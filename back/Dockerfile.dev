@@ -15,6 +15,8 @@ COPY nest-cli.json ./
 # Используем nest-cli.dev.json для dev режима (без deleteOutDir)
 COPY nest-cli.dev.json ./nest-cli.json
 COPY prisma ./prisma
+# Копируем программы психолога (будут перезаписаны при монтировании volume)
+COPY programs ./programs
 
 # Генерируем Prisma Client
 RUN npx prisma generate

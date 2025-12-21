@@ -22,7 +22,7 @@ RUN npm run build
 # ============================================
 # Stage 2: Production stage
 # ============================================
-FROM nginx:alpine AS runner
+FROM nginx:1.27-alpine AS runner
 
 # Устанавливаем переменные по умолчанию
 ARG API_URL=http://localhost:3000

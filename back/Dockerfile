@@ -29,6 +29,8 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 # Копируем tsconfig.json для работы ts-node
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
+# Копируем программы психолога
+COPY --from=builder /app/programs ./programs
 # Создаем entrypoint скрипт для применения миграций и seed при старте
 RUN echo '#!/bin/sh\n\
 if [ "$SKIP_MIGRATIONS" != "true" ]; then\n\

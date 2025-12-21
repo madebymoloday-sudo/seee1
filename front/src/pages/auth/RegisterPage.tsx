@@ -1,10 +1,5 @@
-import { observer } from "mobx-react-lite";
-import { Navigate, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/hooks/useAuth";
+import TelegramAuthButton from "@/components/auth/TelegramAuthButton";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormField,
@@ -12,13 +7,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  registerSchema,
-  type RegisterFormData,
-} from "@/lib/validations/auth";
-import { Brain } from "lucide-react";
-import TelegramAuthButton from "@/components/auth/TelegramAuthButton";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { registerSchema, type RegisterFormData } from "@/lib/validations/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Brain } from "lucide-react";
+import { observer } from "mobx-react-lite";
+import { useForm } from "react-hook-form";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const RegisterPage = observer(() => {
   const navigate = useNavigate();
@@ -121,7 +118,8 @@ const RegisterPage = observer(() => {
                 {...register("username")}
                 aria-invalid={errors.username ? "true" : "false"}
                 className={cn(
-                  errors.username && "border-destructive focus-visible:ring-destructive"
+                  errors.username &&
+                    "border-destructive focus-visible:ring-destructive"
                 )}
               />
               <FormMessage message={errors.username?.message} />
@@ -136,7 +134,8 @@ const RegisterPage = observer(() => {
                 {...register("name")}
                 aria-invalid={errors.name ? "true" : "false"}
                 className={cn(
-                  errors.name && "border-destructive focus-visible:ring-destructive"
+                  errors.name &&
+                    "border-destructive focus-visible:ring-destructive"
                 )}
               />
               <FormMessage message={errors.name?.message} />
@@ -152,7 +151,8 @@ const RegisterPage = observer(() => {
                 {...register("email")}
                 aria-invalid={errors.email ? "true" : "false"}
                 className={cn(
-                  errors.email && "border-destructive focus-visible:ring-destructive"
+                  errors.email &&
+                    "border-destructive focus-visible:ring-destructive"
                 )}
               />
               <FormMessage message={errors.email?.message} />
@@ -168,7 +168,8 @@ const RegisterPage = observer(() => {
                 {...register("password")}
                 aria-invalid={errors.password ? "true" : "false"}
                 className={cn(
-                  errors.password && "border-destructive focus-visible:ring-destructive"
+                  errors.password &&
+                    "border-destructive focus-visible:ring-destructive"
                 )}
               />
               <FormMessage message={errors.password?.message} />
@@ -177,14 +178,17 @@ const RegisterPage = observer(() => {
 
           <FormField>
             <FormItem>
-              <FormLabel htmlFor="passwordConfirm">Подтвердите пароль</FormLabel>
+              <FormLabel htmlFor="passwordConfirm">
+                Подтвердите пароль
+              </FormLabel>
               <Input
                 id="passwordConfirm"
                 type="password"
                 {...register("passwordConfirm")}
                 aria-invalid={errors.passwordConfirm ? "true" : "false"}
                 className={cn(
-                  errors.passwordConfirm && "border-destructive focus-visible:ring-destructive"
+                  errors.passwordConfirm &&
+                    "border-destructive focus-visible:ring-destructive"
                 )}
               />
               <FormMessage message={errors.passwordConfirm?.message} />
@@ -223,4 +227,3 @@ const RegisterPage = observer(() => {
 });
 
 export default RegisterPage;
-
