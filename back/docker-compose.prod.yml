@@ -1,0 +1,69 @@
+version: "3.8"
+
+services:
+  seee-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: seee-backend
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-15m}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-7d}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5171}
+      - PORT=${PORT:-3000}
+      - NODE_ENV=production
+      - NODE_OPTIONS=--max-old-space-size=512
+      # OpenAI configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # Lava integration
+      - LAVA_API_KEY=${LAVA_API_KEY}
+      - LAVA_API_URL=${LAVA_API_URL}
+    ports:
+      - "${PORT:-3000}:3000"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+          cpus: "0.5"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: seee-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-seee_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-seee_password}
+      POSTGRES_DB: ${POSTGRES_DB:-seee_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-seee_user} -d ${POSTGRES_DB:-seee_db}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local

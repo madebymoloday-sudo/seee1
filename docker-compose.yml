@@ -1,0 +1,122 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: seee-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-seee_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-seee_password}
+      POSTGRES_DB: ${POSTGRES_DB:-seee_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-seee_user} -d ${POSTGRES_DB:-seee_db}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - seee-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+      target: runner
+    container_name: seee-backend
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-seee_user}:${POSTGRES_PASSWORD:-seee_password}@postgres:5432/${POSTGRES_DB:-seee_db}}
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-15m}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-change-in-production}
+      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-7d}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5171}
+      - PORT=3000
+      - NODE_ENV=production
+      - NODE_OPTIONS=--max-old-space-size=512
+      # OpenAI configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # Lava integration
+      - LAVA_API_KEY=${LAVA_API_KEY}
+      - LAVA_API_URL=${LAVA_API_URL}
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+          cpus: "0.5"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - seee-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+      target: runner
+      args:
+        API_URL: ${API_URL:-http://backend:3000}
+    container_name: seee-frontend
+    ports:
+      - "${FRONTEND_PORT:-5171}:80"
+    restart: unless-stopped
+    environment:
+      - API_URL=${API_URL:-http://backend:3000}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:80/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - seee-network
+
+networks:
+  seee-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

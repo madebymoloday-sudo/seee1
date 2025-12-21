@@ -1,0 +1,27 @@
+# Dockerfile для development режима
+FROM node:20.12.2
+
+WORKDIR /app
+
+# Копируем package файлы
+COPY package*.json ./
+
+# Устанавливаем все зависимости (включая dev)
+RUN npm i --force
+
+# Копируем остальные файлы конфигурации
+COPY tsconfig.json ./
+COPY nest-cli.json ./
+# Используем nest-cli.dev.json для dev режима (без deleteOutDir)
+COPY nest-cli.dev.json ./nest-cli.json
+COPY prisma ./prisma
+
+# Генерируем Prisma Client
+RUN npx prisma generate
+
+# Устанавливаем curl для healthcheck
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# По умолчанию запускаем start:dev (команда переопределяется в docker-compose)
+CMD ["npm", "run", "start:dev"]
+
