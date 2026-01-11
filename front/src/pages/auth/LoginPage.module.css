@@ -9,7 +9,7 @@
   overflow: hidden;
 }
 
-/* Фоновый градиент (лес с солнечными лучами) */
+/* Фоновый градиент (белый) */
 .loginPageContainer::before {
   content: '';
   position: absolute;
@@ -19,11 +19,11 @@
   bottom: 0;
   background: linear-gradient(
     135deg,
-    #1a4d2e 0%,
-    #2d6a3f 25%,
-    #228b22 50%,
-    #2d6a3f 75%,
-    #1a4d2e 100%
+    #ffffff 0%,
+    #f8f9fa 25%,
+    #e9ecef 50%,
+    #f8f9fa 75%,
+    #ffffff 100%
   );
   z-index: 0;
 }
