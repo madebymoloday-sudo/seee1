@@ -14,6 +14,9 @@ const EmotionCarousel = ({ onSelect, onCancel }: EmotionCarouselProps) => {
   const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
   const categoryRef = useRef<HTMLDivElement>(null);
   const emotionRef = useRef<HTMLDivElement>(null);
+  
+  // Получаем эмоции для выбранной категории
+  const currentCategoryEmotions = EMOTIONS_BY_CATEGORY[EMOTION_CATEGORIES[selectedCategory]] || ALL_EMOTIONS;
 
   // Прокрутка карусели категорий
   useEffect(() => {
@@ -37,6 +40,11 @@ const EmotionCarousel = ({ onSelect, onCancel }: EmotionCarouselProps) => {
     }
   }, [selectedEmotion]);
 
+  // Сбрасываем выбор эмоции при смене категории
+  useEffect(() => {
+    setSelectedEmotion(0);
+  }, [selectedCategory]);
+
   const handleCategoryScroll = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 1 : -1;
@@ -50,14 +58,14 @@ const EmotionCarousel = ({ onSelect, onCancel }: EmotionCarouselProps) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 1 : -1;
     setSelectedEmotion((prev) => {
-      const newValue = Math.max(0, Math.min(ALL_EMOTIONS.length - 1, prev + delta));
+      const newValue = Math.max(0, Math.min(currentCategoryEmotions.length - 1, prev + delta));
       return newValue;
     });
   };
 
   const handleSelect = () => {
     const category = EMOTION_CATEGORIES[selectedCategory];
-    const emotion = ALL_EMOTIONS[selectedEmotion];
+    const emotion = currentCategoryEmotions[selectedEmotion];
     // Добавляем эмоцию в формате "Категория: Эмоция"
     const newSelection = [...selectedEmotions, `${category}: ${emotion}`];
     setSelectedEmotions(newSelection);
@@ -95,7 +103,7 @@ const EmotionCarousel = ({ onSelect, onCancel }: EmotionCarouselProps) => {
           </div>
         </div>
 
-        {/* Список всех эмоций */}
+        {/* Список эмоций из выбранной категории */}
         <div className={styles.carouselSection}>
           <h3 className={styles.carouselTitle}>Эмоция</h3>
           <div
@@ -104,16 +112,20 @@ const EmotionCarousel = ({ onSelect, onCancel }: EmotionCarouselProps) => {
             onWheel={handleEmotionScroll}
           >
             <div className={styles.carouselContent}>
-              {ALL_EMOTIONS.map((emotion, index) => (
-                <div
-                  key={index}
-                  className={`${styles.carouselItem} ${
-                    index === selectedEmotion ? styles.selected : ""
-                  }`}
-                >
-                  {emotion}
-                </div>
-              ))}
+              {currentCategoryEmotions.length > 0 ? (
+                currentCategoryEmotions.map((emotion, index) => (
+                  <div
+                    key={index}
+                    className={`${styles.carouselItem} ${
+                      index === selectedEmotion ? styles.selected : ""
+                    }`}
+                  >
+                    {emotion}
+                  </div>
+                ))
+              ) : (
+                <div className={styles.carouselItem}>Нет эмоций</div>
+              )}
             </div>
           </div>
         </div>

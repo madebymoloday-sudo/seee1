@@ -45,9 +45,10 @@ const ChatWindow = ({
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
   const lastMessageCountRef = useRef(0);
-  const [visibleMessages, setVisibleMessages] = useState<{ message: Message; isVisible: boolean }[]>([]);
+  const [visibleMessages, setVisibleMessages] = useState<{ message: Message; isVisible: boolean; fadeOut?: boolean }[]>([]);
   const [showEmotionCarousel, setShowEmotionCarousel] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const fadeOutTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Передаем функцию refresh в родительский компонент
   useEffect(() => {
@@ -124,6 +125,12 @@ const ChatWindow = ({
 
   // Логика показа сообщений: только одно от AI, затем ответ пользователя, затем оба исчезают
   useEffect(() => {
+    // Очищаем предыдущий таймер
+    if (fadeOutTimerRef.current) {
+      clearTimeout(fadeOutTimerRef.current);
+      fadeOutTimerRef.current = null;
+    }
+
     if (messages.length === 0) {
       setVisibleMessages([]);
       return;
@@ -148,7 +155,7 @@ const ChatWindow = ({
     const userResponseAfter = messages.slice(lastAssistantIndex + 1);
 
     // Показываем только последнее сообщение от assistant и ответы пользователя после него
-    const newVisible: { message: Message; isVisible: boolean }[] = [];
+    const newVisible: { message: Message; isVisible: boolean; fadeOut?: boolean }[] = [];
     
     // Добавляем последнее сообщение от assistant
     newVisible.push({ message: lastAssistant, isVisible: true });
@@ -160,6 +167,18 @@ const ChatWindow = ({
 
     setVisibleMessages(newVisible);
 
+    // Если есть ответ пользователя, запускаем таймер для плавного исчезновения
+    if (userResponseAfter.length > 0) {
+      fadeOutTimerRef.current = setTimeout(() => {
+        setVisibleMessages(prev => prev.map(msg => ({ ...msg, fadeOut: true })));
+        
+        // Через время полностью скрываем
+        setTimeout(() => {
+          setVisibleMessages([]);
+        }, 500); // Время анимации fadeOut
+      }, 3000); // Показываем сообщения 3 секунды перед исчезновением
+    }
+
     // Проверяем, нужно ли показать карусель эмоций
     const questionLower = lastAssistant.content.toLowerCase();
     if (questionLower.includes("эмоцию") || 
@@ -170,6 +189,12 @@ const ChatWindow = ({
     } else {
       setShowEmotionCarousel(false);
     }
+
+    return () => {
+      if (fadeOutTimerRef.current) {
+        clearTimeout(fadeOutTimerRef.current);
+      }
+    };
   }, [messages]);
 
   // Отслеживание когда приходит ответ от AI, чтобы скрыть индикатор "думает"
@@ -263,11 +288,11 @@ const ChatWindow = ({
         )}
 
         {/* Показываем только видимые сообщения (центрированные) */}
-        {visibleMessages.map(({ message, isVisible }) => (
+        {visibleMessages.map(({ message, isVisible, fadeOut }) => (
           <div
             key={message.id}
             className={`${styles.messageWrapper} ${
-              isVisible ? styles.visible : styles.hidden
+              fadeOut ? styles.fadeOut : isVisible ? styles.visible : styles.hidden
             }`}
           >
             <div

@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { observer } from "mobx-react-lite";
 import { useParams } from "react-router-dom";
-import { Layout } from "@/components/layout/Layout";
 import { useSessionsControllerGetSession, useMessagesControllerCreateMessage } from "@/api/seee.swr";
 import { socketService } from "@/lib/socket";
 import { useAuth } from "@/hooks/useAuth";
@@ -101,48 +100,42 @@ const SessionPage = observer(() => {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-screen">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <Loader2 className="h-6 w-6 animate-spin text-white" />
+      </div>
     );
   }
 
   if (error || !session) {
     return (
-      <Layout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <p className="text-destructive">
-              {error ? "Ошибка загрузки сессии" : "Сессия не найдена"}
-            </p>
-          </div>
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="text-center">
+          <p className="text-white text-lg">
+            {error ? "Ошибка загрузки сессии" : "Сессия не найдена"}
+          </p>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="flex flex-col h-screen">
-        <SessionHeader session={session} />
-        <div className="flex-1 overflow-hidden">
-          <ChatWindow
-            sessionId={id!}
-            onSendMessage={handleSendMessage}
-            isSending={isMutating}
-            onRefreshRef={refreshMessagesRef}
-            messages={messages}
-            loadMore={loadMore}
-            hasMore={hasMore}
-            isLoadingMore={isLoadingMore ?? false}
-            isLoading={isLoadingMessages ?? false}
-            refresh={refresh}
-          />
-        </div>
+    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <SessionHeader session={session} />
+      <div className="flex-1 overflow-hidden">
+        <ChatWindow
+          sessionId={id!}
+          onSendMessage={handleSendMessage}
+          isSending={isMutating}
+          onRefreshRef={refreshMessagesRef}
+          messages={messages}
+          loadMore={loadMore}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore ?? false}
+          isLoading={isLoadingMessages ?? false}
+          refresh={refresh}
+        />
       </div>
-    </Layout>
+    </div>
   );
 });
 
