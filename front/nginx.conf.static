@@ -20,9 +20,9 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
 
     # API proxy - основной API endpoint
-    # Backend URL: https://seee.com
+    # Backend URL: https://back-production-c25c.up.railway.app
     location /api/v1 {
-        proxy_pass https://seee.com;
+        proxy_pass https://back-production-c25c.up.railway.app;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -35,7 +35,7 @@ server {
 
     # API JSON schema для Orval
     location /api-json {
-        proxy_pass https://seee.com/api-json;
+        proxy_pass https://back-production-c25c.up.railway.app/api-json;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -45,7 +45,7 @@ server {
 
     # Swagger документация
     location /api/docs {
-        proxy_pass https://seee.com/api/docs;
+        proxy_pass https://back-production-c25c.up.railway.app/api/docs;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -55,7 +55,7 @@ server {
 
     # WebSocket support для Socket.IO
     location /socket.io {
-        proxy_pass https://seee.com/socket.io;
+        proxy_pass https://back-production-c25c.up.railway.app/socket.io;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
