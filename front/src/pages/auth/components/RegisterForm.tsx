@@ -13,14 +13,12 @@ import { registerSchema, type RegisterFormData } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { observer } from "mobx-react-lite";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
 }
 
 const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
-  const navigate = useNavigate();
   const { register: registerUser, isLoading } = useAuth();
 
   const {
