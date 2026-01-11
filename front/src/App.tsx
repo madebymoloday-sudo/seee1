@@ -3,12 +3,15 @@ import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useAuth } from "./hooks/useAuth";
+import { useTheme } from "./hooks/useTheme";
 import { protectedRouter } from "./router/protectedRouter";
 import { publicRouter } from "./router/publicRouter";
 import { RootStoreContext, rootStore } from "./store/rootStore";
 
 const AppContent = observer(() => {
   const { isAuthenticated, isLoading } = useAuth();
+  // Инициализируем тему при загрузке
+  useTheme();
 
   // Показываем загрузку пока проверяем авторизацию
   if (isLoading) {
