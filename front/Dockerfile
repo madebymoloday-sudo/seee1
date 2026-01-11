@@ -33,5 +33,5 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Открываем порт 80
 EXPOSE 80
 
-# Запускаем nginx напрямую с выводом в stdout для логирования
-CMD ["nginx", "-g", "daemon off;", "-c", "/etc/nginx/nginx.conf"]
+# Запускаем nginx напрямую
+CMD ["nginx", "-g", "daemon off;"]
