@@ -1,15 +1,17 @@
 import { useState } from "react";
 import type { KeyboardEvent } from "react";
-import { Send } from "lucide-react";
+import { ArrowUp, Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import styles from "./MessageInput.module.css";
 
 interface MessageInputProps {
   onSend: (message: string) => void;
+  onSettingsClick?: () => void;
   disabled?: boolean;
 }
 
-const MessageInput = ({ onSend, disabled = false }: MessageInputProps) => {
+const MessageInput = ({ onSend, onSettingsClick, disabled = false }: MessageInputProps) => {
   const [message, setMessage] = useState("");
 
   const handleSend = () => {
@@ -27,19 +29,38 @@ const MessageInput = ({ onSend, disabled = false }: MessageInputProps) => {
   };
 
   return (
-    <div className="border-t bg-white p-4">
-      <div className="flex items-end gap-2">
+    <div className={styles.messageInputContainer}>
+      <div className={styles.inputWrapper}>
+        {/* Кнопка настроек (+) */}
+        <Button
+          onClick={onSettingsClick}
+          className={styles.settingsButton}
+          variant="ghost"
+          size="icon"
+          title="Настройки"
+        >
+          <Plus className="h-5 w-5" />
+        </Button>
+
+        {/* Поле ввода */}
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Введите сообщение..."
           disabled={disabled}
-          className="min-h-[60px] resize-none"
-          rows={2}
+          className={styles.textarea}
+          rows={1}
         />
-        <Button onClick={handleSend} disabled={disabled || !message.trim()}>
-          <Send className="h-4 w-4" />
+
+        {/* Кнопка отправки (стрелка вверх) */}
+        <Button
+          onClick={handleSend}
+          disabled={disabled || !message.trim()}
+          className={styles.sendButton}
+          size="icon"
+        >
+          <ArrowUp className="h-5 w-5" />
         </Button>
       </div>
     </div>

@@ -1,13 +1,14 @@
 import { observer } from "mobx-react-lite";
-import { Download, MapPin, MessageSquare, Settings } from "lucide-react";
+import { Download, MapPin, MessageSquare, Settings, Edit2, Pause, Save, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import apiAgent from "@/lib/api";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import type { SessionResponseDto } from "@/api/schemas";
 import { getAllPipelines } from "@/api/pipeline.api";
 import { toast } from "sonner";
+import styles from "./SessionHeader.module.css";
 
 interface SessionHeaderProps {
   session: SessionResponseDto;
@@ -123,34 +124,86 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
     setupDefaultProgram();
   }, [session.id, isAdmin]);
 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Закрытие меню при клике вне его
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
+  const handleRename = () => {
+    const newTitle = prompt("Введите новое название сессии:", session.title || "Без названия");
+    if (newTitle !== null && newTitle.trim()) {
+      // TODO: Добавить API вызов для переименования
+      toast.info("Функция переименования будет добавлена");
+    }
+    setIsMenuOpen(false);
+  };
+
+  const handlePause = () => {
+    // TODO: Добавить API вызов для приостановки
+    toast.info("Функция приостановки будет добавлена");
+    setIsMenuOpen(false);
+  };
+
+  const handleSave = () => {
+    handleDownloadDocument();
+    setIsMenuOpen(false);
+  };
+
+  const handleAllSessions = () => {
+    navigate("/sessions");
+    setIsMenuOpen(false);
+  };
+
   return (
-    <div className="bg-white border-b p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">
-            {session.title || "Без названия"}
-          </h2>
-        </div>
-        <div className="flex items-center gap-2">
-          {isAdmin && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => navigate("/pipeline-builder")}
-              title="Редактировать программу"
-            >
-              <Settings className="h-4 w-4" strokeWidth={2} />
-            </Button>
+    <div className={styles.sessionHeader}>
+      <div className={styles.headerContent}>
+        <div className={styles.sessionTitleWrapper} ref={menuRef}>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className={styles.sessionTitleButton}
+          >
+            <MessageSquare className={styles.icon} />
+            <h2 className={styles.sessionTitle}>
+              {session.title || "Без названия"}
+            </h2>
+          </button>
+
+          {/* Выпадающее меню */}
+          {isMenuOpen && (
+            <div className={styles.dropdownMenu}>
+              <button onClick={handleRename} className={styles.menuItem}>
+                <Edit2 className={styles.menuIcon} />
+                Переименовать
+              </button>
+              <button onClick={handlePause} className={styles.menuItem}>
+                <Pause className={styles.menuIcon} />
+                Приостановить
+              </button>
+              <button onClick={handleSave} className={styles.menuItem}>
+                <Save className={styles.menuIcon} />
+                Сохранить
+              </button>
+              <button onClick={handleAllSessions} className={styles.menuItem}>
+                <List className={styles.menuIcon} />
+                Все сессии
+              </button>
+            </div>
           )}
-          <Button variant="outline" onClick={handleDownloadDocument}>
-            <Download className="h-4 w-4 mr-2" />
-            Скачать документ
-          </Button>
-          <Button variant="outline" onClick={handleAddToMap}>
-            <MapPin className="h-4 w-4 mr-2" />
-            Добавить в нейрокарту
-          </Button>
         </div>
       </div>
     </div>

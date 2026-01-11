@@ -1,8 +1,10 @@
 import { useAuth } from "@/hooks/useAuth";
 import { socketService } from "@/lib/socket";
-import { Loader2, MessageSquare } from "lucide-react";
+import { Loader2, MessageSquare, Settings } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import MessageInput from "./MessageInput";
+import EmotionCarousel from "./EmotionCarousel";
+import styles from "./ChatWindow.module.css";
 
 interface Message {
   id: string;
@@ -43,6 +45,9 @@ const ChatWindow = ({
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
   const lastMessageCountRef = useRef(0);
+  const [visibleMessages, setVisibleMessages] = useState<{ message: Message; isVisible: boolean }[]>([]);
+  const [showEmotionCarousel, setShowEmotionCarousel] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Передаем функцию refresh в родительский компонент
   useEffect(() => {
@@ -117,6 +122,56 @@ const ChatWindow = ({
     };
   }, [sessionId, refresh]);
 
+  // Логика показа сообщений: только одно от AI, затем ответ пользователя, затем оба исчезают
+  useEffect(() => {
+    if (messages.length === 0) {
+      setVisibleMessages([]);
+      return;
+    }
+
+    // Находим последнее сообщение от assistant (обратный поиск)
+    let lastAssistantIndex = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "assistant") {
+        lastAssistantIndex = i;
+        break;
+      }
+    }
+    
+    if (lastAssistantIndex === -1) {
+      // Если нет сообщений от assistant, показываем все сообщения пользователя
+      setVisibleMessages(messages.map(m => ({ message: m, isVisible: true })));
+      return;
+    }
+
+    const lastAssistant = messages[lastAssistantIndex];
+    const userResponseAfter = messages.slice(lastAssistantIndex + 1);
+
+    // Показываем только последнее сообщение от assistant и ответы пользователя после него
+    const newVisible: { message: Message; isVisible: boolean }[] = [];
+    
+    // Добавляем последнее сообщение от assistant
+    newVisible.push({ message: lastAssistant, isVisible: true });
+    
+    // Добавляем ответы пользователя после него
+    userResponseAfter.forEach(msg => {
+      newVisible.push({ message: msg, isVisible: true });
+    });
+
+    setVisibleMessages(newVisible);
+
+    // Проверяем, нужно ли показать карусель эмоций
+    const questionLower = lastAssistant.content.toLowerCase();
+    if (questionLower.includes("эмоцию") || 
+        questionLower.includes("эмоция") ||
+        questionLower.includes("какую эмоцию") ||
+        questionLower.includes("какие эмоции")) {
+      setShowEmotionCarousel(true);
+    } else {
+      setShowEmotionCarousel(false);
+    }
+  }, [messages]);
+
   // Отслеживание когда приходит ответ от AI, чтобы скрыть индикатор "думает"
   useEffect(() => {
     // Если количество сообщений увеличилось и последнее от assistant - AI ответил
@@ -168,87 +223,80 @@ const ChatWindow = ({
     setIsAtBottom(true);
     // Устанавливаем индикатор "AI думает" сразу после отправки
     setIsAiThinking(true);
+    // Скрываем карусель эмоций после отправки
+    setShowEmotionCarousel(false);
+  };
+
+  const handleEmotionSelect = (emotions: string[]) => {
+    // Отправляем выбранные эмоции как сообщение
+    const emotionText = `Выбранные эмоции: ${emotions.join(", ")}`;
+    handleSend(emotionText);
+  };
+
+  const handleSettingsClick = () => {
+    setIsSettingsOpen(!isSettingsOpen);
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Статус подключения */}
-      {socketConnected && (
-        <div className="px-4 py-2 bg-green-50 border-b border-green-200">
-          <div className="flex items-center gap-2 text-sm text-green-700">
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-            <span>Подключено к чату</span>
-          </div>
-        </div>
-      )}
-
-      {/* Индикатор загрузки старых сообщений */}
-      {isLoadingMore && (
-        <div className="p-2 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Загрузка старых сообщений...
-        </div>
-      )}
-
+    <div className={styles.chatWindow}>
       {/* Контейнер сообщений */}
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 space-y-4"
+        className={styles.messagesContainer}
       >
         {isLoading && messages.length === 0 && (
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <div className={styles.loadingContainer}>
+            <Loader2 className={styles.loader} />
           </div>
         )}
 
         {messages.length === 0 && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4">
-            <div className="flex flex-col items-center gap-2">
-              <MessageSquare className="h-12 w-12 text-muted-foreground/50" />
-              <p className="text-lg font-medium">Добро пожаловать в сессию!</p>
-              <p className="text-sm text-center max-w-md">
-                Начните диалог с AI-психологом. Задавайте вопросы, делитесь
-                мыслями и получайте поддержку.
-              </p>
-            </div>
+          <div className={styles.emptyState}>
+            <MessageSquare className={styles.emptyIcon} />
+            <p className={styles.emptyTitle}>Добро пожаловать в сессию!</p>
+            <p className={styles.emptyText}>
+              Начните диалог с AI-психологом. Задавайте вопросы, делитесь
+              мыслями и получайте поддержку.
+            </p>
           </div>
         )}
 
-        {messages.map((message) => (
+        {/* Показываем только видимые сообщения (центрированные) */}
+        {visibleMessages.map(({ message, isVisible }) => (
           <div
             key={message.id}
-            className={`flex ${
-              message.role === "user" ? "justify-end" : "justify-start"
+            className={`${styles.messageWrapper} ${
+              isVisible ? styles.visible : styles.hidden
             }`}
           >
             <div
-              className={`max-w-[70%] rounded-lg p-3 ${
-                message.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
+              className={`${styles.message} ${
+                message.role === "user" ? styles.userMessage : styles.assistantMessage
               }`}
             >
-              <p className="whitespace-pre-wrap">{message.content}</p>
-              <p className="text-xs mt-1 opacity-70">
-                {new Date(message.timestamp).toLocaleTimeString("ru-RU", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
+              <p className={styles.messageContent}>{message.content}</p>
             </div>
           </div>
         ))}
 
+        {/* Карусель эмоций */}
+        {showEmotionCarousel && (
+          <div className={styles.emotionCarouselWrapper}>
+            <EmotionCarousel
+              onSelect={handleEmotionSelect}
+              onCancel={() => setShowEmotionCarousel(false)}
+            />
+          </div>
+        )}
+
         {/* Индикатор "AI думает..." */}
         {isAiThinking && (
-          <div className="flex justify-start">
-            <div className="max-w-[70%] rounded-lg p-3 bg-muted">
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground italic">
-                  AI думает...
-                </span>
+          <div className={styles.messageWrapper}>
+            <div className={`${styles.message} ${styles.assistantMessage}`}>
+              <div className={styles.thinkingIndicator}>
+                <Loader2 className={styles.thinkingLoader} />
+                <span className={styles.thinkingText}>AI думает...</span>
               </div>
             </div>
           </div>
@@ -257,18 +305,12 @@ const ChatWindow = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Индикатор, что есть еще сообщения */}
-      {hasMore && !isLoadingMore && (
-        <button
-          onClick={loadMore}
-          className="p-2 text-center text-sm text-primary hover:text-primary/80"
-        >
-          Загрузить старые сообщения
-        </button>
-      )}
-
       {/* Поле ввода */}
-      <MessageInput onSend={handleSend} disabled={isLoading || isSending} />
+      <MessageInput 
+        onSend={handleSend} 
+        onSettingsClick={handleSettingsClick}
+        disabled={isLoading || isSending} 
+      />
     </div>
   );
 };
