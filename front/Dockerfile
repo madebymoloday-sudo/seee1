@@ -33,6 +33,10 @@ RUN nginx -t
 # Копируем собранное приложение из builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Проверяем, что файлы скопировались
+RUN ls -la /usr/share/nginx/html && \
+    ls -la /usr/share/nginx/html/index.html || echo "WARNING: index.html not found!"
+
 # Устанавливаем правильные права доступа
 RUN chmod -R 755 /usr/share/nginx/html && \
     chown -R nginx:nginx /usr/share/nginx/html
