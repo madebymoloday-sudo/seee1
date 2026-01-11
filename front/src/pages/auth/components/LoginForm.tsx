@@ -53,14 +53,14 @@ const LoginForm = observer(() => {
   return (
     <Form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {errors.root && (
-        <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md">
+        <div className="bg-red-500/20 border border-red-400 text-white px-4 py-3 rounded-md">
           {errors.root.message}
         </div>
       )}
 
       <FormField>
         <FormItem>
-          <FormLabel htmlFor="email">Email</FormLabel>
+          <FormLabel htmlFor="email" className="text-white">Email</FormLabel>
           <Input
             id="email"
             type="email"
@@ -68,17 +68,23 @@ const LoginForm = observer(() => {
             autoComplete="email"
             aria-invalid={errors.email ? "true" : "false"}
             className={cn(
+              "bg-white/10 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white/50",
               errors.email &&
-                "border-destructive focus-visible:ring-destructive"
+                "border-red-400 focus-visible:ring-red-400"
             )}
           />
-          <FormMessage message={errors.email?.message} />
+          {errors.email?.message && (
+            <FormMessage 
+              message={errors.email?.message} 
+              className="text-red-200"
+            />
+          )}
         </FormItem>
       </FormField>
 
       <FormField>
         <FormItem>
-          <FormLabel htmlFor="password">Пароль</FormLabel>
+          <FormLabel htmlFor="password" className="text-white">Пароль</FormLabel>
           <Input
             id="password"
             type="password"
@@ -86,15 +92,25 @@ const LoginForm = observer(() => {
             autoComplete="current-password"
             aria-invalid={errors.password ? "true" : "false"}
             className={cn(
+              "bg-white/10 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white/50",
               errors.password &&
-                "border-destructive focus-visible:ring-destructive"
+                "border-red-400 focus-visible:ring-red-400"
             )}
           />
-          <FormMessage message={errors.password?.message} />
+          {errors.password?.message && (
+            <FormMessage 
+              message={errors.password?.message}
+              className="text-red-200"
+            />
+          )}
         </FormItem>
       </FormField>
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button 
+        type="submit" 
+        className="w-full bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white" 
+        disabled={isLoading}
+      >
         {isLoading ? "Вход..." : "Войти"}
       </Button>
     </Form>

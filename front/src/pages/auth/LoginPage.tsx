@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import LoginForm from "./components/LoginForm";
 import TelegramAuthButton from "@/components/auth/TelegramAuthButton";
 import { Brain } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import styles from "./LoginPage.module.css";
 
 const LoginPage = observer(() => {
   const { isAuthenticated } = useAuth();
@@ -12,15 +14,20 @@ const LoginPage = observer(() => {
     return <Navigate to="/" replace />;
   }
 
+  const handleSubscribe = () => {
+    // TODO: Добавить ссылку на оплату, когда пользователь пришлет
+    window.location.href = "/subscription";
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
-      <div className="w-full max-w-md p-8">
+    <div className={styles.loginPageContainer}>
+      <div className={styles.loginFormContainer}>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Brain className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">SEEE</h1>
+            <Brain className="h-8 w-8 text-white" />
+            <h1 className={`text-3xl font-bold ${styles.loginTitle}`}>SEEE</h1>
           </div>
-          <p className="text-gray-600 mt-2">Вход в систему</p>
+          <p className={`mt-2 ${styles.loginSubtitle}`}>Вход в систему</p>
         </div>
 
         <LoginForm />
@@ -28,10 +35,10 @@ const LoginPage = observer(() => {
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className={`w-full border-t ${styles.divider}`} />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">или</span>
+              <span className={`px-2 ${styles.dividerText}`}>или</span>
             </div>
           </div>
 
@@ -40,9 +47,19 @@ const LoginPage = observer(() => {
           </TelegramAuthButton>
         </div>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <div className="mt-4">
+          <Button
+            onClick={handleSubscribe}
+            variant="outline"
+            className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
+          >
+            Купить подписку
+          </Button>
+        </div>
+
+        <p className={`mt-6 text-center text-sm ${styles.link}`}>
           Нет аккаунта?{" "}
-          <a href="/register" className="text-blue-600 hover:text-blue-500">
+          <a href="/register" className={styles.link}>
             Зарегистрироваться
           </a>
         </p>
