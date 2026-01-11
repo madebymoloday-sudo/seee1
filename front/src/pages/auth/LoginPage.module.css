@@ -9,7 +9,7 @@
   overflow: hidden;
 }
 
-/* Фоновое изображение */
+/* Фоновое изображение (лес с солнечными лучами) */
 .loginPageContainer::before {
   content: '';
   position: absolute;
@@ -23,9 +23,11 @@
   background-repeat: no-repeat;
   background-attachment: fixed;
   z-index: 0;
+  /* Fallback градиент на случай, если изображение не загрузится */
+  background-color: #1a4d2e;
 }
 
-/* Слой размытия фона (Gaussian Blur) */
+/* Слой размытия фона (Foggy Glass Effect - Gaussian Blur) */
 .loginPageContainer::after {
   content: '';
   position: absolute;
@@ -33,42 +35,47 @@
   left: 0;
   right: 0;
   bottom: 0;
-  /* Высокий радиус размытия для эффекта стекла */
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  /* Полупрозрачный слой для эффекта матового стекла */
+  /* Высокий радиус размытия для эффекта матового стекла (как в примере: 10-20px) */
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  /* Полупрозрачный слой для эффекта матового стекла (opacity 30-50% как в примере) */
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.05) 50%,
-    rgba(0, 0, 0, 0.2) 100%
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(0, 0, 0, 0.15) 100%
   );
+  opacity: 0.4;
   z-index: 1;
   pointer-events: none;
 }
 
-/* Контейнер формы - стеклянный эффект */
+/* Контейнер формы - эффект матового стекла (Foggy Glass) */
 .loginFormContainer {
   position: relative;
   z-index: 2;
   width: 100%;
   max-width: 28rem;
-  padding: 2rem;
+  padding: 2.5rem;
+  /* Полупрозрачный фон с эффектом стекла (opacity 30-50%) */
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.1) 100%
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.18) 100%
   );
-  backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
-  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
+  /* Высокий радиус размытия для эффекта матового стекла */
+  backdrop-filter: blur(20px) saturate(200%) brightness(1.15);
+  -webkit-backdrop-filter: blur(20px) saturate(200%) brightness(1.15);
   border-radius: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(255, 255, 255, 0.5) inset,
     0 -1px 0 rgba(0, 0, 0, 0.1) inset,
-    0 0 0 1px rgba(255, 255, 255, 0.2);
+    0 0 0 1px rgba(255, 255, 255, 0.3);
+  /* Текстура матового стекла */
+  overflow: hidden;
 }
 
 /* Внутренний слой для дополнительного эффекта стекла */
@@ -143,13 +150,35 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* Ссылки */
-.link {
-  color: white;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  text-decoration: underline;
+/* Поля ввода - эффект стекла */
+.loginFormContainer input {
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  color: white !important;
 }
 
-.link:hover {
-  color: rgba(255, 255, 255, 0.8);
+.loginFormContainer input::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.loginFormContainer input:focus {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
+  outline: none !important;
+}
+
+/* Кнопки - эффект стекла */
+.loginFormContainer button {
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Labels - белый цвет */
+.loginFormContainer label {
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }

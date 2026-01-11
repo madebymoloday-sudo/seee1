@@ -57,12 +57,6 @@ const LoginPage = observer(() => {
           </Button>
         </div>
 
-        <p className={`mt-6 text-center text-sm ${styles.link}`}>
-          Нет аккаунта?{" "}
-          <a href="/register" className={styles.link}>
-            Зарегистрироваться
-          </a>
-        </p>
       </div>
     </div>
   );
