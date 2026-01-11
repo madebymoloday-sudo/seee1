@@ -39,22 +39,36 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
+      console.log("Начало регистрации:", { email: data.email, name: data.name });
+      
       await registerUser({
         email: data.email,
         password: data.password,
         name: data.name,
         username: data.name.toLowerCase().replace(/\s+/g, "_"), // Генерируем username из имени
       });
-      navigate("/");
+      
+      console.log("Регистрация успешна, перенаправление...");
+      // Небольшая задержка для сохранения токенов
+      setTimeout(() => {
+        navigate("/");
+      }, 100);
     } catch (err: any) {
+      console.error("Ошибка регистрации:", err);
       const errorResponse = err.response?.data;
       const errorMessage =
         typeof errorResponse?.message === "string"
           ? errorResponse.message
           : Array.isArray(errorResponse?.message)
           ? errorResponse.message[0]
-          : "Ошибка регистрации";
+          : err.message || "Ошибка регистрации. Проверьте введённые данные.";
       const errorField = errorResponse?.field;
+
+      // Всегда показываем ошибку пользователю
+      setError("root", {
+        type: "manual",
+        message: errorMessage,
+      });
 
       if (errorField) {
         const validFields: (keyof RegisterFormData)[] = [
@@ -67,23 +81,16 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
             type: "manual",
             message: errorMessage,
           });
-        } else {
-          setError("root", {
-            type: "manual",
-            message: errorMessage,
-          });
         }
-      } else {
-        setError("root", {
-          type: "manual",
-          message: errorMessage,
-        });
       }
     }
   };
 
   return (
-    <Form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <Form onSubmit={(e) => {
+      e.preventDefault();
+      handleSubmit(onSubmit)(e);
+    }} className="space-y-4">
       {errors.root && (
         <div className="bg-red-500/20 border border-red-400 text-white px-4 py-3 rounded-md">
           {errors.root.message}
