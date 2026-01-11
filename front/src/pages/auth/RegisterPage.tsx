@@ -29,6 +29,7 @@ const RegisterPage = observer(() => {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
     },
@@ -40,12 +41,11 @@ const RegisterPage = observer(() => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      // Отправляем только email и password, остальные поля будут сгенерированы на бэкенде
       await registerUser({
         email: data.email,
         password: data.password,
-        name: data.email.split("@")[0], // Используем часть email как имя
-        username: data.email.split("@")[0], // Используем часть email как username
+        name: data.name,
+        username: data.name.toLowerCase().replace(/\s+/g, "_"), // Генерируем username из имени
       });
       navigate("/");
     } catch (err: any) {
@@ -62,6 +62,7 @@ const RegisterPage = observer(() => {
       if (errorField) {
         // Проверяем, является ли поле валидным полем формы
         const validFields: (keyof RegisterFormData)[] = [
+          "name",
           "email",
           "password",
         ];
@@ -104,6 +105,23 @@ const RegisterPage = observer(() => {
               {errors.root.message}
             </div>
           )}
+
+          <FormField>
+            <FormItem>
+              <FormLabel htmlFor="name">Имя</FormLabel>
+              <Input
+                id="name"
+                {...register("name")}
+                autoComplete="name"
+                aria-invalid={errors.name ? "true" : "false"}
+                className={cn(
+                  errors.name &&
+                    "border-destructive focus-visible:ring-destructive"
+                )}
+              />
+              <FormMessage message={errors.name?.message} />
+            </FormItem>
+          </FormField>
 
           <FormField>
             <FormItem>
