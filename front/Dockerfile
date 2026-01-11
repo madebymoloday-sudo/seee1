@@ -41,8 +41,8 @@ RUN ls -la /usr/share/nginx/html && \
 RUN chmod -R 755 /usr/share/nginx/html && \
     chown -R nginx:nginx /usr/share/nginx/html
 
-# Открываем порт 80
-EXPOSE 80
+# Открываем порт 8080
+EXPOSE 8080
 
 # Создаем простой тестовый скрипт для диагностики
 RUN echo '#!/bin/sh' > /test-nginx.sh && \
