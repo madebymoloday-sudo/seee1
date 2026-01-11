@@ -16,11 +16,12 @@ const SessionsPage = observer(() => {
 
   // Автоматически создаём и открываем сессию при первой загрузке, если сессий нет
   useEffect(() => {
-    if (!isLoading && !error && sessions.length === 0 && !isMutating) {
+    let isMounted = true;
+    if (!isLoading && !error && sessions.length === 0 && !isMutating && isMounted) {
       const createAndNavigate = async () => {
         try {
           const newSession = await createSession({});
-          if (newSession) {
+          if (newSession && isMounted) {
             navigate(`/sessions/${newSession.id}`);
           }
         } catch (error) {
@@ -29,6 +30,9 @@ const SessionsPage = observer(() => {
       };
       createAndNavigate();
     }
+    return () => {
+      isMounted = false;
+    };
   }, [isLoading, error, sessions.length, isMutating, createSession, navigate]);
 
   const handleCreateSession = async () => {
