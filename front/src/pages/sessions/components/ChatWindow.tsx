@@ -43,11 +43,10 @@ const ChatWindow = ({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [isAiThinking, setIsAiThinking] = useState(false);
-  const [socketConnected, setSocketConnected] = useState(false);
   const lastMessageCountRef = useRef(0);
   const [visibleMessages, setVisibleMessages] = useState<{ message: Message; isVisible: boolean; fadeOut?: boolean }[]>([]);
   const [showEmotionCarousel, setShowEmotionCarousel] = useState(false);
-  const fadeOutTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const fadeOutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Передаем функцию refresh в родительский компонент
   useEffect(() => {
