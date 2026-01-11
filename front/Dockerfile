@@ -44,5 +44,15 @@ RUN chmod -R 755 /usr/share/nginx/html && \
 # Открываем порт 80
 EXPOSE 80
 
-# Запускаем nginx напрямую
-CMD ["nginx", "-g", "daemon off;"]
+# Создаем простой тестовый скрипт для диагностики
+RUN echo '#!/bin/sh' > /test-nginx.sh && \
+    echo 'echo "Testing nginx..."' >> /test-nginx.sh && \
+    echo 'nginx -t' >> /test-nginx.sh && \
+    echo 'echo "Listing files in /usr/share/nginx/html:"' >> /test-nginx.sh && \
+    echo 'ls -la /usr/share/nginx/html' >> /test-nginx.sh && \
+    echo 'echo "Starting nginx..."' >> /test-nginx.sh && \
+    echo 'exec nginx -g "daemon off;"' >> /test-nginx.sh && \
+    chmod +x /test-nginx.sh
+
+# Запускаем nginx через тестовый скрипт
+CMD ["/test-nginx.sh"]
