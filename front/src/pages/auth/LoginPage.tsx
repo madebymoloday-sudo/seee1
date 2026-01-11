@@ -51,8 +51,11 @@ const LoginPage = observer(() => {
             </div>
           </div>
 
-          <TelegramAuthButton authType="sign-in" className="w-full mt-4">
-            Войти через Telegram
+          <TelegramAuthButton 
+            authType={isRegisterMode ? "sign-up" : "sign-in"} 
+            className="w-full mt-4"
+          >
+            {isRegisterMode ? "Зарегистрироваться через Telegram" : "Войти через Telegram"}
           </TelegramAuthButton>
         </div>
 
