@@ -88,4 +88,11 @@ server {
         return 200 "healthy\n";
         add_header Content-Type text/plain;
     }
+    
+    # Railway healthcheck endpoint (если используется)
+    location /.well-known/health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
 }
