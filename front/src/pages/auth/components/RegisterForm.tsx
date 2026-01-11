@@ -31,21 +31,19 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
-      name: "",
       email: "",
       password: "",
-      passwordConfirm: "",
     },
   });
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
+      // Отправляем только email и password, остальные поля будут сгенерированы на бэкенде
       await registerUser({
         email: data.email,
         password: data.password,
-        name: data.name,
-        username: data.username,
+        name: data.email.split("@")[0], // Используем часть email как имя
+        username: data.email.split("@")[0], // Используем часть email как username
       });
       navigate("/");
     } catch (err: any) {
@@ -61,10 +59,7 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
       if (errorField) {
         const validFields: (keyof RegisterFormData)[] = [
           "email",
-          "username",
           "password",
-          "passwordConfirm",
-          "name",
         ];
         if (validFields.includes(errorField as keyof RegisterFormData)) {
           setError(errorField as keyof RegisterFormData, {
@@ -93,52 +88,6 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
           {errors.root.message}
         </div>
       )}
-
-      <FormField>
-        <FormItem>
-          <FormLabel htmlFor="username" className="text-white">Имя пользователя</FormLabel>
-          <Input
-            id="username"
-            {...register("username")}
-            autoComplete="username"
-            aria-invalid={errors.username ? "true" : "false"}
-            className={cn(
-              "bg-white/10 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white/50",
-              errors.username &&
-                "border-red-400 focus-visible:ring-red-400"
-            )}
-          />
-          {errors.username?.message && (
-            <FormMessage 
-              message={errors.username?.message} 
-              className="text-red-200"
-            />
-          )}
-        </FormItem>
-      </FormField>
-
-      <FormField>
-        <FormItem>
-          <FormLabel htmlFor="name" className="text-white">Имя</FormLabel>
-          <Input
-            id="name"
-            {...register("name")}
-            autoComplete="name"
-            aria-invalid={errors.name ? "true" : "false"}
-            className={cn(
-              "bg-white/10 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white/50",
-              errors.name &&
-                "border-red-400 focus-visible:ring-red-400"
-            )}
-          />
-          {errors.name?.message && (
-            <FormMessage 
-              message={errors.name?.message} 
-              className="text-red-200"
-            />
-          )}
-        </FormItem>
-      </FormField>
 
       <FormField>
         <FormItem>
@@ -188,32 +137,6 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
         </FormItem>
       </FormField>
 
-      <FormField>
-        <FormItem>
-          <FormLabel htmlFor="passwordConfirm" className="text-white">
-            Подтвердите пароль
-          </FormLabel>
-          <Input
-            id="passwordConfirm"
-            type="password"
-            {...register("passwordConfirm")}
-            autoComplete="new-password"
-            aria-invalid={errors.passwordConfirm ? "true" : "false"}
-            className={cn(
-              "bg-white/10 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white/50",
-              errors.passwordConfirm &&
-                "border-red-400 focus-visible:ring-red-400"
-            )}
-          />
-          {errors.passwordConfirm?.message && (
-            <FormMessage 
-              message={errors.passwordConfirm?.message} 
-              className="text-red-200"
-            />
-          )}
-        </FormItem>
-      </FormField>
-
       <div className="flex gap-3">
         <Button 
           type="button"
@@ -228,7 +151,7 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
           className="flex-1 bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white" 
           disabled={isLoading}
         >
-          {isLoading ? "Регистрация..." : "Регистрация"}
+          {isLoading ? "Регистрация..." : "Зарегистрироваться"}
         </Button>
       </div>
     </Form>
