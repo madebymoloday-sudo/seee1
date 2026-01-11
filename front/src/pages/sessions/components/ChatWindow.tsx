@@ -4,6 +4,7 @@ import { Loader2, MessageSquare } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import MessageInput from "./MessageInput";
 import EmotionCarousel from "./EmotionCarousel";
+import SettingsDropdown from "./SettingsDropdown";
 import styles from "./ChatWindow.module.css";
 
 interface Message {
@@ -46,6 +47,7 @@ const ChatWindow = ({
   const lastMessageCountRef = useRef(0);
   const [visibleMessages, setVisibleMessages] = useState<{ message: Message; isVisible: boolean; fadeOut?: boolean }[]>([]);
   const [showEmotionCarousel, setShowEmotionCarousel] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const fadeOutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Передаем функцию refresh в родительский компонент
@@ -251,7 +253,7 @@ const ChatWindow = ({
   };
 
   const handleSettingsClick = () => {
-    // TODO: Добавить функционал настроек
+    setIsSettingsOpen((prev) => !prev);
   };
 
   return (
@@ -323,11 +325,19 @@ const ChatWindow = ({
       </div>
 
       {/* Поле ввода */}
-      <MessageInput 
-        onSend={handleSend} 
-        onSettingsClick={handleSettingsClick}
-        disabled={isLoading || isSending} 
-      />
+      <div style={{ position: "relative" }}>
+        <MessageInput 
+          onSend={handleSend} 
+          onSettingsClick={handleSettingsClick}
+          disabled={isLoading || isSending}
+        />
+        <SettingsDropdown
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          sessionId={sessionId}
+          messages={messages}
+        />
+      </div>
     </div>
   );
 };
