@@ -37,21 +37,16 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
     },
   });
 
-  const onSubmit = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
-    }
-    
-    const isValid = await handleSubmit(async (data) => {
-      try {
-        await registerUser({
-          email: data.email,
-          password: data.password,
-          name: data.name,
-          username: data.name.toLowerCase().replace(/\s+/g, "_"), // Генерируем username из имени
-        });
-        navigate("/");
-      } catch (err: any) {
+  const onSubmit = async (data: RegisterFormData) => {
+    try {
+      await registerUser({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        username: data.name.toLowerCase().replace(/\s+/g, "_"), // Генерируем username из имени
+      });
+      navigate("/");
+    } catch (err: any) {
       const errorResponse = err.response?.data;
       const errorMessage =
         typeof errorResponse?.message === "string"
@@ -88,53 +83,7 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
   };
 
   return (
-    <Form onSubmit={(e) => {
-      e.preventDefault();
-      handleSubmit(async (data) => {
-        try {
-          await registerUser({
-            email: data.email,
-            password: data.password,
-            name: data.name,
-            username: data.name.toLowerCase().replace(/\s+/g, "_"),
-          });
-          navigate("/");
-        } catch (err: any) {
-          const errorResponse = err.response?.data;
-          const errorMessage =
-            typeof errorResponse?.message === "string"
-              ? errorResponse.message
-              : Array.isArray(errorResponse?.message)
-              ? errorResponse.message[0]
-              : "Ошибка регистрации";
-          const errorField = errorResponse?.field;
-
-          if (errorField) {
-            const validFields: (keyof RegisterFormData)[] = [
-              "name",
-              "email",
-              "password",
-            ];
-            if (validFields.includes(errorField as keyof RegisterFormData)) {
-              setError(errorField as keyof RegisterFormData, {
-                type: "manual",
-                message: errorMessage,
-              });
-            } else {
-              setError("root", {
-                type: "manual",
-                message: errorMessage,
-              });
-            }
-          } else {
-            setError("root", {
-              type: "manual",
-              message: errorMessage,
-            });
-          }
-        }
-      })(e);
-    }} className="space-y-4">
+    <Form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {errors.root && (
         <div className="bg-red-500/20 border border-red-400 text-white px-4 py-3 rounded-md">
           {errors.root.message}
