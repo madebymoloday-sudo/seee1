@@ -15,7 +15,11 @@ import { observer } from "mobx-react-lite";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
-const LoginForm = observer(() => {
+interface LoginFormProps {
+  onSwitchToRegister?: () => void;
+}
+
+const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
   const navigate = useNavigate();
   const { login, isLoading } = useAuth();
 
@@ -106,13 +110,25 @@ const LoginForm = observer(() => {
         </FormItem>
       </FormField>
 
-      <Button 
-        type="submit" 
-        className="w-full bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white" 
-        disabled={isLoading}
-      >
-        {isLoading ? "Вход..." : "Войти"}
-      </Button>
+      <div className="flex gap-3">
+        <Button 
+          type="submit" 
+          className="flex-1 bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white" 
+          disabled={isLoading}
+        >
+          {isLoading ? "Вход..." : "Войти"}
+        </Button>
+        {onSwitchToRegister && (
+          <Button 
+            type="button"
+            onClick={onSwitchToRegister}
+            variant="outline"
+            className="flex-1 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white" 
+          >
+            Регистрация
+          </Button>
+        )}
+      </div>
     </Form>
   );
 });

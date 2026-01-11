@@ -1,7 +1,9 @@
 import { observer } from "mobx-react-lite";
 import { Navigate } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import LoginForm from "./components/LoginForm";
+import RegisterForm from "./components/RegisterForm";
 import TelegramAuthButton from "@/components/auth/TelegramAuthButton";
 import { Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,7 @@ import styles from "./LoginPage.module.css";
 
 const LoginPage = observer(() => {
   const { isAuthenticated } = useAuth();
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -27,10 +30,16 @@ const LoginPage = observer(() => {
             <Brain className="h-8 w-8 text-white" />
             <h1 className={`text-3xl font-bold ${styles.loginTitle}`}>SEEE</h1>
           </div>
-          <p className={`mt-2 ${styles.loginSubtitle}`}>Вход в систему</p>
+          <p className={`mt-2 ${styles.loginSubtitle}`}>
+            {isRegisterMode ? "Регистрация" : "Вход в систему"}
+          </p>
         </div>
 
-        <LoginForm />
+        {isRegisterMode ? (
+          <RegisterForm onSwitchToLogin={() => setIsRegisterMode(false)} />
+        ) : (
+          <LoginForm onSwitchToRegister={() => setIsRegisterMode(true)} />
+        )}
 
         <div className="mt-6">
           <div className="relative">
