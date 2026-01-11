@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useSessions } from "@/hooks/useSessions";
 import { MessageSquare, Plus } from "lucide-react";
 import { observer } from "mobx-react-lite";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SessionCard from "./components/SessionCard";
 
@@ -12,6 +13,23 @@ const SessionsPage = observer(() => {
   const { sessions, isLoading, error } = useSessions();
   const { trigger: createSession, isMutating } =
     useSessionsControllerCreateSession();
+
+  // Автоматически создаём и открываем сессию при первой загрузке, если сессий нет
+  useEffect(() => {
+    if (!isLoading && !error && sessions.length === 0 && !isMutating) {
+      const createAndNavigate = async () => {
+        try {
+          const newSession = await createSession({});
+          if (newSession) {
+            navigate(`/sessions/${newSession.id}`);
+          }
+        } catch (error) {
+          console.error("Ошибка автоматического создания сессии:", error);
+        }
+      };
+      createAndNavigate();
+    }
+  }, [isLoading, error, sessions.length, isMutating, createSession, navigate]);
 
   const handleCreateSession = async () => {
     try {

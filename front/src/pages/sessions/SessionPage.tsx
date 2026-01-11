@@ -100,17 +100,21 @@ const SessionPage = observer(() => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <Loader2 className="h-6 w-6 animate-spin text-white" />
+      <div className="flex items-center justify-center h-screen" style={{
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%, #ffffff 100%)'
+      }}>
+        <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
       </div>
     );
   }
 
   if (error || !session) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="flex items-center justify-center h-screen" style={{
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%, #ffffff 100%)'
+      }}>
         <div className="text-center">
-          <p className="text-white text-lg">
+          <p className="text-gray-800 text-lg">
             {error ? "Ошибка загрузки сессии" : "Сессия не найдена"}
           </p>
         </div>
@@ -119,7 +123,9 @@ const SessionPage = observer(() => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="flex flex-col h-screen" style={{
+      background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%, #ffffff 100%)'
+    }}>
       <SessionHeader session={session} />
       <div className="flex-1 overflow-hidden">
         <ChatWindow
