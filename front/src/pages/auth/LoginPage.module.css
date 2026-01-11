@@ -9,7 +9,7 @@
   overflow: hidden;
 }
 
-/* Фоновое изображение (лес с солнечными лучами) */
+/* Фоновый градиент (лес с солнечными лучами) */
 .loginPageContainer::before {
   content: '';
   position: absolute;
@@ -17,14 +17,15 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('/images/login-background.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background: linear-gradient(
+    135deg,
+    #1a4d2e 0%,
+    #2d6a3f 25%,
+    #228b22 50%,
+    #2d6a3f 75%,
+    #1a4d2e 100%
+  );
   z-index: 0;
-  /* Fallback градиент на случай, если изображение не загрузится */
-  background-color: #1a4d2e;
 }
 
 /* Слой размытия фона (Foggy Glass Effect - Gaussian Blur) */
