@@ -251,6 +251,10 @@ const ChatWindow = ({
     handleSend(emotionText);
   };
 
+  const handleSettingsClick = () => {
+    // TODO: Добавить функционал настроек
+  };
+
   return (
     <div className={styles.chatWindow}>
       {/* Контейнер сообщений */}
