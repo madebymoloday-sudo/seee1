@@ -29,11 +29,8 @@ const RegisterPage = observer(() => {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
-      name: "",
       email: "",
       password: "",
-      passwordConfirm: "",
     },
   });
 
@@ -43,11 +40,12 @@ const RegisterPage = observer(() => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
+      // Отправляем только email и password, остальные поля будут сгенерированы на бэкенде
       await registerUser({
         email: data.email,
         password: data.password,
-        name: data.name,
-        username: data.username,
+        name: data.email.split("@")[0], // Используем часть email как имя
+        username: data.email.split("@")[0], // Используем часть email как username
       });
       navigate("/");
     } catch (err: any) {
@@ -65,10 +63,7 @@ const RegisterPage = observer(() => {
         // Проверяем, является ли поле валидным полем формы
         const validFields: (keyof RegisterFormData)[] = [
           "email",
-          "username",
           "password",
-          "passwordConfirm",
-          "name",
         ];
         if (validFields.includes(errorField as keyof RegisterFormData)) {
           setError(errorField as keyof RegisterFormData, {
@@ -112,38 +107,6 @@ const RegisterPage = observer(() => {
 
           <FormField>
             <FormItem>
-              <FormLabel htmlFor="username">Имя пользователя</FormLabel>
-              <Input
-                id="username"
-                {...register("username")}
-                aria-invalid={errors.username ? "true" : "false"}
-                className={cn(
-                  errors.username &&
-                    "border-destructive focus-visible:ring-destructive"
-                )}
-              />
-              <FormMessage message={errors.username?.message} />
-            </FormItem>
-          </FormField>
-
-          <FormField>
-            <FormItem>
-              <FormLabel htmlFor="name">Имя</FormLabel>
-              <Input
-                id="name"
-                {...register("name")}
-                aria-invalid={errors.name ? "true" : "false"}
-                className={cn(
-                  errors.name &&
-                    "border-destructive focus-visible:ring-destructive"
-                )}
-              />
-              <FormMessage message={errors.name?.message} />
-            </FormItem>
-          </FormField>
-
-          <FormField>
-            <FormItem>
               <FormLabel htmlFor="email">Email</FormLabel>
               <Input
                 id="email"
@@ -173,25 +136,6 @@ const RegisterPage = observer(() => {
                 )}
               />
               <FormMessage message={errors.password?.message} />
-            </FormItem>
-          </FormField>
-
-          <FormField>
-            <FormItem>
-              <FormLabel htmlFor="passwordConfirm">
-                Подтвердите пароль
-              </FormLabel>
-              <Input
-                id="passwordConfirm"
-                type="password"
-                {...register("passwordConfirm")}
-                aria-invalid={errors.passwordConfirm ? "true" : "false"}
-                className={cn(
-                  errors.passwordConfirm &&
-                    "border-destructive focus-visible:ring-destructive"
-                )}
-              />
-              <FormMessage message={errors.passwordConfirm?.message} />
             </FormItem>
           </FormField>
 
