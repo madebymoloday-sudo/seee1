@@ -24,6 +24,9 @@ RUN npm run build
 # ============================================
 FROM nginx:1.27-alpine AS runner
 
+# Устанавливаем gettext для envsubst
+RUN apk add --no-cache gettext
+
 # Устанавливаем переменные по умолчанию
 ARG API_URL=http://localhost:3000
 ENV API_URL=$API_URL
@@ -33,17 +36,31 @@ COPY nginx.conf.template /tmp/nginx.conf.template
 
 # Создаем скрипт для запуска с динамическими переменными
 RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
+    echo 'set -x' >> /docker-entrypoint.sh && \
     echo 'echo "=== Starting nginx entrypoint ==="' >> /docker-entrypoint.sh && \
+    echo 'echo "Current API_URL: $API_URL"' >> /docker-entrypoint.sh && \
     echo 'if [ -z "$API_URL" ]; then' >> /docker-entrypoint.sh && \
     echo '  echo "WARNING: API_URL not set, using default http://localhost:3000"' >> /docker-entrypoint.sh && \
     echo '  export API_URL="http://localhost:3000"' >> /docker-entrypoint.sh && \
     echo 'fi' >> /docker-entrypoint.sh && \
-    echo 'echo "API_URL=$API_URL"' >> /docker-entrypoint.sh && \
-    echo 'envsubst '\''${API_URL}'\'' < /tmp/nginx.conf.template > /etc/nginx/conf.d/default.conf || exit 1' >> /docker-entrypoint.sh && \
-    echo 'echo "Nginx configuration generated"' >> /docker-entrypoint.sh && \
-    echo 'nginx -t || (echo "Nginx configuration test FAILED!" && cat /etc/nginx/conf.d/default.conf && exit 1)' >> /docker-entrypoint.sh && \
+    echo 'echo "Using API_URL: $API_URL"' >> /docker-entrypoint.sh && \
+    echo 'echo "Running envsubst..."' >> /docker-entrypoint.sh && \
+    echo 'envsubst '\''${API_URL}'\'' < /tmp/nginx.conf.template > /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.sh && \
+    echo 'if [ $? -ne 0 ]; then' >> /docker-entrypoint.sh && \
+    echo '  echo "ERROR: envsubst failed!"' >> /docker-entrypoint.sh && \
+    echo '  exit 1' >> /docker-entrypoint.sh && \
+    echo 'fi' >> /docker-entrypoint.sh && \
+    echo 'echo "Nginx configuration generated successfully"' >> /docker-entrypoint.sh && \
+    echo 'echo "Testing nginx configuration..."' >> /docker-entrypoint.sh && \
+    echo 'nginx -t' >> /docker-entrypoint.sh && \
+    echo 'if [ $? -ne 0 ]; then' >> /docker-entrypoint.sh && \
+    echo '  echo "ERROR: Nginx configuration test FAILED!"' >> /docker-entrypoint.sh && \
+    echo '  echo "Configuration file content:"' >> /docker-entrypoint.sh && \
+    echo '  cat /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.sh && \
+    echo '  exit 1' >> /docker-entrypoint.sh && \
+    echo 'fi' >> /docker-entrypoint.sh && \
     echo 'echo "Nginx configuration test: OK"' >> /docker-entrypoint.sh && \
-    echo 'echo "Starting nginx..."' >> /docker-entrypoint.sh && \
+    echo 'echo "Starting nginx server..."' >> /docker-entrypoint.sh && \
     echo 'exec nginx -g "daemon off;"' >> /docker-entrypoint.sh && \
     chmod +x /docker-entrypoint.sh
 
