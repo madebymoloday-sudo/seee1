@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { KeyboardEvent } from "react";
-import { ArrowUp, Plus, Settings } from "lucide-react";
+import { ArrowUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import styles from "./MessageInput.module.css";

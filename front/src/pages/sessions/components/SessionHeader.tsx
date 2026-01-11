@@ -1,6 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Download, MapPin, MessageSquare, Settings, Edit2, Pause, Save, List } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MessageSquare, Edit2, Pause, Save, List } from "lucide-react";
 import apiAgent from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
@@ -43,25 +42,6 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
     } catch (error) {
       console.error("Ошибка загрузки документа:", error);
       toast.error("Ошибка загрузки документа");
-    }
-  };
-
-  const handleAddToMap = async () => {
-    if (
-      !confirm(
-        "Добавить эту сессию в нейрокарту? GPT проанализирует диалог и создаст записи."
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await apiAgent.post(`/sessions/${session.id}/add-to-map`);
-      toast.success("Сессия успешно добавлена в нейрокарту!");
-      navigate("/map");
-    } catch (error) {
-      console.error("Ошибка добавления в нейрокарту:", error);
-      toast.error("Ошибка добавления в нейрокарту");
     }
   };
 

@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { socketService } from "@/lib/socket";
-import { Loader2, MessageSquare, Settings } from "lucide-react";
+import { Loader2, MessageSquare } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import MessageInput from "./MessageInput";
 import EmotionCarousel from "./EmotionCarousel";
@@ -47,7 +47,6 @@ const ChatWindow = ({
   const lastMessageCountRef = useRef(0);
   const [visibleMessages, setVisibleMessages] = useState<{ message: Message; isVisible: boolean; fadeOut?: boolean }[]>([]);
   const [showEmotionCarousel, setShowEmotionCarousel] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const fadeOutTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Передаем функцию refresh в родительский компонент
@@ -66,20 +65,14 @@ const ChatWindow = ({
       // Ждем подключения перед join_session
       const handleConnect = () => {
         socketService.emit("join_session", { sessionId });
-        setSocketConnected(true);
       };
 
       const handleDisconnect = () => {
-        setSocketConnected(false);
+        // Обработка отключения
       };
 
       socketService.on("connect", handleConnect);
       socketService.on("disconnect", handleDisconnect);
-
-      // Проверяем текущий статус подключения (асинхронно)
-      setTimeout(() => {
-        setSocketConnected(socketService.isConnected);
-      }, 0);
 
       // Подключаемся (если еще не подключены)
       if (!socketService.isConnected) {
@@ -256,10 +249,6 @@ const ChatWindow = ({
     // Отправляем выбранные эмоции как сообщение
     const emotionText = `Выбранные эмоции: ${emotions.join(", ")}`;
     handleSend(emotionText);
-  };
-
-  const handleSettingsClick = () => {
-    setIsSettingsOpen(!isSettingsOpen);
   };
 
   return (
