@@ -31,22 +31,27 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
     },
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
-    try {
-      // Отправляем только email и password, остальные поля будут сгенерированы на бэкенде
-      await registerUser({
-        email: data.email,
-        password: data.password,
-        name: data.email.split("@")[0], // Используем часть email как имя
-        username: data.email.split("@")[0], // Используем часть email как username
-      });
-      navigate("/");
-    } catch (err: any) {
+  const onSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
+    const isValid = await handleSubmit(async (data) => {
+      try {
+        await registerUser({
+          email: data.email,
+          password: data.password,
+          name: data.name,
+          username: data.name.toLowerCase().replace(/\s+/g, "_"), // Генерируем username из имени
+        });
+        navigate("/");
+      } catch (err: any) {
       const errorResponse = err.response?.data;
       const errorMessage =
         typeof errorResponse?.message === "string"
@@ -58,6 +63,7 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
 
       if (errorField) {
         const validFields: (keyof RegisterFormData)[] = [
+          "name",
           "email",
           "password",
         ];
@@ -82,12 +88,81 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
   };
 
   return (
-    <Form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <Form onSubmit={(e) => {
+      e.preventDefault();
+      handleSubmit(async (data) => {
+        try {
+          await registerUser({
+            email: data.email,
+            password: data.password,
+            name: data.name,
+            username: data.name.toLowerCase().replace(/\s+/g, "_"),
+          });
+          navigate("/");
+        } catch (err: any) {
+          const errorResponse = err.response?.data;
+          const errorMessage =
+            typeof errorResponse?.message === "string"
+              ? errorResponse.message
+              : Array.isArray(errorResponse?.message)
+              ? errorResponse.message[0]
+              : "Ошибка регистрации";
+          const errorField = errorResponse?.field;
+
+          if (errorField) {
+            const validFields: (keyof RegisterFormData)[] = [
+              "name",
+              "email",
+              "password",
+            ];
+            if (validFields.includes(errorField as keyof RegisterFormData)) {
+              setError(errorField as keyof RegisterFormData, {
+                type: "manual",
+                message: errorMessage,
+              });
+            } else {
+              setError("root", {
+                type: "manual",
+                message: errorMessage,
+              });
+            }
+          } else {
+            setError("root", {
+              type: "manual",
+              message: errorMessage,
+            });
+          }
+        }
+      })(e);
+    }} className="space-y-4">
       {errors.root && (
         <div className="bg-red-500/20 border border-red-400 text-white px-4 py-3 rounded-md">
           {errors.root.message}
         </div>
       )}
+
+      <FormField>
+        <FormItem>
+          <FormLabel htmlFor="name" className="text-white">Имя</FormLabel>
+          <Input
+            id="name"
+            {...register("name")}
+            autoComplete="name"
+            aria-invalid={errors.name ? "true" : "false"}
+            className={cn(
+              "bg-white/10 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white/50",
+              errors.name &&
+                "border-red-400 focus-visible:ring-red-400"
+            )}
+          />
+          {errors.name?.message && (
+            <FormMessage 
+              message={errors.name?.message} 
+              className="text-red-200"
+            />
+          )}
+        </FormItem>
+      </FormField>
 
       <FormField>
         <FormItem>
