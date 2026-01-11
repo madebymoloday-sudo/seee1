@@ -27,6 +27,9 @@ FROM nginx:1.27-alpine AS runner
 # Копируем статический nginx.conf (без envsubst)
 COPY nginx.conf.static /etc/nginx/conf.d/default.conf
 
+# Проверяем конфигурацию nginx
+RUN nginx -t
+
 # Копируем собранное приложение из builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
