@@ -48,11 +48,17 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
         username: data.name.toLowerCase().replace(/\s+/g, "_"), // Генерируем username из имени
       });
       
+      // Проверяем, что токены сохранились
+      const token = localStorage.getItem("accessToken");
+      console.log("Токен после регистрации:", token ? "сохранён" : "не найден");
+      
+      if (!token) {
+        throw new Error("Не удалось сохранить токен. Попробуйте войти вручную.");
+      }
+      
       console.log("Регистрация успешна, перенаправление...");
-      // Небольшая задержка для сохранения токенов
-      setTimeout(() => {
-        navigate("/");
-      }, 100);
+      // Перенаправление на главную страницу
+      window.location.href = "/";
     } catch (err: any) {
       console.error("Ошибка регистрации:", err);
       const errorResponse = err.response?.data;
