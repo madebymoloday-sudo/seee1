@@ -34,13 +34,16 @@ COPY nginx.conf.template /tmp/nginx.conf.template
 # Создаем скрипт для запуска с динамическими переменными
 RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
     echo 'set -e' >> /docker-entrypoint.sh && \
+    echo 'echo "=== Starting nginx entrypoint ==="' >> /docker-entrypoint.sh && \
     echo 'if [ -z "$API_URL" ]; then' >> /docker-entrypoint.sh && \
     echo '  echo "WARNING: API_URL not set, using default http://localhost:3000"' >> /docker-entrypoint.sh && \
     echo '  export API_URL="http://localhost:3000"' >> /docker-entrypoint.sh && \
     echo 'fi' >> /docker-entrypoint.sh && \
+    echo 'echo "API_URL=$API_URL"' >> /docker-entrypoint.sh && \
     echo 'envsubst '\''${API_URL}'\'' < /tmp/nginx.conf.template > /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.sh && \
-    echo 'echo "Nginx configuration generated with API_URL=$API_URL"' >> /docker-entrypoint.sh && \
-    echo 'nginx -t' >> /docker-entrypoint.sh && \
+    echo 'echo "Nginx configuration generated"' >> /docker-entrypoint.sh && \
+    echo 'nginx -t && echo "Nginx configuration test: OK"' >> /docker-entrypoint.sh || echo 'Nginx configuration test: FAILED' >> /docker-entrypoint.sh && \
+    echo 'echo "Starting nginx..."' >> /docker-entrypoint.sh && \
     echo 'exec nginx -g "daemon off;"' >> /docker-entrypoint.sh && \
     chmod +x /docker-entrypoint.sh
 
