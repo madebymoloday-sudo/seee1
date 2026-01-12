@@ -13,13 +13,23 @@ import { registerSchema, type RegisterFormData } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { observer } from "mobx-react-lite";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
 }
 
 const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
-  const { register: registerUser, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const { register: registerUser, isLoading, isAuthenticated } = useAuth();
+
+  // Автоматический редирект после успешной регистрации
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const {
     register,
@@ -37,8 +47,6 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      console.log("Начало регистрации:", { email: data.email, name: data.name });
-      
       await registerUser({
         email: data.email,
         password: data.password,
@@ -46,17 +54,7 @@ const RegisterForm = observer(({ onSwitchToLogin }: RegisterFormProps) => {
         username: data.name.toLowerCase().replace(/\s+/g, "_"), // Генерируем username из имени
       });
       
-      // Проверяем, что токены сохранились
-      const token = localStorage.getItem("accessToken");
-      console.log("Токен после регистрации:", token ? "сохранён" : "не найден");
-      
-      if (!token) {
-        throw new Error("Не удалось сохранить токен. Попробуйте войти вручную.");
-      }
-      
-      console.log("Регистрация успешна, перенаправление...");
-      // Перенаправление на главную страницу
-      window.location.href = "/";
+      // Редирект произойдёт автоматически через useEffect при изменении isAuthenticated
     } catch (err: any) {
       console.error("Ошибка регистрации:", err);
       const errorResponse = err.response?.data;
