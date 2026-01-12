@@ -4,7 +4,7 @@ import JournalPage from "../pages/journal/JournalPage";
 import MapPage from "../pages/map/MapPage";
 import PipelineBuilderPage from "../pages/pipeline-builder/PipelineBuilderPage";
 import SessionPage from "../pages/sessions/SessionPage";
-import SessionsPage from "../pages/sessions/SessionsPage";
+import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
 import SubscriptionPage from "../pages/subscription/SubscriptionPage";
 import SubscriptionSuccessPage from "../pages/subscription/SubscriptionSuccessPage";
 import { ProtectedRoute } from "./ProtectedRoute";
@@ -28,7 +28,11 @@ export const protectedRouter = createBrowserRouter([
       },
       {
         index: true,
-        element: <SessionsPage />,
+        element: <SessionsCollectionPage />,
+      },
+      {
+        path: "sessions/list",
+        element: <SessionsCollectionPage />,
       },
       {
         path: "sessions/:id",

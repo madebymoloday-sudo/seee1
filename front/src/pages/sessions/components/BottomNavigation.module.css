@@ -1,0 +1,95 @@
+/* Нижняя панель навигации в стиле Apple 2007 */
+
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
+  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.navButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  min-width: 60px;
+}
+
+.navButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  transform: translateY(-2px);
+}
+
+.navIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: rgba(0, 0, 0, 0.7);
+  transition: all 0.2s ease;
+}
+
+.navButton:hover .navIcon {
+  color: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.navLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.navButton:hover .navLabel {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+/* Тёмный режим */
+:global(.dark) .bottomNav {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .navButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .navIcon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+:global(.dark) .navButton:hover .navIcon {
+  color: white;
+}
+
+:global(.dark) .navLabel {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+:global(.dark) .navButton:hover .navLabel {
+  color: white;
+}

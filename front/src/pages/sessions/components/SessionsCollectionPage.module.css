@@ -1,0 +1,317 @@
+/* Страница коллекции сессий в стиле архивариуса */
+
+.collectionPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #f8f9fa 25%,
+    #e9ecef 50%,
+    #f8f9fa 75%,
+    #ffffff 100%
+  );
+  padding-bottom: 80px; /* Место для нижней панели */
+}
+
+/* Заголовок */
+.header {
+  padding: 2rem 1.5rem 1.5rem;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
+  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.9);
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.plusButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+}
+
+.plusButton:hover:not(:disabled) {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
+  transform: scale(1.1);
+}
+
+.plusIcon {
+  width: 24px;
+  height: 24px;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+/* Поиск и сортировка */
+.searchBar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.searchInputWrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 0.75rem;
+  color: rgba(0, 0, 0, 0.9);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.searchInput::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.searchInput:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.sortWrapper {
+  position: relative;
+}
+
+.sortButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+.sortButton:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+.sortIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.sortMenu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 250px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  backdrop-filter: blur(30px) saturate(200%) brightness(1.1);
+  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.1);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  padding: 0.5rem;
+  z-index: 1000;
+  animation: fadeInDown 0.2s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sortMenuItem {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sortMenuItem:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sortMenuItemActive {
+  background: rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+}
+
+/* Контейнер папок */
+.foldersContainer {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.foldersList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.loadingState,
+.errorState,
+.emptyState {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.emptyHint {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 0.5rem;
+}
+
+/* Тёмный режим */
+:global(.dark) .collectionPage {
+  background: linear-gradient(
+    135deg,
+    #1a1a1a 0%,
+    #2d2d2d 25%,
+    #1a1a1a 50%,
+    #2d2d2d 75%,
+    #1a1a1a 100%
+  );
+}
+
+:global(.dark) .header {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .title {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .searchInput {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+:global(.dark) .searchIcon {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:global(.dark) .sortButton {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .sortIcon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:global(.dark) .sortMenu {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .sortMenuItem {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .sortMenuItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .sortMenuItemActive {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+:global(.dark) .loadingState,
+:global(.dark) .errorState,
+:global(.dark) .emptyState {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:global(.dark) .emptyHint {
+  color: rgba(255, 255, 255, 0.5);
+}
