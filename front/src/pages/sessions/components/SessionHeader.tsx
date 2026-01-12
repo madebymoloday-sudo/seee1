@@ -1,9 +1,10 @@
 import { observer } from "mobx-react-lite";
-import { MessageSquare, Edit2, Pause, Save, List } from "lucide-react";
+import { MessageSquare, Edit2, Pause, Save, List, Plus } from "lucide-react";
 import apiAgent from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSessionsControllerCreateSession } from "@/api/seee.swr";
 import type { SessionResponseDto } from "@/api/schemas";
 import { getAllPipelines } from "@/api/pipeline.api";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
   const navigate = useNavigate();
   const auth = useAuth();
   const isAdmin = (auth.user as { role?: string } | null)?.role === 'admin';
+  const { trigger: createSession } = useSessionsControllerCreateSession();
 
   const handleDownloadDocument = async () => {
     try {
@@ -145,8 +147,21 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
   };
 
   const handleAllSessions = () => {
-    navigate("/sessions");
+    navigate("/sessions/list");
     setIsMenuOpen(false);
+  };
+
+  const handleNewSession = async () => {
+    setIsMenuOpen(false);
+    try {
+      const newSession = await createSession({});
+      if (newSession) {
+        navigate(`/sessions/${newSession.id}`);
+      }
+    } catch (error) {
+      console.error("Ошибка создания сессии:", error);
+      toast.error("Не удалось создать сессию");
+    }
   };
 
   return (
@@ -178,9 +193,13 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
                 <Save className={styles.menuIcon} />
                 Сохранить
               </button>
+              <button onClick={handleNewSession} className={styles.menuItem}>
+                <Plus className={styles.menuIcon} />
+                Новая сессия
+              </button>
               <button onClick={handleAllSessions} className={styles.menuItem}>
                 <List className={styles.menuIcon} />
-                Все сессии
+                Список сессий
               </button>
             </div>
           )}
