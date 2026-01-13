@@ -103,6 +103,25 @@ echo ""
 echo "=========================================="
 echo "=== Starting application ==="
 echo "=========================================="
+
+# Применяем миграции перед запуском (если не пропущены)
+if [ "$SKIP_MIGRATIONS" != "true" ]; then
+  echo ""
+  echo "=== Applying database migrations (from entrypoint) ==="
+  if [ -d "/app/prisma/migrations" ] && [ "$(ls -A /app/prisma/migrations 2>/dev/null)" ]; then
+    echo "Found migrations, running migrate deploy..."
+    npx prisma migrate deploy 2>&1 || {
+      echo "migrate deploy failed, trying db push..."
+      npx prisma db push --skip-generate --accept-data-loss 2>&1
+    }
+  else
+    echo "No migrations found, running db push..."
+    npx prisma db push --skip-generate --accept-data-loss 2>&1
+  fi
+  echo "✓ Migrations completed"
+  echo ""
+fi
+
 exec npm run start:prod
 EOF
 RUN chmod +x /app/docker-entrypoint.sh
