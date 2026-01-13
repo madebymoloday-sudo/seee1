@@ -36,52 +36,73 @@ RUN cat > /app/docker-entrypoint.sh << 'EOF'
 #!/bin/sh
 set -e
 
+echo "=========================================="
 echo "=== Starting application setup ==="
+echo "=========================================="
 
 if [ "$SKIP_MIGRATIONS" != "true" ]; then
-  echo "Step 1: Applying database migrations..."
-  
-  # Проверяем подключение к БД
-  echo "Checking database connection..."
-  if ! npx prisma db execute --stdin <<< "SELECT 1" > /dev/null 2>&1; then
-    echo "WARNING: Could not verify database connection, but continuing..."
+  echo ""
+  echo "Step 1: Checking Prisma schema..."
+  if [ ! -f "/app/prisma/schema.prisma" ]; then
+    echo "ERROR: Prisma schema not found at /app/prisma/schema.prisma"
+    exit 1
   fi
+  echo "✓ Prisma schema found"
   
-  if [ -d "/app/prisma/migrations" ] && [ "$(ls -A /app/prisma/migrations)" ]; then
+  echo ""
+  echo "Step 2: Checking DATABASE_URL..."
+  if [ -z "$DATABASE_URL" ]; then
+    echo "ERROR: DATABASE_URL environment variable is not set!"
+    exit 1
+  fi
+  echo "✓ DATABASE_URL is set"
+  
+  echo ""
+  echo "Step 3: Applying database schema..."
+  if [ -d "/app/prisma/migrations" ] && [ "$(ls -A /app/prisma/migrations 2>/dev/null)" ]; then
     echo "Found migrations directory, running migrate deploy..."
-    npx prisma migrate deploy || {
+    npx prisma migrate deploy 2>&1 || {
       echo "WARNING: migrate deploy failed, trying db push..."
-      npx prisma db push --skip-generate --accept-data-loss || {
+      npx prisma db push --skip-generate --accept-data-loss 2>&1 || {
         echo "ERROR: Database migration failed!"
+        echo "Please check DATABASE_URL connection string"
         exit 1
       }
     }
   else
     echo "No migrations directory found, using db push..."
-    npx prisma db push --skip-generate --accept-data-loss || {
-      echo "ERROR: Database push failed! Check DATABASE_URL connection."
-      echo "DATABASE_URL format: postgresql://user:password@host:port/database"
+    npx prisma db push --skip-generate --accept-data-loss 2>&1 || {
+      echo "ERROR: Database push failed!"
+      echo "DATABASE_URL format should be: postgresql://user:password@host:port/database"
       exit 1
     }
   fi
+  echo "✓ Database schema applied successfully"
   
-  echo "Step 2: Generating Prisma Client..."
-  npx prisma generate || {
+  echo ""
+  echo "Step 4: Generating Prisma Client..."
+  npx prisma generate 2>&1 || {
     echo "ERROR: Prisma generate failed!"
     exit 1
   }
+  echo "✓ Prisma Client generated"
   
-  echo "Step 3: Database migrations completed successfully!"
+  echo ""
+  echo "Step 5: Database setup completed successfully!"
   
   if [ "$SKIP_SEED" != "true" ]; then
-    echo "Step 4: Running database seed..."
-    npm run prisma:seed || echo "WARNING: Seed failed, continuing..."
+    echo ""
+    echo "Step 6: Running database seed..."
+    npm run prisma:seed 2>&1 || echo "WARNING: Seed failed, continuing..."
   fi
 else
   echo "Skipping migrations (SKIP_MIGRATIONS=true)"
 fi
 
+echo ""
+echo "=========================================="
 echo "=== Starting application ==="
+echo "=========================================="
 exec npm run start:prod
 EOF
 RUN chmod +x /app/docker-entrypoint.sh
