@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { MessageSquare, Edit2, Pause, Save, List, Plus } from "lucide-react";
+import { MessageSquare, Edit2, Pause, Save, List, Plus, Trash2 } from "lucide-react";
 import apiAgent from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
@@ -8,6 +8,7 @@ import type { SessionResponseDto } from "@/api/schemas";
 import { getAllPipelines } from "@/api/pipeline.api";
 import { useSessionsControllerCreateSession } from "@/api/seee.swr";
 import { toast } from "sonner";
+import PauseSessionModal from "./PauseSessionModal";
 import styles from "./SessionHeader.module.css";
 
 interface SessionHeaderProps {
@@ -107,6 +108,8 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
   }, [session.id, isAdmin]);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Закрытие меню при клике вне его
@@ -136,9 +139,38 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
   };
 
   const handlePause = () => {
-    // TODO: Добавить API вызов для приостановки
-    toast.info("Функция приостановки будет добавлена");
+    setIsPauseModalOpen(true);
     setIsMenuOpen(false);
+  };
+
+  const handleDelete = () => {
+    setIsDeleteConfirmOpen(true);
+    setIsMenuOpen(false);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await apiAgent.delete(`/sessions/${session.id}`);
+      toast.success("Сессия удалена");
+      
+      // Создаём новую сессию
+      try {
+        const newSession = await createSession({});
+        if (newSession) {
+          navigate(`/sessions/${newSession.id}`);
+        } else {
+          navigate("/sessions");
+        }
+      } catch (error) {
+        console.error("Ошибка создания новой сессии:", error);
+        navigate("/sessions");
+      }
+    } catch (error: any) {
+      console.error("Ошибка удаления сессии:", error);
+      toast.error(error.response?.data?.message || "Ошибка удаления сессии");
+    } finally {
+      setIsDeleteConfirmOpen(false);
+    }
   };
 
   const handleSave = () => {
@@ -202,10 +234,42 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
                 <List className={styles.menuIcon} />
                 Список сессий
               </button>
+              <button onClick={handleDelete} className={`${styles.menuItem} ${styles.deleteItem}`}>
+                <Trash2 className={styles.menuIcon} />
+                Удалить сессию
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      <PauseSessionModal
+        isOpen={isPauseModalOpen}
+        onClose={() => setIsPauseModalOpen(false)}
+        sessionId={session.id}
+      />
+
+      {isDeleteConfirmOpen && (
+        <div className={styles.deleteConfirmOverlay} onClick={() => setIsDeleteConfirmOpen(false)}>
+          <div className={styles.deleteConfirmModal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.deleteConfirmTitle}>Точно удалить эту сессию?</h3>
+            <div className={styles.deleteConfirmActions}>
+              <button
+                onClick={() => setIsDeleteConfirmOpen(false)}
+                className={styles.deleteConfirmButton}
+              >
+                Нет
+              </button>
+              <button
+                onClick={confirmDelete}
+                className={`${styles.deleteConfirmButton} ${styles.deleteConfirmButtonYes}`}
+              >
+                Да
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 });

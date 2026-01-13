@@ -1,0 +1,112 @@
+.sessionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sessionItem {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+:global(.dark) .sessionItem {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.sessionButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.02);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.sessionButton:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+:global(.dark) .sessionButton {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global(.dark) .sessionButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sessionTitle {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+:global(.dark) .sessionTitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sessionArrow {
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 0.75rem;
+}
+
+:global(.dark) .sessionArrow {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.feedbackContent {
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+:global(.dark) .feedbackContent {
+  background: rgba(255, 255, 255, 0.02);
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.feedbackAnswers {
+  margin-bottom: 1.5rem;
+}
+
+.noFeedback {
+  color: rgba(0, 0, 0, 0.5);
+  font-style: italic;
+}
+
+:global(.dark) .noFeedback {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.userMessages {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+:global(.dark) .userMessages {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.userMessagesTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+:global(.dark) .userMessagesTitle {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.comingSoon {
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 0.875rem;
+}
+
+:global(.dark) .comingSoon {
+  color: rgba(255, 255, 255, 0.5);
+}

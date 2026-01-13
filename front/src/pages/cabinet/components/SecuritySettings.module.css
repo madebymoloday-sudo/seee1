@@ -1,0 +1,87 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+:global(.dark) .label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.input {
+  flex: 1;
+}
+
+.eyeButton {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.eyeButton:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+:global(.dark) .eyeButton {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .eyeButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.eyeIcon {
+  width: 1rem;
+  height: 1rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+:global(.dark) .eyeIcon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.editButton {
+  white-space: nowrap;
+}
+
+.editIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-right: 0.25rem;
+}
+
+.editActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.editInput {
+  width: 100%;
+}
+
+.saveButton,
+.cancelButton {
+  width: 100%;
+}

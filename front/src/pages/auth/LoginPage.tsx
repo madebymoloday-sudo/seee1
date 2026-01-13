@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
 import TelegramAuthButton from "@/components/auth/TelegramAuthButton";
+import SubscriptionModal from "@/components/subscription/SubscriptionModal";
 import { Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import styles from "./LoginPage.module.css";
@@ -12,14 +13,14 @@ import styles from "./LoginPage.module.css";
 const LoginPage = observer(() => {
   const { isAuthenticated } = useAuth();
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
   const handleSubscribe = () => {
-    // TODO: Добавить ссылку на оплату, когда пользователь пришлет
-    window.location.href = "/subscription";
+    setIsSubscriptionModalOpen(true);
   };
 
   return (
@@ -70,6 +71,11 @@ const LoginPage = observer(() => {
         </div>
 
       </div>
+
+      <SubscriptionModal
+        isOpen={isSubscriptionModalOpen}
+        onClose={() => setIsSubscriptionModalOpen(false)}
+      />
     </div>
   );
 });
