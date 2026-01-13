@@ -6,14 +6,12 @@ import { Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import apiAgent from "@/lib/api";
 import styles from "./LoginPage.module.css";
 
 const LoginPage = observer(() => {
   const { isAuthenticated, login, register: registerUser, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -49,8 +47,8 @@ const LoginPage = observer(() => {
     }
 
     try {
-      // Генерируем имя из email, если не указано
-      const userName = name.trim() || email.split("@")[0];
+      // Генерируем имя из email
+      const userName = email.split("@")[0];
       const username = userName.toLowerCase().replace(/\s+/g, "_");
 
       await registerUser({

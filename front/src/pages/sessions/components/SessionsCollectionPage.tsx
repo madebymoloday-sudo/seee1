@@ -77,7 +77,7 @@ const SessionsCollectionPage = observer(() => {
     }
   };
 
-  const handleSave = async (sessionId: string) => {
+  const handleSave = async (_sessionId?: string) => {
     try {
       // TODO: Реализовать сохранение сессии
       toast.success("Сессия сохранена");
@@ -87,7 +87,7 @@ const SessionsCollectionPage = observer(() => {
   };
 
   // Подсчёт количества идей (пока заглушка)
-  const getIdeasCount = (sessionId: string) => {
+  const getIdeasCount = (_sessionId?: string) => {
     // TODO: Получить реальное количество идей из API
     return Math.floor(Math.random() * 100);
   };
@@ -175,7 +175,7 @@ const SessionsCollectionPage = observer(() => {
           </div>
         )}
         
-        {error && (
+        {error !== undefined && error !== null && (
           <div className={styles.errorState}>
             <p>Ошибка загрузки сессий</p>
           </div>

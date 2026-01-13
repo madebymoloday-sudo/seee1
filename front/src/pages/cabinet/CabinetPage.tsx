@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { observer } from "mobx-react-lite";
 import { Layout } from "@/components/layout/Layout";
-import { User, CreditCard, Network, MessageSquare, Brain } from "lucide-react";
+import { User, CreditCard, Brain } from "lucide-react";
 import { useAuthControllerGetMe } from "@/api/seee.swr";
 import ProfileSection from "./components/ProfileSection";
 import SubscriptionSection from "./components/SubscriptionSection";
@@ -17,7 +17,6 @@ const CabinetPage = observer(() => {
   const { data: profile } = useAuthControllerGetMe();
   const navigate = useNavigate();
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<string | null>(null);
 
   const handleSubscriptionClick = () => {
     setIsSubscriptionModalOpen(true);

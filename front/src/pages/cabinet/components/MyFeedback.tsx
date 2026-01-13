@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { useSessions } from "@/hooks/useSessions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
 import styles from "./MyFeedback.module.css";
 
 const MyFeedback = () => {
   const { sessions, isLoading } = useSessions();
-  const navigate = useNavigate();
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
 
   // TODO: Загрузить обратную связь для каждой сессии из API
