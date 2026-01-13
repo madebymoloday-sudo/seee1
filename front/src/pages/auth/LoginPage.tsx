@@ -115,7 +115,7 @@ const LoginPage = observer(() => {
           <div className="flex gap-3">
             <Button
               type="submit"
-              className="flex-1 bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white"
+              className="flex-1 bg-[#0088cc] hover:bg-[#0077b3] text-white border-none shadow-lg hover:shadow-xl transition-all duration-200"
               disabled={isLoading}
             >
               {isLoading ? "Вход..." : "Войти"}
