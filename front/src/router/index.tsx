@@ -3,7 +3,6 @@
  * Оставлен для обратной совместимости.
  */
 import { createBrowserRouter } from "react-router-dom";
-import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import CabinetPage from "../pages/cabinet/CabinetPage";
 import JournalPage from "../pages/journal/JournalPage";
@@ -17,14 +16,6 @@ import { PublicRoute } from "./PublicRoute";
 import { SubscriptionRoute } from "./SubscriptionRoute";
 
 export const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: (
-      <PublicRoute>
-        <LoginPage />
-      </PublicRoute>
-    ),
-  },
   {
     path: "/register",
     element: (

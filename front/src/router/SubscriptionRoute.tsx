@@ -21,7 +21,7 @@ export const SubscriptionRoute = observer(() => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // Если есть активная подписка, разрешаем доступ
