@@ -175,13 +175,13 @@ const SessionsCollectionPage = observer(() => {
           </div>
         )}
         
-        {error !== undefined && error !== null && (
+        {error !== undefined && error !== null ? (
           <div className={styles.errorState}>
             <p>Ошибка загрузки сессий</p>
           </div>
-        )}
+        ) : null}
         
-        {!isLoading && !error && filteredAndSortedSessions.length === 0 && (
+        {!isLoading && (error === undefined || error === null) && filteredAndSortedSessions.length === 0 && (
           <div className={styles.emptyState}>
             <p>Сессии не найдены</p>
             {searchQuery && (
@@ -190,7 +190,7 @@ const SessionsCollectionPage = observer(() => {
           </div>
         )}
         
-        {!isLoading && !error && filteredAndSortedSessions.length > 0 && (
+        {!isLoading && (error === undefined || error === null) && filteredAndSortedSessions.length > 0 && (
           <div className={styles.foldersList}>
             {filteredAndSortedSessions.map((session, index) => (
               <SessionFolderCard
