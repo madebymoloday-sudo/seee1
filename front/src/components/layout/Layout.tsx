@@ -22,7 +22,7 @@ export const Layout = observer(({ children }: LayoutProps) => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/");
   };
 
   const isActive = (path: string) => {

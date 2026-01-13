@@ -80,13 +80,13 @@ instance.interceptors.response.use(
         } catch {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
-          window.location.href = "/login";
+          window.location.href = "/";
         }
       } else {
         // Если нет refresh токена, редиректим на логин
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        window.location.href = "/";
       }
     }
 

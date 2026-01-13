@@ -95,7 +95,7 @@ class ApiAgent {
               // Логика выхода
               localStorage.removeItem("accessToken");
               localStorage.removeItem("refreshToken");
-              window.location.href = "/login";
+              window.location.href = "/";
             }
           } else {
             // Если нет refresh токена, редиректим на логин
