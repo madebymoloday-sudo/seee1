@@ -13,61 +13,77 @@ async function runMigrations() {
     return;
   }
 
-  console.log('');
-  console.log('==========================================');
-  console.log('=== Applying database migrations ===');
-  console.log('==========================================');
-  console.log('');
+  // Используем process.stdout.write для гарантированного вывода
+  process.stdout.write('\n');
+  process.stdout.write('==========================================\n');
+  process.stdout.write('=== Applying database migrations ===\n');
+  process.stdout.write('==========================================\n');
+  process.stdout.write('\n');
 
   try {
     // Проверяем наличие DATABASE_URL
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL environment variable is not set!');
     }
-    console.log('✓ DATABASE_URL is set');
+    process.stdout.write('✓ DATABASE_URL is set\n');
 
     // Проверяем наличие Prisma schema
     const schemaPath = path.join(__dirname, '../../prisma/schema.prisma');
     if (!fs.existsSync(schemaPath)) {
       throw new Error(`Prisma schema not found at ${schemaPath}`);
     }
-    console.log('✓ Prisma schema found');
+    process.stdout.write('✓ Prisma schema found\n');
 
     // Проверяем наличие папки migrations
     const migrationsPath = path.join(__dirname, '../../prisma/migrations');
     const hasMigrations = fs.existsSync(migrationsPath) && 
                          fs.readdirSync(migrationsPath).length > 0;
 
+    const appRoot = path.join(__dirname, '../..');
+    process.stdout.write(`Working directory: ${appRoot}\n`);
+
     if (hasMigrations) {
-      console.log('Found migrations directory, running migrate deploy...');
-      execSync('npx prisma migrate deploy', { 
-        stdio: 'inherit',
-        cwd: path.join(__dirname, '../..'),
-        env: { ...process.env }
-      });
+      process.stdout.write('Found migrations directory, running migrate deploy...\n');
+      try {
+        execSync('npx prisma migrate deploy', { 
+          stdio: 'inherit',
+          cwd: appRoot,
+          env: { ...process.env },
+          shell: '/bin/sh'
+        });
+      } catch (migrateError: any) {
+        process.stdout.write('WARNING: migrate deploy failed, trying db push...\n');
+        execSync('npx prisma db push --skip-generate --accept-data-loss', { 
+          stdio: 'inherit',
+          cwd: appRoot,
+          env: { ...process.env },
+          shell: '/bin/sh'
+        });
+      }
     } else {
-      console.log('No migrations directory found, using db push...');
+      process.stdout.write('No migrations directory found, using db push...\n');
       execSync('npx prisma db push --skip-generate --accept-data-loss', { 
         stdio: 'inherit',
-        cwd: path.join(__dirname, '../..'),
-        env: { ...process.env }
+        cwd: appRoot,
+        env: { ...process.env },
+        shell: '/bin/sh'
       });
     }
 
-    console.log('');
-    console.log('✓ Database migrations completed successfully!');
-    console.log('==========================================');
-    console.log('');
+    process.stdout.write('\n');
+    process.stdout.write('✓ Database migrations completed successfully!\n');
+    process.stdout.write('==========================================\n');
+    process.stdout.write('\n');
   } catch (error: any) {
-    console.error('');
-    console.error('❌ ERROR: Database migration failed!');
-    console.error('Error details:', error.message || error);
-    if (error.stdout) console.error('stdout:', error.stdout.toString());
-    if (error.stderr) console.error('stderr:', error.stderr.toString());
-    console.error('');
-    console.error('Application will continue, but database operations may fail.');
-    console.error('Please check DATABASE_URL and database connectivity.');
-    console.error('');
+    process.stderr.write('\n');
+    process.stderr.write('❌ ERROR: Database migration failed!\n');
+    process.stderr.write(`Error details: ${error.message || error}\n`);
+    if (error.stdout) process.stderr.write(`stdout: ${error.stdout.toString()}\n`);
+    if (error.stderr) process.stderr.write(`stderr: ${error.stderr.toString()}\n`);
+    process.stderr.write('\n');
+    process.stderr.write('Application will continue, but database operations may fail.\n');
+    process.stderr.write('Please check DATABASE_URL and database connectivity.\n');
+    process.stderr.write('\n');
   }
 }
 
