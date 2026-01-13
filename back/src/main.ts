@@ -89,7 +89,11 @@ async function runMigrations() {
 
 async function bootstrap() {
   // Применяем миграции перед запуском приложения
+  process.stdout.write('\n🚀 Starting bootstrap process...\n');
+  process.stdout.write(`Current working directory: ${process.cwd()}\n`);
+  process.stdout.write(`__dirname: ${__dirname}\n`);
   await runMigrations();
+  process.stdout.write('✅ Migrations completed, creating NestJS app...\n');
   
   const app = await NestFactory.create(AppModule);
 
