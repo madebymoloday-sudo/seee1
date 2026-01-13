@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
+import SessionsPage from "../pages/sessions/SessionsPage";
+import SessionPage from "../pages/sessions/SessionPage";
 import { PublicRoute } from "./PublicRoute";
 
 /**
@@ -11,15 +12,23 @@ export const publicRouter = createBrowserRouter([
     path: "/",
     element: (
       <PublicRoute>
-        <Navigate to="/login" replace />
+        <SessionsPage />
       </PublicRoute>
     ),
   },
   {
-    path: "/login",
+    path: "/sessions",
     element: (
       <PublicRoute>
-        <LoginPage />
+        <SessionsPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/sessions/:id",
+    element: (
+      <PublicRoute>
+        <SessionPage />
       </PublicRoute>
     ),
   },
@@ -35,7 +44,7 @@ export const publicRouter = createBrowserRouter([
     path: "*",
     element: (
       <PublicRoute>
-        <Navigate to="/login" replace />
+        <Navigate to="/" replace />
       </PublicRoute>
     ),
   },

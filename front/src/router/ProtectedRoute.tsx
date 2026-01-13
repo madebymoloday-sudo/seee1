@@ -28,9 +28,14 @@ export const ProtectedRoute = observer(() => {
     );
   }
 
-  // Если не авторизован, редиректим на логин
+  // Если не авторизован, разрешаем доступ к сессиям
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    // Разрешаем доступ к страницам сессий без авторизации
+    if (location.pathname.startsWith("/sessions") || location.pathname === "/") {
+      return <Outlet />;
+    }
+    // Для других страниц редиректим на главную
+    return <Navigate to="/" replace />;
   }
 
   // Если мы на странице подписки, разрешаем доступ (даже без активной подписки)
