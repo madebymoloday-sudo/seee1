@@ -37,7 +37,7 @@ const LoginPage = observer(() => {
     e.preventDefault();
     
     if (!email.trim() || !password.trim()) {
-      toast.error("Заполните все поля");
+      toast.error("Заполните email и пароль");
       return;
     }
 
@@ -47,9 +47,9 @@ const LoginPage = observer(() => {
     }
 
     try {
-      // Генерируем имя из email
+      // Генерируем имя из email (часть до @)
       const userName = email.split("@")[0];
-      const username = userName.toLowerCase().replace(/\s+/g, "_");
+      const username = userName.toLowerCase().replace(/[^a-z0-9_]/g, "_");
 
       await registerUser({
         email: email.trim(),
@@ -62,7 +62,8 @@ const LoginPage = observer(() => {
       // Редирект произойдёт автоматически через isAuthenticated
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Ошибка регистрации";
-      toast.error(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
+      const message = Array.isArray(errorMessage) ? errorMessage[0] : errorMessage;
+      toast.error(message);
     }
   };
 
