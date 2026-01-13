@@ -123,7 +123,11 @@ const LoginPage = observer(() => {
             </Button>
             <Button
               type="button"
-              onClick={handleRegister}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleRegister(e);
+              }}
               variant="outline"
               className="flex-1 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
               disabled={isLoading}
