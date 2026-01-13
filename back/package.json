@@ -11,7 +11,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "prestart:prod": "node -e \"const {execSync} = require('child_process'); const fs = require('fs'); const path = require('path'); try { if (process.env.SKIP_MIGRATIONS !== 'true') { console.log('=== Applying database migrations ==='); const migrationsPath = path.join(__dirname, 'prisma/migrations'); const hasMigrations = fs.existsSync(migrationsPath) && fs.readdirSync(migrationsPath).length > 0; if (hasMigrations) { console.log('Running migrate deploy...'); execSync('npx prisma migrate deploy', {stdio: 'inherit'}); } else { console.log('Running db push...'); execSync('npx prisma db push --skip-generate --accept-data-loss', {stdio: 'inherit'}); } console.log('✓ Migrations completed'); } } catch(e) { console.error('Migration error:', e.message); process.exit(1); }\"",
+    "prestart:prod": "if [ \"$SKIP_MIGRATIONS\" != \"true\" ]; then echo '=== Applying database migrations ==='; if [ -d \"prisma/migrations\" ] && [ \"$(ls -A prisma/migrations 2>/dev/null)\" ]; then echo 'Running migrate deploy...'; npx prisma migrate deploy || (echo 'migrate deploy failed, trying db push...' && npx prisma db push --skip-generate --accept-data-loss); else echo 'No migrations found, running db push...'; npx prisma db push --skip-generate --accept-data-loss; fi; echo '✓ Migrations completed'; fi",
     "start:prod": "node dist/src/main.js",
     "migrate:deploy": "prisma migrate deploy || prisma db push --skip-generate --accept-data-loss",
     "postinstall": "prisma generate",
