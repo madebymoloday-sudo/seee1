@@ -2,7 +2,8 @@
 
 .sessionsPage {
   min-height: 100vh;
-  padding: 2rem 1.5rem 5rem 1.5rem;
+  padding: 2rem 1.5rem 6rem 1.5rem;
+  padding-bottom: 6rem; /* Отступ для нижней панели навигации */
   background: linear-gradient(
     135deg,
     #ffffff 0%,
