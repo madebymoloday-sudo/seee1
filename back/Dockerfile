@@ -34,23 +34,39 @@ COPY --from=builder /app/programs ./programs
 # Создаем entrypoint скрипт для применения миграций и seed при старте
 RUN echo '#!/bin/sh\n\
 set -e\n\
+echo "=== Starting application setup ==="\n\
 if [ "$SKIP_MIGRATIONS" != "true" ]; then\n\
-  echo "Applying database migrations..."\n\
+  echo "Step 1: Applying database migrations..."\n\
   if [ -d "/app/prisma/migrations" ]; then\n\
     echo "Found migrations directory, running migrate deploy..."\n\
-    npx prisma migrate deploy || { echo "migrate deploy failed, trying db push..."; npx prisma db push --skip-generate; }\n\
+    npx prisma migrate deploy || {\n\
+      echo "WARNING: migrate deploy failed, trying db push..."\n\
+      npx prisma db push --skip-generate --accept-data-loss || {\n\
+        echo "ERROR: Database migration failed!"\n\
+        exit 1\n\
+      }\n\
+    }\n\
   else\n\
     echo "No migrations directory found, using db push..."\n\
-    npx prisma db push --skip-generate --accept-data-loss\n\
+    npx prisma db push --skip-generate --accept-data-loss || {\n\
+      echo "ERROR: Database push failed! Check DATABASE_URL connection."\n\
+      exit 1\n\
+    }\n\
   fi\n\
-  echo "Generating Prisma Client..."\n\
-  npx prisma generate\n\
+  echo "Step 2: Generating Prisma Client..."\n\
+  npx prisma generate || {\n\
+    echo "ERROR: Prisma generate failed!"\n\
+    exit 1\n\
+  }\n\
+  echo "Step 3: Database migrations completed successfully!"\n\
   if [ "$SKIP_SEED" != "true" ]; then\n\
-    echo "Running database seed..."\n\
-    npm run prisma:seed || echo "Seed failed, continuing..."\n\
+    echo "Step 4: Running database seed..."\n\
+    npm run prisma:seed || echo "WARNING: Seed failed, continuing..."\n\
   fi\n\
+else\n\
+  echo "Skipping migrations (SKIP_MIGRATIONS=true)"\n\
 fi\n\
-echo "Starting application..."\n\
+echo "=== Starting application ==="\n\
 exec npm run start:prod' > /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 CMD ["/app/docker-entrypoint.sh"]
 
