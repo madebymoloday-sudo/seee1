@@ -202,7 +202,12 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
       <div className={styles.headerContent}>
         <div className={styles.sessionTitleWrapper} ref={menuRef}>
           <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsMenuOpen(!isMenuOpen);
+            }}
             className={styles.sessionTitleButton}
           >
             <MessageSquare className={styles.icon} />

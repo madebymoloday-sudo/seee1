@@ -32,15 +32,22 @@ const MessageInput = ({ onSend, onSettingsClick, disabled = false }: MessageInpu
     <div className={styles.messageInputContainer}>
       <div className={styles.inputWrapper}>
         {/* Кнопка настроек (+) */}
-        <Button
-          onClick={onSettingsClick}
-          className={styles.settingsButton}
-          variant="ghost"
-          size="icon"
-          title="Настройки"
-        >
-          <Plus className="h-5 w-5" />
-        </Button>
+        {onSettingsClick && (
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onSettingsClick();
+            }}
+            className={styles.settingsButton}
+            variant="ghost"
+            size="icon"
+            title="Настройки"
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
+        )}
 
         {/* Поле ввода */}
         <Textarea
@@ -55,7 +62,12 @@ const MessageInput = ({ onSend, onSettingsClick, disabled = false }: MessageInpu
 
         {/* Кнопка отправки (стрелка вверх) */}
         <Button
-          onClick={handleSend}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleSend();
+          }}
           disabled={disabled || !message.trim()}
           className={styles.sendButton}
           size="icon"
