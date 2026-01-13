@@ -33,9 +33,10 @@ COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/programs ./programs
 # Создаем entrypoint скрипт для применения миграций и seed при старте
 RUN echo '#!/bin/sh\n\
+set -e\n\
 if [ "$SKIP_MIGRATIONS" != "true" ]; then\n\
   echo "Applying database migrations..."\n\
-  npx prisma db push --skip-generate || echo "Migration failed, continuing..."\n\
+  npx prisma migrate deploy || npx prisma db push --skip-generate || echo "Migration failed, continuing..."\n\
   if [ "$SKIP_SEED" != "true" ]; then\n\
     echo "Running database seed..."\n\
     npm run prisma:seed || echo "Seed failed, continuing..."\n\
