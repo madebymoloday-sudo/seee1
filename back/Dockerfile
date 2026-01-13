@@ -36,7 +36,15 @@ RUN echo '#!/bin/sh\n\
 set -e\n\
 if [ "$SKIP_MIGRATIONS" != "true" ]; then\n\
   echo "Applying database migrations..."\n\
-  npx prisma migrate deploy || npx prisma db push --skip-generate || echo "Migration failed, continuing..."\n\
+  if [ -d "/app/prisma/migrations" ]; then\n\
+    echo "Found migrations directory, running migrate deploy..."\n\
+    npx prisma migrate deploy || { echo "migrate deploy failed, trying db push..."; npx prisma db push --skip-generate; }\n\
+  else\n\
+    echo "No migrations directory found, using db push..."\n\
+    npx prisma db push --skip-generate --accept-data-loss\n\
+  fi\n\
+  echo "Generating Prisma Client..."\n\
+  npx prisma generate\n\
   if [ "$SKIP_SEED" != "true" ]; then\n\
     echo "Running database seed..."\n\
     npm run prisma:seed || echo "Seed failed, continuing..."\n\
