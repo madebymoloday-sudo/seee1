@@ -3,8 +3,37 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { execSync } from 'child_process';
 
 async function bootstrap() {
+  // Применяем миграции перед запуском приложения
+  if (process.env.SKIP_MIGRATIONS !== 'true') {
+    try {
+      console.log('==========================================');
+      console.log('=== Applying database migrations ===');
+      console.log('==========================================');
+      
+      // Проверяем наличие папки migrations
+      const fs = require('fs');
+      const path = require('path');
+      const migrationsPath = path.join(__dirname, '../../prisma/migrations');
+      
+      if (fs.existsSync(migrationsPath) && fs.readdirSync(migrationsPath).length > 0) {
+        console.log('Found migrations directory, running migrate deploy...');
+        execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+      } else {
+        console.log('No migrations directory found, using db push...');
+        execSync('npx prisma db push --skip-generate --accept-data-loss', { stdio: 'inherit' });
+      }
+      
+      console.log('✓ Database migrations completed successfully!');
+      console.log('==========================================');
+    } catch (error) {
+      console.error('ERROR: Database migration failed!', error);
+      // Не останавливаем приложение, продолжаем запуск
+    }
+  }
+  
   const app = await NestFactory.create(AppModule);
 
   // CORS
