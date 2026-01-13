@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import RegisterPage from "../pages/auth/RegisterPage";
 import SessionsPage from "../pages/sessions/SessionsPage";
 import SessionPage from "../pages/sessions/SessionPage";
+import HomePage from "../pages/HomePage";
 import { PublicRoute } from "./PublicRoute";
 
 /**
@@ -12,7 +13,7 @@ export const publicRouter = createBrowserRouter([
     path: "/",
     element: (
       <PublicRoute>
-        <SessionsPage />
+        <HomePage />
       </PublicRoute>
     ),
   },
