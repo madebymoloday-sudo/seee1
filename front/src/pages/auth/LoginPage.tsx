@@ -35,7 +35,7 @@ const LoginPage = observer(() => {
     }
 
     try {
-      await login({ email, password });
+      await login(email, password);
       // Редирект произойдёт автоматически через isAuthenticated
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Ошибка входа. Проверьте данные.");
