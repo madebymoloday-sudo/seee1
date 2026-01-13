@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useSessionsControllerCreateSession } from "@/api/seee.swr";
 import { useSessions } from "@/hooks/useSessions";
 import { Plus, Search, Filter } from "lucide-react";
@@ -17,8 +17,24 @@ const SessionsPage = observer(() => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("default");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
 
-  // Убираем автоматическое создание сессии - пользователь сам создаст через кнопку
+  // Закрытие выпадающего меню фильтра при клике вне его
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setIsFilterOpen(false);
+      }
+    };
+
+    if (isFilterOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isFilterOpen]);
 
   const handleCreateSession = async () => {
     try {
@@ -87,7 +103,7 @@ const SessionsPage = observer(() => {
             className={styles.searchInput}
           />
         </div>
-        <div className={styles.filterWrapper}>
+        <div className={styles.filterWrapper} ref={filterRef}>
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className={styles.filterButton}
