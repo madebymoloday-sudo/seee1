@@ -5,6 +5,10 @@ server {
     root /usr/share/nginx/html;
     index index.html;
     
+    # DNS resolver для динамического резолвинга
+    resolver 8.8.8.8 8.8.4.4 valid=300s;
+    resolver_timeout 5s;
+    
     # Логирование для диагностики
     access_log /var/log/nginx/access.log;
     error_log /var/log/nginx/error.log;
@@ -27,11 +31,12 @@ server {
     # API proxy - основной API endpoint
     # Backend URL: https://back-production-c25c.up.railway.app
     location /api/v1 {
-        proxy_pass https://back-production-c25c.up.railway.app/api/v1;
+        set $backend "back-production-c25c.up.railway.app";
+        proxy_pass https://$backend/api/v1;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host back-production-c25c.up.railway.app;
+        proxy_set_header Host $backend;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -40,13 +45,18 @@ server {
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
+        # SSL настройки для правильного handshake
+        proxy_ssl_server_name on;
+        proxy_ssl_verify off;
+        proxy_ssl_name $backend;
     }
 
     # API JSON schema для Orval
     location /api-json {
-        proxy_pass https://back-production-c25c.up.railway.app/api-json;
+        set $backend "back-production-c25c.up.railway.app";
+        proxy_pass https://$backend/api-json;
         proxy_http_version 1.1;
-        proxy_set_header Host back-production-c25c.up.railway.app;
+        proxy_set_header Host $backend;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -54,13 +64,17 @@ server {
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
+        proxy_ssl_server_name on;
+        proxy_ssl_verify off;
+        proxy_ssl_name $backend;
     }
 
     # Swagger документация
     location /api/docs {
-        proxy_pass https://back-production-c25c.up.railway.app/api/docs;
+        set $backend "back-production-c25c.up.railway.app";
+        proxy_pass https://$backend/api/docs;
         proxy_http_version 1.1;
-        proxy_set_header Host back-production-c25c.up.railway.app;
+        proxy_set_header Host $backend;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -68,15 +82,19 @@ server {
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
+        proxy_ssl_server_name on;
+        proxy_ssl_verify off;
+        proxy_ssl_name $backend;
     }
 
     # WebSocket support для Socket.IO
     location /socket.io {
-        proxy_pass https://back-production-c25c.up.railway.app/socket.io;
+        set $backend "back-production-c25c.up.railway.app";
+        proxy_pass https://$backend/socket.io;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host back-production-c25c.up.railway.app;
+        proxy_set_header Host $backend;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -85,6 +103,9 @@ server {
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
+        proxy_ssl_server_name on;
+        proxy_ssl_verify off;
+        proxy_ssl_name $backend;
     }
 
     # SPA routing - все остальные запросы на index.html
