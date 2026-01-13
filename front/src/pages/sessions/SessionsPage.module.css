@@ -1,0 +1,276 @@
+/* Страница сессий в стиле архивариуса */
+
+.sessionsPage {
+  min-height: 100vh;
+  padding: 2rem 1.5rem 5rem 1.5rem;
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #f8f9fa 25%,
+    #e9ecef 50%,
+    #f8f9fa 75%,
+    #ffffff 100%
+  );
+  position: relative;
+}
+
+/* Заголовок */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.85);
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.newSessionButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  backdrop-filter: blur(20px) saturate(200%) brightness(1.15);
+  -webkit-backdrop-filter: blur(20px) saturate(200%) brightness(1.15);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.newSessionButton:hover:not(:disabled) {
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.newSessionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.plusIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Поиск и фильтр */
+.searchSection {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.searchWrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  color: rgba(0, 0, 0, 0.85);
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.searchInput::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.filterWrapper {
+  position: relative;
+}
+
+.filterButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.filterButton:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filterIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.filterDropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 220px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem;
+  z-index: 100;
+  animation: fadeInDown 0.2s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filterOption {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  text-align: left;
+  font-size: 0.95rem;
+  color: rgba(0, 0, 0, 0.85);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterOption:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Контейнер папок */
+.foldersContainer {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.foldersList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.loadingState,
+.errorState,
+.emptyState {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.emptyTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.emptyText {
+  font-size: 0.95rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+/* Тёмный режим */
+:global(.dark) .sessionsPage {
+  background: linear-gradient(
+    135deg,
+    #1a1a1a 0%,
+    #2d2d2d 25%,
+    #1a1a1a 50%,
+    #2d2d2d 75%,
+    #1a1a1a 100%
+  );
+}
+
+:global(.dark) .title {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .searchInput {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+:global(.dark) .searchIcon {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:global(.dark) .filterButton {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .filterDropdown {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .filterOption {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .filterOption:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .emptyTitle,
+:global(.dark) .emptyText {
+  color: rgba(255, 255, 255, 0.7);
+}

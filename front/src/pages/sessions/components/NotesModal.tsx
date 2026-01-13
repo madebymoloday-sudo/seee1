@@ -5,10 +5,8 @@ import styles from "./NotesModal.module.css";
 
 interface Note {
   id: string;
-  title: string;
   content: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
 }
 
 interface NotesModalProps {
@@ -17,84 +15,76 @@ interface NotesModalProps {
 }
 
 const NotesModal = ({ isOpen, onClose }: NotesModalProps) => {
-  const [notes, setNotes] = useState<Note[]>(() => {
-    const saved = localStorage.getItem("notes");
-    return saved ? JSON.parse(saved).map((n: any) => ({
-      ...n,
-      createdAt: new Date(n.createdAt),
-      updatedAt: new Date(n.updatedAt),
-    })) : [];
-  });
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [newNoteContent, setNewNoteContent] = useState("");
 
-  // Сохранение заметок в localStorage
+  // Загружаем заметки из localStorage
   useEffect(() => {
-    if (notes.length > 0) {
-      localStorage.setItem("notes", JSON.stringify(notes));
+    if (isOpen) {
+      const savedNotes = localStorage.getItem("userNotes");
+      if (savedNotes) {
+        try {
+          setNotes(JSON.parse(savedNotes));
+        } catch (error) {
+          console.error("Ошибка загрузки заметок:", error);
+        }
+      }
     }
-  }, [notes]);
+  }, [isOpen]);
+
+  // Сохраняем заметки в localStorage
+  const saveNotes = (updatedNotes: Note[]) => {
+    localStorage.setItem("userNotes", JSON.stringify(updatedNotes));
+    setNotes(updatedNotes);
+  };
 
   const handleCreateNote = () => {
+    if (!newNoteContent.trim()) return;
+
     const newNote: Note = {
       id: Date.now().toString(),
-      title: "Новая заметка",
-      content: "",
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      content: newNoteContent.trim(),
+      createdAt: new Date().toISOString(),
     };
-    setNotes([newNote, ...notes]);
-    setSelectedNote(newNote);
-    setIsEditing(true);
-    setEditTitle(newNote.title);
-    setEditContent(newNote.content);
+
+    const updatedNotes = [newNote, ...notes];
+    saveNotes(updatedNotes);
+    setNewNoteContent("");
+    toast.success("Заметка создана");
   };
 
-  const handleSelectNote = (note: Note) => {
-    setSelectedNote(note);
-    setIsEditing(false);
-    setEditTitle(note.title);
-    setEditContent(note.content);
+  const handleEditNote = (note: Note) => {
+    setEditingNote(note);
+    setNewNoteContent(note.content);
   };
 
-  const handleEdit = () => {
-    if (selectedNote) {
-      setIsEditing(true);
-    }
+  const handleUpdateNote = () => {
+    if (!editingNote || !newNoteContent.trim()) return;
+
+    const updatedNotes = notes.map((note) =>
+      note.id === editingNote.id
+        ? { ...note, content: newNoteContent.trim() }
+        : note
+    );
+
+    saveNotes(updatedNotes);
+    setEditingNote(null);
+    setNewNoteContent("");
+    toast.success("Заметка обновлена");
   };
 
-  const handleSave = () => {
-    if (selectedNote) {
-      const updatedNote: Note = {
-        ...selectedNote,
-        title: editTitle.trim() || "Без названия",
-        content: editContent,
-        updatedAt: new Date(),
-      };
-      setNotes(notes.map(n => n.id === selectedNote.id ? updatedNote : n));
-      setSelectedNote(updatedNote);
-      setIsEditing(false);
-      toast.success("Заметка сохранена");
-    }
-  };
-
-  const handleDelete = () => {
-    if (selectedNote && confirm("Удалить эту заметку?")) {
-      setNotes(notes.filter(n => n.id !== selectedNote.id));
-      setSelectedNote(null);
-      setIsEditing(false);
+  const handleDeleteNote = (id: string) => {
+    if (confirm("Удалить эту заметку?")) {
+      const updatedNotes = notes.filter((note) => note.id !== id);
+      saveNotes(updatedNotes);
       toast.success("Заметка удалена");
     }
   };
 
-  const handleCancel = () => {
-    if (selectedNote) {
-      setEditTitle(selectedNote.title);
-      setEditContent(selectedNote.content);
-      setIsEditing(false);
-    }
+  const handleCancelEdit = () => {
+    setEditingNote(null);
+    setNewNoteContent("");
   };
 
   if (!isOpen) return null;
@@ -102,100 +92,80 @@ const NotesModal = ({ isOpen, onClose }: NotesModalProps) => {
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>Заметки</h2>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Заметки</h2>
           <button onClick={onClose} className={styles.closeButton}>
             <X className={styles.closeIcon} />
           </button>
         </div>
 
-        <div className={styles.modalContent}>
-          {/* Список заметок */}
-          <div className={styles.notesList}>
-            <button onClick={handleCreateNote} className={styles.newNoteButton}>
-              <Plus className={styles.plusIcon} />
-              <span>Новая заметка</span>
-            </button>
-            
-            {notes.map((note) => (
-              <div
-                key={note.id}
-                onClick={() => handleSelectNote(note)}
-                className={`${styles.noteItem} ${selectedNote?.id === note.id ? styles.noteItemActive : ""}`}
-              >
-                <div className={styles.noteItemTitle}>{note.title}</div>
-                <div className={styles.noteItemPreview}>
-                  {note.content.substring(0, 50) || "Пустая заметка"}
-                  {note.content.length > 50 && "..."}
-                </div>
-                <div className={styles.noteItemDate}>
-                  {note.updatedAt.toLocaleDateString("ru-RU", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </div>
-              </div>
-            ))}
+        <div className={styles.content}>
+          {/* Форма создания/редактирования заметки */}
+          <div className={styles.noteForm}>
+            <textarea
+              value={newNoteContent}
+              onChange={(e) => setNewNoteContent(e.target.value)}
+              placeholder={editingNote ? "Редактировать заметку..." : "Новая заметка..."}
+              className={styles.textarea}
+              rows={4}
+            />
+            <div className={styles.formActions}>
+              {editingNote ? (
+                <>
+                  <button onClick={handleCancelEdit} className={styles.cancelButton}>
+                    Отмена
+                  </button>
+                  <button onClick={handleUpdateNote} className={styles.saveButton}>
+                    Сохранить
+                  </button>
+                </>
+              ) : (
+                <button onClick={handleCreateNote} className={styles.createButton}>
+                  <Plus className={styles.buttonIcon} />
+                  Создать
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Редактор заметки */}
-          <div className={styles.noteEditor}>
-            {selectedNote ? (
-              <>
-                {isEditing ? (
-                  <>
-                    <input
-                      type="text"
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      className={styles.titleInput}
-                      placeholder="Название заметки"
-                    />
-                    <textarea
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      className={styles.contentTextarea}
-                      placeholder="Начните писать..."
-                      rows={15}
-                    />
-                    <div className={styles.editorActions}>
-                      <button onClick={handleCancel} className={styles.cancelButton}>
-                        Отмена
-                      </button>
-                      <button onClick={handleSave} className={styles.saveButton}>
-                        Сохранить
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className={styles.noteViewHeader}>
-                      <h3 className={styles.noteViewTitle}>{selectedNote.title}</h3>
-                      <div className={styles.noteViewActions}>
-                        <button onClick={handleEdit} className={styles.editButton}>
-                          Редактировать
-                        </button>
-                        <button onClick={handleDelete} className={styles.deleteButton}>
-                          <Trash2 className={styles.deleteIcon} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className={styles.noteViewContent}>
-                      {selectedNote.content || (
-                        <p className={styles.emptyNote}>Заметка пуста</p>
-                      )}
-                    </div>
-                    <div className={styles.noteViewDate}>
-                      Изменено: {selectedNote.updatedAt.toLocaleString("ru-RU")}
-                    </div>
-                  </>
-                )}
-              </>
-            ) : (
-              <div className={styles.emptyEditor}>
-                <p>Выберите заметку или создайте новую</p>
+          {/* Список заметок */}
+          <div className={styles.notesList}>
+            {notes.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>Нет заметок</p>
+                <p className={styles.emptyHint}>Создайте первую заметку выше</p>
               </div>
+            ) : (
+              notes.map((note) => (
+                <div key={note.id} className={styles.noteItem}>
+                  <div className={styles.noteContent}>
+                    <p>{note.content}</p>
+                    <span className={styles.noteDate}>
+                      {new Date(note.createdAt).toLocaleDateString("ru-RU", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <div className={styles.noteActions}>
+                    <button
+                      onClick={() => handleEditNote(note)}
+                      className={styles.editButton}
+                      title="Редактировать"
+                    >
+                      Редактировать
+                    </button>
+                    <button
+                      onClick={() => handleDeleteNote(note.id)}
+                      className={styles.deleteButton}
+                      title="Удалить"
+                    >
+                      <Trash2 className={styles.deleteIcon} />
+                    </button>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>
