@@ -154,8 +154,8 @@ const SecuritySettings = () => {
           <label className={styles.label}>Пароль</label>
           <div className={styles.inputWrapper}>
             <Input
-              type={showPassword ? "text" : "password"}
-              value={showPassword ? "password123" : maskPassword()}
+              type="text"
+              value={showPassword ? "••••••••" : maskPassword()}
               readOnly
               className={styles.input}
             />

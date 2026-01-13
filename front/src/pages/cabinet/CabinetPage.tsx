@@ -24,7 +24,7 @@ const CabinetPage = observer(() => {
   };
 
   const handleNeurocardClick = () => {
-    navigate("/neurocard");
+    navigate("/map");
   };
 
   return (
