@@ -2,8 +2,6 @@ import { observer } from "mobx-react-lite";
 import { Navigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import TelegramAuthButton from "@/components/auth/TelegramAuthButton";
-import SubscriptionModal from "@/components/subscription/SubscriptionModal";
 import { Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +11,6 @@ import styles from "./LoginPage.module.css";
 
 const LoginPage = observer(() => {
   const { isAuthenticated, login, register: registerUser, isLoading } = useAuth();
-  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -21,10 +18,6 @@ const LoginPage = observer(() => {
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
-
-  const handleSubscribe = () => {
-    setIsSubscriptionModalOpen(true);
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,40 +133,7 @@ const LoginPage = observer(() => {
             </Button>
           </div>
         </form>
-
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className={`w-full border-t ${styles.divider}`} />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className={`px-2 ${styles.dividerText}`}>или</span>
-            </div>
-          </div>
-
-          <TelegramAuthButton 
-            authType="sign-in" 
-            className="w-full mt-4"
-          >
-            Войти через Telegram
-          </TelegramAuthButton>
-        </div>
-
-        <div className="mt-4">
-          <Button
-            onClick={handleSubscribe}
-            variant="outline"
-            className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
-          >
-            Купить подписку
-          </Button>
-        </div>
       </div>
-
-      <SubscriptionModal
-        isOpen={isSubscriptionModalOpen}
-        onClose={() => setIsSubscriptionModalOpen(false)}
-      />
     </div>
   );
 });
