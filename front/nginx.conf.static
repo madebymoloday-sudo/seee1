@@ -4,6 +4,10 @@ server {
     server_name _;
     root /usr/share/nginx/html;
     index index.html;
+
+    # Debug marker: helps confirm which commit is deployed
+    # Update when investigating deployment issues
+    add_header X-SEEE-Front-Commit "d4548db" always;
     
     # Логирование для диагностики
     access_log /var/log/nginx/access.log;
@@ -100,10 +104,10 @@ server {
 
     # Жёсткий редирект: страница /subscription удалена, отправляем в /cabinet
     # Важно: /subscription/success НЕ трогаем (страница успеха оплаты)
-    location = /subscription {
-        return 302 /cabinet;
+    location ^~ /subscription/success {
+        try_files $uri $uri/ /index.html;
     }
-    location = /subscription/ {
+    location ^~ /subscription {
         return 302 /cabinet;
     }
 
