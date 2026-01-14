@@ -38,14 +38,15 @@ export const ProtectedRoute = observer(() => {
     return <Navigate to="/" replace />;
   }
 
-  // Если мы на странице подписки, разрешаем доступ (даже без активной подписки)
-  if (location.pathname === "/subscription") {
+  // Если мы в кабинете, разрешаем доступ (даже без активной подписки)
+  // Пользователь сможет купить подписку через модальное окно
+  if (location.pathname === "/cabinet") {
     return <Outlet />;
   }
 
-  // Если нет активной подписки, редиректим на страницу подписки
+  // Если нет активной подписки, редиректим в кабинет
   if (!hasActiveSubscription) {
-    return <Navigate to="/subscription" replace />;
+    return <Navigate to="/cabinet" replace />;
   }
 
   // Если есть активная подписка, разрешаем доступ ко всем страницам

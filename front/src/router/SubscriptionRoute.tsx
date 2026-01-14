@@ -29,16 +29,16 @@ export const SubscriptionRoute = observer(() => {
     return <Outlet />;
   }
 
-  // Если нет подписки и мы не на странице подписки, редиректим
-  if (location.pathname !== "/subscription" && location.pathname !== "/") {
-    return <Navigate to="/subscription" replace />;
+  // Если нет подписки, разрешаем доступ только к кабинету
+  // Пользователь сможет купить подписку через модальное окно в кабинете
+  if (location.pathname === "/cabinet") {
+    return <Outlet />;
   }
 
-  // Если мы на главной странице без подписки, редиректим на страницу подписки
-  if (location.pathname === "/") {
-    return <Navigate to="/subscription" replace />;
+  // Для всех остальных страниц без подписки редиректим в кабинет
+  if (location.pathname !== "/cabinet") {
+    return <Navigate to="/cabinet" replace />;
   }
 
-  // Если мы уже на странице подписки, показываем её
   return <Outlet />;
 });

@@ -5,7 +5,6 @@ import MapPage from "../pages/map/MapPage";
 import PipelineBuilderPage from "../pages/pipeline-builder/PipelineBuilderPage";
 import SessionPage from "../pages/sessions/SessionPage";
 import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
-import SubscriptionPage from "../pages/subscription/SubscriptionPage";
 import SubscriptionSuccessPage from "../pages/subscription/SubscriptionSuccessPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -18,10 +17,6 @@ export const protectedRouter = createBrowserRouter([
     path: "/",
     element: <ProtectedRoute />,
     children: [
-      {
-        path: "subscription",
-        element: <SubscriptionPage />,
-      },
       {
         path: "subscription/success",
         element: <SubscriptionSuccessPage />,
