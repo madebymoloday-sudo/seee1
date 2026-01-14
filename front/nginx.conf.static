@@ -98,6 +98,15 @@ server {
         proxy_ssl_verify off;
     }
 
+    # Жёсткий редирект: страница /subscription удалена, отправляем в /cabinet
+    # Важно: /subscription/success НЕ трогаем (страница успеха оплаты)
+    location = /subscription {
+        return 302 /cabinet;
+    }
+    location = /subscription/ {
+        return 302 /cabinet;
+    }
+
     # SPA routing - все остальные запросы на index.html
     location / {
         try_files $uri $uri/ /index.html;
