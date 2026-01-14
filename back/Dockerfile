@@ -1,5 +1,5 @@
 # Force rebuild cache bust - change this value to force rebuild
-ARG CACHE_BUST=2026-01-14-12-30
+ARG CACHE_BUST=2026-01-14-13-30
 RUN echo "Cache bust: $CACHE_BUST"
 
 # 1) Устанавливаем все deps (включая dev)
