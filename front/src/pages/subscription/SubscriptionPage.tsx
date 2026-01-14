@@ -165,6 +165,17 @@ const SubscriptionPage = observer(() => {
             💡 После оформления подписки вы получите полный доступ к сервису
           </p>
         </div>
+
+        {/* Виджет Lava.top */}
+        <div className="mt-12 flex justify-center">
+          <iframe
+            title="lava.top"
+            style={{ border: 'none' }}
+            width="350"
+            height="60"
+            src="https://widget.lava.top/c7af956a-6721-443b-b940-ab161161afa7"
+          />
+        </div>
       </div>
     </Layout>
   );
