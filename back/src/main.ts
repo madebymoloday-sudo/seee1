@@ -3,9 +3,37 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { execSync } from 'child_process';
+import * as path from 'path';
 
 async function bootstrap() {
   console.log('🚀 Starting NestJS application...\n');
+  
+  // КРИТИЧЕСКИ ВАЖНО: Применяем миграции ПЕРЕД созданием приложения
+  if (process.env.SKIP_MIGRATIONS !== 'true') {
+    try {
+      console.log('🔵 [MIGRATION] Applying database schema BEFORE app creation...');
+      const appRoot = process.env.APP_ROOT || '/app';
+      console.log(`🔵 [MIGRATION] appRoot: ${appRoot}`);
+      
+      const output = execSync('npx prisma db push --skip-generate --accept-data-loss', {
+        stdio: 'inherit',
+        cwd: appRoot,
+        env: { ...process.env },
+        encoding: 'utf-8'
+      });
+      console.log('🔵 [MIGRATION] ✓ Database schema applied successfully!');
+    } catch (error: any) {
+      console.error('🔴 [MIGRATION] ❌ CRITICAL: Database migration failed!');
+      console.error('🔴 [MIGRATION] Error:', error.message);
+      console.error('🔴 [MIGRATION] stdout:', error.stdout);
+      console.error('🔴 [MIGRATION] stderr:', error.stderr);
+      // НЕ продолжаем, если миграции не применились
+      process.exit(1);
+    }
+  } else {
+    console.log('🔵 [MIGRATION] Skipped (SKIP_MIGRATIONS=true)');
+  }
   
   const app = await NestFactory.create(AppModule);
 
