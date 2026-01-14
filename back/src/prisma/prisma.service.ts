@@ -11,7 +11,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:9',message:'onModuleInit ENTRY',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
     // #endregion
     console.log('🔵 [DEBUG-HYP-A] PrismaService.onModuleInit called');
-    console.log(`🔵 SKIP_MIGRATIONS = ${process.env.SKIP_MIGRATIONS}`);
+    console.log(`🔵 [DEBUG-HYP-B] SKIP_MIGRATIONS = ${process.env.SKIP_MIGRATIONS}`);
     
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:14',message:'SKIP_MIGRATIONS check',data:{skipMigrations:process.env.SKIP_MIGRATIONS,willSkip:process.env.SKIP_MIGRATIONS==='true'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
