@@ -13,26 +13,23 @@ async function runMigrations() {
     return;
   }
 
-  // Используем process.stdout.write для гарантированного вывода
-  process.stdout.write('\n');
-  process.stdout.write('==========================================\n');
-  process.stdout.write('=== Applying database migrations ===\n');
-  process.stdout.write('==========================================\n');
-  process.stdout.write('\n');
+  console.log('\n==========================================');
+  console.log('=== Applying database migrations ===');
+  console.log('==========================================\n');
 
   try {
     // Проверяем наличие DATABASE_URL
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL environment variable is not set!');
     }
-    process.stdout.write('✓ DATABASE_URL is set\n');
+    console.log('✓ DATABASE_URL is set');
 
     // Проверяем наличие Prisma schema
     const schemaPath = path.join(__dirname, '../../prisma/schema.prisma');
     if (!fs.existsSync(schemaPath)) {
       throw new Error(`Prisma schema not found at ${schemaPath}`);
     }
-    process.stdout.write('✓ Prisma schema found\n');
+    console.log('✓ Prisma schema found');
 
     // Проверяем наличие папки migrations
     const migrationsPath = path.join(__dirname, '../../prisma/migrations');
@@ -40,10 +37,10 @@ async function runMigrations() {
                          fs.readdirSync(migrationsPath).length > 0;
 
     const appRoot = path.join(__dirname, '../..');
-    process.stdout.write(`Working directory: ${appRoot}\n`);
+    console.log(`Working directory: ${appRoot}`);
 
     if (hasMigrations) {
-      process.stdout.write('Found migrations directory, running migrate deploy...\n');
+      console.log('Found migrations directory, running migrate deploy...');
       try {
         execSync('npx prisma migrate deploy', { 
           stdio: 'inherit',
@@ -52,7 +49,7 @@ async function runMigrations() {
           shell: '/bin/sh'
         });
       } catch (migrateError: any) {
-        process.stdout.write('WARNING: migrate deploy failed, trying db push...\n');
+        console.log('WARNING: migrate deploy failed, trying db push...');
         execSync('npx prisma db push --skip-generate --accept-data-loss', { 
           stdio: 'inherit',
           cwd: appRoot,
@@ -61,7 +58,7 @@ async function runMigrations() {
         });
       }
     } else {
-      process.stdout.write('No migrations directory found, using db push...\n');
+      console.log('No migrations directory found, using db push...');
       execSync('npx prisma db push --skip-generate --accept-data-loss', { 
         stdio: 'inherit',
         cwd: appRoot,
@@ -70,30 +67,26 @@ async function runMigrations() {
       });
     }
 
-    process.stdout.write('\n');
-    process.stdout.write('✓ Database migrations completed successfully!\n');
-    process.stdout.write('==========================================\n');
-    process.stdout.write('\n');
+    console.log('\n✓ Database migrations completed successfully!');
+    console.log('==========================================\n');
   } catch (error: any) {
-    process.stderr.write('\n');
-    process.stderr.write('❌ ERROR: Database migration failed!\n');
-    process.stderr.write(`Error details: ${error.message || error}\n`);
-    if (error.stdout) process.stderr.write(`stdout: ${error.stdout.toString()}\n`);
-    if (error.stderr) process.stderr.write(`stderr: ${error.stderr.toString()}\n`);
-    process.stderr.write('\n');
-    process.stderr.write('Application will continue, but database operations may fail.\n');
-    process.stderr.write('Please check DATABASE_URL and database connectivity.\n');
-    process.stderr.write('\n');
+    console.error('\n❌ ERROR: Database migration failed!');
+    console.error(`Error details: ${error.message || error}`);
+    if (error.stdout) console.error(`stdout: ${error.stdout.toString()}`);
+    if (error.stderr) console.error(`stderr: ${error.stderr.toString()}`);
+    console.error('\nApplication will continue, but database operations may fail.');
+    console.error('Please check DATABASE_URL and database connectivity.\n');
   }
 }
 
 async function bootstrap() {
   // Применяем миграции перед запуском приложения
-  process.stdout.write('\n🚀 Starting bootstrap process...\n');
-  process.stdout.write(`Current working directory: ${process.cwd()}\n`);
-  process.stdout.write(`__dirname: ${__dirname}\n`);
+  console.log('\n🚀 Starting bootstrap process...');
+  console.log(`Current working directory: ${process.cwd()}`);
+  console.log(`__dirname: ${__dirname}`);
+  console.log('Running migrations...');
   await runMigrations();
-  process.stdout.write('✅ Migrations completed, creating NestJS app...\n');
+  console.log('✅ Migrations completed, creating NestJS app...\n');
   
   const app = await NestFactory.create(AppModule);
 
