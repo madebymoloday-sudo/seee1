@@ -1,42 +1,33 @@
 // Apply migrations BEFORE any imports to ensure they run
 import { execSync } from 'child_process';
-import * as fs from 'fs';
 import * as path from 'path';
 
-console.log('📦 main.ts file loaded - applying migrations FIRST');
+// Force immediate execution - log to stderr to ensure it's visible
+process.stderr.write('📦 MIGRATIONS: main.ts loaded\n');
+process.stderr.write(`📦 MIGRATIONS: __dirname = ${__dirname}\n`);
 
 if (process.env.SKIP_MIGRATIONS !== 'true') {
   try {
-    console.log('\n==========================================');
-    console.log('=== Applying database migrations ===');
-    console.log('==========================================\n');
-    
+    process.stderr.write('📦 MIGRATIONS: Starting...\n');
     const appRoot = path.join(__dirname, '../..');
-    const migrationsPath = path.join(appRoot, 'prisma/migrations');
-    const hasMigrations = fs.existsSync(migrationsPath) && 
-                         fs.readdirSync(migrationsPath).length > 0;
+    process.stderr.write(`📦 MIGRATIONS: appRoot = ${appRoot}\n`);
+    process.stderr.write(`📦 MIGRATIONS: DATABASE_URL = ${process.env.DATABASE_URL ? 'SET' : 'NOT SET'}\n`);
     
-    if (hasMigrations) {
-      console.log('Found migrations, running migrate deploy...');
-      execSync('npx prisma migrate deploy', { 
-        stdio: 'inherit',
-        cwd: appRoot,
-        env: { ...process.env }
-      });
-    } else {
-      console.log('No migrations found, running db push...');
-      execSync('npx prisma db push --skip-generate --accept-data-loss', { 
-        stdio: 'inherit',
-        cwd: appRoot,
-        env: { ...process.env }
-      });
-    }
+    // Always try db push first (simpler and more reliable)
+    process.stderr.write('📦 MIGRATIONS: Running prisma db push...\n');
+    execSync('npx prisma db push --skip-generate --accept-data-loss', { 
+      stdio: 'inherit',
+      cwd: appRoot,
+      env: { ...process.env }
+    });
     
-    console.log('\n✓ Migrations completed!\n');
+    process.stderr.write('📦 MIGRATIONS: Completed successfully!\n');
   } catch (error: any) {
-    console.error('\n❌ Migration error:', error.message);
-    console.error('Continuing anyway...\n');
+    process.stderr.write(`📦 MIGRATIONS: ERROR - ${error.message}\n`);
+    process.stderr.write('📦 MIGRATIONS: Continuing anyway...\n');
   }
+} else {
+  process.stderr.write('📦 MIGRATIONS: Skipped (SKIP_MIGRATIONS=true)\n');
 }
 
 import { NestFactory } from '@nestjs/core';
