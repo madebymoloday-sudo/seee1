@@ -18,6 +18,10 @@ export const protectedRouter = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
+        path: "subscription",
+        element: <Navigate to="/cabinet" replace />,
+      },
+      {
         path: "subscription/success",
         element: <SubscriptionSuccessPage />,
       },

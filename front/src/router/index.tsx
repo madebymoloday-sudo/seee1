@@ -2,7 +2,7 @@
  * @deprecated Этот роутер устарел. Используйте publicRouter и protectedRouter из соответствующих файлов.
  * Оставлен для обратной совместимости.
  */
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import RegisterPage from "../pages/auth/RegisterPage";
 import CabinetPage from "../pages/cabinet/CabinetPage";
 import JournalPage from "../pages/journal/JournalPage";
@@ -27,6 +27,10 @@ export const router = createBrowserRouter([
     path: "/",
     element: <ProtectedRoute />,
     children: [
+      {
+        path: "subscription",
+        element: <Navigate to="/cabinet" replace />,
+      },
       {
         element: <SubscriptionRoute />,
         children: [
