@@ -120,6 +120,12 @@ export class AuthService {
       refreshToken: tokens.refreshToken,
       user: this.toUserProfileDto(user),
     };
+    } catch (error: any) {
+      console.error('❌ Register error:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Error code:', error.code);
+      throw error;
+    }
   }
 
   async loginWithTelegram(dto: TelegramLoginDto): Promise<AuthResponseDto> {
