@@ -1,96 +1,52 @@
-// Log immediately when file is loaded
-console.log('📦 main.ts file loaded');
-console.log('Environment:', process.env.NODE_ENV || 'development');
+// Apply migrations BEFORE any imports to ensure they run
+import { execSync } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
+
+console.log('📦 main.ts file loaded - applying migrations FIRST');
+
+if (process.env.SKIP_MIGRATIONS !== 'true') {
+  try {
+    console.log('\n==========================================');
+    console.log('=== Applying database migrations ===');
+    console.log('==========================================\n');
+    
+    const appRoot = path.join(__dirname, '../..');
+    const migrationsPath = path.join(appRoot, 'prisma/migrations');
+    const hasMigrations = fs.existsSync(migrationsPath) && 
+                         fs.readdirSync(migrationsPath).length > 0;
+    
+    if (hasMigrations) {
+      console.log('Found migrations, running migrate deploy...');
+      execSync('npx prisma migrate deploy', { 
+        stdio: 'inherit',
+        cwd: appRoot,
+        env: { ...process.env }
+      });
+    } else {
+      console.log('No migrations found, running db push...');
+      execSync('npx prisma db push --skip-generate --accept-data-loss', { 
+        stdio: 'inherit',
+        cwd: appRoot,
+        env: { ...process.env }
+      });
+    }
+    
+    console.log('\n✓ Migrations completed!\n');
+  } catch (error: any) {
+    console.error('\n❌ Migration error:', error.message);
+    console.error('Continuing anyway...\n');
+  }
+}
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { execSync } from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
-
-async function runMigrations() {
-  if (process.env.SKIP_MIGRATIONS === 'true') {
-    console.log('⚠️  Skipping migrations (SKIP_MIGRATIONS=true)');
-    return;
-  }
-
-  console.log('\n==========================================');
-  console.log('=== Applying database migrations ===');
-  console.log('==========================================\n');
-
-  try {
-    // Проверяем наличие DATABASE_URL
-    if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL environment variable is not set!');
-    }
-    console.log('✓ DATABASE_URL is set');
-
-    // Проверяем наличие Prisma schema
-    const schemaPath = path.join(__dirname, '../../prisma/schema.prisma');
-    if (!fs.existsSync(schemaPath)) {
-      throw new Error(`Prisma schema not found at ${schemaPath}`);
-    }
-    console.log('✓ Prisma schema found');
-
-    // Проверяем наличие папки migrations
-    const migrationsPath = path.join(__dirname, '../../prisma/migrations');
-    const hasMigrations = fs.existsSync(migrationsPath) && 
-                         fs.readdirSync(migrationsPath).length > 0;
-
-    const appRoot = path.join(__dirname, '../..');
-    console.log(`Working directory: ${appRoot}`);
-
-    if (hasMigrations) {
-      console.log('Found migrations directory, running migrate deploy...');
-      try {
-        execSync('npx prisma migrate deploy', { 
-          stdio: 'inherit',
-          cwd: appRoot,
-          env: { ...process.env },
-          shell: '/bin/sh'
-        });
-      } catch (migrateError: any) {
-        console.log('WARNING: migrate deploy failed, trying db push...');
-        execSync('npx prisma db push --skip-generate --accept-data-loss', { 
-          stdio: 'inherit',
-          cwd: appRoot,
-          env: { ...process.env },
-          shell: '/bin/sh'
-        });
-      }
-    } else {
-      console.log('No migrations directory found, using db push...');
-      execSync('npx prisma db push --skip-generate --accept-data-loss', { 
-        stdio: 'inherit',
-        cwd: appRoot,
-        env: { ...process.env },
-        shell: '/bin/sh'
-      });
-    }
-
-    console.log('\n✓ Database migrations completed successfully!');
-    console.log('==========================================\n');
-  } catch (error: any) {
-    console.error('\n❌ ERROR: Database migration failed!');
-    console.error(`Error details: ${error.message || error}`);
-    if (error.stdout) console.error(`stdout: ${error.stdout.toString()}`);
-    if (error.stderr) console.error(`stderr: ${error.stderr.toString()}`);
-    console.error('\nApplication will continue, but database operations may fail.');
-    console.error('Please check DATABASE_URL and database connectivity.\n');
-  }
-}
 
 async function bootstrap() {
-  // Применяем миграции перед запуском приложения
-  console.log('\n🚀 Starting bootstrap process...');
-  console.log(`Current working directory: ${process.cwd()}`);
-  console.log(`__dirname: ${__dirname}`);
-  console.log('Running migrations...');
-  await runMigrations();
-  console.log('✅ Migrations completed, creating NestJS app...\n');
+  console.log('🚀 Starting NestJS application...\n');
   
   const app = await NestFactory.create(AppModule);
 
