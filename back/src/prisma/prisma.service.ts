@@ -7,8 +7,15 @@ import * as fs from 'fs';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:9',message:'onModuleInit ENTRY',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     console.log('🔵 PrismaService.onModuleInit called');
     console.log(`🔵 SKIP_MIGRATIONS = ${process.env.SKIP_MIGRATIONS}`);
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:14',message:'SKIP_MIGRATIONS check',data:{skipMigrations:process.env.SKIP_MIGRATIONS,willSkip:process.env.SKIP_MIGRATIONS==='true'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     
     // Apply migrations before connecting to database
     if (process.env.SKIP_MIGRATIONS !== 'true') {
@@ -35,6 +42,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         // Всегда используем db push, так как миграций нет
         // Это безопаснее и работает быстрее для разработки
         console.log('Running prisma db push to apply schema...');
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:37',message:'BEFORE execSync db push',data:{appRoot,hasDbUrl:!!process.env.DATABASE_URL},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         try {
           const output = execSync('npx prisma db push --skip-generate --accept-data-loss', { 
             stdio: 'pipe',
@@ -42,8 +52,14 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
             env: { ...process.env },
             encoding: 'utf-8'
           });
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:45',message:'AFTER execSync db push SUCCESS',data:{outputLength:output?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+          // #endregion
           console.log('db push output:', output);
         } catch (error: any) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:47',message:'execSync db push ERROR',data:{errorMessage:error?.message,errorCode:error?.code,stdout:error?.stdout?.substring(0,200),stderr:error?.stderr?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+          // #endregion
           console.error('❌ db push failed!');
           console.error('Error message:', error.message);
           console.error('Error stdout:', error.stdout);
@@ -54,15 +70,27 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         console.log('\n✓ Migrations completed successfully!');
         console.log('==========================================\n');
       } catch (error: any) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:56',message:'Migration error caught (outer catch)',data:{errorMessage:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
         console.error('\n❌ Migration error:', error.message);
         console.error('Error stack:', error.stack);
         console.error('Continuing anyway...\n');
       }
     } else {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:62',message:'Migrations SKIPPED',data:{skipMigrations:process.env.SKIP_MIGRATIONS},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       console.log('🔵 Migrations skipped (SKIP_MIGRATIONS=true)');
     }
     
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:65',message:'BEFORE $connect',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
     await this.$connect();
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:66',message:'AFTER $connect',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
   }
 
   async onModuleDestroy() {

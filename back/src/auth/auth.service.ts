@@ -61,8 +61,14 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.service.ts:63',message:'register ENTRY',data:{email:dto.email,username:dto.username},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
     try {
       // Проверяем, существует ли пользователь
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.service.ts:65',message:'BEFORE first DB query',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
       const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [{ email: dto.email }, { username: dto.username }],
@@ -121,6 +127,9 @@ export class AuthService {
       user: this.toUserProfileDto(user),
     };
     } catch (error: any) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.service.ts:123',message:'register ERROR',data:{errorMessage:error?.message,errorCode:error?.code,errorName:error?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
       console.error('❌ Register error:', error.message);
       console.error('Error stack:', error.stack);
       console.error('Error code:', error.code);
