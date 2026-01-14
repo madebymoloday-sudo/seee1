@@ -31,6 +31,8 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 # Копируем схему Prisma и seed для возможного применения миграций и seed
 COPY --from=builder /app/prisma ./prisma
+# Копируем скрипты для миграций
+COPY --from=builder /app/scripts ./scripts
 # Копируем tsconfig.json для работы ts-node
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 # Копируем программы психолога
