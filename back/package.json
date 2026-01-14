@@ -12,7 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "migrate:run": "node scripts/run-migrations.js",
-    "start:prod": "node scripts/run-migrations.js && node dist/src/main.js",
+    "start:prod": "node dist/src/main.js",
     "migrate:deploy": "prisma migrate deploy || prisma db push --skip-generate --accept-data-loss",
     "postinstall": "prisma generate",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
