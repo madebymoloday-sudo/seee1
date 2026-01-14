@@ -2,7 +2,7 @@ import { X, Check, CreditCard, Sparkles } from "lucide-react";
 import { useSubscriptionControllerGetSubscription } from "@/api/seee.swr";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import apiAgent from "@/api/seee.axios";
+import apiAgent from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
