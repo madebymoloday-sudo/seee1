@@ -1,3 +1,7 @@
+// Log immediately when file is loaded
+console.log('📦 main.ts file loaded');
+console.log('Environment:', process.env.NODE_ENV || 'development');
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
