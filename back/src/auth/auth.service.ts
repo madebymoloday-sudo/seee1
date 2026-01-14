@@ -61,8 +61,9 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
-    // Проверяем, существует ли пользователь
-    const existingUser = await this.prisma.user.findFirst({
+    try {
+      // Проверяем, существует ли пользователь
+      const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [{ email: dto.email }, { username: dto.username }],
       },

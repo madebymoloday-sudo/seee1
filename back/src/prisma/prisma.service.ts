@@ -59,8 +59,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         console.log('==========================================\n');
       } catch (error: any) {
         console.error('\n❌ Migration error:', error.message);
+        console.error('Error stack:', error.stack);
         console.error('Continuing anyway...\n');
       }
+    } else {
+      console.log('🔵 Migrations skipped (SKIP_MIGRATIONS=true)');
     }
     
     await this.$connect();
