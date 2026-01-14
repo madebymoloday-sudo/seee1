@@ -1,35 +1,3 @@
-// Apply migrations BEFORE any imports to ensure they run
-import { execSync } from 'child_process';
-import * as path from 'path';
-
-// Force immediate execution - log to stderr to ensure it's visible
-process.stderr.write('📦 MIGRATIONS: main.ts loaded\n');
-process.stderr.write(`📦 MIGRATIONS: __dirname = ${__dirname}\n`);
-
-if (process.env.SKIP_MIGRATIONS !== 'true') {
-  try {
-    process.stderr.write('📦 MIGRATIONS: Starting...\n');
-    const appRoot = path.join(__dirname, '../..');
-    process.stderr.write(`📦 MIGRATIONS: appRoot = ${appRoot}\n`);
-    process.stderr.write(`📦 MIGRATIONS: DATABASE_URL = ${process.env.DATABASE_URL ? 'SET' : 'NOT SET'}\n`);
-    
-    // Always try db push first (simpler and more reliable)
-    process.stderr.write('📦 MIGRATIONS: Running prisma db push...\n');
-    execSync('npx prisma db push --skip-generate --accept-data-loss', { 
-      stdio: 'inherit',
-      cwd: appRoot,
-      env: { ...process.env }
-    });
-    
-    process.stderr.write('📦 MIGRATIONS: Completed successfully!\n');
-  } catch (error: any) {
-    process.stderr.write(`📦 MIGRATIONS: ERROR - ${error.message}\n`);
-    process.stderr.write('📦 MIGRATIONS: Continuing anyway...\n');
-  }
-} else {
-  process.stderr.write('📦 MIGRATIONS: Skipped (SKIP_MIGRATIONS=true)\n');
-}
-
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
