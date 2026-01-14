@@ -7,6 +7,9 @@ import * as fs from 'fs';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
+    console.log('🔵 PrismaService.onModuleInit called');
+    console.log(`🔵 SKIP_MIGRATIONS = ${process.env.SKIP_MIGRATIONS}`);
+    
     // Apply migrations before connecting to database
     if (process.env.SKIP_MIGRATIONS !== 'true') {
       try {
