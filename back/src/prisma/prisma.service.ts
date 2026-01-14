@@ -41,6 +41,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
         // Всегда используем db push, так как миграций нет
         // Это безопаснее и работает быстрее для разработки
+        console.log(`🔵 [DEBUG-HYP-C] BEFORE execSync db push | appRoot: ${appRoot} | hasDbUrl: ${!!process.env.DATABASE_URL}`);
         console.log('Running prisma db push to apply schema...');
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:37',message:'BEFORE execSync db push',data:{appRoot,hasDbUrl:!!process.env.DATABASE_URL},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
