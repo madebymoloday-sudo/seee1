@@ -17,14 +17,16 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         console.log('=== Applying database migrations ===');
         console.log('==========================================\n');
         
+        // В Docker контейнере корень проекта всегда /app
         // После компиляции __dirname будет в dist/src/prisma
-        // Нужно подняться на 3 уровня вверх, чтобы попасть в корень проекта
-        const appRoot = path.join(__dirname, '../../..');
+        // Используем абсолютный путь для надежности
+        const appRoot = process.env.APP_ROOT || '/app';
         const migrationsPath = path.join(appRoot, 'prisma/migrations');
         
         console.log(`🔵 __dirname: ${__dirname}`);
         console.log(`🔵 appRoot: ${appRoot}`);
         console.log(`🔵 migrationsPath: ${migrationsPath}`);
+        console.log(`🔵 migrationsPath exists: ${fs.existsSync(migrationsPath)}`);
         const hasMigrations = fs.existsSync(migrationsPath) && 
                              fs.readdirSync(migrationsPath).length > 0;
 
