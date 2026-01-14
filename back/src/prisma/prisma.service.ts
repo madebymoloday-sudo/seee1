@@ -30,29 +30,25 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         const hasMigrations = fs.existsSync(migrationsPath) && 
                              fs.readdirSync(migrationsPath).length > 0;
 
-        if (hasMigrations) {
-          console.log('Found migrations, running migrate deploy...');
-          try {
-            execSync('npx prisma migrate deploy', { 
-              stdio: 'inherit',
-              cwd: appRoot,
-              env: { ...process.env }
-            });
-          } catch (error) {
-            console.log('migrate deploy failed, trying db push...');
-            execSync('npx prisma db push --skip-generate --accept-data-loss', { 
-              stdio: 'inherit',
-              cwd: appRoot,
-              env: { ...process.env }
-            });
-          }
-        } else {
-          console.log('No migrations found, running db push...');
-          execSync('npx prisma db push --skip-generate --accept-data-loss', { 
-            stdio: 'inherit',
+        console.log(`🔵 hasMigrations: ${hasMigrations}`);
+
+        // Всегда используем db push, так как миграций нет
+        // Это безопаснее и работает быстрее для разработки
+        console.log('Running prisma db push to apply schema...');
+        try {
+          const output = execSync('npx prisma db push --skip-generate --accept-data-loss', { 
+            stdio: 'pipe',
             cwd: appRoot,
-            env: { ...process.env }
+            env: { ...process.env },
+            encoding: 'utf-8'
           });
+          console.log('db push output:', output);
+        } catch (error: any) {
+          console.error('❌ db push failed!');
+          console.error('Error message:', error.message);
+          console.error('Error stdout:', error.stdout);
+          console.error('Error stderr:', error.stderr);
+          throw error; // Не продолжаем, если миграции не применились
         }
         
         console.log('\n✓ Migrations completed successfully!');
