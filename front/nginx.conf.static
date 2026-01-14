@@ -7,7 +7,7 @@ server {
 
     # Debug marker: helps confirm which commit is deployed
     # Update when investigating deployment issues
-    add_header X-SEEE-Front-Commit "d4548db" always;
+    add_header X-SEEE-Front-Commit "d617494" always;
     
     # Логирование для диагностики
     access_log /var/log/nginx/access.log;
@@ -22,6 +22,9 @@ server {
     gzip_vary on;
     gzip_min_length 1024;
     gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json application/javascript;
+
+    # Disable ETag for HTML to avoid edge caching stale routes
+    etag off;
 
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -108,11 +111,18 @@ server {
         try_files $uri $uri/ /index.html;
     }
     location ^~ /subscription {
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
         return 302 /cabinet;
     }
 
     # SPA routing - все остальные запросы на index.html
     location / {
+        # Never cache HTML at edge (prevents stale client routes like /subscription)
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
         try_files $uri $uri/ /index.html;
     }
 

@@ -15,6 +15,10 @@ RUN npm i
 # Копируем исходный код
 COPY . .
 
+# Force rebuild cache bust (update to trigger)
+ARG CACHE_BUST=2026-01-14T20-35-DEPLOY
+RUN echo "CACHE_BUST(front)=$CACHE_BUST"
+
 # Строим приложение с оптимизацией памяти для Node.js
 ENV NODE_OPTIONS="--max-old-space-size=1024"
 RUN npm run build
