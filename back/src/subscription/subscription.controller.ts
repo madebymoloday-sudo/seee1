@@ -138,8 +138,8 @@ export class SubscriptionController {
     const status = body.status;
 
     if (orderId) {
-      // Если статус успешный, подтверждаем платеж
-      if (status === 'success' || status === 'paid') {
+      // Если статус успешный или это моковый orderId, подтверждаем платеж
+      if (status === 'success' || status === 'paid' || orderId.startsWith('mock_')) {
         await this.subscriptionService.confirmPayment(orderId);
       }
       return { received: true, processed: true };

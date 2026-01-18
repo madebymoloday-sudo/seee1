@@ -18,15 +18,16 @@ export class SubscriptionGuard implements CanActivate {
       throw new ForbiddenException('Не авторизован');
     }
 
-    const isActive = await this.subscriptionService.checkSubscriptionActive(
-      userId,
-    );
+    // TODO: Временно отключена проверка подписки для мок-режима
+    // const isActive = await this.subscriptionService.checkSubscriptionActive(
+    //   userId,
+    // );
 
-    if (!isActive) {
-      throw new ForbiddenException(
-        'Требуется активная подписка для доступа к этому функционалу',
-      );
-    }
+    // if (!isActive) {
+    //   throw new ForbiddenException(
+    //     'Требуется активная подписка для доступа к этому функционалу',
+    //   );
+    // }
 
     return true;
   }

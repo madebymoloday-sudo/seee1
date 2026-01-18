@@ -11,11 +11,24 @@ import { SubscriptionPlan } from '@prisma/client';
 
 @Injectable()
 export class SubscriptionService {
+  private readonly isMockMode: boolean;
+
   constructor(
     private prisma: PrismaService,
     private lavaService: LavaService,
     private configService: ConfigService,
-  ) {}
+  ) {
+    // Включаем мок-режим если:
+    // 1. Явно установлена переменная ENABLE_MOCK_SUBSCRIPTION=true
+    // 2. Или NODE_ENV !== production (dev/test режимы)
+    const enableMock = this.configService.get<string>('ENABLE_MOCK_SUBSCRIPTION') === 'true';
+    const isDev = process.env.NODE_ENV !== 'production';
+    this.isMockMode = enableMock || isDev;
+    
+    if (this.isMockMode) {
+      console.log('🧪 [Subscription] Mock mode enabled - all subscriptions will be mocked');
+    }
+  }
 
   /**
    * Проверяет, является ли пользователь администратором
@@ -145,17 +158,23 @@ export class SubscriptionService {
   }
 
   async purchaseSubscription(userId: string, dto: PurchaseSubscriptionDto) {
-    const { planId, promoCode, paymentMethod = 'lava' } = dto;
+    const { planId, promoCode, paymentMethod = this.isMockMode ? 'mock' : 'lava' } = dto;
+
+    // В мок-режиме всегда используем мок, независимо от указанного paymentMethod
+    // (кроме случая, когда явно указан paymentMethod='balance' - его обрабатываем отдельно)
+    if (this.isMockMode && paymentMethod !== 'balance') {
+      return this.createMockSubscription(userId, planId, promoCode);
+    }
+
+    // Если явно указан paymentMethod='mock' - используем мок
+    if (paymentMethod === 'mock') {
+      return this.createMockSubscription(userId, planId, promoCode);
+    }
 
     // Для администраторов всегда используем мок-подписку
     const isUserAdmin = await this.isAdmin(userId);
     if (isUserAdmin) {
-      return this.createMockSubscription(userId, planId);
-    }
-
-    // Если способ оплаты 'mock', создаем подписку без реальной оплаты
-    if (paymentMethod === 'mock') {
-      return this.createMockSubscription(userId, planId);
+      return this.createMockSubscription(userId, planId, promoCode);
     }
 
     // Получаем план
@@ -281,6 +300,56 @@ export class SubscriptionService {
   }
 
   async confirmPayment(lavaOrderId: string): Promise<InvoiceResponse> {
+    // В мок-режиме сразу активируем подписку без проверки Lava API
+    if (this.isMockMode) {
+      const subscription = await this.prisma.subscription.findUnique({
+        where: { lavaOrderId },
+      });
+
+      if (subscription && subscription.status !== 'ACTIVE') {
+        await this.prisma.subscription.update({
+          where: { id: subscription.id },
+          data: {
+            status: 'ACTIVE',
+          },
+        });
+
+        // Создаем транзакцию для истории
+        const plan = this.getPlanById(
+          subscription.plan === 'MONTHLY'
+            ? 'monthly'
+            : subscription.plan === 'QUARTERLY'
+              ? 'quarterly'
+              : 'yearly',
+        );
+
+        if (plan) {
+          await this.prisma.transaction.create({
+            data: {
+              userId: subscription.userId,
+              amount: -plan.price,
+              transactionType: 'PAYMENT',
+              description: `[MOCK] Оплата подписки ${plan.name}`,
+            },
+          });
+        }
+      }
+
+      return {
+        id: lavaOrderId,
+        status: 'success',
+        amount: subscription ? this.getPlanById(
+          subscription.plan === 'MONTHLY'
+            ? 'monthly'
+            : subscription.plan === 'QUARTERLY'
+              ? 'quarterly'
+              : 'yearly',
+        )?.price || 0 : 0,
+        paymentUrl: null,
+        createdAt: new Date().toISOString(),
+      } as InvoiceResponse;
+    }
+
     // Проверяем статус платежа через Lava API
     const order = await this.lavaService.getOrderStatus(lavaOrderId);
 
@@ -412,14 +481,30 @@ export class SubscriptionService {
   /**
    * Создает моковую подписку для разработки
    */
-  private async createMockSubscription(userId: string, planId: string) {
+  private async createMockSubscription(userId: string, planId: string, promoCode?: string) {
     const plan = this.getPlanById(planId);
     if (!plan) {
       throw new BadRequestException('Неверный план подписки');
     }
 
+    // Применяем промокод если есть
+    let finalPrice = plan.price;
+    if (promoCode) {
+      try {
+        const discount = await this.validatePromoCode(promoCode);
+        finalPrice = plan.price - discount;
+        if (finalPrice < 0) finalPrice = 0;
+      } catch (error) {
+        // В мок-режиме игнорируем ошибки промокода, но логируем
+        console.warn(`[Subscription Mock] Invalid promo code: ${promoCode}`);
+      }
+    }
+
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + plan.duration);
+
+    // Генерируем моковый lavaOrderId для совместимости
+    const mockLavaOrderId = `mock_${userId}_${Date.now()}`;
 
     // Создаем или обновляем подписку в БД
     const subscription = await this.prisma.subscription.upsert({
@@ -431,7 +516,7 @@ export class SubscriptionService {
         expiresAt,
         autoRenew: true,
         paymentMethod: 'mock',
-        lavaOrderId: null,
+        lavaOrderId: mockLavaOrderId,
       },
       update: {
         plan: plan.planType,
@@ -439,14 +524,26 @@ export class SubscriptionService {
         expiresAt,
         autoRenew: true,
         paymentMethod: 'mock',
-        lavaOrderId: null,
+        lavaOrderId: mockLavaOrderId,
       },
     });
+
+    // Создаем транзакцию для истории (в мок-режиме)
+    await this.prisma.transaction.create({
+      data: {
+        userId,
+        amount: -finalPrice,
+        transactionType: 'PAYMENT',
+        description: `[MOCK] Оплата подписки ${plan.name}${promoCode ? ` (промокод: ${promoCode})` : ''}`,
+      },
+    });
+
+    console.log(`🧪 [Subscription Mock] Created subscription for user ${userId}, plan: ${planId}, price: ${finalPrice}`);
 
     return {
       subscription,
       paymentUrl: null,
-      sessionId: null,
+      sessionId: mockLavaOrderId,
     };
   }
 }

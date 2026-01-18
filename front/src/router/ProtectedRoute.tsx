@@ -38,9 +38,14 @@ export const ProtectedRoute = observer(() => {
     return <Navigate to="/" replace />;
   }
 
-  // Если мы в кабинете, разрешаем доступ (даже без активной подписки)
+  // Если мы в кабинете, на карте или на страницах сессий, разрешаем доступ (даже без активной подписки)
   // Пользователь сможет купить подписку через модальное окно
-  if (location.pathname === "/cabinet") {
+  if (
+    location.pathname === "/cabinet" ||
+    location.pathname === "/map" ||
+    location.pathname === "/" ||
+    location.pathname.startsWith("/sessions")
+  ) {
     return <Outlet />;
   }
 
