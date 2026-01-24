@@ -7,6 +7,8 @@ RUN echo "Cache bust: $CACHE_BUST"
 
 WORKDIR /app
 COPY package*.json ./
+# Копируем схему Prisma для postinstall скрипта
+COPY prisma ./prisma
 RUN npm i --force
 
 # 2) Сборка + prisma generate
