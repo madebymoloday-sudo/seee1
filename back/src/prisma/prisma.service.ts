@@ -127,11 +127,18 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:65',message:'BEFORE $connect',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
     // #endregion
     console.log('🔵 [DEBUG-HYP-F] BEFORE $connect');
-    await this.$connect();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:66',message:'AFTER $connect',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    // #endregion
-    console.log('🔵 [DEBUG-HYP-F] AFTER $connect');
+    try {
+      await this.$connect();
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'prisma.service.ts:66',message:'AFTER $connect',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
+      console.log('🔵 [DEBUG-HYP-F] AFTER $connect - SUCCESS');
+    } catch (error: any) {
+      console.error('🔴 [ERROR] Failed to connect to database:', error.message);
+      console.error('⚠️  Application will continue, but database operations may fail');
+      // Не бросаем ошибку, чтобы приложение могло запуститься
+      // БД может быть временно недоступна, но приложение должно отвечать на healthcheck
+    }
   }
 
   async onModuleDestroy() {

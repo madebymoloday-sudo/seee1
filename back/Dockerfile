@@ -7,8 +7,10 @@ RUN echo "Cache bust: $CACHE_BUST"
 
 WORKDIR /app
 COPY package*.json ./
-# Устанавливаем зависимости без postinstall (prisma generate будет запущен позже)
-RUN npm i --force --ignore-scripts
+# Копируем схему Prisma для postinstall скрипта
+COPY prisma ./prisma
+# Устанавливаем зависимости (postinstall запустит prisma generate, но это нормально)
+RUN npm i --force
 
 # 2) Сборка + prisma generate
 FROM node:20.12.2 AS builder
