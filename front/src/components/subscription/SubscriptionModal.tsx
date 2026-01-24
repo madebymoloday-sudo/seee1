@@ -20,7 +20,7 @@ interface SubscriptionModalProps {
 
 const SubscriptionModal = ({ isOpen, onClose }: SubscriptionModalProps) => {
   const { checkSubscription } = useAuth();
-  const { data: subscription, isLoading } = useSubscriptionControllerGetSubscription();
+  const { isLoading } = useSubscriptionControllerGetSubscription();
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOpen) return null;
