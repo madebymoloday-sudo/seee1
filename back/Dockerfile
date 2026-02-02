@@ -1,11 +1,15 @@
+# 1) Устанавливаем все deps (включая dev)
+FROM node:20.12.2 AS deps
+
 # Force rebuild cache bust - change this value to force rebuild
 ARG CACHE_BUST=2026-01-14-17-00-URGENT-MIGRATIONS
 RUN echo "Cache bust: $CACHE_BUST"
 
-# 1) Устанавливаем все deps (включая dev)
-FROM node:20.12.2 AS deps
 WORKDIR /app
 COPY package*.json ./
+# Копируем схему Prisma для postinstall скрипта
+COPY prisma ./prisma
+# Устанавливаем зависимости (postinstall запустит prisma generate, но это нормально)
 RUN npm i --force
 
 # 2) Сборка + prisma generate

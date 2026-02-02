@@ -6,6 +6,9 @@ WORKDIR /app
 # Копируем package файлы
 COPY package*.json ./
 
+# Копируем prisma схему до установки зависимостей (нужна для postinstall)
+COPY prisma ./prisma
+
 # Устанавливаем все зависимости (включая dev)
 RUN npm i --force
 
@@ -14,12 +17,10 @@ COPY tsconfig.json ./
 COPY nest-cli.json ./
 # Используем nest-cli.dev.json для dev режима (без deleteOutDir)
 COPY nest-cli.dev.json ./nest-cli.json
-COPY prisma ./prisma
 # Копируем программы психолога (будут перезаписаны при монтировании volume)
 COPY programs ./programs
 
-# Генерируем Prisma Client
-RUN npx prisma generate
+# Prisma Client генерируется автоматически через postinstall скрипт в package.json
 
 # Устанавливаем curl для healthcheck
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
