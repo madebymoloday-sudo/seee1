@@ -86,8 +86,6 @@ JWT_REFRESH_SECRET=dev-refresh-secret-key
 
 # API Keys (опционально для dev)
 OPENAI_API_KEY=your-key
-LAVA_API_KEY=your-key
-LAVA_API_URL=https://gate.lava.top
 
 # Ports
 BACKEND_PORT=3000

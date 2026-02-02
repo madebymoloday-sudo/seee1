@@ -5,26 +5,17 @@ import MapPage from "../pages/map/MapPage";
 import PipelineBuilderPage from "../pages/pipeline-builder/PipelineBuilderPage";
 import SessionPage from "../pages/sessions/SessionPage";
 import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
-import SubscriptionSuccessPage from "../pages/subscription/SubscriptionSuccessPage";
+import WizardDemoPage from "../pages/sessions/WizardDemoPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 /**
  * Роутер для авторизованных пользователей
- * Проверка подписки выполняется в ProtectedRoute
  */
 export const protectedRouter = createBrowserRouter([
   {
     path: "/",
     element: <ProtectedRoute />,
     children: [
-      {
-        path: "subscription",
-        element: <Navigate to="/cabinet" replace />,
-      },
-      {
-        path: "subscription/success",
-        element: <SubscriptionSuccessPage />,
-      },
       {
         index: true,
         element: <SessionsCollectionPage />,
@@ -37,6 +28,14 @@ export const protectedRouter = createBrowserRouter([
         path: "sessions/:id",
         element: <SessionPage />,
       },
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: "wizard-demo",
+              element: <WizardDemoPage />,
+            },
+          ]
+        : []),
       {
         path: "map",
         element: <MapPage />,

@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import RegisterPage from "../pages/auth/RegisterPage";
 import SessionsPage from "../pages/sessions/SessionsPage";
 import SessionPage from "../pages/sessions/SessionPage";
+import WizardDemoPage from "../pages/sessions/WizardDemoPage";
 import HomePage from "../pages/HomePage";
 import { PublicRoute } from "./PublicRoute";
 
@@ -41,6 +42,14 @@ export const publicRouter = createBrowserRouter([
       </PublicRoute>
     ),
   },
+  ...(import.meta.env.DEV
+    ? [
+        {
+          path: "/wizard-demo",
+          element: <WizardDemoPage />,
+        },
+      ]
+    : []),
   {
     path: "*",
     element: (

@@ -69,7 +69,7 @@ const SessionsCollectionPage = observer(() => {
   const handleRename = (sessionId: string) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
-      const newTitle = prompt("Введите новое название сессии:", session.title || "Без названия");
+      const newTitle = prompt("Введите новое название сессии:", session.title || "Новая сессия");
       if (newTitle !== null && newTitle.trim()) {
         // TODO: Добавить API вызов для переименования
         toast.info("Функция переименования будет добавлена");

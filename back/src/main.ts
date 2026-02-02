@@ -71,7 +71,6 @@ async function bootstrap() {
     .addTag('Sessions', 'Сессии психолога')
     .addTag('Messages', 'Сообщения')
     .addTag('EventMap', 'Нейрокарта')
-    .addTag('Subscription', 'Подписка и оплата')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

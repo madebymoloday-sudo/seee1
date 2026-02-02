@@ -37,9 +37,6 @@
    JWT_REFRESH_EXPIRES_IN=7d
    FRONTEND_URL=${{Frontend.RAILWAY_PUBLIC_DOMAIN}}
    OPENAI_API_KEY=your-openai-api-key
-   LAVA_API_KEY=your-lava-api-key
-   LAVA_API_URL=https://gate.lava.top
-   LAVA_WEBHOOK_URL=${{Backend.RAILWAY_PUBLIC_DOMAIN}}/api/v1/subscription/webhook/lava
    ```
 
 5. **Добавьте PostgreSQL базу данных**:
@@ -118,8 +115,6 @@ railway up --service frontend
 - `JWT_REFRESH_SECRET` - секретный ключ для refresh токенов
 - `FRONTEND_URL` - URL фронтенда (используйте `${{Frontend.RAILWAY_PUBLIC_DOMAIN}}`)
 - `OPENAI_API_KEY` - ваш API ключ OpenAI
-- `LAVA_API_KEY` - API ключ для платежной системы Lava
-- `LAVA_WEBHOOK_URL` - URL для webhook от Lava (должен быть публичным)
 
 ### Frontend
 

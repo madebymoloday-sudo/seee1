@@ -127,18 +127,6 @@
    ```
    OPENAI_API_KEY = [ваш OpenAI API ключ]
    ```
-   
-   ```
-   LAVA_API_KEY = [ваш Lava API ключ, если есть]
-   ```
-   
-   ```
-   LAVA_API_URL = https://gate.lava.top
-   ```
-   
-   ```
-   LAVA_WEBHOOK_URL = ${{Backend.RAILWAY_PUBLIC_DOMAIN}}/api/v1/subscription/webhook/lava
-   ```
 
 ### 4.2. Переменные для Frontend сервиса
 

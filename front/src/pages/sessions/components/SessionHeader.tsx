@@ -130,7 +130,7 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
   }, [isMenuOpen]);
 
   const handleRename = () => {
-    const newTitle = prompt("Введите новое название сессии:", session.title || "Без названия");
+    const newTitle = prompt("Введите новое название сессии:", session.title || "Новая сессия");
     if (newTitle !== null && newTitle.trim()) {
       // TODO: Добавить API вызов для переименования
       toast.info("Функция переименования будет добавлена");
@@ -212,7 +212,7 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
           >
             <MessageSquare className={styles.icon} />
             <h2 className={styles.sessionTitle}>
-              {session.title || "Без названия"}
+              {session.title || "Новая сессия"}
             </h2>
           </button>
 

@@ -57,7 +57,7 @@ const MyFeedback = () => {
                   className={styles.sessionButton}
                 >
                   <span className={styles.sessionTitle}>
-                    {session.title || "Без названия"}
+                    {session.title || "Новая сессия"}
                   </span>
                   <span className={styles.sessionArrow}>
                     {isExpanded ? "▼" : "▶"}

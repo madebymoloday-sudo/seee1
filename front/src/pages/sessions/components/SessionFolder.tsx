@@ -43,7 +43,7 @@ const SessionFolder = ({ session, colorIndex }: SessionFolderProps) => {
       {/* Корешок с названием */}
       <div className={styles.folderSpine}>
         <span className={styles.spineTitle}>
-          {session.title || "Без названия"}
+          {session.title || "Новая сессия"}
         </span>
       </div>
 
@@ -52,7 +52,7 @@ const SessionFolder = ({ session, colorIndex }: SessionFolderProps) => {
         <div className={styles.folderContent}>
           <div className={styles.folderInfo}>
             <h3 className={styles.folderName}>
-              {session.title || "Без названия"}
+              {session.title || "Новая сессия"}
             </h3>
             <div className={styles.ideasCount}>
               {ideasCount} {ideasCount === 1 ? "идея" : ideasCount < 5 ? "идеи" : "идей"}

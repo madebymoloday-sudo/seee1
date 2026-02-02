@@ -57,9 +57,6 @@ JWT_REFRESH_SECRET=[сгенерируйте другую строку]
 JWT_REFRESH_EXPIRES_IN=7d
 FRONTEND_URL=${{Frontend.RAILWAY_PUBLIC_DOMAIN}}
 OPENAI_API_KEY=[ваш ключ]
-LAVA_API_KEY=[ваш ключ, если есть]
-LAVA_API_URL=https://gate.lava.top
-LAVA_WEBHOOK_URL=${{Backend.RAILWAY_PUBLIC_DOMAIN}}/api/v1/subscription/webhook/lava
 ```
 
 #### Frontend сервис → Variables:

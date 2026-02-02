@@ -39,8 +39,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data.email, data.password);
-      // После успешного логина проверка подписки происходит в authStore
-      // Перенаправление на нужную страницу обработает ProtectedRoute
+      // После успешного логина перенаправление обработает ProtectedRoute
       navigate("/");
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || "Ошибка входа";

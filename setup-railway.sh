@@ -5,12 +5,21 @@
 
 set -e
 
-RAILWAY_TOKEN="6ecf44cc-693b-413d-a4a3-3761595c9dbc"
 PROJECT_NAME="seee"
 
 echo "🚂 Настройка Railway проекта через API"
 echo "========================================"
 echo ""
+
+# ВАЖНО: не храните токены в репозитории.
+# Перед запуском установите переменную окружения RAILWAY_TOKEN:
+#   export RAILWAY_TOKEN="..."
+if [ -z "${RAILWAY_TOKEN:-}" ]; then
+    echo "❌ Не задан RAILWAY_TOKEN"
+    echo "📝 Установите переменную окружения и повторите:"
+    echo "   export RAILWAY_TOKEN=\"<ваш railway token>\""
+    exit 1
+fi
 
 # Проверка наличия curl
 if ! command -v curl &> /dev/null; then
@@ -41,18 +50,12 @@ echo "✅ Проект создан! ID: $PROJECT_ID"
 echo ""
 
 echo "📝 Следующие шаги:"
-echo "   1. Добавьте токен в GitHub Secrets:"
-echo "      - Откройте: https://github.com/madebymoloday-sudo/seee1/settings/secrets/actions"
-echo "      - Нажмите 'New repository secret'"
-echo "      - Name: RAILWAY_TOKEN"
-echo "      - Value: $RAILWAY_TOKEN"
-echo ""
-echo "   2. Настройте сервисы в Railway Dashboard:"
+echo "   1. Настройте сервисы в Railway Dashboard:"
 echo "      - Откройте: https://railway.app/project/$PROJECT_ID"
 echo "      - Добавьте PostgreSQL базу данных"
 echo "      - Создайте Backend сервис (Root Directory: back)"
 echo "      - Создайте Frontend сервис (Root Directory: front)"
 echo ""
-echo "   3. Установите переменные окружения (см. SETUP_RAILWAY_TOKEN.md)"
+echo "   2. Установите переменные окружения в Railway Dashboard (не храните токены в репозитории)"
 echo ""
-echo "   4. После настройки, каждый push в main будет автоматически деплоить изменения"
+echo "   3. После настройки, каждый push в main будет автоматически деплоить изменения (если подключен GitHub репозиторий)"

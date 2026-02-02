@@ -1,26 +1,17 @@
-import { useState } from "react";
 import { observer } from "mobx-react-lite";
 import { Layout } from "@/components/layout/Layout";
-import { User, CreditCard, Brain } from "lucide-react";
+import { User, Brain } from "lucide-react";
 import { useAuthControllerGetMe } from "@/api/seee.swr";
 import ProfileSection from "./components/ProfileSection";
-import SubscriptionSection from "./components/SubscriptionSection";
-import TransactionsSection from "./components/TransactionsSection";
 import SecuritySettings from "./components/SecuritySettings";
 import ReferralSystem from "./components/ReferralSystem";
 import MyFeedback from "./components/MyFeedback";
-import SubscriptionModal from "@/components/subscription/SubscriptionModal";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 const CabinetPage = observer(() => {
   const { data: profile } = useAuthControllerGetMe();
   const navigate = useNavigate();
-  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-
-  const handleSubscriptionClick = () => {
-    setIsSubscriptionModalOpen(true);
-  };
 
   const handleNeurocardClick = () => {
     navigate("/map");
@@ -36,7 +27,6 @@ const CabinetPage = observer(() => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <ProfileSection profile={profile} />
-          <SubscriptionSection />
         </div>
 
         {/* Настройки безопасности */}
@@ -46,14 +36,6 @@ const CabinetPage = observer(() => {
 
         {/* Кнопки действий */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Button
-            onClick={handleSubscriptionClick}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <CreditCard className="h-5 w-5" />
-            Подписка
-          </Button>
           <Button
             onClick={handleNeurocardClick}
             variant="outline"
@@ -73,16 +55,6 @@ const CabinetPage = observer(() => {
         <div className="mb-6">
           <MyFeedback />
         </div>
-
-        {/* Транзакции */}
-        <div className="lg:col-span-2">
-          <TransactionsSection />
-        </div>
-
-        <SubscriptionModal
-          isOpen={isSubscriptionModalOpen}
-          onClose={() => setIsSubscriptionModalOpen(false)}
-        />
       </div>
     </Layout>
   );

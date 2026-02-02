@@ -38,9 +38,6 @@ JWT_REFRESH_SECRET=ваш-другой-секретный-ключ-миниму�
 JWT_REFRESH_EXPIRES_IN=7d
 FRONTEND_URL=${{Frontend.RAILWAY_PUBLIC_DOMAIN}}
 OPENAI_API_KEY=ваш-openai-api-ключ
-LAVA_API_KEY=ваш-lava-api-ключ
-LAVA_API_URL=https://gate.lava.top
-LAVA_WEBHOOK_URL=${{Backend.RAILWAY_PUBLIC_DOMAIN}}/api/v1/subscription/webhook/lava
 ```
 
 **Примечание**: 

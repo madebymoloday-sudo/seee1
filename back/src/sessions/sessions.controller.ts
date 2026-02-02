@@ -20,7 +20,6 @@ import { SessionsService } from './sessions.service';
 import { CreateSessionDto, SessionResponseDto } from './dto/session.dto';
 import { UpdateSessionProgramDto } from './dto/update-session-program.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { SubscriptionGuard } from '../subscription/subscription.guard';
 
 @ApiTags('Sessions')
 @Controller('sessions')
@@ -31,7 +30,6 @@ export class SessionsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(SubscriptionGuard)
   @ApiOperation({ summary: 'Создать новую сессию' })
   @ApiResponse({
     status: 201,
@@ -41,10 +39,6 @@ export class SessionsController {
   @ApiResponse({
     status: 401,
     description: 'Неавторизованный доступ',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Требуется активная подписка',
   })
   async createSession(
     @Request() req: { user: { id: string } },

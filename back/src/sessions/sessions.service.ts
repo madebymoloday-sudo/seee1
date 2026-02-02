@@ -15,7 +15,6 @@ export class SessionsService {
   async create(
     userId: string,
     createSessionDto: CreateSessionDto,
-    checkSubscription: boolean = true,
   ): Promise<SessionResponseDto> {
     const session = await this.prisma.session.create({
       data: {

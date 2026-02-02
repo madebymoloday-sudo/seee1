@@ -273,10 +273,9 @@ const ChatWindow = ({
         {messages.length === 0 && !isLoading && (
           <div className={styles.emptyState}>
             <MessageSquare className={styles.emptyIcon} />
-            <p className={styles.emptyTitle}>Добро пожаловать в сессию!</p>
+            <p className={styles.emptyTitle}>Расскажите, какая ситуация вас беспокоит</p>
             <p className={styles.emptyText}>
-              Начните диалог с AI-психологом. Задавайте вопросы, делитесь
-              мыслями и получайте поддержку.
+              Напишите ответ ниже — после каждого ответа будет следующий вопрос.
             </p>
           </div>
         )}

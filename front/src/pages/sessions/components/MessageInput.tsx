@@ -9,9 +9,10 @@ interface MessageInputProps {
   onSend: (message: string) => void;
   onSettingsClick?: () => void;
   disabled?: boolean;
+  placeholder?: string;
 }
 
-const MessageInput = ({ onSend, onSettingsClick, disabled = false }: MessageInputProps) => {
+const MessageInput = ({ onSend, onSettingsClick, disabled = false, placeholder }: MessageInputProps) => {
   const [message, setMessage] = useState("");
 
   const handleSend = () => {
@@ -54,7 +55,7 @@ const MessageInput = ({ onSend, onSettingsClick, disabled = false }: MessageInpu
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Введите сообщение..."
+          placeholder={placeholder ?? "Введите сообщение..."}
           disabled={disabled}
           className={styles.textarea}
           rows={1}

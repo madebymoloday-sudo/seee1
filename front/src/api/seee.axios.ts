@@ -15,11 +15,9 @@ import type {
   MessageDto,
   MessagesControllerGetMessagesParams,
   MessagesResponseDto,
-  PurchaseSubscriptionDto,
   RefreshTokenDto,
   RegisterDto,
   SessionResponseDto,
-  SubscriptionResponseDto,
   TelegramLinkDto,
   TelegramLoginDto,
   UserProfileDto
@@ -175,80 +173,6 @@ const sessionsControllerAddSessionToMap = (
     }
   
 /**
- * @summary Получить текущую подписку пользователя
- */
-const subscriptionControllerGetSubscription = (
-    
- options?: SecondParameter<typeof axiosInstance<SubscriptionResponseDto>>,) => {
-      return axiosInstance<SubscriptionResponseDto>(
-      {url: `/api/v1/subscription`, method: 'GET'
-    },
-      options);
-    }
-  
-/**
- * @summary Оформить подписку
- */
-const subscriptionControllerPurchase = (
-    purchaseSubscriptionDto: PurchaseSubscriptionDto,
- options?: SecondParameter<typeof axiosInstance<void>>,) => {
-      return axiosInstance<void>(
-      {url: `/api/v1/subscription/purchase`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: purchaseSubscriptionDto
-    },
-      options);
-    }
-  
-/**
- * @summary Подтвердить оплату (webhook от Lava)
- */
-const subscriptionControllerConfirmPayment = (
-    
- options?: SecondParameter<typeof axiosInstance<void>>,) => {
-      return axiosInstance<void>(
-      {url: `/api/v1/subscription/confirm-payment`, method: 'POST'
-    },
-      options);
-    }
-  
-/**
- * @summary Отменить подписку
- */
-const subscriptionControllerCancel = (
-    
- options?: SecondParameter<typeof axiosInstance<void>>,) => {
-      return axiosInstance<void>(
-      {url: `/api/v1/subscription/cancel`, method: 'POST'
-    },
-      options);
-    }
-  
-/**
- * @summary Проверить промокод
- */
-const subscriptionControllerValidatePromo = (
-    
- options?: SecondParameter<typeof axiosInstance<void>>,) => {
-      return axiosInstance<void>(
-      {url: `/api/v1/subscription/validate-promo`, method: 'POST'
-    },
-      options);
-    }
-  
-/**
- * @summary Webhook для уведомлений от Lava API
- */
-const subscriptionControllerHandleLavaWebhook = (
-    
- options?: SecondParameter<typeof axiosInstance<void>>,) => {
-      return axiosInstance<void>(
-      {url: `/api/v1/subscription/webhook/lava`, method: 'POST'
-    },
-      options);
-    }
-  
-/**
  * @summary Получить список доступных программ психолога
  */
 const psychologistControllerListPrograms = (
@@ -327,7 +251,7 @@ const eventMapControllerCreateEventMap = (
       options);
     }
   
-return {authControllerLogin,authControllerRegister,authControllerLoginWithTelegram,authControllerLinkTelegram,authControllerRefresh,authControllerGetMe,sessionsControllerCreateSession,sessionsControllerGetSessions,sessionsControllerGetSession,sessionsControllerGetDocument,sessionsControllerAddSessionToMap,subscriptionControllerGetSubscription,subscriptionControllerPurchase,subscriptionControllerConfirmPayment,subscriptionControllerCancel,subscriptionControllerValidatePromo,subscriptionControllerHandleLavaWebhook,psychologistControllerListPrograms,psychologistControllerGetProgram,messagesControllerGetMessages,messagesControllerCreateMessage,eventMapControllerGetEventMap,eventMapControllerCreateEventMap}};
+return {authControllerLogin,authControllerRegister,authControllerLoginWithTelegram,authControllerLinkTelegram,authControllerRefresh,authControllerGetMe,sessionsControllerCreateSession,sessionsControllerGetSessions,sessionsControllerGetSession,sessionsControllerGetDocument,sessionsControllerAddSessionToMap,psychologistControllerListPrograms,psychologistControllerGetProgram,messagesControllerGetMessages,messagesControllerCreateMessage,eventMapControllerGetEventMap,eventMapControllerCreateEventMap}};
 export type AuthControllerLoginResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['authControllerLogin']>>>
 export type AuthControllerRegisterResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['authControllerRegister']>>>
 export type AuthControllerLoginWithTelegramResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['authControllerLoginWithTelegram']>>>
@@ -339,12 +263,6 @@ export type SessionsControllerGetSessionsResult = NonNullable<Awaited<ReturnType
 export type SessionsControllerGetSessionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['sessionsControllerGetSession']>>>
 export type SessionsControllerGetDocumentResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['sessionsControllerGetDocument']>>>
 export type SessionsControllerAddSessionToMapResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['sessionsControllerAddSessionToMap']>>>
-export type SubscriptionControllerGetSubscriptionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['subscriptionControllerGetSubscription']>>>
-export type SubscriptionControllerPurchaseResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['subscriptionControllerPurchase']>>>
-export type SubscriptionControllerConfirmPaymentResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['subscriptionControllerConfirmPayment']>>>
-export type SubscriptionControllerCancelResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['subscriptionControllerCancel']>>>
-export type SubscriptionControllerValidatePromoResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['subscriptionControllerValidatePromo']>>>
-export type SubscriptionControllerHandleLavaWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['subscriptionControllerHandleLavaWebhook']>>>
 export type PsychologistControllerListProgramsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['psychologistControllerListPrograms']>>>
 export type PsychologistControllerGetProgramResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['psychologistControllerGetProgram']>>>
 export type MessagesControllerGetMessagesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeeeApi>['messagesControllerGetMessages']>>>

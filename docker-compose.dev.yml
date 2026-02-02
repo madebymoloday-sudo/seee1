@@ -43,9 +43,6 @@ services:
       - NODE_ENV=development
       # OpenAI configuration
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      # Lava integration
-      - LAVA_API_KEY=${LAVA_API_KEY}
-      - LAVA_API_URL=${LAVA_API_URL}
     ports:
       - "${BACKEND_PORT:-3000}:3000"
     volumes:

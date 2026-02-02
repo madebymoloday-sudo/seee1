@@ -58,7 +58,6 @@ echo "⚠️  Не забудьте установить следующие пе
 echo "   - JWT_SECRET (сгенерируйте случайную строку)"
 echo "   - JWT_REFRESH_SECRET (сгенерируйте случайную строку)"
 echo "   - OPENAI_API_KEY (ваш API ключ OpenAI)"
-echo "   - LAVA_API_KEY (ваш API ключ Lava)"
 echo "   - FRONTEND_URL (будет установлен автоматически после деплоя Frontend)"
 
 echo ""

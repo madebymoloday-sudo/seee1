@@ -74,7 +74,7 @@ const SessionFolderCard = observer(({
     if (onRename) {
       onRename();
     } else {
-      const newTitle = prompt("Введите новое название сессии:", session.title || "Без названия");
+      const newTitle = prompt("Введите новое название сессии:", session.title || "Новая сессия");
       if (newTitle !== null && newTitle.trim()) {
         toast.info("Функция переименования будет добавлена");
       }
@@ -125,7 +125,7 @@ const SessionFolderCard = observer(({
             onClick={handleTitleClick}
             className={styles.folderTitle}
           >
-            {session.title || "Без названия"}
+            {session.title || "Новая сессия"}
           </button>
           
           {/* Выпадающее меню */}

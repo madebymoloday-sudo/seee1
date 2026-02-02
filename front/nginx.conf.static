@@ -105,21 +105,9 @@ server {
         proxy_ssl_verify off;
     }
 
-    # Жёсткий редирект: страница /subscription удалена, отправляем в /cabinet
-    # Важно: /subscription/success НЕ трогаем (страница успеха оплаты)
-    location ^~ /subscription/success {
-        try_files $uri $uri/ /index.html;
-    }
-    location ^~ /subscription {
-        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate" always;
-        add_header Pragma "no-cache" always;
-        add_header Expires "0" always;
-        return 302 /cabinet;
-    }
-
     # SPA routing - все остальные запросы на index.html
     location / {
-        # Never cache HTML at edge (prevents stale client routes like /subscription)
+        # Never cache HTML at edge (prevents stale client routes)
         add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate" always;
         add_header Pragma "no-cache" always;
         add_header Expires "0" always;

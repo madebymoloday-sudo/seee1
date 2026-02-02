@@ -33,19 +33,6 @@ enum FeedbackStatus {
   RESOLVED
 }
 
-enum SubscriptionStatus {
-  ACTIVE
-  EXPIRED
-  CANCELLED
-  PENDING
-}
-
-enum SubscriptionPlan {
-  MONTHLY
-  QUARTERLY
-  YEARLY
-}
-
 // Models
 model User {
   id            String   @id @default(uuid())
@@ -71,7 +58,6 @@ model User {
   transactions       Transaction[]
   paymentDetails     PaymentDetails?
   refreshTokens      RefreshToken[]
-  subscription       Subscription?
   gptStatistics      GptStatistics[]
   pipelinePrograms   PipelineProgram[]
 
@@ -346,43 +332,6 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("refresh_tokens")
-}
-
-model Subscription {
-  id            String            @id @default(uuid())
-  userId        String            @unique @map("user_id")
-  plan          SubscriptionPlan
-  status        SubscriptionStatus @default(PENDING)
-  expiresAt     DateTime?         @map("expires_at")
-  autoRenew     Boolean           @default(true) @map("auto_renew")
-  paymentMethod String?           @map("payment_method")
-  lavaOrderId   String?           @unique @map("lava_order_id")
-
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt     DateTime          @default(now()) @map("created_at")
-  updatedAt     DateTime          @updatedAt @map("updated_at")
-
-  @@index([userId])
-  @@index([status])
-  @@index([expiresAt])
-  @@map("subscriptions")
-}
-
-model PromoCode {
-  id            String    @id @default(uuid())
-  code          String    @unique
-  discountAmount Decimal?  @map("discount_amount") @db.Decimal(10, 2)
-  discountPercent Int?    @map("discount_percent")
-  isActive      Boolean   @default(true) @map("is_active")
-  expiresAt     DateTime? @map("expires_at")
-  maxUses       Int?      @map("max_uses")
-  currentUses   Int       @default(0) @map("current_uses")
-
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-
-  @@map("promo_codes")
 }
 
 model PipelineState {

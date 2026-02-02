@@ -124,7 +124,6 @@ back/
 │   ├── event-map/           # Нейрокарта
 │   ├── psychologist/        # AI психолог
 │   ├── websocket/           # Socket.IO
-│   ├── subscription/        # Подписка
 │   └── integrations/        # Внешние интеграции
 ├── prisma/
 │   ├── schema.prisma        # Схема БД

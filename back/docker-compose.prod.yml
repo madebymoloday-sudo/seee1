@@ -19,9 +19,6 @@ services:
       - NODE_OPTIONS=--max-old-space-size=512
       # OpenAI configuration
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      # Lava integration
-      - LAVA_API_KEY=${LAVA_API_KEY}
-      - LAVA_API_URL=${LAVA_API_URL}
     ports:
       - "${PORT:-3000}:3000"
     restart: unless-stopped
