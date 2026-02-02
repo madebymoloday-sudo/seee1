@@ -218,6 +218,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const timersRef = useRef<number[]>([]);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     // cleanup on unmount
@@ -226,6 +227,24 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       timersRef.current = [];
     };
   }, []);
+
+  // Автофокус на поле ввода после смены шага/ветки
+  useEffect(() => {
+    if (isListModalOpen) return;
+    if (isTransitioning) return;
+    if (!isTextAnswerView(view)) return;
+
+    const t = window.setTimeout(() => inputRef.current?.focus(), 0);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isListModalOpen,
+    isTransitioning,
+    view.kind,
+    view.kind === "core" ? view.step : null,
+    view.kind === "solve" ? view.step : null,
+    view.kind === "deepPick" ? view.fromImportant : null,
+  ]);
 
   const [listTitle, setListTitle] = useState("");
   const [listNotes, setListNotes] = useState("");
@@ -411,9 +430,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       {isTextAnswerView(view) && (
         <div style={{ position: "relative" }}>
           <MessageInput
+            ref={inputRef}
             onSend={onAnswer}
             disabled={isMutating || isTransitioning}
             placeholder="Введите ответ..."
+            autoFocus
           />
         </div>
       )}
