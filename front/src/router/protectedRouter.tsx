@@ -19,7 +19,7 @@ export const protectedRouter = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <SessionsCollectionPage />,
+        element: <NeuroMapPage />,
       },
       {
         path: "sessions/list",

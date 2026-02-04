@@ -47,9 +47,9 @@ export const Layout = observer(({ children }: LayoutProps) => {
               </Link>
               <div className="flex items-center space-x-6">
                 <Link
-                  to="/"
+                  to="/sessions/list"
                   className={`flex items-center space-x-1.5 transition-colors ${
-                    isActive("/") && location.pathname !== "/sessions"
+                    isActive("/sessions")
                       ? "text-blue-600 font-medium"
                       : "text-gray-700 hover:text-gray-900"
                   }`}
