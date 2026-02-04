@@ -2,7 +2,7 @@ import { observer } from "mobx-react-lite";
 import { Navigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Brain } from "lucide-react";
+import { Brain, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -14,6 +14,8 @@ const RegisterPage = observer(() => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
 
   if (isAuthenticated) {
@@ -23,13 +25,18 @@ const RegisterPage = observer(() => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email.trim() || !password.trim() || !name.trim()) {
+    if (!email.trim() || !password.trim() || !confirmPassword.trim() || !name.trim()) {
       toast.error("Заполните все поля");
       return;
     }
 
     if (password.length < 6) {
       toast.error("Пароль должен быть не менее 6 символов");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Пароли не совпадают");
       return;
     }
 
@@ -103,17 +110,54 @@ const RegisterPage = observer(() => {
             <label htmlFor="password" className={`block mb-2 ${styles.label}`}>
               Пароль
             </label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Пароль (минимум 6 символов)"
-              autoComplete="new-password"
-              className={styles.input}
-              required
-              minLength={6}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Пароль (минимум 6 символов)"
+                autoComplete="new-password"
+                className={`${styles.input} pr-10`}
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 hover:text-white"
+                title={showPassword ? "Скрыть пароль" : "Показать пароль"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword" className={`block mb-2 ${styles.label}`}>
+              Подтвердите пароль
+            </label>
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Повторите пароль"
+                autoComplete="new-password"
+                className={`${styles.input} pr-10`}
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 hover:text-white"
+                title={showPassword ? "Скрыть пароль" : "Показать пароль"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <Button
