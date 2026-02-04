@@ -217,6 +217,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [lastUserAnswer, setLastUserAnswer] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [listTitle, setListTitle] = useState("");
+  const [listNotes, setListNotes] = useState("");
+  const [isListModalOpen, setIsListModalOpen] = useState(false);
   const timersRef = useRef<number[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -245,10 +248,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     view.kind === "solve" ? view.step : null,
     view.kind === "deepPick" ? view.fromImportant : null,
   ]);
-
-  const [listTitle, setListTitle] = useState("");
-  const [listNotes, setListNotes] = useState("");
-  const [isListModalOpen, setIsListModalOpen] = useState(false);
 
   const computeNextState = (answer: string): DialogStateV1 | null => {
     const trimmed = answer.trim();
@@ -432,7 +431,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           <MessageInput
             ref={inputRef}
             onSend={onAnswer}
-            disabled={isMutating || isTransitioning}
+            disabled={isMutating}
+            readOnly={isMutating || isTransitioning}
             placeholder="Введите ответ..."
             autoFocus
           />

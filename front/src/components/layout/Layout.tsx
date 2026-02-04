@@ -58,9 +58,9 @@ export const Layout = observer(({ children }: LayoutProps) => {
                   <span>Сессии</span>
                 </Link>
                 <Link
-                  to="/map"
+                  to="/neuro"
                   className={`flex items-center space-x-1.5 transition-colors ${
-                    isActive("/map")
+                    isActive("/neuro")
                       ? "text-blue-600 font-medium"
                       : "text-gray-700 hover:text-gray-900"
                   }`}

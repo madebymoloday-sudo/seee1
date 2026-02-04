@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import CabinetPage from "../pages/cabinet/CabinetPage";
 import JournalPage from "../pages/journal/JournalPage";
 import MapPage from "../pages/map/MapPage";
+import NeuroMapPage from "../pages/neuro/NeuroMapPage";
 import PipelineBuilderPage from "../pages/pipeline-builder/PipelineBuilderPage";
 import SessionPage from "../pages/sessions/SessionPage";
 import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
@@ -39,6 +40,10 @@ export const protectedRouter = createBrowserRouter([
       {
         path: "map",
         element: <MapPage />,
+      },
+      {
+        path: "neuro",
+        element: <NeuroMapPage />,
       },
       {
         path: "cabinet",

@@ -9,8 +9,11 @@ interface MessageInputProps {
   onSend: (message: string) => void;
   onSettingsClick?: () => void;
   disabled?: boolean;
+  readOnly?: boolean;
   placeholder?: string;
   autoFocus?: boolean;
+  value?: string;
+  onValueChange?: (value: string) => void;
 }
 
 function setCombinedRefs<T>(value: T, refs: Array<React.Ref<T> | undefined>) {
@@ -22,9 +25,28 @@ function setCombinedRefs<T>(value: T, refs: Array<React.Ref<T> | undefined>) {
 }
 
 const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
-  ({ onSend, onSettingsClick, disabled = false, placeholder, autoFocus }: MessageInputProps, forwardedRef) => {
-  const [message, setMessage] = useState("");
+  (
+    {
+      onSend,
+      onSettingsClick,
+      disabled = false,
+      readOnly = false,
+      placeholder,
+      autoFocus,
+      value,
+      onValueChange,
+    }: MessageInputProps,
+    forwardedRef
+  ) => {
+  const [internalMessage, setInternalMessage] = useState("");
   const localRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const isControlled = value !== undefined && typeof onValueChange === "function";
+  const message = isControlled ? value : internalMessage;
+  const setMessage = (next: string) => {
+    if (isControlled) onValueChange(next);
+    else setInternalMessage(next);
+  };
 
   const combinedRef = useMemo(() => {
     return (el: HTMLTextAreaElement | null) => {
@@ -41,7 +63,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
   }, [autoFocus, disabled]);
 
   const handleSend = () => {
-    if (message.trim() && !disabled) {
+    if (message.trim() && !disabled && !readOnly) {
       onSend(message.trim());
       setMessage("");
       // Не теряем фокус после отправки (особенно на мобильных)
@@ -49,7 +71,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
     }
   };
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -63,6 +85,10 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
         {onSettingsClick && (
           <Button
             type="button"
+            onMouseDown={(e) => {
+              // Не забираем фокус у textarea при клике по кнопке
+              e.preventDefault();
+            }}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -72,6 +98,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
             variant="ghost"
             size="icon"
             title="Настройки"
+            disabled={disabled}
           >
             <Plus className="h-5 w-5" />
           </Button>
@@ -82,9 +109,10 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           ref={combinedRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder ?? "Введите сообщение..."}
           disabled={disabled}
+          readOnly={readOnly}
           className={styles.textarea}
           rows={1}
         />
@@ -92,12 +120,16 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
         {/* Кнопка отправки (стрелка вверх) */}
         <Button
           type="button"
+          onMouseDown={(e) => {
+            // Не забираем фокус у textarea при клике по кнопке
+            e.preventDefault();
+          }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             handleSend();
           }}
-          disabled={disabled || !message.trim()}
+          disabled={disabled || readOnly || !message.trim()}
           className={styles.sendButton}
           size="icon"
         >

@@ -17,7 +17,7 @@ const RegisterPage = observer(() => {
   const [name, setName] = useState("");
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/neuro" replace />;
   }
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -45,7 +45,7 @@ const RegisterPage = observer(() => {
 
       toast.success("Регистрация успешна! Вы вошли в систему.");
       // Редирект произойдёт автоматически через isAuthenticated
-      navigate("/", { replace: true });
+      navigate("/neuro", { replace: true });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Ошибка регистрации";
       const message = Array.isArray(errorMessage) ? errorMessage[0] : errorMessage;

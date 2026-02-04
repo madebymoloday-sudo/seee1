@@ -40,7 +40,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
     try {
       await login(data.email, data.password);
       // После успешного логина перенаправление обработает ProtectedRoute
-      navigate("/");
+      navigate("/neuro", { replace: true });
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || "Ошибка входа";
 
