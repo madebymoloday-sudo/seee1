@@ -18,7 +18,32 @@ export const useTheme = () => {
       document.documentElement.classList.remove("dark");
     }
     localStorage.setItem("darkMode", String(isDarkMode));
+
+    // Синхронизируем другие вкладки/хуки внутри приложения
+    // (storage не всегда срабатывает в той же вкладке)
+    window.dispatchEvent(new Event("seee:darkMode"));
   }, [isDarkMode]);
+
+  useEffect(() => {
+    const syncFromStorage = () => {
+      const saved = localStorage.getItem("darkMode");
+      if (saved === null) return;
+      const next = saved === "true";
+      setIsDarkMode((prev) => (prev === next ? prev : next));
+    };
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "darkMode") return;
+      syncFromStorage();
+    };
+
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("seee:darkMode", syncFromStorage);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("seee:darkMode", syncFromStorage);
+    };
+  }, []);
 
   const toggleDarkMode = () => {
     setIsDarkMode((prev) => !prev);

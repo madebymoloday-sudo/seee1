@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Eye, EyeOff, Edit2 } from "lucide-react";
+import { Eye, EyeOff, Edit2, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import styles from "./SecuritySettings.module.css";
 
 const SecuritySettings = () => {
   const { user } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [showLogin, setShowLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isEditingLogin, setIsEditingLogin] = useState(false);
@@ -205,6 +207,29 @@ const SecuritySettings = () => {
                 </Button>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Тема */}
+        <div className={styles.field}>
+          <label className={styles.label}>Тема</label>
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-sm text-muted-foreground">
+              {isDarkMode ? "Тёмная тема включена" : "Светлая тема включена"}
+            </div>
+            <Button onClick={toggleDarkMode} variant="outline" size="sm">
+              {isDarkMode ? (
+                <>
+                  <Sun className="h-4 w-4 mr-2" />
+                  Светлая
+                </>
+              ) : (
+                <>
+                  <Moon className="h-4 w-4 mr-2" />
+                  Тёмная
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </CardContent>

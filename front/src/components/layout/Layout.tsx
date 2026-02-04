@@ -33,8 +33,8 @@ export const Layout = observer(({ children }: LayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-background">
+      <nav className="bg-card shadow-sm border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
@@ -51,7 +51,7 @@ export const Layout = observer(({ children }: LayoutProps) => {
                   className={`flex items-center space-x-1.5 transition-colors ${
                     isActive("/sessions")
                       ? "text-blue-600 font-medium"
-                      : "text-gray-700 hover:text-gray-900"
+                      : "text-foreground/80 hover:text-foreground"
                   }`}
                 >
                   <MessageSquare className="h-4 w-4" />
@@ -62,7 +62,7 @@ export const Layout = observer(({ children }: LayoutProps) => {
                   className={`flex items-center space-x-1.5 transition-colors ${
                     isActive("/neuro")
                       ? "text-blue-600 font-medium"
-                      : "text-gray-700 hover:text-gray-900"
+                      : "text-foreground/80 hover:text-foreground"
                   }`}
                 >
                   <Map className="h-4 w-4" />
@@ -73,7 +73,7 @@ export const Layout = observer(({ children }: LayoutProps) => {
                   className={`flex items-center space-x-1.5 transition-colors ${
                     isActive("/journal")
                       ? "text-blue-600 font-medium"
-                      : "text-gray-700 hover:text-gray-900"
+                      : "text-foreground/80 hover:text-foreground"
                   }`}
                 >
                   <BookOpen className="h-4 w-4" />
@@ -84,7 +84,7 @@ export const Layout = observer(({ children }: LayoutProps) => {
                   className={`flex items-center space-x-1.5 transition-colors ${
                     isActive("/cabinet")
                       ? "text-blue-600 font-medium"
-                      : "text-gray-700 hover:text-gray-900"
+                      : "text-foreground/80 hover:text-foreground"
                   }`}
                 >
                   <User className="h-4 w-4" />
@@ -93,7 +93,7 @@ export const Layout = observer(({ children }: LayoutProps) => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700">{user?.username || "Пользователь"}</span>
+              <span className="text-foreground/80">{user?.username || "Пользователь"}</span>
               <Button variant="outline" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Выйти
