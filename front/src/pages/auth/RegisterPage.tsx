@@ -2,7 +2,7 @@ import { observer } from "mobx-react-lite";
 import { Navigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Brain, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -65,8 +65,13 @@ const RegisterPage = observer(() => {
       <div className={styles.loginFormContainer}>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Brain className="h-8 w-8 text-white" />
-            <h1 className={`text-3xl font-bold ${styles.loginTitle}`}>SEEE</h1>
+            <img
+              src="/seee-logo-128.png"
+              alt="Seee"
+              className="h-8 w-8 rounded-full bg-white/90"
+              draggable={false}
+            />
+            <h1 className={`text-3xl font-bold ${styles.loginTitle}`}>Seee</h1>
           </div>
           <p className={`mt-2 ${styles.loginSubtitle}`}>
             Регистрация

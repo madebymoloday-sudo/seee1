@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { Layout } from "@/components/layout/Layout";
-import { User, Brain } from "lucide-react";
+import { User } from "lucide-react";
 import { useAuthControllerGetMe } from "@/api/seee.swr";
 import ProfileSection from "./components/ProfileSection";
 import SecuritySettings from "./components/SecuritySettings";
@@ -14,7 +14,7 @@ const CabinetPage = observer(() => {
   const navigate = useNavigate();
 
   const handleNeurocardClick = () => {
-    navigate("/map");
+    navigate("/neuro");
   };
 
   return (
@@ -41,7 +41,12 @@ const CabinetPage = observer(() => {
             variant="outline"
             className="flex items-center gap-2"
           >
-            <Brain className="h-5 w-5" />
+            <img
+              src="/seee-logo-128.png"
+              alt="Seee"
+              className="h-5 w-5 rounded-full"
+              draggable={false}
+            />
             Нейрокарта
           </Button>
         </div>

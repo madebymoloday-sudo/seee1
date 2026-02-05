@@ -8,7 +8,6 @@ import {
   BookOpen,
   User,
   LogOut,
-  Brain,
 } from "lucide-react";
 
 interface LayoutProps {
@@ -42,8 +41,13 @@ export const Layout = observer(({ children }: LayoutProps) => {
                 to="/"
                 className="flex items-center space-x-2 text-xl font-bold text-blue-600 hover:text-blue-700"
               >
-                <Brain className="h-6 w-6" />
-                <span>SEEE</span>
+                <img
+                  src="/seee-logo-128.png"
+                  alt="Seee"
+                  className="h-7 w-7 rounded-full"
+                  draggable={false}
+                />
+                <span>Seee</span>
               </Link>
               <div className="flex items-center space-x-6">
                 <Link

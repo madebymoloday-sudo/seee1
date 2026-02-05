@@ -32,7 +32,15 @@ const HomePage = observer(() => {
         <div className="w-full max-w-md px-6 py-8">
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-2xl">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">SEEE</h1>
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <img
+                  src="/seee-logo-128.png"
+                  alt="Seee"
+                  className="h-10 w-10 rounded-full bg-white/90"
+                  draggable={false}
+                />
+                <h1 className="text-3xl font-bold text-white">Seee</h1>
+              </div>
               <p className="text-white/80">Войдите в свой аккаунт</p>
             </div>
             {showRegister ? (
