@@ -548,10 +548,10 @@ const NeuroMapPage = observer(() => {
       const s = draft.situations[draft.situationIndex];
       return (
         <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-          <Button variant="secondary" onClick={onAddEmotion}>
+          <Button variant="secondary" onClick={onAddEmotion} className={chatStyles.glassButton}>
             Добавить эмоцию
           </Button>
-          <Button onClick={onGoToThoughts} disabled={s.emotions.length === 0}>
+          <Button onClick={onGoToThoughts} disabled={s.emotions.length === 0} className={chatStyles.glassButton}>
             Идём дальше
           </Button>
         </div>
@@ -561,10 +561,10 @@ const NeuroMapPage = observer(() => {
     if (c.kind === "thought") {
       return (
         <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-          <Button variant="secondary" onClick={requestHint}>
+          <Button variant="secondary" onClick={requestHint} className={chatStyles.glassButton}>
             Затрудняюсь ответить
           </Button>
-          <Button variant="ghost" onClick={onCantAnswer}>
+          <Button variant="ghost" onClick={onCantAnswer} className={chatStyles.glassButton}>
             Не могу ответить
           </Button>
         </div>
@@ -574,10 +574,10 @@ const NeuroMapPage = observer(() => {
     // summary
     return (
       <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-        <Button variant="secondary" onClick={onAddSituation}>
+        <Button variant="secondary" onClick={onAddSituation} className={chatStyles.glassButton}>
           Добавить ещё одну ситуацию
         </Button>
-        <Button onClick={onSaveToNeuroMap} disabled={isSaving}>
+        <Button onClick={onSaveToNeuroMap} disabled={isSaving} className={chatStyles.glassButton}>
           {isSaving ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

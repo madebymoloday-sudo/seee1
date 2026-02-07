@@ -531,7 +531,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             {importantOptions.map((opt) => (
               <Button
                 key={opt}
-                className={styles.choiceButton}
+                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
                 variant="outline"
                 onClick={() => onAnswer(opt)}
                 disabled={isTransitioning}
@@ -544,10 +544,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
         {showCoreChoice && (
           <div className={styles.choiceRow}>
-            <Button className={styles.choiceButton} onClick={goSolve}>
+            <Button className={`${styles.choiceButton} ${chatStyles.glassButton}`} onClick={goSolve}>
               Решить ситуацию
             </Button>
-            <Button className={styles.choiceButton} variant="outline" onClick={goDeepPick}>
+            <Button className={`${styles.choiceButton} ${chatStyles.glassButton}`} variant="outline" onClick={goDeepPick}>
               Разобраться глубже
             </Button>
           </div>
@@ -555,10 +555,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
         {showSolveChoice && (
           <div className={styles.choiceRow}>
-            <Button className={styles.choiceButton} variant="outline" onClick={goDeepPick}>
+            <Button className={`${styles.choiceButton} ${chatStyles.glassButton}`} variant="outline" onClick={goDeepPick}>
               Разобраться глубже
             </Button>
-            <Button className={styles.choiceButton} onClick={openAddToList}>
+            <Button className={`${styles.choiceButton} ${chatStyles.glassButton}`} onClick={openAddToList}>
               Добавить в список
             </Button>
           </div>
@@ -576,10 +576,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                   setIsEditing(true);
                   window.setTimeout(() => inputRef.current?.focus(), 0);
                 }}
+                className={chatStyles.glassButton}
               >
                 Отредактировать
               </Button>
-              <Button onClick={() => onAnswer(inputText)} disabled={!inputText.trim()}>
+              <Button onClick={() => onAnswer(inputText)} disabled={!inputText.trim()} className={chatStyles.glassButton}>
                 Дальше
               </Button>
             </>
@@ -633,10 +634,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               </p>
             </div>
             <div className={styles.modalFooter}>
-              <Button variant="outline" onClick={() => setIsListModalOpen(false)}>
+              <Button variant="outline" onClick={() => setIsListModalOpen(false)} className={chatStyles.glassButton}>
                 Отмена
               </Button>
-              <Button onClick={submitAddToList} disabled={isMutating}>
+              <Button onClick={submitAddToList} disabled={isMutating} className={chatStyles.glassButton}>
                 Отправить
               </Button>
             </div>
