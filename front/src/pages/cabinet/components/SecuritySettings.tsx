@@ -14,6 +14,7 @@ const SecuritySettings = () => {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [showLogin, setShowLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [isEditingLogin, setIsEditingLogin] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [newLogin, setNewLogin] = useState(user?.email || "");
@@ -91,7 +92,9 @@ const SecuritySettings = () => {
     return `${maskedLocal}@${domain}`;
   };
 
-  const maskPassword = () => "••••••••";
+  // Реальный текущий пароль показывать нельзя — но "глазик" должен давать видимый эффект
+  // (в скрытом виде — нативная маска password input, в показанном — звездочки текстом).
+  const maskPassword = () => "********";
 
   return (
     <Card>
@@ -110,6 +113,7 @@ const SecuritySettings = () => {
               className={styles.input}
             />
             <button
+              type="button"
               onClick={() => setShowLogin(!showLogin)}
               className={styles.eyeButton}
               title={showLogin ? "Скрыть" : "Показать"}
@@ -156,12 +160,13 @@ const SecuritySettings = () => {
           <label className={styles.label}>Пароль</label>
           <div className={styles.inputWrapper}>
             <Input
-              type="text"
-              value={showPassword ? "••••••••" : maskPassword()}
+              type={showPassword ? "text" : "password"}
+              value={maskPassword()}
               readOnly
               className={styles.input}
             />
             <button
+              type="button"
               onClick={() => setShowPassword(!showPassword)}
               className={styles.eyeButton}
               title={showPassword ? "Скрыть" : "Показать"}
@@ -180,20 +185,48 @@ const SecuritySettings = () => {
               </Button>
             ) : (
               <div className={styles.editActions}>
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className={styles.editInput}
-                  placeholder="Новый пароль"
-                />
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={styles.editInput}
-                  placeholder="Подтвердите пароль"
-                />
+                <div className="relative">
+                  <Input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className={`${styles.editInput} pr-10`}
+                    placeholder="Новый пароль"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((p) => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    title={showNewPassword ? "Скрыть пароль" : "Показать пароль"}
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Input
+                    type={showNewPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`${styles.editInput} pr-10`}
+                    placeholder="Подтвердите пароль"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((p) => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    title={showNewPassword ? "Скрыть пароль" : "Показать пароль"}
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
                 <Button onClick={handleSavePassword} size="sm" className={styles.saveButton}>
                   Сохранить
                 </Button>

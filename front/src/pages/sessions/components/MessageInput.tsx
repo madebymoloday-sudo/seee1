@@ -62,6 +62,19 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
     return () => window.clearTimeout(t);
   }, [autoFocus, disabled]);
 
+  const autoResize = () => {
+    const el = localRef.current;
+    if (!el) return;
+    // reset then fit content
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  useEffect(() => {
+    autoResize();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message]);
+
   const handleSend = () => {
     if (message.trim() && !disabled && !readOnly) {
       onSend(message.trim());
@@ -108,13 +121,17 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
         <Textarea
           ref={combinedRef}
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            setMessage(e.target.value);
+            // Resize as user types
+            window.requestAnimationFrame(autoResize);
+          }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder ?? "Введите сообщение..."}
           disabled={disabled}
           readOnly={readOnly}
           className={styles.textarea}
-          rows={1}
+          rows={3}
         />
 
         {/* Кнопка отправки (стрелка вверх) */}
