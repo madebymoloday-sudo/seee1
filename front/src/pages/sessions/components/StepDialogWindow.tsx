@@ -257,6 +257,18 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
+    if (!isListModalOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setIsListModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isListModalOpen]);
+
+  useEffect(() => {
     // cleanup on unmount
     return () => {
       for (const t of timersRef.current) window.clearTimeout(t);

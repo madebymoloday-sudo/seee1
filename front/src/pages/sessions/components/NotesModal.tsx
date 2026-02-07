@@ -39,6 +39,18 @@ const NotesModal = ({ isOpen, onClose }: NotesModalProps) => {
     }
   }, [isOpen, storageKey]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onClose]);
+
   // Сохраняем заметки в localStorage
   const saveNotes = (updatedNotes: Note[]) => {
     localStorage.setItem(storageKey, JSON.stringify(updatedNotes));
