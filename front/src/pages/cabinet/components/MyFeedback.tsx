@@ -20,13 +20,13 @@ const MyFeedback = () => {
     updatedAt: string;
   };
 
+  const fetchMyFeedback = (url: string) => apiAgent.get<FeedbackItem[]>(url);
+
   const {
     data: feedbacks,
     isLoading,
     mutate,
-  } = useSwr<FeedbackItem[]>("/feedback/my?sessionOnly=1", (url) =>
-    apiAgent.get(url)
-  );
+  } = useSwr<FeedbackItem[]>("/feedback/my?sessionOnly=1", fetchMyFeedback);
 
   const items = useMemo(() => feedbacks ?? [], [feedbacks]);
 
