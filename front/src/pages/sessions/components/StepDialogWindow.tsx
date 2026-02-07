@@ -459,6 +459,43 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           </div>
         </div>
 
+        {canGoBack && (
+          <div
+            className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
+              isFadingOut ? chatStyles.fadeOut : ""
+            }`}
+            style={{ justifyContent: "flex-end", marginTop: "-0.75rem" }}
+          >
+            <div
+              className={`${chatStyles.message} ${chatStyles.assistantMessage}`}
+              style={{
+                width: "auto",
+                maxWidth: 260,
+                padding: "0.75rem 1rem",
+                borderRadius: "999px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={goBack}
+                disabled={!canGoBack || isTransitioning}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  padding: 0,
+                  cursor: isTransitioning ? "not-allowed" : "pointer",
+                  opacity: isTransitioning ? 0.6 : 1,
+                }}
+                className={chatStyles.messageContent}
+                aria-label="Назад"
+                title="Назад"
+              >
+                ← Назад
+              </button>
+            </div>
+          </div>
+        )}
+
         {lastUserAnswer && (
           <div
             className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
@@ -495,9 +532,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
         {showCoreChoice && (
           <div className={styles.choiceRow}>
-            <Button className={styles.choiceButton} variant="outline" onClick={goBack} disabled={!canGoBack}>
-              Назад
-            </Button>
             <Button className={styles.choiceButton} onClick={goSolve}>
               Решить ситуацию
             </Button>
@@ -509,9 +543,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
         {showSolveChoice && (
           <div className={styles.choiceRow}>
-            <Button className={styles.choiceButton} variant="outline" onClick={goBack} disabled={!canGoBack}>
-              Назад
-            </Button>
             <Button className={styles.choiceButton} variant="outline" onClick={goDeepPick}>
               Разобраться глубже
             </Button>
@@ -525,9 +556,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       {/* Кнопки управления (назад/редактирование) */}
       {isTextAnswerView(view) && (
         <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-          <Button variant="outline" onClick={goBack} disabled={!canGoBack}>
-            Назад
-          </Button>
           {!isEditing && (
             <>
               <Button

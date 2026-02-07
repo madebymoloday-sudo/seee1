@@ -538,32 +538,17 @@ const NeuroMapPage = observer(() => {
     const canBack = history.length > 0;
 
     if (c.kind === "situation") {
-      return (
-        <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-          <Button variant="outline" onClick={goBack} disabled={!canBack}>
-            Назад
-          </Button>
-        </div>
-      );
+      return null;
     }
 
     if (c.kind === "emotionInput") {
-      return (
-        <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-          <Button variant="outline" onClick={goBack} disabled={!canBack}>
-            Назад
-          </Button>
-        </div>
-      );
+      return null;
     }
 
     if (c.kind === "emotionActions") {
       const s = draft.situations[draft.situationIndex];
       return (
         <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-          <Button variant="outline" onClick={goBack} disabled={!canBack}>
-            Назад
-          </Button>
           <Button variant="secondary" onClick={onAddEmotion}>
             Добавить эмоцию
           </Button>
@@ -577,9 +562,6 @@ const NeuroMapPage = observer(() => {
     if (c.kind === "thought") {
       return (
         <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-          <Button variant="outline" onClick={goBack} disabled={!canBack}>
-            Назад
-          </Button>
           <Button variant="secondary" onClick={requestHint}>
             Затрудняюсь ответить
           </Button>
@@ -593,9 +575,6 @@ const NeuroMapPage = observer(() => {
     // summary
     return (
       <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-        <Button variant="outline" onClick={goBack} disabled={!canBack}>
-          Назад
-        </Button>
         <Button variant="secondary" onClick={onAddSituation}>
           Добавить ещё одну ситуацию
         </Button>
@@ -662,6 +641,39 @@ const NeuroMapPage = observer(() => {
                   <p className={chatStyles.messageContent}>{prompt}</p>
                 </div>
               </div>
+
+              {history.length > 0 && (
+                <div
+                  className={chatStyles.messageWrapper}
+                  style={{ justifyContent: "flex-end", marginTop: "-0.75rem" }}
+                >
+                  <div
+                    className={`${chatStyles.message} ${chatStyles.assistantMessage}`}
+                    style={{
+                      width: "auto",
+                      maxWidth: 260,
+                      padding: "0.75rem 1rem",
+                      borderRadius: "999px",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                      }}
+                      className={chatStyles.messageContent}
+                      aria-label="Назад"
+                      title="Назад"
+                    >
+                      ← Назад
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {summaryTable && (
                 <div className={chatStyles.messageWrapper}>
