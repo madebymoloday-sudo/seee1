@@ -15,6 +15,44 @@ import { toast } from "sonner";
 
 type SortOption = "default" | "negative" | "positive" | "to_explore";
 
+function parseImportantOptions(text: string): string[] {
+  const raw = (text || "")
+    .split(/\r?\n|;|•|\u2022|,|—|-|\*/g)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => s.replace(/^\d+[\)\.\-]\s*/, "").trim())
+    .filter((s) => s.length >= 2);
+
+  const unique: string[] = [];
+  for (const item of raw) {
+    const key = item.toLowerCase();
+    if (!unique.some((x) => x.toLowerCase() === key)) unique.push(item);
+    if (unique.length >= 16) break;
+  }
+  return unique;
+}
+
+function getIdeasCountFromLocalState(sessionId: string): number {
+  try {
+    const raw = localStorage.getItem(`seee_step_dialog_state:${sessionId}`);
+    if (!raw) return 0;
+    const parsed = JSON.parse(raw) as { v?: number; answers?: Record<string, string> };
+    const answers = parsed?.v === 2 ? parsed.answers || {} : {};
+
+    const answer3 =
+      answers["core:situation:3"] || answers["core:thought:3"] || "";
+    const answer4 =
+      answers["core:situation:4"] || answers["core:thought:4"] || "";
+
+    let count = 0;
+    if (answer3.trim()) count += 1;
+    count += parseImportantOptions(answer4).length;
+    return count;
+  } catch {
+    return 0;
+  }
+}
+
 const SessionsCollectionPage = observer(() => {
   const navigate = useNavigate();
   const { sessions, isLoading, error } = useSessions();
@@ -86,10 +124,9 @@ const SessionsCollectionPage = observer(() => {
     }
   };
 
-  // Подсчёт количества идей (пока заглушка)
-  const getIdeasCount = (_sessionId?: string) => {
-    // TODO: Получить реальное количество идей из API
-    return Math.floor(Math.random() * 100);
+  const getIdeasCount = (sessionId?: string) => {
+    if (!sessionId) return 0;
+    return getIdeasCountFromLocalState(sessionId);
   };
 
   return (

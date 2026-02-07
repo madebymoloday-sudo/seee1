@@ -21,6 +21,8 @@ import {
 import MessageInput from "@/pages/sessions/components/MessageInput";
 import chatStyles from "@/pages/sessions/components/ChatWindow.module.css";
 import { mutate } from "swr";
+import { useAuth } from "@/hooks/useAuth";
+import { Navigate } from "react-router-dom";
 
 type EmotionEntry = {
   id: string;
@@ -56,8 +58,9 @@ type HistorySnapshot = {
   notice: string | null;
 };
 
-const STORAGE_KEY = "seee_neuromap_draft_v1";
+const STORAGE_KEY_PREFIX = "seee_neuromap_draft_v1:";
 const SESSION_KIND_PREFIX = "seee_session_kind:";
+const ONBOARDING_DONE_PREFIX = "seee_onboarding_neuro_done:";
 
 function setSessionKind(sessionId: string, kind: "thought") {
   try {
@@ -78,9 +81,9 @@ function cloneDraft(draft: DraftV1): DraftV1 {
   return JSON.parse(JSON.stringify(draft)) as DraftV1;
 }
 
-function loadDraft(): DraftV1 | null {
+function loadDraft(storageKey: string): DraftV1 | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<DraftV1>;
     if (parsed.v !== 1) return null;
@@ -166,12 +169,22 @@ function getPrompt(draft: DraftV1, hint: string | null, notice: string | null): 
 
 const NeuroMapPage = observer(() => {
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const { user } = useAuth();
+  const userId = user?.id || "anonymous";
+  const storageKey = `${STORAGE_KEY_PREFIX}${userId}`;
+  const onboardingDoneKey = `${ONBOARDING_DONE_PREFIX}${userId}`;
+  const onboardingDone = localStorage.getItem(onboardingDoneKey) === "1";
+
+  if (onboardingDone) {
+    return <Navigate to="/map" replace />;
+  }
+
   const [history, setHistory] = useState<HistorySnapshot[]>([]);
   const [hint, setHint] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
 
-  const [draft, setDraft] = useState<DraftV1>(() => loadDraft() ?? defaultDraft());
+  const [draft, setDraft] = useState<DraftV1>(() => loadDraft(storageKey) ?? defaultDraft());
 
   const currentSituation = draft.situations[draft.situationIndex];
 
@@ -185,11 +198,11 @@ const NeuroMapPage = observer(() => {
   // Persist draft
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+      localStorage.setItem(storageKey, JSON.stringify(draft));
     } catch {
       // ignore
     }
-  }, [draft]);
+  }, [draft, storageKey]);
 
   // Autofocus when we need text input
   useEffect(() => {
@@ -478,11 +491,17 @@ const NeuroMapPage = observer(() => {
         num += 1;
       }
       toast.success("Ситуация записана в нейрокарту");
+      try {
+        localStorage.setItem(onboardingDoneKey, "1");
+        localStorage.removeItem(storageKey);
+      } catch {
+        // ignore
+      }
     } catch (err) {
       console.error("Save neuro map error:", err);
       toast.error("Не удалось записать в нейрокарту");
     }
-  }, [createEventMap, draft, nextEventNumberStart]);
+  }, [createEventMap, draft, nextEventNumberStart, onboardingDoneKey, storageKey]);
 
   const actionRow = (() => {
     const c = draft.cursor;

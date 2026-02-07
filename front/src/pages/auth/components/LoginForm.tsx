@@ -39,8 +39,8 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data.email, data.password);
-      // После успешного логина перенаправление обработает ProtectedRoute
-      navigate("/neuro", { replace: true });
+      // Дальше решит EntryGate (онбординг или новая сессия)
+      navigate("/", { replace: true });
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || "Ошибка входа";
 

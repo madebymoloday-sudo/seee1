@@ -4,6 +4,7 @@ import JournalPage from "../pages/journal/JournalPage";
 import MapPage from "../pages/map/MapPage";
 import NeuroMapPage from "../pages/neuro/NeuroMapPage";
 import PipelineBuilderPage from "../pages/pipeline-builder/PipelineBuilderPage";
+import EntryGatePage from "../pages/EntryGatePage";
 import SessionPage from "../pages/sessions/SessionPage";
 import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
 import WizardDemoPage from "../pages/sessions/WizardDemoPage";
@@ -19,7 +20,7 @@ export const protectedRouter = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <NeuroMapPage />,
+        element: <EntryGatePage />,
       },
       {
         path: "sessions/list",

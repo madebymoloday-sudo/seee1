@@ -28,8 +28,29 @@ const SessionFolder = ({ session, colorIndex }: SessionFolderProps) => {
     navigate(`/sessions/${session.id}`);
   };
 
-  // Количество идей (сообщений пользователя)
-  const ideasCount = session.messageCount || 0;
+  // Количество идей: шаг 3 (мысль) + варианты шага 4 (почему важно)
+  const ideasCount = (() => {
+    try {
+      const raw = localStorage.getItem(`seee_step_dialog_state:${session.id}`);
+      if (!raw) return 0;
+      const parsed = JSON.parse(raw) as { v?: number; answers?: Record<string, string> };
+      const answers = parsed?.v === 2 ? parsed.answers || {} : {};
+      const answer3 =
+        answers["core:situation:3"] || answers["core:thought:3"] || "";
+      const answer4 =
+        answers["core:situation:4"] || answers["core:thought:4"] || "";
+      const opts = (answer4 || "")
+        .split(/\r?\n|;|•|\u2022|,|—|-|\*/g)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((s) => s.replace(/^\d+[\)\.\-]\s*/, "").trim())
+        .filter((s) => s.length >= 2);
+      const unique = Array.from(new Set(opts.map((x) => x.toLowerCase()))).length;
+      return (answer3.trim() ? 1 : 0) + unique;
+    } catch {
+      return 0;
+    }
+  })();
 
   return (
     <div 

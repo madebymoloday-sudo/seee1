@@ -19,8 +19,8 @@ const HomePage = observer(() => {
 
     // Если пользователь авторизован, продолжаем логику
     if (isAuthenticated) {
-      // Новый онбординг: после входа/регистрации сразу ведём в "Нейрокарту"
-      navigate("/neuro", { replace: true });
+      // Дальше решит EntryGate (онбординг или новая сессия)
+      navigate("/", { replace: true });
       return;
     }
   }, [isAuthenticated, authLoading, navigate]);

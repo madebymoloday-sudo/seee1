@@ -158,7 +158,9 @@ const SessionFolderCard = observer(({
         {/* Основная часть папки */}
         <div className={styles.folderBody}>
           <div className={styles.folderInfo}>
-            <span className={styles.ideasCount}>{ideasCount} идей</span>
+            <span className={styles.ideasBadge}>
+              {ideasCount} идей
+            </span>
           </div>
           
           {/* Кнопка перехода */}

@@ -107,7 +107,8 @@ const TelegramAuthButton = observer(
 
               // Обновляем store через проверку авторизации
               await login(response.user.email || "", "");
-              navigate("/neuro", { replace: true });
+              // Дальше решит EntryGate (онбординг или новая сессия)
+              navigate("/", { replace: true });
             }
           } catch (error) {
             console.error("Telegram auth error:", error);
