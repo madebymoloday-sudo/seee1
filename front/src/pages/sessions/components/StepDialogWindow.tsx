@@ -31,6 +31,11 @@ type DialogStateV1 = {
 type DialogStateV2 = Omit<DialogStateV1, "v"> & {
   v: 2;
   answers: Record<string, string>;
+  deepPickReturn?: {
+    coreStep: number;
+    solveStep: number;
+    subject: Subject;
+  };
 };
 
 type DialogState = DialogStateV2;
@@ -51,7 +56,8 @@ function parseImportantOptions(text: string): string[] {
   for (const item of raw) {
     const key = item.toLowerCase();
     if (!unique.some((x) => x.toLowerCase() === key)) unique.push(item);
-    if (unique.length >= 8) break;
+    // keep a safe upper bound to avoid UI overload
+    if (unique.length >= 50) break;
   }
   return unique;
 }
@@ -242,8 +248,30 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const importantOptions = useMemo(() => {
     if (view.kind !== "deepPick") return [];
-    return parseImportantOptions(state.importantText);
-  }, [view, state.importantText]);
+    const text =
+      view.fromImportant ||
+      state.answers["core:situation:4"] ||
+      state.answers["core:thought:4"] ||
+      state.importantText ||
+      "";
+    return parseImportantOptions(text);
+  }, [view, state.answers, state.importantText]);
+
+  const importantTextForDeep = useMemo(() => {
+    return (
+      state.answers["core:situation:4"] ||
+      state.answers["core:thought:4"] ||
+      state.importantText ||
+      ""
+    );
+  }, [state.answers, state.importantText]);
+
+  const canDeepNow = useMemo(() => {
+    // button should be available during the session after step 4 is answered at least once
+    if (isTransitioning || isListModalOpen) return false;
+    if (view.kind === "deepPick") return false;
+    return parseImportantOptions(importantTextForDeep).length > 0;
+  }, [importantTextForDeep, isListModalOpen, isTransitioning, view.kind]);
 
   const [lastUserAnswer, setLastUserAnswer] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -323,6 +351,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         subject: "thought",
         situationText: trimmed,
         coreStep: 2,
+        deepPickReturn: undefined,
       };
     }
 
@@ -383,7 +412,17 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   const goDeepPick = () => {
-    setState((s) => ({ ...s, coreStep: 99 })); // pseudo-step for deepPick
+    setState((s) => ({
+      ...s,
+      // make sure we use the latest stored answer
+      importantText:
+        s.answers["core:situation:4"] ||
+        s.answers["core:thought:4"] ||
+        s.importantText ||
+        "",
+      deepPickReturn: { coreStep: s.coreStep, solveStep: s.solveStep, subject: s.subject },
+      coreStep: 99, // pseudo-step for deepPick
+    }));
   };
 
   const goSolve = () => {
@@ -441,7 +480,18 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const goBack = () => {
     if (!canGoBack) return;
     if (view.kind === "deepPick") {
-      setState((s) => ({ ...s, coreStep: 10 }));
+      setState((s) => {
+        if (s.deepPickReturn) {
+          return {
+            ...s,
+            coreStep: s.deepPickReturn.coreStep,
+            solveStep: s.deepPickReturn.solveStep,
+            subject: s.deepPickReturn.subject,
+            deepPickReturn: undefined,
+          };
+        }
+        return { ...s, coreStep: 10, deepPickReturn: undefined };
+      });
       return;
     }
     if (view.kind === "solve") {
@@ -568,6 +618,18 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       {/* Кнопки управления (назад/редактирование) */}
       {isTextAnswerView(view) && (
         <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
+          {canDeepNow && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={goDeepPick}
+              disabled={isTransitioning || isListModalOpen}
+              className={chatStyles.glassButton}
+              title='Показать идеи из ответа "Почему это важно"'
+            >
+              Глубже
+            </Button>
+          )}
           {!isEditing && (
             <>
               <Button
