@@ -18,6 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { SessionsService } from './sessions.service';
 import { CreateSessionDto, SessionResponseDto } from './dto/session.dto';
+import { UpdateSessionDto } from './dto/update-session.dto';
 import { UpdateSessionProgramDto } from './dto/update-session-program.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -76,6 +77,25 @@ export class SessionsController {
     @Request() req: { user: { id: string } },
   ): Promise<SessionResponseDto> {
     return this.sessionsService.findOne(id, req.user.id);
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Обновить данные сессии' })
+  @ApiResponse({
+    status: 200,
+    description: 'Сессия успешно обновлена',
+    type: SessionResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Неавторизованный доступ' })
+  @ApiResponse({ status: 403, description: 'Нет доступа к сессии' })
+  @ApiResponse({ status: 404, description: 'Сессия не найдена' })
+  async updateSession(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+    @Body() updateDto: UpdateSessionDto,
+  ): Promise<SessionResponseDto> {
+    return this.sessionsService.update(id, req.user.id, updateDto);
   }
 
   @Get(':id/document')

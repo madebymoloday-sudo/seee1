@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import styles from "./NotesModal.module.css";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Note {
   id: string;
@@ -15,27 +16,32 @@ interface NotesModalProps {
 }
 
 const NotesModal = ({ isOpen, onClose }: NotesModalProps) => {
+  const { user } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [newNoteContent, setNewNoteContent] = useState("");
 
+  const storageKey = user?.id ? `seee_user_notes:${user.id}` : "seee_user_notes:anonymous";
+
   // Загружаем заметки из localStorage
   useEffect(() => {
     if (isOpen) {
-      const savedNotes = localStorage.getItem("userNotes");
+      const savedNotes = localStorage.getItem(storageKey);
       if (savedNotes) {
         try {
           setNotes(JSON.parse(savedNotes));
         } catch (error) {
           console.error("Ошибка загрузки заметок:", error);
         }
+      } else {
+        setNotes([]);
       }
     }
-  }, [isOpen]);
+  }, [isOpen, storageKey]);
 
   // Сохраняем заметки в localStorage
   const saveNotes = (updatedNotes: Note[]) => {
-    localStorage.setItem("userNotes", JSON.stringify(updatedNotes));
+    localStorage.setItem(storageKey, JSON.stringify(updatedNotes));
     setNotes(updatedNotes);
   };
 

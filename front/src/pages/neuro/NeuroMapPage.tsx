@@ -16,14 +16,17 @@ import apiAgent from "@/lib/api";
 import {
   useEventMapControllerCreateEventMap,
   useEventMapControllerGetEventMap,
+  useSessionsControllerCreateSession,
 } from "@/api/seee.swr";
 import MessageInput from "@/pages/sessions/components/MessageInput";
 import chatStyles from "@/pages/sessions/components/ChatWindow.module.css";
+import { mutate } from "swr";
 
 type EmotionEntry = {
   id: string;
   emotion: string;
   thought: string | null; // null = "не могу ответить"
+  sessionId?: string; // session created in "Моя коллекция" for this thought
 };
 
 type SituationEntry = {
@@ -54,6 +57,15 @@ type HistorySnapshot = {
 };
 
 const STORAGE_KEY = "seee_neuromap_draft_v1";
+const SESSION_KIND_PREFIX = "seee_session_kind:";
+
+function setSessionKind(sessionId: string, kind: "thought") {
+  try {
+    localStorage.setItem(`${SESSION_KIND_PREFIX}${sessionId}`, kind);
+  } catch {
+    // ignore
+  }
+}
 
 function uid(): string {
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -166,6 +178,7 @@ const NeuroMapPage = observer(() => {
   const { data: existingMap } = useEventMapControllerGetEventMap();
   const { trigger: createEventMap, isMutating: isSaving } =
     useEventMapControllerCreateEventMap();
+  const { trigger: createSession } = useSessionsControllerCreateSession();
 
   const prompt = useMemo(() => getPrompt(draft, hint, notice), [draft, hint, notice]);
 
@@ -252,6 +265,7 @@ const NeuroMapPage = observer(() => {
     (text: string) => {
       const trimmed = text.trim();
       if (!trimmed) return;
+      const draftSnapshot = cloneDraft(draft);
 
       const c = draft.cursor;
       const sIdx = draft.situationIndex;
@@ -293,13 +307,15 @@ const NeuroMapPage = observer(() => {
 
       if (c.kind === "thought") {
         pushHistory();
+        const currentEmotionIndex = c.emotionIndex;
+
         setDraft((prev) => {
           const next = cloneDraft(prev);
           const s = next.situations[sIdx];
-          const e = s.emotions[c.emotionIndex];
+          const e = s.emotions[currentEmotionIndex];
           if (e) e.thought = trimmed;
 
-          const nextEmotionIndex = c.emotionIndex + 1;
+          const nextEmotionIndex = currentEmotionIndex + 1;
           if (nextEmotionIndex < s.emotions.length) {
             next.cursor = { kind: "thought", emotionIndex: nextEmotionIndex };
           } else {
@@ -307,10 +323,43 @@ const NeuroMapPage = observer(() => {
           }
           return next;
         });
+
+        // Create/Update a "thought session" in My Collection for this thought
+        (async () => {
+          try {
+            const s = draftSnapshot.situations[sIdx];
+            const e = s.emotions[currentEmotionIndex];
+            if (!e) return;
+            if (!trimmed) return;
+
+            if (!e.sessionId) {
+              const newSession = await createSession({ title: trimmed });
+              if (!newSession?.id) return;
+
+              setSessionKind(newSession.id, "thought");
+              await mutate(`/api/v1/sessions`);
+
+              setDraft((prev) => {
+                const next = cloneDraft(prev);
+                const ee =
+                  next.situations[sIdx]?.emotions?.[currentEmotionIndex];
+                if (ee && !ee.sessionId) ee.sessionId = newSession.id;
+                return next;
+              });
+            } else {
+              // If user edited the thought (via back), update the session title
+              await apiAgent.patch(`/sessions/${e.sessionId}`, { title: trimmed });
+              await mutate(`/api/v1/sessions`);
+            }
+          } catch {
+            // non-blocking
+          }
+        })();
+
         return;
       }
     },
-    [draft, ensureSituationExists, pushHistory]
+    [createSession, draft, ensureSituationExists, pushHistory]
   );
 
   const onAddEmotion = useCallback(() => {

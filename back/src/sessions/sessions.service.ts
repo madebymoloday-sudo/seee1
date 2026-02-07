@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSessionDto, SessionResponseDto } from './dto/session.dto';
+import { UpdateSessionDto } from './dto/update-session.dto';
 import { PipelineStep } from '../psychologist/pipeline/pipeline.types';
 import type { PipelineState } from '../psychologist/pipeline/pipeline.types';
 
@@ -96,6 +97,41 @@ export class SessionsService {
     }
 
     return this.toResponseDto(session);
+  }
+
+  async update(
+    sessionId: string,
+    userId: string,
+    dto: UpdateSessionDto,
+  ): Promise<SessionResponseDto> {
+    const existing = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Сессия не найдена');
+    }
+
+    if (existing.userId !== userId) {
+      throw new ForbiddenException('Нет доступа к этой сессии');
+    }
+
+    const nextTitle =
+      dto.title === undefined ? undefined : dto.title.trim() || null;
+
+    const updated = await this.prisma.session.update({
+      where: { id: sessionId },
+      data: {
+        ...(nextTitle !== undefined ? { title: nextTitle } : {}),
+      },
+      include: {
+        _count: {
+          select: { messages: true },
+        },
+      },
+    });
+
+    return this.toResponseDto(updated);
   }
 
   async generateDocument(

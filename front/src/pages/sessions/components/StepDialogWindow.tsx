@@ -28,6 +28,13 @@ type DialogStateV1 = {
   situationText: string; // исходная ситуация (или заголовок мысль-сессии)
 };
 
+type DialogStateV2 = Omit<DialogStateV1, "v"> & {
+  v: 2;
+  answers: Record<string, string>;
+};
+
+type DialogState = DialogStateV2;
+
 const STORAGE_KEY_PREFIX = "seee_step_dialog_state:";
 const SESSION_KIND_PREFIX = "seee_session_kind:";
 const SESSION_NOTES_PREFIX = "seee_session_notes:";
@@ -49,21 +56,37 @@ function parseImportantOptions(text: string): string[] {
   return unique;
 }
 
-function loadState(sessionId: string): DialogStateV1 | null {
+function loadState(sessionId: string): DialogState | null {
   try {
     const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${sessionId}`);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<DialogStateV1>;
-    if (parsed?.v !== 1) return null;
-    // минимальная валидация
-    if (typeof parsed.coreStep !== "number" || typeof parsed.solveStep !== "number") return null;
-    return parsed as DialogStateV1;
+    const parsed = JSON.parse(raw) as Partial<DialogStateV1 & DialogStateV2>;
+
+    // v2
+    if (parsed?.v === 2) {
+      if (typeof parsed.coreStep !== "number" || typeof parsed.solveStep !== "number") return null;
+      return parsed as DialogStateV2;
+    }
+
+    // v1 -> v2 migration
+    if (parsed?.v === 1) {
+      if (typeof parsed.coreStep !== "number" || typeof parsed.solveStep !== "number") return null;
+      const v1 = parsed as DialogStateV1;
+      const migrated: DialogStateV2 = {
+        ...v1,
+        v: 2,
+        answers: {},
+      };
+      return migrated;
+    }
+
+    return null;
   } catch {
     return null;
   }
 }
 
-function saveState(sessionId: string, state: DialogStateV1) {
+function saveState(sessionId: string, state: DialogState) {
   try {
     localStorage.setItem(`${STORAGE_KEY_PREFIX}${sessionId}`, JSON.stringify(state));
   } catch {
@@ -161,6 +184,13 @@ function getPrompt(view: View, importantText: string, situationText: string): st
   return situationText;
 }
 
+function stepKey(view: View): string {
+  if (view.kind === "core") return `core:${view.subject}:${view.step}`;
+  if (view.kind === "solve") return `solve:${view.step}`;
+  if (view.kind === "deepPick") return `deepPick`;
+  return "other";
+}
+
 interface StepDialogWindowProps {
   session: SessionResponseDto;
 }
@@ -169,7 +199,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const navigate = useNavigate();
   const { trigger: createSession, isMutating } = useSessionsControllerCreateSession();
 
-  const [state, setState] = useState<DialogStateV1>(() => {
+  const [state, setState] = useState<DialogState>(() => {
     const existing = loadState(session.id);
     if (existing) return existing;
 
@@ -177,12 +207,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     const isThought = kind === "thought";
     const situationText = isThought ? (session.title || "Новая сессия") : "";
     return {
-      v: 1,
+      v: 2,
       subject: isThought ? "thought" : "situation",
       coreStep: isThought ? 2 : 1,
       solveStep: 1,
       importantText: "",
       situationText,
+      answers: {},
     };
   });
 
@@ -217,6 +248,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [lastUserAnswer, setLastUserAnswer] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [inputText, setInputText] = useState("");
+  const [isEditing, setIsEditing] = useState(true);
   const [listTitle, setListTitle] = useState("");
   const [listNotes, setListNotes] = useState("");
   const [isListModalOpen, setIsListModalOpen] = useState(false);
@@ -249,7 +282,25 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     view.kind === "deepPick" ? view.fromImportant : null,
   ]);
 
-  const computeNextState = (answer: string): DialogStateV1 | null => {
+  // Sync input with saved answer (review mode on revisit)
+  useEffect(() => {
+    if (!isTextAnswerView(view)) {
+      setInputText("");
+      setIsEditing(false);
+      return;
+    }
+    const key = stepKey(view);
+    const saved = state.answers[key];
+    if (saved !== undefined) {
+      setInputText(saved);
+      setIsEditing(false);
+    } else {
+      setInputText("");
+      setIsEditing(true);
+    }
+  }, [state.answers, view]);
+
+  const computeNextState = (answer: string): DialogState | null => {
     const trimmed = answer.trim();
     if (!trimmed) return null;
 
@@ -291,8 +342,16 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     const nextState = computeNextState(answer);
     if (!nextState) return;
 
+    const key = stepKey(view);
+    const trimmed = answer.trim();
+    const nextStateWithAnswer: DialogState = {
+      ...(nextState as any),
+      v: 2,
+      answers: { ...(state.answers || {}), [key]: trimmed },
+    };
+
     // Показать ответ и плавно убрать пару (вопрос+ответ), затем показать следующий вопрос
-    setLastUserAnswer(answer.trim());
+    setLastUserAnswer(trimmed);
     setIsTransitioning(true);
     setIsFadingOut(false);
 
@@ -302,10 +361,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     timersRef.current.push(
       window.setTimeout(() => setIsFadingOut(true), 250),
       window.setTimeout(() => {
-        setState(nextState);
+        setState(nextStateWithAnswer);
         setLastUserAnswer(null);
         setIsFadingOut(false);
         setIsTransitioning(false);
+        // for the next step we'll switch to edit/review depending on saved answer (effect)
       }, 850)
     );
   };
@@ -354,6 +414,37 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const showCoreChoice = view.kind === "core" && view.step === 10;
   const showSolveChoice = view.kind === "solve" && view.step === 7;
+
+  const canGoBack = (() => {
+    if (isTransitioning || isListModalOpen) return false;
+    if (view.kind === "deepPick") return true;
+    if (view.kind === "solve") return true;
+    if (view.kind === "core") {
+      const min = view.subject === "thought" ? 2 : 1;
+      return view.step > min;
+    }
+    return false;
+  })();
+
+  const goBack = () => {
+    if (!canGoBack) return;
+    if (view.kind === "deepPick") {
+      setState((s) => ({ ...s, coreStep: 10 }));
+      return;
+    }
+    if (view.kind === "solve") {
+      setState((s) => {
+        if (s.solveStep > 1) return { ...s, solveStep: s.solveStep - 1 };
+        // back to the core choice step
+        return { ...s, coreStep: 10, solveStep: 1, subject: "situation" };
+      });
+      return;
+    }
+    if (view.kind === "core") {
+      const min = view.subject === "thought" ? 2 : 1;
+      setState((s) => ({ ...s, coreStep: Math.max(min, s.coreStep - 1) }));
+    }
+  };
 
   return (
     <div className={chatStyles.chatWindow}>
@@ -404,6 +495,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
         {showCoreChoice && (
           <div className={styles.choiceRow}>
+            <Button className={styles.choiceButton} variant="outline" onClick={goBack} disabled={!canGoBack}>
+              Назад
+            </Button>
             <Button className={styles.choiceButton} onClick={goSolve}>
               Решить ситуацию
             </Button>
@@ -415,6 +509,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
         {showSolveChoice && (
           <div className={styles.choiceRow}>
+            <Button className={styles.choiceButton} variant="outline" onClick={goBack} disabled={!canGoBack}>
+              Назад
+            </Button>
             <Button className={styles.choiceButton} variant="outline" onClick={goDeepPick}>
               Разобраться глубже
             </Button>
@@ -425,16 +522,46 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         )}
       </div>
 
+      {/* Кнопки управления (назад/редактирование) */}
+      {isTextAnswerView(view) && (
+        <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
+          <Button variant="outline" onClick={goBack} disabled={!canGoBack}>
+            Назад
+          </Button>
+          {!isEditing && (
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setIsEditing(true);
+                  window.setTimeout(() => inputRef.current?.focus(), 0);
+                }}
+              >
+                Отредактировать
+              </Button>
+              <Button onClick={() => onAnswer(inputText)} disabled={!inputText.trim()}>
+                Дальше
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Ввод ответа (только там, где нужен текст) */}
       {isTextAnswerView(view) && (
         <div style={{ position: "relative" }}>
           <MessageInput
             ref={inputRef}
-            onSend={onAnswer}
+            onSend={(v) => {
+              if (!isEditing) return;
+              onAnswer(v);
+            }}
             disabled={isMutating}
-            readOnly={isMutating || isTransitioning}
+            readOnly={isMutating || isTransitioning || !isEditing}
             placeholder="Введите ответ..."
             autoFocus
+            value={inputText}
+            onValueChange={setInputText}
           />
         </div>
       )}
