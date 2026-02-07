@@ -266,13 +266,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     );
   }, [state.answers, state.importantText]);
 
-  const canDeepNow = useMemo(() => {
-    // button should be available during the session after step 4 is answered at least once
-    if (isTransitioning || isListModalOpen) return false;
-    if (view.kind === "deepPick") return false;
-    return parseImportantOptions(importantTextForDeep).length > 0;
-  }, [importantTextForDeep, isListModalOpen, isTransitioning, view.kind]);
-
   const [lastUserAnswer, setLastUserAnswer] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
@@ -283,6 +276,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const timersRef = useRef<number[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const canDeepNow = useMemo(() => {
+    // button should be available during the session after step 4 is answered at least once
+    if (isTransitioning || isListModalOpen) return false;
+    if (view.kind === "deepPick") return false;
+    return parseImportantOptions(importantTextForDeep).length > 0;
+  }, [importantTextForDeep, isListModalOpen, isTransitioning, view.kind]);
 
   useEffect(() => {
     if (!isListModalOpen) return;
