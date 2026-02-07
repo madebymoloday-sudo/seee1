@@ -80,7 +80,7 @@ const SessionsPage = observer(() => {
     <div className={styles.sessionsPage}>
       {/* Заголовок */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Моя коллекция</h1>
+        <h1 className={styles.title}>Сессии</h1>
         <button
           onClick={handleCreateSession}
           className={styles.newSessionButton}

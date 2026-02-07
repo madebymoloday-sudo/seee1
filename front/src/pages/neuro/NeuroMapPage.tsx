@@ -28,7 +28,7 @@ type EmotionEntry = {
   id: string;
   emotion: string;
   thought: string | null; // null = "не могу ответить"
-  sessionId?: string; // session created in "Моя коллекция" for this thought
+  sessionId?: string; // session card created for this thought
 };
 
 type SituationEntry = {
