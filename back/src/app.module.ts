@@ -8,6 +8,7 @@ import { WebSocketModule } from './websocket/websocket.module';
 import { PsychologistModule } from './psychologist/psychologist.module';
 import { EventMapModule } from './event-map/event-map.module';
 import { PipelineModule } from './pipeline/pipeline.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PipelineModule } from './pipeline/pipeline.module';
     PsychologistModule,
     EventMapModule,
     PipelineModule,
+    FeedbackModule,
   ],
   controllers: [],
   providers: [],

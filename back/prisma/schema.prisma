@@ -199,6 +199,7 @@ model Feedback {
   id          String         @id @default(uuid())
   userId      String         @map("user_id")
   sessionId   String?        @map("session_id")
+  title       String?        @map("title")
   description String
   filePath    String?        @map("file_path")
   fileType    String?        @map("file_type")
@@ -210,6 +211,7 @@ model Feedback {
   files       FeedbackFile[]
 
   createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
 
   @@index([userId])
   @@index([status])

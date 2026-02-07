@@ -1,22 +1,43 @@
-import { useState } from "react";
-import { useSessions } from "@/hooks/useSessions";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import styles from "./MyFeedback.module.css";
+import useSwr from "swr";
+import apiAgent from "@/lib/api";
+import { Pencil, Check, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const MyFeedback = () => {
-  const { sessions, isLoading } = useSessions();
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  type FeedbackItem = {
+    id: string;
+    sessionId?: string | null;
+    sessionTitle?: string | null;
+    title?: string | null;
+    description: string;
+    createdAt: string;
+    updatedAt: string;
+  };
 
-  // TODO: Загрузить обратную связь для каждой сессии из API
-  // Пока используем заглушку
-  const sessionFeedbacks: Record<string, any> = {};
+  const {
+    data: feedbacks,
+    isLoading,
+    mutate,
+  } = useSwr<FeedbackItem[]>("/feedback/my?sessionOnly=1", (url) =>
+    apiAgent.get(url)
+  );
 
-  const handleSessionClick = (sessionId: string) => {
-    if (selectedSessionId === sessionId) {
-      setSelectedSessionId(null);
-    } else {
-      setSelectedSessionId(sessionId);
-    }
+  const items = useMemo(() => feedbacks ?? [], [feedbacks]);
+
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftDescription, setDraftDescription] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleToggle = (id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id));
   };
 
   if (isLoading) {
@@ -29,11 +50,11 @@ const MyFeedback = () => {
     );
   }
 
-  if (sessions.length === 0) {
+  if (items.length === 0) {
     return (
       <Card>
         <CardContent className="py-8 text-center">
-          У вас пока нет сессий с обратной связью
+          У вас пока нет обратной связи
         </CardContent>
       </Card>
     );
@@ -46,43 +67,109 @@ const MyFeedback = () => {
       </CardHeader>
       <CardContent>
         <div className={styles.sessionsList}>
-          {sessions.map((session) => {
-            const feedback = sessionFeedbacks[session.id];
-            const isExpanded = selectedSessionId === session.id;
+          {items.map((item) => {
+            const isExpanded = expandedId === item.id;
+            const displayTitle =
+              item.title?.trim() ||
+              item.sessionTitle?.trim() ||
+              "Отзыв";
 
             return (
-              <div key={session.id} className={styles.sessionItem}>
-                <button
-                  onClick={() => handleSessionClick(session.id)}
-                  className={styles.sessionButton}
-                >
-                  <span className={styles.sessionTitle}>
-                    {session.title || "Новая сессия"}
-                  </span>
-                  <span className={styles.sessionArrow}>
-                    {isExpanded ? "▼" : "▶"}
-                  </span>
-                </button>
+              <div key={item.id} className={styles.sessionItem}>
+                <div className={styles.sessionRow}>
+                  <button
+                    onClick={() => handleToggle(item.id)}
+                    className={styles.sessionButton}
+                  >
+                    <span className={styles.sessionTitle}>{displayTitle}</span>
+                    <span className={styles.sessionArrow}>
+                      {isExpanded ? "▼" : "▶"}
+                    </span>
+                  </button>
+
+                  <button
+                    className={styles.editButton}
+                    title="Редактировать"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setExpandedId(item.id);
+                      setEditingId(item.id);
+                      setDraftTitle(item.title ?? "");
+                      setDraftDescription(item.description ?? "");
+                    }}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                </div>
 
                 {isExpanded && (
                   <div className={styles.feedbackContent}>
-                    {feedback ? (
-                      <div className={styles.feedbackAnswers}>
-                        {/* TODO: Показать ответы на вопросы обратной связи */}
-                        <p>Ответы на обратную связь будут здесь</p>
+                    {editingId === item.id ? (
+                      <div className={styles.editForm}>
+                        <div className={styles.editRow}>
+                          <Input
+                            value={draftTitle}
+                            onChange={(e) => setDraftTitle(e.target.value)}
+                            placeholder="Название"
+                            disabled={isSaving}
+                          />
+                        </div>
+                        <div className={styles.editRow}>
+                          <Textarea
+                            value={draftDescription}
+                            onChange={(e) => setDraftDescription(e.target.value)}
+                            rows={6}
+                            disabled={isSaving}
+                          />
+                        </div>
+                        <div className={styles.editActions}>
+                          <Button
+                            onClick={async () => {
+                              const nextTitle = draftTitle.trim();
+                              const nextDescription = draftDescription.trim();
+                              if (nextDescription.length < 3) {
+                                toast.error(
+                                  "Текст обратной связи должен быть не короче 3 символов"
+                                );
+                                return;
+                              }
+
+                              setIsSaving(true);
+                              try {
+                                await apiAgent.patch(`/feedback/${item.id}`, {
+                                  title: nextTitle,
+                                  description: nextDescription,
+                                });
+                                await mutate();
+                                toast.success("Обратная связь обновлена");
+                                setEditingId(null);
+                              } catch {
+                                toast.error("Не удалось сохранить изменения");
+                              } finally {
+                                setIsSaving(false);
+                              }
+                            }}
+                            disabled={isSaving}
+                            className={styles.iconButton}
+                          >
+                            <Check size={16} />
+                            Сохранить
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            onClick={() => setEditingId(null)}
+                            disabled={isSaving}
+                            className={styles.iconButton}
+                          >
+                            <X size={16} />
+                            Отмена
+                          </Button>
+                        </div>
                       </div>
                     ) : (
-                      <p className={styles.noFeedback}>
-                        Обратная связь для этой сессии отсутствует
-                      </p>
+                      <pre className={styles.feedbackText}>{item.description}</pre>
                     )}
-
-                    {/* Цепочка ответов пользователя */}
-                    <div className={styles.userMessages}>
-                      <h4 className={styles.userMessagesTitle}>Ваши ответы по сессии:</h4>
-                      {/* TODO: Загрузить и показать только ответы пользователя (не вопросы от приложения) */}
-                      <p className={styles.comingSoon}>Функция будет добавлена</p>
-                    </div>
                   </div>
                 )}
               </div>

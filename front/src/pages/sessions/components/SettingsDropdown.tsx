@@ -108,7 +108,11 @@ const SettingsDropdown = ({ isOpen, onClose, sessionId, messages }: SettingsDrop
         </button>
       </div>
 
-      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        sessionId={sessionId}
+      />
     </>
   );
 };

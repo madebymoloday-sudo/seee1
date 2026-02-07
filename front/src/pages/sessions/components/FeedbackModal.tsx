@@ -2,15 +2,17 @@ import { useEffect, useState } from "react";
 import { X, AlertCircle, Star, Upload } from "lucide-react";
 import { toast } from "sonner";
 import styles from "./FeedbackModal.module.css";
+import apiAgent from "@/lib/api";
 
 interface FeedbackModalProps {
   isOpen: boolean;
   onClose: () => void;
+  sessionId?: string;
 }
 
 type TabType = "feedback" | "error";
 
-const FeedbackModal = ({ isOpen, onClose }: FeedbackModalProps) => {
+const FeedbackModal = ({ isOpen, onClose, sessionId }: FeedbackModalProps) => {
   const [activeTab, setActiveTab] = useState<TabType>("feedback");
   
   // Ошибка
@@ -39,16 +41,35 @@ const FeedbackModal = ({ isOpen, onClose }: FeedbackModalProps) => {
   const handleErrorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // TODO: Отправить данные на сервер
-    console.log({
-      type: "error",
-      what: errorWhat,
-      device: errorDevice,
-      files: errorFiles,
-    });
+    // Пока сохраняем как "быструю" обратную связь без файлов (файлы добавим позже)
+    const description = [
+      "Тип: Ошибка",
+      `Что произошло: ${errorWhat}`,
+      `Устройство: ${errorDevice}`,
+      errorFiles.length ? `Файлы: ${errorFiles.map((f) => f.name).join(", ")}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
 
-    toast.success("Ваше сообщение отправлено, спасибо за обратную связь, мы скоро всё исправим");
-    
+    try {
+      await apiAgent.post<
+        { sessionId?: string; title?: string; description: string; feedbackType?: "QUICK" },
+        any
+      >("/feedback", {
+        sessionId,
+        title: sessionId ? "Ошибка после сессии" : "Ошибка",
+        description,
+        feedbackType: "QUICK",
+      });
+
+      toast.success(
+        "Ваше сообщение отправлено, спасибо за обратную связь, мы скоро всё исправим"
+      );
+    } catch {
+      toast.error("Не удалось отправить сообщение. Попробуйте ещё раз.");
+      return;
+    }
+
     // Сброс формы
     setErrorWhat("");
     setErrorDevice("");
@@ -59,18 +80,32 @@ const FeedbackModal = ({ isOpen, onClose }: FeedbackModalProps) => {
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // TODO: Отправить данные на сервер
-    console.log({
-      type: "feedback",
-      about: feedbackAbout,
-      expectations: feedbackExpectations,
-      met: feedbackMet,
-      reality: feedbackReality,
-      contact: feedbackContact,
-    });
+    const description = [
+      "Тип: Отзыв",
+      `Расскажите о себе: ${feedbackAbout}`,
+      `Ожидания: ${feedbackExpectations}`,
+      `Сбылись или нет: ${feedbackMet}`,
+      `Как было на самом деле: ${feedbackReality}`,
+      `Контакт: ${feedbackContact}`,
+    ].join("\n");
 
-    toast.success("Спасибо за ваш отзыв!");
-    
+    try {
+      await apiAgent.post<
+        { sessionId?: string; title?: string; description: string; feedbackType?: "FULL" },
+        any
+      >("/feedback", {
+        sessionId,
+        title: sessionId ? "Отзыв после сессии" : "Отзыв",
+        description,
+        feedbackType: "FULL",
+      });
+
+      toast.success("Спасибо за ваш отзыв!");
+    } catch {
+      toast.error("Не удалось отправить отзыв. Попробуйте ещё раз.");
+      return;
+    }
+
     // Сброс формы
     setFeedbackAbout("");
     setFeedbackExpectations("");
