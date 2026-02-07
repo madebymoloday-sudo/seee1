@@ -28,6 +28,17 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
 
   useEffect(() => {
     if (!isOpen) return;
+    // Close mobile keyboard and lock background scroll (prevents iOS modal jumping)
+    try {
+      const el = document.activeElement;
+      if (el && el instanceof HTMLElement) el.blur();
+    } catch {
+      // ignore
+    }
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -35,7 +46,10 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
       }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -54,13 +68,21 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
     setIsSubmitting(true);
 
     try {
-      // Сохраняем обратную связь
-      await apiAgent.post(`/sessions/${sessionId}/feedback`, {
-        situation: answers.situation,
-        emotion: answers.emotion,
-        thoughts: answers.thoughts,
-        nextTopics: answers.nextTopics,
-        overall: answers.overall,
+      const description = [
+        "Тип: Приостановка сессии",
+        `а) Какую ситуацию разбирали? ${answers.situation}`,
+        `б) Какую эмоцию сейчас испытываете? ${answers.emotion}`,
+        `в) Какие интересные мысли вы вынесли из этой сессии? ${answers.thoughts}`,
+        `г) Что ещё хотели бы разобрать после этой сессии? ${answers.nextTopics}`,
+        `д) В целом, как проходила эта сессия? ${answers.overall}`,
+      ].join("\n");
+
+      // Сохраняем обратную связь (привязываем к текущей сессии)
+      await apiAgent.post("/feedback", {
+        sessionId,
+        title: "Обратная связь после сессии",
+        description,
+        feedbackType: "FULL",
       });
 
       toast.success("Обратная связь сохранена");
@@ -73,7 +95,7 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
         }
       } catch (error) {
         console.error("Ошибка создания новой сессии:", error);
-        navigate("/sessions");
+        navigate("/sessions/list");
       }
 
       onClose();
