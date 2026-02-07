@@ -535,7 +535,6 @@ const NeuroMapPage = observer(() => {
 
   const actionRow = (() => {
     const c = draft.cursor;
-    const canBack = history.length > 0;
 
     if (c.kind === "situation") {
       return null;
