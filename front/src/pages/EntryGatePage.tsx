@@ -10,7 +10,7 @@ const ONBOARDING_DONE_PREFIX = "seee_onboarding_neuro_done:";
 const EntryGatePage = observer(() => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { trigger: createSession, isMutating } = useSessionsControllerCreateSession();
+  const { trigger: createSession } = useSessionsControllerCreateSession();
   const startedRef = useRef(false);
 
   const onboardingDone = useMemo(() => {

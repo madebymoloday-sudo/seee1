@@ -60,7 +60,7 @@ function loadState(sessionId: string): DialogState | null {
   try {
     const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${sessionId}`);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<DialogStateV1 & DialogStateV2>;
+    const parsed: any = JSON.parse(raw);
 
     // v2
     if (parsed?.v === 2) {
