@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -9,7 +10,13 @@ import { TokenService } from './token.service';
 import { TelegramAuthService } from './telegram-auth.service';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-import { LoginDto, RegisterDto, AuthResponseDto, UserProfileDto } from './dto/auth.dto';
+import {
+  LoginDto,
+  RegisterDto,
+  AuthResponseDto,
+  UserProfileDto,
+  UpdateProfileDto,
+} from './dto/auth.dto';
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
 
 @Injectable()
@@ -287,6 +294,59 @@ export class AuthService {
     }
 
     return this.toUserProfileDto(user);
+  }
+
+  async updateMe(userId: string, dto: UpdateProfileDto): Promise<UserProfileDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: this.authUserSelect,
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const dataToUpdate: { username?: string } = {};
+
+    if (typeof dto.username === 'string') {
+      const nextUsername = dto.username.trim();
+      if (nextUsername.length < 3) {
+        throw new BadRequestException(
+          'Имя пользователя должно быть не короче 3 символов',
+        );
+      }
+
+      if (nextUsername !== user.username) {
+        const sameUsername = await this.prisma.user.findFirst({
+          where: {
+            username: nextUsername,
+            NOT: { id: userId },
+          },
+          select: { id: true },
+        });
+
+        if (sameUsername) {
+          throw new ConflictException({
+            message: 'Пользователь с таким username уже существует',
+            field: 'username',
+          });
+        }
+
+        dataToUpdate.username = nextUsername;
+      }
+    }
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      return this.toUserProfileDto(user);
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: dataToUpdate,
+      select: this.authUserSelect,
+    });
+
+    return this.toUserProfileDto(updated);
   }
 
   private composeDisplayName(validated: {

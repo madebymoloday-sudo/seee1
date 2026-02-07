@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   UseGuards,
   Request,
@@ -24,6 +25,7 @@ import {
   RefreshTokenDto,
   AuthResponseDto,
   UserProfileDto,
+  UpdateProfileDto,
 } from './dto/auth.dto';
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
 
@@ -135,6 +137,28 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Неавторизованный доступ' })
   async getMe(@Request() req: { user: { id: string } }): Promise<UserProfileDto> {
     return this.authService.getMe(req.user.id);
+  }
+
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Обновить профиль текущего пользователя' })
+  @ApiResponse({
+    status: 200,
+    description: 'Профиль обновлён',
+    type: UserProfileDto,
+  })
+  @ApiResponse({ status: 400, description: 'Некорректные данные' })
+  @ApiResponse({ status: 401, description: 'Неавторизованный доступ' })
+  @ApiResponse({
+    status: 409,
+    description: 'Пользователь с таким username уже существует',
+  })
+  async updateMe(
+    @Request() req: { user: { id: string } },
+    @Body() dto: UpdateProfileDto,
+  ): Promise<UserProfileDto> {
+    return this.authService.updateMe(req.user.id, dto);
   }
 }
 

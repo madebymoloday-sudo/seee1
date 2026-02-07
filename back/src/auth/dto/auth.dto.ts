@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsString, IsNotEmpty, MinLength } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty, IsOptional, MinLength } from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({
@@ -95,5 +95,17 @@ export class AuthResponseDto {
 
   @ApiProperty({ description: 'Данные пользователя', type: UserProfileDto })
   user: UserProfileDto;
+}
+
+export class UpdateProfileDto {
+  @ApiPropertyOptional({
+    description: 'Имя пользователя',
+    example: 'ivan_petrov',
+    minLength: 3,
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  username?: string;
 }
 
