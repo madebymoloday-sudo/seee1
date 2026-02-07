@@ -22,7 +22,7 @@ import MessageInput from "@/pages/sessions/components/MessageInput";
 import chatStyles from "@/pages/sessions/components/ChatWindow.module.css";
 import { mutate } from "swr";
 import { useAuth } from "@/hooks/useAuth";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 
 type EmotionEntry = {
   id: string;
@@ -170,12 +170,16 @@ function getPrompt(draft: DraftV1, hint: string | null, notice: string | null): 
 const NeuroMapPage = observer(() => {
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isRefill = searchParams.get("refill") === "1";
+  const isReset = searchParams.get("new") === "1";
   const userId = user?.id || "anonymous";
   const storageKey = `${STORAGE_KEY_PREFIX}${userId}`;
   const onboardingDoneKey = `${ONBOARDING_DONE_PREFIX}${userId}`;
   const onboardingDone = localStorage.getItem(onboardingDoneKey) === "1";
 
-  if (onboardingDone) {
+  if (onboardingDone && !isRefill) {
     return <Navigate to="/map" replace />;
   }
 
@@ -203,6 +207,24 @@ const NeuroMapPage = observer(() => {
       // ignore
     }
   }, [draft, storageKey]);
+
+  // Start a fresh refill flow once (when opened from "Пополнить нейрокарту")
+  useEffect(() => {
+    if (!isRefill) return;
+    if (!isReset) return;
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      // ignore
+    }
+    setHistory([]);
+    setHint(null);
+    setNotice(null);
+    setInputText("");
+    setDraft(defaultDraft());
+    navigate("/neuro?refill=1", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRefill, isReset, storageKey]);
 
   // Autofocus when we need text input
   useEffect(() => {
@@ -497,11 +519,19 @@ const NeuroMapPage = observer(() => {
       } catch {
         // ignore
       }
+      navigate("/map", { replace: true });
     } catch (err) {
       console.error("Save neuro map error:", err);
       toast.error("Не удалось записать в нейрокарту");
     }
-  }, [createEventMap, draft, nextEventNumberStart, onboardingDoneKey, storageKey]);
+  }, [
+    createEventMap,
+    draft,
+    navigate,
+    nextEventNumberStart,
+    onboardingDoneKey,
+    storageKey,
+  ]);
 
   const actionRow = (() => {
     const c = draft.cursor;

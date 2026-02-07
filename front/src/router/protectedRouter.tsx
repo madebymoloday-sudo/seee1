@@ -66,4 +66,6 @@ export const protectedRouter = createBrowserRouter([
   },
   {
     path: "*",
-    element: <Navigate to="/" replace />, // Fallback - б
+    element: <Navigate to="/" replace />, // Fallback - будет редирект в ProtectedRoute
+  },
+]);
