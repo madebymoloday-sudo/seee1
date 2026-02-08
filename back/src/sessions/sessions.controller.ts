@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Patch,
   Body,
   Param,
@@ -96,6 +97,20 @@ export class SessionsController {
     @Body() updateDto: UpdateSessionDto,
   ): Promise<SessionResponseDto> {
     return this.sessionsService.update(id, req.user.id, updateDto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Удалить сессию' })
+  @ApiResponse({ status: 204, description: 'Сессия удалена' })
+  @ApiResponse({ status: 401, description: 'Неавторизованный доступ' })
+  @ApiResponse({ status: 403, description: 'Нет доступа к сессии' })
+  @ApiResponse({ status: 404, description: 'Сессия не найдена' })
+  async deleteSession(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+  ): Promise<void> {
+    await this.sessionsService.delete(id, req.user.id);
   }
 
   @Get(':id/document')

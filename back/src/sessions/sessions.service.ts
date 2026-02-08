@@ -305,6 +305,25 @@ export class SessionsService {
     return this.findOne(sessionId, userId);
   }
 
+  async delete(sessionId: string, userId: string): Promise<void> {
+    const existing = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+      select: { id: true, userId: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Сессия не найдена');
+    }
+
+    if (existing.userId !== userId) {
+      throw new ForbiddenException('Нет доступа к этой сессии');
+    }
+
+    await this.prisma.session.delete({
+      where: { id: sessionId },
+    });
+  }
+
   private generateMarkdownDocument(
     conceptData: Record<string, any>,
     username: string,

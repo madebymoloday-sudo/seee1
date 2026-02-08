@@ -223,6 +223,99 @@
   margin: 0 auto;
 }
 
+/* Info modals (feedback/ideas per session) */
+.infoModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 12000;
+  padding: 16px;
+}
+
+.infoModal {
+  width: min(720px, calc(100% - 32px));
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.95) 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
+  padding: 16px;
+}
+
+.infoModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.infoModalTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.infoModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.infoEmpty {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.infoItem {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.infoItemTitle {
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+  margin-bottom: 8px;
+}
+
+.ideaGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ideaChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.85);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
 .loadingState,
 .errorState,
 .emptyState {
@@ -314,4 +407,36 @@
 
 :global(.dark) .emptyHint {
   color: rgba(255, 255, 255, 0.5);
+}
+
+:global(.dark) .infoModal {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.96) 0%,
+    rgba(30, 41, 59, 0.96) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+:global(.dark) .infoModalTitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .infoEmpty {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:global(.dark) .infoItem {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .infoItemTitle {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+:global(.dark) .ideaChip {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
 }

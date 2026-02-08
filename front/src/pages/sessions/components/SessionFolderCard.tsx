@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Edit2, Pause, Save, List, Plus } from "lucide-react";
+import { ChevronRight, Edit2, MessageSquareText, Lightbulb, MoreVertical, Trash2 } from "lucide-react";
 import type { SessionResponseDto } from "@/api/schemas";
 import { toast } from "sonner";
 import styles from "./SessionFolderCard.module.css";
@@ -10,9 +10,9 @@ interface SessionFolderCardProps {
   session: SessionResponseDto;
   colorIndex: number;
   onRename?: () => void;
-  onPause?: () => void;
-  onSave?: () => void;
-  onNewSession?: () => void;
+  onDelete?: () => void;
+  onShowFeedback?: () => void;
+  onShowIdeas?: () => void;
   ideasCount?: number;
 }
 
@@ -31,15 +31,15 @@ const SessionFolderCard = observer(({
   session, 
   colorIndex, 
   onRename,
-  onPause,
-  onSave,
-  onNewSession,
+  onDelete,
+  onShowFeedback,
+  onShowIdeas,
   ideasCount = 0 
 }: SessionFolderCardProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLButtonElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   const folderColor = FOLDER_COLORS[colorIndex % FOLDER_COLORS.length];
 
@@ -47,7 +47,7 @@ const SessionFolderCard = observer(({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node) &&
-          titleRef.current && !titleRef.current.contains(event.target as Node)) {
+          menuButtonRef.current && !menuButtonRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
       }
     };
@@ -60,10 +60,6 @@ const SessionFolderCard = observer(({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMenuOpen]);
-
-  const handleTitleClick = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
 
   const handleNavigate = () => {
     navigate(`/sessions/${session.id}`);
@@ -81,32 +77,19 @@ const SessionFolderCard = observer(({
     }
   };
 
-  const handlePause = () => {
+  const handleDelete = () => {
     setIsMenuOpen(false);
-    if (onPause) {
-      onPause();
-    } else {
-      toast.info("Функция приостановки будет добавлена");
-    }
+    if (onDelete) onDelete();
   };
 
-  const handleSave = () => {
+  const handleShowFeedback = () => {
     setIsMenuOpen(false);
-    if (onSave) {
-      onSave();
-    }
+    if (onShowFeedback) onShowFeedback();
   };
 
-  const handleAllSessions = () => {
+  const handleShowIdeas = () => {
     setIsMenuOpen(false);
-    navigate("/sessions/list");
-  };
-
-  const handleNewSession = () => {
-    setIsMenuOpen(false);
-    if (onNewSession) {
-      onNewSession();
-    }
+    if (onShowIdeas) onShowIdeas();
   };
 
   return (
@@ -122,36 +105,49 @@ const SessionFolderCard = observer(({
       >
         {/* Корешок с названием */}
         <div className={styles.folderSpine}>
-          <button
-            ref={titleRef}
-            onClick={handleTitleClick}
-            className={styles.folderTitle}
-          >
-            {session.title || "Новая сессия"}
-          </button>
+          <div className={styles.spineRow}>
+            <button
+              onClick={handleNavigate}
+              className={styles.folderTitle}
+              title="Открыть сессию"
+            >
+              {session.title || "Новая сессия"}
+            </button>
+
+            <button
+              ref={menuButtonRef}
+              type="button"
+              className={styles.actionsButton}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsMenuOpen((p) => !p);
+              }}
+              title="Действия"
+              aria-label="Действия"
+            >
+              <MoreVertical className={styles.actionsIcon} />
+            </button>
+          </div>
           
           {/* Выпадающее меню */}
           {isMenuOpen && (
             <div ref={menuRef} className={styles.dropdownMenu}>
               <button onClick={handleRename} className={styles.menuItem}>
                 <Edit2 className={styles.menuIcon} />
-                Переименовать
+                Редактировать название
               </button>
-              <button onClick={handlePause} className={styles.menuItem}>
-                <Pause className={styles.menuIcon} />
-                Приостановить
+              <button onClick={handleDelete} className={`${styles.menuItem} ${styles.menuDanger}`}>
+                <Trash2 className={styles.menuIcon} />
+                Удалить
               </button>
-              <button onClick={handleSave} className={styles.menuItem}>
-                <Save className={styles.menuIcon} />
-                Сохранить
+              <button onClick={handleShowFeedback} className={styles.menuItem}>
+                <MessageSquareText className={styles.menuIcon} />
+                Обратная связь
               </button>
-              <button onClick={handleNewSession} className={styles.menuItem}>
-                <Plus className={styles.menuIcon} />
-                Новая сессия
-              </button>
-              <button onClick={handleAllSessions} className={styles.menuItem}>
-                <List className={styles.menuIcon} />
-                Список сессий
+              <button onClick={handleShowIdeas} className={styles.menuItem}>
+                <Lightbulb className={styles.menuIcon} />
+                Идеи
               </button>
             </div>
           )}
