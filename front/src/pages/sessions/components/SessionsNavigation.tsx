@@ -1,7 +1,5 @@
 import { Bookmark, User, StickyNote, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useSessionsControllerCreateSession } from "@/api/seee.swr";
-import { toast } from "sonner";
 import FeedbackModal from "./FeedbackModal";
 import { useState } from "react";
 import NotesModal from "./NotesModal";
@@ -9,7 +7,6 @@ import styles from "./SessionsNavigation.module.css";
 
 const SessionsNavigation = () => {
   const navigate = useNavigate();
-  const { trigger: createSession, isMutating } = useSessionsControllerCreateSession();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
 
@@ -26,15 +23,8 @@ const SessionsNavigation = () => {
   };
 
   const handleNewSession = async () => {
-    try {
-      const newSession = await createSession({});
-      if (newSession) {
-        navigate(`/sessions/${newSession.id}`);
-      }
-    } catch (error) {
-      console.error("Ошибка создания сессии:", error);
-      toast.error("Не удалось создать новую сессию");
-    }
+    // Не создаём сессию заранее — она появится в списке после первого ответа.
+    navigate("/sessions/new");
   };
 
   return (
@@ -56,7 +46,6 @@ const SessionsNavigation = () => {
           onClick={handleNewSession} 
           className={styles.navButton} 
           title="Новая сессия"
-          disabled={isMutating}
         >
           <Plus className={styles.navIcon} />
           <span className={styles.navLabel}>Новая</span>

@@ -100,6 +100,14 @@ function saveState(sessionId: string, state: DialogState) {
   }
 }
 
+function removeState(sessionId: string) {
+  try {
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}${sessionId}`);
+  } catch {
+    // ignore
+  }
+}
+
 function getSessionKind(sessionId: string): "thought" | "default" {
   const v = localStorage.getItem(`${SESSION_KIND_PREFIX}${sessionId}`);
   return v === "thought" ? "thought" : "default";
@@ -116,6 +124,68 @@ function setSessionKind(sessionId: string, kind: "thought") {
 function setSessionNotes(sessionId: string, notes: string) {
   try {
     localStorage.setItem(`${SESSION_NOTES_PREFIX}${sessionId}`, notes);
+  } catch {
+    // ignore
+  }
+}
+
+function getSessionNotes(sessionId: string): string | null {
+  try {
+    return localStorage.getItem(`${SESSION_NOTES_PREFIX}${sessionId}`);
+  } catch {
+    return null;
+  }
+}
+
+function removeSessionMeta(sessionId: string) {
+  try {
+    localStorage.removeItem(`${SESSION_KIND_PREFIX}${sessionId}`);
+    localStorage.removeItem(`${SESSION_NOTES_PREFIX}${sessionId}`);
+  } catch {
+    // ignore
+  }
+}
+
+function decodeJwtPayload(token: string): any | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function getUserKey(): string {
+  try {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      const payload = decodeJwtPayload(token);
+      const sub = payload?.sub ?? payload?.id ?? payload?.userId;
+      if (sub) return String(sub);
+    }
+  } catch {
+    // ignore
+  }
+  return "anon";
+}
+
+function removeToExploreTemplate(userKey: string, templateId: string) {
+  try {
+    const key = `seee_to_explore_templates:${userKey}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as any[];
+    if (!Array.isArray(parsed)) return;
+    const next = parsed.filter((x) => String(x?.id ?? "") !== templateId);
+    localStorage.setItem(key, JSON.stringify(next));
   } catch {
     // ignore
   }
@@ -204,6 +274,7 @@ interface StepDialogWindowProps {
 const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const navigate = useNavigate();
   const { trigger: createSession, isMutating } = useSessionsControllerCreateSession();
+  const isDraftSession = session.id === "new";
 
   const [state, setState] = useState<DialogState>(() => {
     const existing = loadState(session.id);
@@ -378,7 +449,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return null;
   };
 
-  const onAnswer = (answer: string) => {
+  const onAnswer = async (answer: string) => {
     if (isTransitioning) return;
     const nextState = computeNextState(answer);
     if (!nextState) return;
@@ -390,6 +461,59 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       v: 2,
       answers: { ...(state.answers || {}), [key]: trimmed },
     };
+
+    // Черновик: создаём сессию только после ответа на ПЕРВЫЙ вопрос (core step 1).
+    if (isDraftSession && view.kind === "core" && view.step === 1) {
+      setLastUserAnswer(trimmed);
+      setIsTransitioning(true);
+      setIsFadingOut(false);
+
+      try {
+        const userKey = getUserKey();
+        const draftTitle = localStorage.getItem(`seee_draft_title:${userKey}`)?.trim();
+        const templateId = localStorage.getItem(`seee_draft_to_explore_template:${userKey}`)?.trim();
+
+        const title = (draftTitle && draftTitle.length > 0 ? draftTitle : trimmed).slice(0, 80);
+        const newSession = await createSession({ title });
+        if (!newSession?.id) {
+          toast.error("Не удалось создать сессию");
+          setIsTransitioning(false);
+          return;
+        }
+
+        // переносим состояние диалога и метаданные с draft-id на реальный id
+        saveState(newSession.id, nextStateWithAnswer);
+
+        const kind = getSessionKind(session.id);
+        if (kind === "thought") {
+          setSessionKind(newSession.id, "thought");
+        }
+        const notes = getSessionNotes(session.id);
+        if (notes && notes.trim()) {
+          setSessionNotes(newSession.id, notes.trim());
+        }
+
+        removeState(session.id);
+        removeSessionMeta(session.id);
+
+        if (templateId) {
+          removeToExploreTemplate(userKey, templateId);
+        }
+        try {
+          localStorage.removeItem(`seee_draft_title:${userKey}`);
+          localStorage.removeItem(`seee_draft_to_explore_template:${userKey}`);
+        } catch {
+          // ignore
+        }
+
+        navigate(`/sessions/${newSession.id}`, { replace: true });
+      } catch (e) {
+        console.error(e);
+        toast.error("Не удалось создать сессию");
+        setIsTransitioning(false);
+      }
+      return;
+    }
 
     // Показать ответ и плавно убрать пару (вопрос+ответ), затем показать следующий вопрос
     setLastUserAnswer(trimmed);

@@ -23,6 +23,10 @@ export const protectedRouter = createBrowserRouter([
         element: <EntryGatePage />,
       },
       {
+        path: "sessions",
+        element: <SessionsCollectionPage />,
+      },
+      {
         path: "sessions/list",
         element: <SessionsCollectionPage />,
       },

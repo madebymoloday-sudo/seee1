@@ -1,7 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
-import { useSessionsControllerCreateSession } from "@/api/seee.swr";
 import { useSessions } from "@/hooks/useSessions";
 import { Plus, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,8 +14,87 @@ import { toast } from "sonner";
 import apiAgent from "@/lib/api";
 import useSwr from "swr";
 import { Textarea } from "@/components/ui/textarea";
+import type { SessionResponseDto } from "@/api/schemas";
 
 type SortOption = "default" | "negative" | "positive" | "to_explore";
+
+const TO_EXPLORE_TITLES = [
+  "Со мной что-то не так",
+  "Ревность",
+  "Порядок",
+  "Со мной всё в порядке",
+  "Проблемы с алкоголем",
+  "Постоянно смотрю сериалы",
+  "Хочу бросить курить",
+  "Проблемы со сном",
+  "Отношения с родителями",
+  "Неуверенность в себе",
+] as const;
+
+type ToExploreTemplate = { id: string; title: string };
+
+function decodeJwtPayload(token: string): any | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function getUserKey(): string {
+  try {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      const payload = decodeJwtPayload(token);
+      const sub = payload?.sub ?? payload?.id ?? payload?.userId;
+      if (sub) return String(sub);
+    }
+  } catch {
+    // ignore
+  }
+  return "anon";
+}
+
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[^a-z0-9а-я\s-]/gi, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+function loadToExploreTemplates(userKey: string): ToExploreTemplate[] {
+  try {
+    const raw = localStorage.getItem(`seee_to_explore_templates:${userKey}`);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((x: any) => ({ id: String(x?.id ?? ""), title: String(x?.title ?? "") }))
+      .filter((x) => x.id && x.title);
+  } catch {
+    return [];
+  }
+}
+
+function saveToExploreTemplates(userKey: string, items: ToExploreTemplate[]) {
+  try {
+    localStorage.setItem(`seee_to_explore_templates:${userKey}`, JSON.stringify(items));
+  } catch {
+    // ignore
+  }
+}
 
 function parseImportantOptions(text: string): string[] {
   const raw = (text || "")
@@ -77,12 +155,13 @@ function getIdeasFromLocalState(sessionId: string): { coreThought?: string; impo
 const SessionsCollectionPage = observer(() => {
   const navigate = useNavigate();
   const { sessions, isLoading, error, refetch } = useSessions();
-  const { trigger: createSession, isMutating } = useSessionsControllerCreateSession();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("default");
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const userKey = useMemo(() => getUserKey(), []);
+  const [toExplore, setToExplore] = useState<ToExploreTemplate[]>(() => loadToExploreTemplates(userKey));
 
   const [feedbackInfoSessionId, setFeedbackInfoSessionId] = useState<string | null>(null);
   const [ideasInfoSessionId, setIdeasInfoSessionId] = useState<string | null>(null);
@@ -101,6 +180,21 @@ const SessionsCollectionPage = observer(() => {
     "/feedback/my?sessionOnly=1",
     fetchMyFeedback
   );
+
+  // Seed "Предстоит исследовать" один раз на пользователя.
+  useEffect(() => {
+    const existing = loadToExploreTemplates(userKey);
+    if (existing.length > 0) {
+      setToExplore(existing);
+      return;
+    }
+    const seeded: ToExploreTemplate[] = TO_EXPLORE_TITLES.map((title) => ({
+      id: `to_explore:${slugify(title)}`,
+      title,
+    }));
+    saveToExploreTemplates(userKey, seeded);
+    setToExplore(seeded);
+  }, [userKey]);
 
   // Фильтрация и поиск сессий
   const filteredAndSortedSessions = useMemo(() => {
@@ -124,8 +218,8 @@ const SessionsCollectionPage = observer(() => {
       // TODO: Сортировка по позитивным установкам (когда будет доступно)
       filtered = [...filtered];
     } else if (sortOption === "to_explore") {
-      // TODO: Сортировка "предстоит исследовать" (когда будет доступно)
-      filtered = [...filtered];
+      // В режиме "предстоит исследовать" скрываем основной список
+      filtered = [];
     }
 
     return filtered;
@@ -133,10 +227,8 @@ const SessionsCollectionPage = observer(() => {
 
   const handleCreateSession = async () => {
     try {
-      const newSession = await createSession({});
-      if (newSession) {
-        navigate(`/sessions/${newSession.id}`);
-      }
+      // Не создаём пустую сессию на сервере заранее.
+      navigate("/sessions/new");
     } catch (error) {
       console.error("Ошибка создания сессии:", error);
       toast.error("Не удалось создать сессию");
@@ -181,6 +273,31 @@ const SessionsCollectionPage = observer(() => {
     return getIdeasCountFromLocalState(sessionId);
   };
 
+  const getIdeasCountForSession = (session: SessionResponseDto) => {
+    const fromLocal = getIdeasCountFromLocalState(session.id);
+    const base = typeof session.messageCount === "number" ? session.messageCount : 0;
+    const total = Math.max(fromLocal, base);
+    // Если у сессии есть название — считаем, что 1 идея/концепция есть всегда.
+    if ((session.title ?? "").trim().length > 0) return Math.max(1, total);
+    return total;
+  };
+
+  const filteredToExplore = useMemo(() => {
+    if (!searchQuery.trim()) return toExplore;
+    const q = searchQuery.toLowerCase();
+    return toExplore.filter((t) => t.title.toLowerCase().includes(q));
+  }, [toExplore, searchQuery]);
+
+  const openToExploreTemplate = (template: ToExploreTemplate) => {
+    try {
+      localStorage.setItem(`seee_draft_title:${userKey}`, template.title);
+      localStorage.setItem(`seee_draft_to_explore_template:${userKey}`, template.id);
+    } catch {
+      // ignore
+    }
+    navigate("/sessions/new");
+  };
+
   return (
     <div className={styles.collectionPage}>
       {/* Заголовок */}
@@ -191,7 +308,6 @@ const SessionsCollectionPage = observer(() => {
             onClick={handleCreateSession}
             className={styles.plusButton}
             size="icon"
-            disabled={isMutating}
             title="Новая сессия"
           >
             <Plus className={styles.plusIcon} />
@@ -258,6 +374,37 @@ const SessionsCollectionPage = observer(() => {
 
       {/* Список папок */}
       <div className={styles.foldersContainer}>
+        {/* Предстоит исследовать */}
+        {filteredToExplore.length > 0 && (
+          <div className="mb-6">
+            <div className="px-1 pb-3 text-sm font-semibold text-white/80">
+              Предстоит исследовать
+            </div>
+            <div className={styles.foldersList}>
+              {filteredToExplore.map((t) => {
+                const fakeSession = {
+                  id: t.id,
+                  title: t.title,
+                  createdAt: new Date().toISOString(),
+                  messageCount: 0,
+                } as unknown as SessionResponseDto;
+
+                return (
+                  <SessionFolderCard
+                    key={t.id}
+                    session={fakeSession}
+                    ideasCount={1}
+                    tagLabel="Предстоит исследовать"
+                    palette="toExplore"
+                    showMenu={false}
+                    onOpen={() => openToExploreTemplate(t)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {isLoading && (
           <div className={styles.loadingState}>
             <p>Загрузка сессий...</p>
@@ -290,7 +437,7 @@ const SessionsCollectionPage = observer(() => {
                 onDelete={() => handleDelete(session.id)}
                 onShowFeedback={() => setFeedbackInfoSessionId(session.id)}
                 onShowIdeas={() => setIdeasInfoSessionId(session.id)}
-                ideasCount={getIdeasCount(session.id)}
+                ideasCount={getIdeasCountForSession(session)}
               />
             ))}
           </div>

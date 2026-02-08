@@ -4,18 +4,76 @@ import { useSessionsControllerGetSession } from "@/api/seee.swr";
 import SessionHeader from "./components/SessionHeader";
 import StepDialogWindow from "./components/StepDialogWindow";
 import { Loader2 } from "lucide-react";
+import type { SessionResponseDto } from "@/api/schemas";
 
 const SessionPage = observer(() => {
   const { id } = useParams<{ id: string }>();
+  const isDraft = id === "new";
 
   const { data: session, isLoading, error } = useSessionsControllerGetSession(
     id!,
     {
       swr: {
-        enabled: !!id,
+        enabled: !!id && !isDraft,
       },
     }
   );
+
+  if (isDraft) {
+    // Черновик: сессию на сервере НЕ создаём, пока пользователь не ответит на первый вопрос.
+    let draftTitle = "Новая сессия";
+    try {
+      const token = localStorage.getItem("accessToken");
+      const userKey = token
+        ? (() => {
+            try {
+              const parts = token.split(".");
+              if (parts.length < 2) return "anon";
+              const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+              const json = decodeURIComponent(
+                atob(base64)
+                  .split("")
+                  .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                  .join("")
+              );
+              const payload = JSON.parse(json);
+              return String(payload?.sub ?? payload?.id ?? payload?.userId ?? "anon");
+            } catch {
+              return "anon";
+            }
+          })()
+        : "anon";
+      const stored = localStorage.getItem(`seee_draft_title:${userKey}`);
+      if (stored && stored.trim()) draftTitle = stored.trim();
+    } catch {
+      // ignore
+    }
+
+    const draftSession = {
+      id: "new",
+      title: draftTitle,
+      createdAt: new Date().toISOString(),
+      messageCount: 0,
+    } as unknown as SessionResponseDto;
+
+    return (
+      <div className="flex flex-col overflow-hidden h-screen h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="px-4 py-3 border-b border-black/5 bg-white/70 backdrop-blur-sm dark:bg-slate-900/40 dark:border-white/10">
+          <div className="flex items-center justify-between gap-3">
+            <div className="font-semibold text-slate-900 dark:text-slate-100">
+              {draftTitle}
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-300">
+              Сессия появится в списке после первого ответа
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <StepDialogWindow session={draftSession} />
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

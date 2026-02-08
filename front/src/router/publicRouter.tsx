@@ -1,10 +1,10 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import RegisterPage from "../pages/auth/RegisterPage";
-import SessionsPage from "../pages/sessions/SessionsPage";
 import SessionPage from "../pages/sessions/SessionPage";
 import WizardDemoPage from "../pages/sessions/WizardDemoPage";
 import HomePage from "../pages/HomePage";
 import { PublicRoute } from "./PublicRoute";
+import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
 
 /**
  * Роутер для неавторизованных пользователей
@@ -22,7 +22,7 @@ export const publicRouter = createBrowserRouter([
     path: "/sessions",
     element: (
       <PublicRoute>
-        <SessionsPage />
+        <SessionsCollectionPage />
       </PublicRoute>
     ),
   },

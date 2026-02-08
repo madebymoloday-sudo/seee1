@@ -6,7 +6,6 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import type { SessionResponseDto } from "@/api/schemas";
 import { getAllPipelines } from "@/api/pipeline.api";
-import { useSessionsControllerCreateSession } from "@/api/seee.swr";
 import { toast } from "sonner";
 import PauseSessionModal from "./PauseSessionModal";
 import styles from "./SessionHeader.module.css";
@@ -19,7 +18,6 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
   const navigate = useNavigate();
   const auth = useAuth();
   const isAdmin = (auth.user as { role?: string } | null)?.role === 'admin';
-  const { trigger: createSession, isMutating } = useSessionsControllerCreateSession();
 
   const handleDownloadDocument = async () => {
     try {
@@ -152,19 +150,9 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
     try {
       await apiAgent.delete(`/sessions/${session.id}`);
       toast.success("Сессия удалена");
-      
-      // Создаём новую сессию
-      try {
-        const newSession = await createSession({});
-        if (newSession) {
-          navigate(`/sessions/${newSession.id}`);
-        } else {
-          navigate("/sessions/list");
-        }
-      } catch (error) {
-        console.error("Ошибка создания новой сессии:", error);
-        navigate("/sessions/list");
-      }
+
+      // Не создаём пустую сессию автоматически — отправляем в черновик.
+      navigate("/sessions/new", { replace: true });
     } catch (error: any) {
       console.error("Ошибка удаления сессии:", error);
       toast.error(error.response?.data?.message || "Ошибка удаления сессии");
@@ -179,16 +167,13 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
   };
 
   const handleAllSessions = () => {
-    navigate("/sessions/list");
+    navigate("/sessions");
     setIsMenuOpen(false);
   };
 
   const handleNewSession = async () => {
     try {
-      const newSession = await createSession({});
-      if (newSession) {
-        navigate(`/sessions/${newSession.id}`);
-      }
+      navigate("/sessions/new");
       setIsMenuOpen(false);
     } catch (error) {
       console.error("Ошибка создания сессии:", error);
@@ -219,7 +204,7 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
           {/* Выпадающее меню */}
           {isMenuOpen && (
             <div className={styles.dropdownMenu}>
-              <button onClick={handleNewSession} className={styles.menuItem} disabled={isMutating}>
+              <button onClick={handleNewSession} className={styles.menuItem}>
                 <Plus className={styles.menuIcon} />
                 Новая сессия
               </button>
