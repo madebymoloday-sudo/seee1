@@ -4,11 +4,36 @@
   border-color: rgba(255, 255, 255, 0.18);
 }
 
+/* Dark-mode overrides for colored folders (use !important to beat legacy rules below) */
+:global(.dark) .folderCard {
+  background-color: var(--folder-color, rgba(0, 0, 0, 0.35)) !important;
+  background-image: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(0, 0, 0, 0.22) 100%
+  ) !important;
+}
+
+:global(.dark) .folderTab {
+  background: var(--folder-tab-color, rgba(255, 255, 255, 0.10)) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+:global(.dark) .tagBadge {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.28);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
 /* Папка архивариуса в стиле Apple 2007 */
 
 .folderContainer {
   margin-bottom: 1rem;
   position: relative;
+  padding-top: 0.5rem; /* место под верхний "корешок" */
 }
 
 .folderContainerOpen {
@@ -25,17 +50,50 @@
   flex-direction: column;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: linear-gradient(
+  background-color: var(--folder-color, rgba(255, 255, 255, 0.2));
+  background-image: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.3) 0%,
     rgba(255, 255, 255, 0.2) 100%
   );
+  background-blend-mode: overlay;
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.4);
   box-shadow: 
     0 4px 12px rgba(0, 0, 0, 0.15),
     0 1px 0 rgba(255, 255, 255, 0.5) inset;
+}
+
+.folderTab {
+  position: absolute;
+  top: -12px;
+  left: 28px;
+  width: 180px;
+  height: 22px;
+  border-radius: 12px 12px 0 0;
+  background: var(--folder-tab-color, rgba(255, 255, 255, 0.28));
+  border: 1px solid var(--folder-border-color, rgba(255, 255, 255, 0.45));
+  border-bottom: none;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  z-index: 1;
+}
+
+.folderTab::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.32) 0%,
+    rgba(255, 255, 255, 0.12) 60%,
+    rgba(0, 0, 0, 0.04) 100%
+  );
+  pointer-events: none;
+  opacity: 0.9;
 }
 
 .folderCard:hover {
@@ -214,6 +272,29 @@
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+}
+
+.badgesRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tagBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.72);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.10);
   backdrop-filter: blur(10px) saturate(180%);
   -webkit-backdrop-filter: blur(10px) saturate(180%);
 }

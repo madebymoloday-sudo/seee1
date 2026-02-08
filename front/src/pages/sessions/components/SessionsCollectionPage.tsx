@@ -359,7 +359,7 @@ const SessionsCollectionPage = observer(() => {
                   }}
                   className={`${styles.sortMenuItem} ${sortOption === "to_explore" ? styles.sortMenuItemActive : ""}`}
                 >
-                  Предстоит исследовать
+                  Предстоит изучить
                 </button>
               </div>
             )}
@@ -369,37 +369,6 @@ const SessionsCollectionPage = observer(() => {
 
       {/* Список папок */}
       <div className={styles.foldersContainer}>
-        {/* Предстоит исследовать */}
-        {filteredToExplore.length > 0 && (
-          <div className="mb-6">
-            <div className="px-1 pb-3 text-sm font-semibold text-white/80">
-              Предстоит исследовать
-            </div>
-            <div className={styles.foldersList}>
-              {filteredToExplore.map((t) => {
-                const fakeSession = {
-                  id: t.id,
-                  title: t.title,
-                  createdAt: new Date().toISOString(),
-                  messageCount: 0,
-                } as unknown as SessionResponseDto;
-
-                return (
-                  <SessionFolderCard
-                    key={t.id}
-                    session={fakeSession}
-                    ideasCount={1}
-                    tagLabel="Предстоит исследовать"
-                    palette="toExplore"
-                    showMenu={false}
-                    onOpen={() => openToExploreTemplate(t)}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {isLoading && (
           <div className={styles.loadingState}>
             <p>Загрузка сессий...</p>
@@ -435,6 +404,37 @@ const SessionsCollectionPage = observer(() => {
                 ideasCount={getIdeasCountForSession(session)}
               />
             ))}
+          </div>
+        )}
+
+        {/* Предстоит изучить (системные подсказки) — показываем ПОСЛЕ сессий пользователя */}
+        {filteredToExplore.length > 0 && (
+          <div className="mt-8 mb-2">
+            <div className="px-1 pb-3 text-sm font-semibold text-white/80">
+              Предстоит изучить
+            </div>
+            <div className={styles.foldersList}>
+              {filteredToExplore.map((t) => {
+                const fakeSession = {
+                  id: t.id,
+                  title: t.title,
+                  createdAt: new Date().toISOString(),
+                  messageCount: 0,
+                } as unknown as SessionResponseDto;
+
+                return (
+                  <SessionFolderCard
+                    key={t.id}
+                    session={fakeSession}
+                    ideasCount={1}
+                    tagLabel="Предстоит изучить"
+                    palette="toExplore"
+                    showMenu={false}
+                    onOpen={() => openToExploreTemplate(t)}
+                  />
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
