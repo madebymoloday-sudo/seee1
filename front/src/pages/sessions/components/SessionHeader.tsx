@@ -159,11 +159,11 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
         if (newSession) {
           navigate(`/sessions/${newSession.id}`);
         } else {
-          navigate("/sessions");
+          navigate("/sessions/list");
         }
       } catch (error) {
         console.error("Ошибка создания новой сессии:", error);
-        navigate("/sessions");
+        navigate("/sessions/list");
       }
     } catch (error: any) {
       console.error("Ошибка удаления сессии:", error);
@@ -179,7 +179,7 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
   };
 
   const handleAllSessions = () => {
-    navigate("/sessions");
+    navigate("/sessions/list");
     setIsMenuOpen(false);
   };
 

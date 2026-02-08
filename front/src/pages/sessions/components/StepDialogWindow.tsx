@@ -456,7 +456,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
       toast.success("Мысль добавлена в список сессий");
       setIsListModalOpen(false);
-      navigate("/sessions");
+      navigate("/sessions/list");
     } catch (e) {
       console.error(e);
       toast.error("Не удалось добавить мысль");

@@ -16,7 +16,26 @@ const EntryGatePage = observer(() => {
   const onboardingDone = useMemo(() => {
     const userId = user?.id;
     if (!userId) return false;
-    return localStorage.getItem(`${ONBOARDING_DONE_PREFIX}${userId}`) === "1";
+    const key = `${ONBOARDING_DONE_PREFIX}${userId}`;
+    if (localStorage.getItem(key) === "1") return true;
+    // Migration: older flow could write "anonymous" before authStore was ready
+    if (localStorage.getItem(`${ONBOARDING_DONE_PREFIX}anonymous`) === "1") return true;
+    return false;
+  }, [user?.id]);
+
+  useEffect(() => {
+    const userId = user?.id;
+    if (!userId) return;
+    const anonKey = `${ONBOARDING_DONE_PREFIX}anonymous`;
+    const realKey = `${ONBOARDING_DONE_PREFIX}${userId}`;
+    try {
+      if (localStorage.getItem(realKey) !== "1" && localStorage.getItem(anonKey) === "1") {
+        localStorage.setItem(realKey, "1");
+        localStorage.removeItem(anonKey);
+      }
+    } catch {
+      // ignore
+    }
   }, [user?.id]);
 
   useEffect(() => {

@@ -174,7 +174,16 @@ const NeuroMapPage = observer(() => {
   const [searchParams] = useSearchParams();
   const isRefill = searchParams.get("refill") === "1";
   const isReset = searchParams.get("new") === "1";
-  const userId = user?.id || "anonymous";
+  const userId = user?.id;
+
+  // Avoid writing onboarding/draft under "anonymous" key
+  if (!userId) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-muted-foreground">Загружаем...</div>
+      </div>
+    );
+  }
   const storageKey = `${STORAGE_KEY_PREFIX}${userId}`;
   const onboardingDoneKey = `${ONBOARDING_DONE_PREFIX}${userId}`;
   const onboardingDone = localStorage.getItem(onboardingDoneKey) === "1";

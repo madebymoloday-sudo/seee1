@@ -99,7 +99,7 @@ const SessionFolderCard = observer(({
 
   const handleAllSessions = () => {
     setIsMenuOpen(false);
-    navigate("/sessions");
+    navigate("/sessions/list");
   };
 
   const handleNewSession = () => {
@@ -110,7 +110,9 @@ const SessionFolderCard = observer(({
   };
 
   return (
-    <div className={styles.folderContainer}>
+    <div
+      className={`${styles.folderContainer} ${isMenuOpen ? styles.folderContainerOpen : ""}`}
+    >
       <div 
         className={styles.folderCard}
         style={{ 
