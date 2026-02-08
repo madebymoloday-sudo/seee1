@@ -509,8 +509,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   return (
-    <div className={chatStyles.chatWindow}>
-      <div className={chatStyles.messagesContainer}>
+    <div className={styles.wizardWindow}>
+      <div className={styles.stage}>
         <div
           className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
             isFadingOut ? chatStyles.fadeOut : ""

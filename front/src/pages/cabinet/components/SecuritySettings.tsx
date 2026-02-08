@@ -13,7 +13,6 @@ const SecuritySettings = () => {
   const { user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [showLogin, setShowLogin] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isEditingLogin, setIsEditingLogin] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
@@ -93,7 +92,7 @@ const SecuritySettings = () => {
   };
 
   // Реальный текущий пароль показывать нельзя — но "глазик" должен давать видимый эффект
-  // (в скрытом виде — нативная маска password input, в показанном — звездочки текстом).
+  // Пароль не хранится на клиенте и не может быть показан.
   const maskPassword = () => "********";
 
   return (
@@ -160,18 +159,21 @@ const SecuritySettings = () => {
           <label className={styles.label}>Пароль</label>
           <div className={styles.inputWrapper}>
             <Input
-              type={showPassword ? "text" : "password"}
+              type="password"
               value={maskPassword()}
               readOnly
               className={styles.input}
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={() => {
+                // Нельзя показать текущий пароль — объясняем пользователю.
+                toast.message("Пароль нельзя показать — его можно только задать заново.");
+              }}
               className={styles.eyeButton}
-              title={showPassword ? "Скрыть" : "Показать"}
+              title="Пароль нельзя показать"
             >
-              {showPassword ? <EyeOff className={styles.eyeIcon} /> : <Eye className={styles.eyeIcon} />}
+              <Eye className={styles.eyeIcon} />
             </button>
             {!isEditingPassword ? (
               <Button

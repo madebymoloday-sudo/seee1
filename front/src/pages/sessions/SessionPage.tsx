@@ -44,7 +44,7 @@ const SessionPage = observer(() => {
   }
 
   return (
-    <div className="flex flex-col h-screen max-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="flex flex-col overflow-hidden h-screen h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <SessionHeader session={session} />
       <div className="flex-1 overflow-hidden">
         <StepDialogWindow session={session} />
