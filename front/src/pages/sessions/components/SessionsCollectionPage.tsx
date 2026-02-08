@@ -268,11 +268,6 @@ const SessionsCollectionPage = observer(() => {
     })();
   };
 
-  const getIdeasCount = (sessionId?: string) => {
-    if (!sessionId) return 0;
-    return getIdeasCountFromLocalState(sessionId);
-  };
-
   const getIdeasCountForSession = (session: SessionResponseDto) => {
     const fromLocal = getIdeasCountFromLocalState(session.id);
     const base = typeof session.messageCount === "number" ? session.messageCount : 0;
