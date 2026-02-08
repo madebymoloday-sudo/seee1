@@ -99,10 +99,45 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.systemActionsRow {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.backButton {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: rgba(0, 0, 0, 0.62);
+  font-weight: 650;
+  cursor: pointer;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.backButton:hover:not(:disabled) {
+  color: rgba(0, 0, 0, 0.78);
+  text-decoration: underline;
+}
+
+.backButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+::global(.dark) .backButton {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+::global(.dark) .backButton:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 @media (max-width: 768px) {
   .stage {
     padding: 12px 10px;
     gap: 12px;
   }
 }
-

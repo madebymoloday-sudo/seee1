@@ -642,45 +642,22 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         >
           <div className={`${chatStyles.message} ${chatStyles.assistantMessage}`}>
             <p className={chatStyles.messageContent}>{prompt}</p>
+            {canGoBack && (
+              <div className={styles.systemActionsRow}>
+                <button
+                  type="button"
+                  onClick={goBack}
+                  disabled={!canGoBack || isTransitioning}
+                  className={styles.backButton}
+                  aria-label="Назад"
+                  title="Назад"
+                >
+                  ← Назад
+                </button>
+              </div>
+            )}
           </div>
         </div>
-
-        {canGoBack && (
-          <div
-            className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
-              isFadingOut ? chatStyles.fadeOut : ""
-            }`}
-            style={{ justifyContent: "flex-end", marginTop: "-0.75rem" }}
-          >
-            <div
-              className={`${chatStyles.message} ${chatStyles.assistantMessage}`}
-              style={{
-                width: "auto",
-                maxWidth: 260,
-                padding: "0.75rem 1rem",
-                borderRadius: "999px",
-              }}
-            >
-              <button
-                type="button"
-                onClick={goBack}
-                disabled={!canGoBack || isTransitioning}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  padding: 0,
-                  cursor: isTransitioning ? "not-allowed" : "pointer",
-                  opacity: isTransitioning ? 0.6 : 1,
-                }}
-                className={chatStyles.messageContent}
-                aria-label="Назад"
-                title="Назад"
-              >
-                ← Назад
-              </button>
-            </div>
-          </div>
-        )}
 
         {lastUserAnswer && (
           <div
