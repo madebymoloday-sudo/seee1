@@ -168,19 +168,25 @@ const SessionFolderCard = observer(({
 
   return (
     <div className={`${styles.folderContainer} ${isMenuOpen ? styles.folderContainerOpen : ""}`}>
+      {/* Маленький корешок/язычок сверху (без подписи) */}
+      <div
+        className={styles.folderTab}
+        aria-hidden="true"
+        style={{
+          ["--folder-tab-color" as any]: tabColor,
+          ["--folder-border-color" as any]: borderColor,
+        }}
+      />
+
       <div
         className={styles.folderCard}
         onClick={handleNavigate}
         style={{
           // CSS использует background-image + эту подложку для "текстуры"
           ["--folder-color" as any]: folderColor,
-          ["--folder-tab-color" as any]: tabColor,
-          ["--folder-border-color" as any]: borderColor,
           boxShadow: `0 4px 12px ${folderColor}40`,
         }}
       >
-        {/* Маленький корешок/язычок сверху (без подписи) */}
-        <div className={styles.folderTab} aria-hidden="true" />
 
         {/* Верхняя строка: название + меню */}
         <div className={styles.folderSpine}>
