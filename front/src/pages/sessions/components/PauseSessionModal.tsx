@@ -5,7 +5,6 @@ import { Textarea } from "@/components/ui/textarea";
 import apiAgent from "@/lib/api";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { useSessionsControllerCreateSession } from "@/api/seee.swr";
 import styles from "./PauseSessionModal.module.css";
 
 interface PauseSessionModalProps {
@@ -16,7 +15,6 @@ interface PauseSessionModalProps {
 
 const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProps) => {
   const navigate = useNavigate();
-  const { trigger: createSession } = useSessionsControllerCreateSession();
   const [answers, setAnswers] = useState({
     situation: "",
     emotion: "",
@@ -87,16 +85,8 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
 
       toast.success("Обратная связь сохранена");
 
-      // Создаём новую сессию
-      try {
-        const newSession = await createSession({});
-        if (newSession) {
-          navigate(`/sessions/${newSession.id}`);
-        }
-      } catch (error) {
-        console.error("Ошибка создания новой сессии:", error);
-        navigate("/sessions/list");
-      }
+      // Не создаём пустую сессию автоматически — отправляем в черновик.
+      navigate("/sessions/new");
 
       onClose();
     } catch (error: any) {

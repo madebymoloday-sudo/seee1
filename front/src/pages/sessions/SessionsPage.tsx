@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useSessionsControllerCreateSession } from "@/api/seee.swr";
 import { useSessions } from "@/hooks/useSessions";
 import { Plus, Search, Filter } from "lucide-react";
 import { observer } from "mobx-react-lite";
@@ -13,7 +12,6 @@ type SortOption = "default" | "negative" | "positive" | "toExplore";
 const SessionsPage = observer(() => {
   const navigate = useNavigate();
   const { sessions, isLoading, error } = useSessions();
-  const { trigger: createSession, isMutating } = useSessionsControllerCreateSession();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("default");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -38,10 +36,8 @@ const SessionsPage = observer(() => {
 
   const handleCreateSession = async () => {
     try {
-      const newSession = await createSession({});
-      if (newSession) {
-        navigate(`/sessions/${newSession.id}`);
-      }
+      // Не создаём пустую сессию на сервере заранее.
+      navigate("/sessions/new");
     } catch (error) {
       console.error("Ошибка создания сессии:", error);
     }
@@ -84,7 +80,6 @@ const SessionsPage = observer(() => {
         <button
           onClick={handleCreateSession}
           className={styles.newSessionButton}
-          disabled={isMutating}
           title="Новая сессия"
         >
           <Plus className={styles.plusIcon} />

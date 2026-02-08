@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { observer } from "mobx-react-lite";
 import { useAuth } from "@/hooks/useAuth";
-import { useSessionsControllerCreateSession } from "@/api/seee.swr";
 import { Loader2 } from "lucide-react";
 
 const ONBOARDING_DONE_PREFIX = "seee_onboarding_neuro_done:";
@@ -10,7 +9,6 @@ const ONBOARDING_DONE_PREFIX = "seee_onboarding_neuro_done:";
 const EntryGatePage = observer(() => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { trigger: createSession } = useSessionsControllerCreateSession();
   const startedRef = useRef(false);
 
   const onboardingDone = useMemo(() => {
@@ -44,19 +42,10 @@ const EntryGatePage = observer(() => {
     if (startedRef.current) return;
     startedRef.current = true;
 
-    (async () => {
-      try {
-        const s = await createSession({});
-        if (s?.id) {
-          navigate(`/sessions/${s.id}`, { replace: true });
-        } else {
-          navigate("/sessions/list", { replace: true });
-        }
-      } catch {
-        navigate("/sessions/list", { replace: true });
-      }
-    })();
-  }, [createSession, navigate, onboardingDone, user?.id]);
+    // ВАЖНО: не создаём пустую сессию на сервере при входе.
+    // Сессия должна появляться только после первого ответа в /sessions/new.
+    navigate("/sessions", { replace: true });
+  }, [navigate, onboardingDone, user?.id]);
 
   if (!user?.id) {
     return (
@@ -77,7 +66,7 @@ const EntryGatePage = observer(() => {
     <div className="flex items-center justify-center h-screen">
       <div className="flex items-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Создаём новую сессию...
+        Открываем сессии...
       </div>
     </div>
   );
