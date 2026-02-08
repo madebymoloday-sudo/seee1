@@ -108,4 +108,3 @@ export class UpdateProfileDto {
   @MinLength(3)
   username?: string;
 }
-
