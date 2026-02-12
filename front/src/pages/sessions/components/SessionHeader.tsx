@@ -4,6 +4,7 @@ import apiAgent from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import type { SessionResponseDto } from "@/api/schemas";
 import { getAllPipelines } from "@/api/pipeline.api";
 import { toast } from "sonner";
@@ -39,6 +40,7 @@ interface SessionHeaderProps {
 const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps) => {
   const navigate = useNavigate();
   const auth = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const isAdmin = (auth.user as { role?: string } | null)?.role === 'admin';
 
   const handleDownloadDocument = async () => {
@@ -233,6 +235,10 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
     }
   };
 
+  const handleThemeToggle = () => {
+    toggleDarkMode();
+  };
+
   return (
     <div className={styles.sessionHeader}>
       <div className={styles.headerContent}>
@@ -278,6 +284,15 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
               <button onClick={handleAllSessions} className={styles.menuItem}>
                 <List className={styles.menuIcon} />
                 Галерея сессий
+              </button>
+              <button onClick={handleThemeToggle} className={`${styles.menuItem} ${styles.themeItem}`}>
+                <span>Тёмная тема</span>
+                <span
+                  className={`${styles.themeSwitch} ${isDarkMode ? styles.themeSwitchActive : ""}`}
+                  aria-hidden="true"
+                >
+                  <span className={styles.themeSwitchKnob} />
+                </span>
               </button>
               <button onClick={handleDelete} className={`${styles.menuItem} ${styles.deleteItem}`}>
                 <Trash2 className={styles.menuIcon} />

@@ -9,6 +9,7 @@ import { PsychologistModule } from './psychologist/psychologist.module';
 import { EventMapModule } from './event-map/event-map.module';
 import { PipelineModule } from './pipeline/pipeline.module';
 import { FeedbackModule } from './feedback/feedback.module';
+import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { FeedbackModule } from './feedback/feedback.module';
     EventMapModule,
     PipelineModule,
     FeedbackModule,
+    TelegramBotModule,
   ],
   controllers: [],
   providers: [],

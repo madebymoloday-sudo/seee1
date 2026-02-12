@@ -139,6 +139,41 @@
   background: rgba(239, 68, 68, 0.2);
 }
 
+.themeItem {
+  justify-content: space-between;
+}
+
+.themeSwitch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.themeSwitchKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.themeSwitchActive {
+  background: #22c55e;
+}
+
+.themeSwitchActive .themeSwitchKnob {
+  transform: translateX(18px);
+}
+
 .deleteConfirmOverlay {
   position: fixed;
   top: 0;
@@ -267,6 +302,15 @@
 
 :global(.dark) .menuIcon {
   color: rgba(147, 197, 253, 0.7);
+}
+
+:global(.dark) .themeSwitch {
+  background: rgba(71, 85, 105, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+:global(.dark) .themeSwitchActive {
+  background: #22c55e;
 }
 
 :global(.dark) .deleteConfirmModal {

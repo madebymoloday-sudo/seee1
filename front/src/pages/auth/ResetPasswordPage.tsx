@@ -142,17 +142,30 @@ const ResetPasswordPage = observer(() => {
                 <FormLabel htmlFor="confirmPassword" className="text-white">
                   Подтвердите пароль
                 </FormLabel>
-                <Input
-                  id="confirmPassword"
-                  type={showPassword ? "text" : "password"}
-                  {...register("confirmPassword")}
-                  autoComplete="new-password"
-                  placeholder="Повторите пароль"
-                  className={cn(
-                    "bg-white/10 border-white/30 text-white placeholder:text-white/60",
-                    errors.confirmPassword && "border-red-400"
-                  )}
-                />
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showPassword ? "text" : "password"}
+                    {...register("confirmPassword")}
+                    autoComplete="new-password"
+                    placeholder="Повторите пароль"
+                    className={cn(
+                      "bg-white/10 border-white/30 text-white placeholder:text-white/60 pr-10",
+                      errors.confirmPassword && "border-red-400"
+                    )}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((p) => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 hover:text-white"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
                 {errors.confirmPassword?.message && (
                   <FormMessage
                     message={errors.confirmPassword?.message}
