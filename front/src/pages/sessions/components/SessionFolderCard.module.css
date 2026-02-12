@@ -6,12 +6,18 @@
 
 /* Dark-mode overrides for colored folders (use !important to beat legacy rules below) */
 :global(.dark) .folderCard {
-  background-color: var(--folder-color, rgba(0, 0, 0, 0.35)) !important;
+  background-color: rgba(var(--folder-color-rgb, 80, 80, 80), 0.30) !important;
   background-image: linear-gradient(
     135deg,
-    rgba(0, 0, 0, 0.35) 0%,
-    rgba(0, 0, 0, 0.22) 100%
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.06) 100%
   ) !important;
+  backdrop-filter: blur(30px) saturate(200%) brightness(1.15) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.15) !important;
+  border-color: rgba(255, 255, 255, 0.26) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.32),
+    0 1px 0 rgba(255, 255, 255, 0.45) inset !important;
 }
 
 :global(.dark) .folderTab {
@@ -50,21 +56,19 @@
   flex-direction: column;
   cursor: pointer;
   transition: all 0.3s ease;
-  background-color: color-mix(in srgb, var(--folder-color, #ffffff) 62%, transparent);
+  background-color: rgba(var(--folder-color-rgb, 200, 200, 200), 0.34);
   background-image: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.32) 0%,
-    rgba(255, 255, 255, 0.16) 45%,
-    rgba(255, 255, 255, 0.10) 100%
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.20) 100%
   );
   background-blend-mode: overlay;
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.40);
+  backdrop-filter: blur(30px) saturate(200%) brightness(1.2);
+  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.20),
-    0 3px 10px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.58);
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
   overflow: hidden; /* удерживаем блики внутри скругления */
 }
 
@@ -375,19 +379,6 @@
   width: 20px;
   height: 20px;
   color: rgba(0, 0, 0, 0.7);
-}
-
-/* Тёмный режим */
-:global(.dark) .folderCard {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.06) 100%
-  );
-  background-color: color-mix(in srgb, var(--folder-color, #111827) 50%, transparent);
-  border-color: rgba(255, 255, 255, 0.26);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
 }
 
 :global(.dark) .folderTitle {

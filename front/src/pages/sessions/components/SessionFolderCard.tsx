@@ -217,6 +217,7 @@ const SessionFolderCard = observer(({
         style={{
           // CSS использует background-image + эту подложку для "текстуры"
           ["--folder-color" as any]: folderColor,
+          ["--folder-color-rgb" as any]: `${folderRgb.r}, ${folderRgb.g}, ${folderRgb.b}`,
           boxShadow: `0 4px 12px ${folderColor}40`,
         }}
       >
