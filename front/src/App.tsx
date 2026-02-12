@@ -37,7 +37,7 @@ function App() {
     // Загружаем Telegram Login Widget
     const script = document.createElement("script");
     script.src = "https://telegram.org/js/telegram-widget.js?22";
-    const botId = import.meta.env.VITE_TELEGRAM_BOT_ID;
+    const botId = import.meta.env.VITE_TELEGRAM_BOT_ID || "8225371483";
     if (botId) {
       script.setAttribute("data-telegram-login", botId);
       script.setAttribute("data-size", "large");
