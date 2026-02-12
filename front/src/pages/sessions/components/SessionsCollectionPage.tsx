@@ -402,7 +402,7 @@ const SessionsCollectionPage = observer(() => {
               Предстоит изучить
             </div>
             <div className={styles.foldersList}>
-              {filteredToExplore.map((t) => {
+              {filteredToExplore.map((t, index) => {
                 const fakeSession = {
                   id: t.id,
                   title: t.title,
@@ -414,6 +414,7 @@ const SessionsCollectionPage = observer(() => {
                   <SessionFolderCard
                     key={t.id}
                     session={fakeSession}
+                    colorIndex={index}
                     ideasCount={1}
                     tagLabel="Предстоит изучить"
                     palette="toExplore"

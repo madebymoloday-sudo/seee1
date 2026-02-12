@@ -259,9 +259,20 @@ function isTextAnswerView(view: View): boolean {
   return false;
 }
 
+function sanitizeThoughtValue(v?: string): string {
+  const s = (v || "").trim();
+  if (!s || s === "—") return "";
+  return s;
+}
+
 function getPrompt(view: View, importantText: string, situationText: string, answers?: Record<string, string>): string {
   if (view.kind === "core") {
-    const thought3 = answers?.["core:situation:3"] || answers?.["core:thought:3"] || "";
+    const primaryKey = `core:${view.subject}:3`;
+    const secondaryKey =
+      view.subject === "thought" ? "core:situation:3" : "core:thought:3";
+    const thought3 =
+      sanitizeThoughtValue(answers?.[primaryKey]) ||
+      sanitizeThoughtValue(answers?.[secondaryKey]);
     return coreQuestion(view.step, view.subject, thought3);
   }
   if (view.kind === "solve") return solveQuestion(view.step, importantText);
@@ -381,7 +392,12 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const isIdeasStep = view.kind === "core" && view.step >= 3;
 
   const ideasList = useMemo(() => {
-    const answer3 = state.answers["core:situation:3"] || state.answers["core:thought:3"] || "";
+    const primaryKey = `core:${state.subject}:3` as const;
+    const secondaryKey =
+      state.subject === "thought" ? "core:situation:3" : "core:thought:3";
+    const answer3 =
+      sanitizeThoughtValue(state.answers[primaryKey]) ||
+      sanitizeThoughtValue(state.answers[secondaryKey]);
     const answer4 = state.answers["core:situation:4"] || state.answers["core:thought:4"] || "";
     const opts = parseImportantOptions(answer4);
     const list: string[] = [];

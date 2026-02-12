@@ -84,7 +84,7 @@ function getRussianIdeaWord(count: number) {
 
 const SessionFolderCard = observer(({ 
   session, 
-  colorIndex: _colorIndex, 
+  colorIndex, 
   tagLabel,
   palette = "default",
   onOpen,
@@ -102,10 +102,13 @@ const SessionFolderCard = observer(({
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuActionHandledRef = useRef(false);
 
-  const colorSeed = String(session.id ?? session.createdAt ?? session.title ?? "");
   const paletteColors = palette === "toExplore" ? TO_EXPLORE_COLORS : FOLDER_COLORS;
-  const colorIndex = stableModuloFromString(colorSeed, paletteColors.length);
-  const folderColor = paletteColors[colorIndex];
+  const colorSeed = String(session.id ?? session.createdAt ?? session.title ?? "");
+  const resolvedColorIndex =
+    typeof colorIndex === "number"
+      ? ((colorIndex % paletteColors.length) + paletteColors.length) % paletteColors.length
+      : stableModuloFromString(colorSeed, paletteColors.length);
+  const folderColor = paletteColors[resolvedColorIndex];
   const folderRgb = hexToRgb(folderColor);
   const tabColor = mixRgb(folderRgb, { r: 255, g: 255, b: 255 }, 0.14);
   const borderColor = mixRgb(folderRgb, { r: 0, g: 0, b: 0 }, 0.22);

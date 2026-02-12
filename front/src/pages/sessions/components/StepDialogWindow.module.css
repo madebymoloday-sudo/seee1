@@ -231,17 +231,17 @@
   cursor: not-allowed;
 }
 
-/* Тёмная тема: кнопки светлые */
-:global(.dark) .actionButton,
-:global(.dark) .skipButton,
-:global(.dark) .backButton {
-  color: rgba(255, 255, 255, 0.65);
+/* Тёмная тема: кнопки светлые (жёсткий приоритет) */
+:global(html.dark) .actionButton,
+:global(html.dark) .skipButton,
+:global(html.dark) .backButton {
+  color: rgba(255, 255, 255, 0.72) !important;
 }
 
-:global(.dark) .actionButton:hover:not(:disabled),
-:global(.dark) .skipButton:hover:not(:disabled),
-:global(.dark) .backButton:hover:not(:disabled) {
-  color: rgba(255, 255, 255, 0.85);
+:global(html.dark) .actionButton:hover:not(:disabled),
+:global(html.dark) .skipButton:hover:not(:disabled),
+:global(html.dark) .backButton:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.92) !important;
 }
 
 /* В non-chat wizard ответ пользователя не прижимаем к правому краю */
