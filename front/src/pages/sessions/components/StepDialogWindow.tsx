@@ -811,8 +811,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               isFadingOut ? chatStyles.fadeOut : ""
             }`}
           >
-            <div className={`${chatStyles.message} ${chatStyles.userMessage}`}>
-              <p className={chatStyles.messageContent}>{lastUserAnswer}</p>
+            <div
+              className={`${chatStyles.message} ${chatStyles.userMessage} ${styles.centeredUserBubble}`}
+              style={{ marginLeft: "auto", marginRight: "auto" }}
+            >
+              <p className={chatStyles.messageContent} style={{ textAlign: "right" }}>
+                {lastUserAnswer}
+              </p>
             </div>
           </div>
         )}
@@ -825,8 +830,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           if (!saved || !saved.trim()) return null;
           return (
             <div className={`${chatStyles.messageWrapper} ${chatStyles.visible}`}>
-              <div className={`${chatStyles.message} ${chatStyles.userMessage}`}>
-                <p className={chatStyles.messageContent}>{saved}</p>
+              <div
+                className={`${chatStyles.message} ${chatStyles.userMessage} ${styles.centeredUserBubble}`}
+                style={{ marginLeft: "auto", marginRight: "auto" }}
+              >
+                <p className={chatStyles.messageContent} style={{ textAlign: "right" }}>
+                  {saved}
+                </p>
               </div>
             </div>
           );

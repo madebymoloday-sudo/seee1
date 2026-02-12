@@ -231,6 +231,29 @@
   cursor: not-allowed;
 }
 
+/* Светлая тема: делаем кнопки контрастными */
+:global(:not(.dark)) .actionButton,
+:global(:not(.dark)) .skipButton,
+:global(:not(.dark)) .backButton {
+  color: rgba(30, 41, 59, 0.72);
+}
+
+:global(:not(.dark)) .actionButton:hover:not(:disabled),
+:global(:not(.dark)) .skipButton:hover:not(:disabled),
+:global(:not(.dark)) .backButton:hover:not(:disabled) {
+  color: rgba(15, 23, 42, 0.95);
+}
+
+/* В non-chat wizard ответ пользователя не прижимаем к правому краю */
+.centeredUserBubble {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.centeredUserBubble .messageContent {
+  text-align: left !important;
+}
+
 /* Фон строки ввода — на всю ширину. Само окно ввода — по левому краю сообщения. */
 .inputAlignWrapper {
   width: 100%;
