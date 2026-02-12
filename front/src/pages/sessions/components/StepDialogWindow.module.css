@@ -9,6 +9,14 @@
 
 .choiceButton {
   min-width: 220px;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
+  text-align: left;
+  justify-content: flex-start;
+  padding: 0.75rem 1rem;
+  height: auto;
+  min-height: 44px;
 }
 
 .helperText {
@@ -112,18 +120,23 @@
   flex: 1;
   display: flex;
   justify-content: flex-start;
+  flex-shrink: 0;
 }
 
 .actionsCenter {
   flex: 1;
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .actionsRight {
   flex: 1;
   display: flex;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .actionButton,
@@ -140,6 +153,15 @@
 
 .actionButton {
   color: rgba(0, 0, 0, 0.62);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.actionIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 .skipButton {

@@ -15,6 +15,7 @@ import apiAgent from "@/lib/api";
 import useSwr from "swr";
 import { Textarea } from "@/components/ui/textarea";
 import type { SessionResponseDto } from "@/api/schemas";
+import { parseImportantOptions } from "@/lib/sessionUtils";
 
 type SortOption = "default" | "negative" | "positive" | "to_explore";
 
@@ -94,23 +95,6 @@ function saveToExploreTemplates(userKey: string, items: ToExploreTemplate[]) {
   } catch {
     // ignore
   }
-}
-
-function parseImportantOptions(text: string): string[] {
-  const raw = (text || "")
-    .split(/\r?\n|;|•|\u2022|,|—|-|\*/g)
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((s) => s.replace(/^\d+[\)\.\-]\s*/, "").trim())
-    .filter((s) => s.length >= 2);
-
-  const unique: string[] = [];
-  for (const item of raw) {
-    const key = item.toLowerCase();
-    if (!unique.some((x) => x.toLowerCase() === key)) unique.push(item);
-    if (unique.length >= 16) break;
-  }
-  return unique;
 }
 
 function getIdeasCountFromLocalState(sessionId: string): number {

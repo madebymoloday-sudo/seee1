@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +8,7 @@ import { useSessionsControllerCreateSession } from "@/api/seee.swr";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import type { SessionResponseDto } from "@/api/schemas";
+import { parseImportantOptions } from "@/lib/sessionUtils";
 import MessageInput from "./MessageInput";
 import chatStyles from "./ChatWindow.module.css";
 import styles from "./StepDialogWindow.module.css";
@@ -43,24 +45,6 @@ type DialogState = DialogStateV2;
 const STORAGE_KEY_PREFIX = "seee_step_dialog_state:";
 const SESSION_KIND_PREFIX = "seee_session_kind:";
 const SESSION_NOTES_PREFIX = "seee_session_notes:";
-
-function parseImportantOptions(text: string): string[] {
-  const raw = (text || "")
-    .split(/\r?\n|;|•|\u2022|,|—|-|\*/g)
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((s) => s.replace(/^\d+[\)\.\-]\s*/, "").trim())
-    .filter((s) => s.length >= 2);
-
-  const unique: string[] = [];
-  for (const item of raw) {
-    const key = item.toLowerCase();
-    if (!unique.some((x) => x.toLowerCase() === key)) unique.push(item);
-    // keep a safe upper bound to avoid UI overload
-    if (unique.length >= 50) break;
-  }
-  return unique;
-}
 
 function loadState(sessionId: string): DialogState | null {
   try {
@@ -191,7 +175,7 @@ function removeToExploreTemplate(userKey: string, templateId: string) {
   }
 }
 
-function coreQuestion(step: number, subject: Subject): string {
+function coreQuestion(step: number, subject: Subject, thought3?: string): string {
   const thing = subject === "thought" ? "эта мысль" : "эта ситуация";
   switch (step) {
     case 1:
@@ -202,8 +186,11 @@ function coreQuestion(step: number, subject: Subject): string {
       return `Как вы думаете, какая мысль/идея вызывает эту эмоцию?`;
     case 4:
       return `Почему для вас это важно? Перечислите несколько вариантов.`;
-    case 5:
-      return `Как вы думаете, кто заразил вас этой мыслью? Это может быть человек, сообщество, вы сами, родители и прочее. Если не знаете, то так и напишите "не знаю".`;
+    case 5: {
+      const thought = (thought3 || "").trim();
+      const suffix = thought ? `: «${thought}»?` : "?";
+      return `Как вы думаете, кто заразил вас этой мыслью${suffix} Это может быть человек, сообщество, вы сами, родители и прочее. Если не знаете, то так и напишите "не знаю".`;
+    }
     case 6:
       return `Как думаете, с какой эгоистичной целью эта мысль/идея была вам сказана?`;
     case 7:
@@ -248,8 +235,11 @@ function isTextAnswerView(view: View): boolean {
   return false;
 }
 
-function getPrompt(view: View, importantText: string, situationText: string): string {
-  if (view.kind === "core") return coreQuestion(view.step, view.subject);
+function getPrompt(view: View, importantText: string, situationText: string, answers?: Record<string, string>): string {
+  if (view.kind === "core") {
+    const thought3 = answers?.["core:situation:3"] || answers?.["core:thought:3"] || "";
+    return coreQuestion(view.step, view.subject, thought3);
+  }
   if (view.kind === "solve") return solveQuestion(view.step, importantText);
   if (view.kind === "deepPick") {
     return `В ответе на вопрос: "Почему для вас это важно" вы написали:\n\n${view.fromImportant || importantText || "—"}\n\nКакую из этих мыслей вы хотели бы разобрать?`;
@@ -313,8 +303,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   }, [state]);
 
   const prompt = useMemo(
-    () => getPrompt(view, state.importantText, state.situationText),
-    [view, state.importantText, state.situationText]
+    () => getPrompt(view, state.importantText, state.situationText, state.answers),
+    [view, state.importantText, state.situationText, state.answers]
   );
 
   const importantOptions = useMemo(() => {
@@ -630,32 +620,42 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const goBack = () => {
     if (!canGoBack) return;
-    if (view.kind === "deepPick") {
-      setState((s) => {
+    const answerToSave = inputText.trim();
+
+    const applyBackState = (s: DialogState): Partial<DialogState> => {
+      if (view.kind === "deepPick") {
         if (s.deepPickReturn) {
           return {
-            ...s,
             coreStep: s.deepPickReturn.coreStep,
             solveStep: s.deepPickReturn.solveStep,
             subject: s.deepPickReturn.subject,
             deepPickReturn: undefined,
           };
         }
-        return { ...s, coreStep: 10, deepPickReturn: undefined };
-      });
-      return;
-    }
-    if (view.kind === "solve") {
-      setState((s) => {
-        if (s.solveStep > 1) return { ...s, solveStep: s.solveStep - 1 };
-        // back to the core choice step
-        return { ...s, coreStep: 10, solveStep: 1, subject: "situation" };
-      });
-      return;
-    }
-    if (view.kind === "core") {
-      const min = view.subject === "thought" ? 2 : 1;
-      setState((s) => ({ ...s, coreStep: Math.max(min, s.coreStep - 1) }));
+        return { coreStep: 10, deepPickReturn: undefined };
+      }
+      if (view.kind === "solve") {
+        if (s.solveStep > 1) return { solveStep: s.solveStep - 1 };
+        return { coreStep: 10, solveStep: 1, subject: "situation" };
+      }
+      if (view.kind === "core") {
+        const min = view.subject === "thought" ? 2 : 1;
+        return { coreStep: Math.max(min, s.coreStep - 1) };
+      }
+      return {};
+    };
+
+    setState((s) => {
+      const backUpdate = applyBackState(s);
+      const answers = answerToSave
+        ? { ...s.answers, [stepKey(view)]: answerToSave }
+        : s.answers;
+      return { ...s, ...backUpdate, answers };
+    });
+
+    if (answerToSave) {
+      setLastUserAnswer(answerToSave);
+      setInputText("");
     }
   };
 
@@ -669,7 +669,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         >
           <div className={`${chatStyles.message} ${chatStyles.assistantMessage}`}>
             <p className={chatStyles.messageContent}>{prompt}</p>
-            {(canGoBack || isIdeasStep || canSkip) && (
+            {(canGoBack || isIdeasStep || canSkip || canDeepNow) && (
               <div className={styles.systemActionsRow}>
                 <div className={styles.actionsLeft}>
                   {canGoBack && (
@@ -697,6 +697,32 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                     >
                       ↓ Идеи
                     </button>
+                  )}
+                  {canDeepNow && (
+                    isEditing ? (
+                      <button
+                        type="button"
+                        onClick={goDeepPick}
+                        disabled={isTransitioning || isListModalOpen}
+                        className={styles.actionButton}
+                        aria-label="Нейросписок"
+                        title='Показать идеи из ответа "Почему это важно"'
+                      >
+                        <ChevronDown className={styles.actionIcon} />
+                        Нейросписок
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={openAddToList}
+                        disabled={isTransitioning || isListModalOpen}
+                        className={styles.actionButton}
+                        aria-label="Добавить мысль в Нейросписок"
+                        title="Добавить мысль в Нейросписок"
+                      >
+                        Добавить мысль в Нейросписок
+                      </button>
+                    )
                   )}
                 </div>
                 <div className={styles.actionsRight}>
@@ -775,21 +801,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         )}
       </div>
 
-      {/* Кнопки управления (назад/редактирование) */}
+      {/* Кнопки управления (редактирование/дальше) */}
       {isTextAnswerView(view) && (
         <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-          {canDeepNow && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={goDeepPick}
-              disabled={isTransitioning || isListModalOpen}
-              className={chatStyles.glassButton}
-              title='Показать идеи из ответа "Почему это важно"'
-            >
-              Глубже
-            </Button>
-          )}
           {!isEditing && (
             <>
               <Button

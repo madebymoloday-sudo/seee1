@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { SessionResponseDto } from "@/api/schemas";
+import { parseImportantOptions } from "@/lib/sessionUtils";
 import styles from "./SessionFolder.module.css";
 
 interface SessionFolderProps {
@@ -39,14 +40,8 @@ const SessionFolder = ({ session, colorIndex }: SessionFolderProps) => {
         answers["core:situation:3"] || answers["core:thought:3"] || "";
       const answer4 =
         answers["core:situation:4"] || answers["core:thought:4"] || "";
-      const opts = (answer4 || "")
-        .split(/\r?\n|;|•|\u2022|,|—|-|\*/g)
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .map((s) => s.replace(/^\d+[\)\.\-]\s*/, "").trim())
-        .filter((s) => s.length >= 2);
-      const unique = Array.from(new Set(opts.map((x) => x.toLowerCase()))).length;
-      return (answer3.trim() ? 1 : 0) + unique;
+      const opts = parseImportantOptions(answer4);
+      return (answer3.trim() ? 1 : 0) + opts.length;
     } catch {
       return 0;
     }
