@@ -58,13 +58,7 @@ const SessionPage = observer(() => {
 
     return (
       <div className="flex flex-col overflow-hidden h-screen h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <div className="px-4 py-3 border-b border-black/5 bg-white/70 backdrop-blur-sm dark:bg-slate-900/40 dark:border-white/10">
-          <div className="flex items-center justify-center">
-            <div className="font-semibold text-slate-900 dark:text-slate-100">
-              {draftTitle}
-            </div>
-          </div>
-        </div>
+        <SessionHeader session={draftSession} isDraft />
         <div className="flex-1 overflow-hidden">
           <StepDialogWindow key={draftSession.id} session={draftSession} />
         </div>

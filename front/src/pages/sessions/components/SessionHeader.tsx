@@ -8,13 +8,35 @@ import type { SessionResponseDto } from "@/api/schemas";
 import { getAllPipelines } from "@/api/pipeline.api";
 import { toast } from "sonner";
 import PauseSessionModal from "./PauseSessionModal";
+import { clearDraftSession } from "@/lib/sessionUtils";
 import styles from "./SessionHeader.module.css";
+
+function getSessionUserKey(): string {
+  try {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return "anon";
+    const parts = token.split(".");
+    if (parts.length < 2) return "anon";
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    const payload = JSON.parse(json);
+    return String(payload?.sub ?? payload?.id ?? payload?.userId ?? "anon");
+  } catch {
+    return "anon";
+  }
+}
 
 interface SessionHeaderProps {
   session: SessionResponseDto;
+  isDraft?: boolean;
 }
 
-const SessionHeader = observer(({ session }: SessionHeaderProps) => {
+const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps) => {
   const navigate = useNavigate();
   const auth = useAuth();
   const isAdmin = (auth.user as { role?: string } | null)?.role === 'admin';
@@ -47,10 +69,11 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
   };
 
 
-  // Автоматическая установка дефолтной программы для не-админов
+  // Автоматическая установка дефолтной программы для не-админов (только для сохранённых сессий)
   useEffect(() => {
+    if (isDraft) return;
+
     const setupDefaultProgram = async () => {
-      // Только для не-админов устанавливаем дефолтную программу автоматически
       if (isAdmin) return;
 
       try {
@@ -103,7 +126,7 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
     };
 
     setupDefaultProgram();
-  }, [session.id, isAdmin]);
+  }, [session.id, isAdmin, isDraft]);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
@@ -130,20 +153,40 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
   const handleRename = () => {
     const newTitle = prompt("Введите новое название сессии:", session.title || "Новая сессия");
     if (newTitle !== null && newTitle.trim()) {
-      // TODO: Добавить API вызов для переименования
-      toast.info("Функция переименования будет добавлена");
+      if (isDraft) {
+        try {
+          localStorage.setItem(`seee_draft_title:${getSessionUserKey()}`, newTitle.trim());
+          toast.success("Название сохранено");
+          window.location.reload();
+        } catch {
+          toast.error("Не удалось сохранить");
+        }
+      } else {
+        toast.info("Функция переименования будет добавлена");
+      }
     }
     setIsMenuOpen(false);
   };
 
   const handlePause = () => {
-    setIsPauseModalOpen(true);
-    setIsMenuOpen(false);
+    if (isDraft) {
+      navigate("/sessions");
+      setIsMenuOpen(false);
+    } else {
+      setIsPauseModalOpen(true);
+      setIsMenuOpen(false);
+    }
   };
 
   const handleDelete = () => {
-    setIsDeleteConfirmOpen(true);
-    setIsMenuOpen(false);
+    if (isDraft) {
+      clearDraftSession(getSessionUserKey());
+      navigate("/sessions");
+      setIsMenuOpen(false);
+    } else {
+      setIsDeleteConfirmOpen(true);
+      setIsMenuOpen(false);
+    }
   };
 
   const confirmDelete = async () => {
@@ -162,8 +205,13 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
   };
 
   const handleSave = () => {
-    handleDownloadDocument();
-    setIsMenuOpen(false);
+    if (isDraft) {
+      toast.info("Ответьте на первый вопрос, чтобы сохранить сессию");
+      setIsMenuOpen(false);
+    } else {
+      handleDownloadDocument();
+      setIsMenuOpen(false);
+    }
   };
 
   const handleAllSessions = () => {
@@ -173,6 +221,9 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
 
   const handleNewSession = async () => {
     try {
+      if (isDraft) {
+        clearDraftSession(getSessionUserKey());
+      }
       navigate("/sessions/new");
       setIsMenuOpen(false);
     } catch (error) {
