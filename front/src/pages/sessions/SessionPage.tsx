@@ -69,7 +69,7 @@ const SessionPage = observer(() => {
           </div>
         </div>
         <div className="flex-1 overflow-hidden">
-          <StepDialogWindow session={draftSession} />
+          <StepDialogWindow key={draftSession.id} session={draftSession} />
         </div>
       </div>
     );
@@ -105,7 +105,7 @@ const SessionPage = observer(() => {
     <div className="flex flex-col overflow-hidden h-screen h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <SessionHeader session={session} />
       <div className="flex-1 overflow-hidden">
-        <StepDialogWindow session={session} />
+        <StepDialogWindow key={session.id} session={session} />
       </div>
     </div>
   );

@@ -733,7 +733,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                   )}
                 </div>
                 <div className={styles.actionsCenter}>
-                  {isIdeasStep && (
+                  {isIdeasStep && !canDeepNow && (
                     <button
                       type="button"
                       onClick={() => setIsIdeasModalOpen(true)}
@@ -745,31 +745,18 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                       ↓ Идеи
                     </button>
                   )}
-                  {canDeepNow && (
-                    isEditing ? (
-                      <button
-                        type="button"
-                        onClick={goDeepPick}
-                        disabled={isTransitioning || isListModalOpen}
-                        className={styles.actionButton}
-                        aria-label="Идеи"
-                        title='Показать идеи из ответа "Почему это важно"'
-                      >
-                        <ChevronDown className={styles.actionIcon} />
-                        Идеи
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={openAddToList}
-                        disabled={isTransitioning || isListModalOpen}
-                        className={styles.actionButton}
-                        aria-label="Добавить мысль в Нейросписок"
-                        title="Добавить мысль в Нейросписок"
-                      >
-                        Добавить мысль в Нейросписок
-                      </button>
-                    )
+                  {canDeepNow && isEditing && (
+                    <button
+                      type="button"
+                      onClick={goDeepPick}
+                      disabled={isTransitioning || isListModalOpen}
+                      className={styles.actionButton}
+                      aria-label="Идеи"
+                      title='Показать идеи из ответа "Почему это важно"'
+                    >
+                      <ChevronDown className={styles.actionIcon} />
+                      Идеи
+                    </button>
                   )}
                 </div>
                 <div className={styles.actionsRight}>
@@ -848,7 +835,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         )}
       </div>
 
-      {/* Кнопки управления (редактирование/дальше) */}
+      {/* Кнопки управления (редактирование/дальше) и «Добавить мысль в Нейросписок» */}
       {isTextAnswerView(view) && (
         <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
           {!isEditing && (
@@ -867,6 +854,18 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                 Дальше
               </Button>
             </>
+          )}
+          {canDeepNow && !isEditing && (
+            <Button
+              type="button"
+              onClick={openAddToList}
+              disabled={isTransitioning || isListModalOpen}
+              className={chatStyles.glassButton}
+              aria-label="Добавить мысль в Нейросписок"
+              title="Добавить мысль в Нейросписок"
+            >
+              Добавить мысль в Нейросписок
+            </Button>
           )}
         </div>
       )}

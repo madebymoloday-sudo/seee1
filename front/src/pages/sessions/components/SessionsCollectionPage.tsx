@@ -15,7 +15,7 @@ import apiAgent from "@/lib/api";
 import useSwr from "swr";
 import { Textarea } from "@/components/ui/textarea";
 import type { SessionResponseDto } from "@/api/schemas";
-import { parseImportantOptions } from "@/lib/sessionUtils";
+import { parseImportantOptions, clearDraftSession } from "@/lib/sessionUtils";
 
 type SortOption = "default" | "negative" | "positive" | "to_explore";
 
@@ -211,7 +211,8 @@ const SessionsCollectionPage = observer(() => {
 
   const handleCreateSession = async () => {
     try {
-      // Не создаём пустую сессию на сервере заранее.
+      // Очищаем черновик, чтобы новая сессия начиналась с чистого листа
+      clearDraftSession(getUserKey());
       navigate("/sessions/new");
     } catch (error) {
       console.error("Ошибка создания сессии:", error);
@@ -497,8 +498,11 @@ const SessionsCollectionPage = observer(() => {
             </div>
             <div className={styles.infoModalBody}>
               {(() => {
+                const session = sessions?.find((s) => s.id === ideasInfoSessionId);
                 const { coreThought, importantIdeas } = getIdeasFromLocalState(ideasInfoSessionId);
-                if (!coreThought && importantIdeas.length === 0) {
+                const hasTitle = (session?.title ?? "").trim().length > 0;
+                const displayThought = coreThought || (hasTitle ? (session?.title ?? "").trim() : undefined);
+                if (!displayThought && importantIdeas.length === 0) {
                   return (
                     <p className={styles.infoEmpty}>
                       Для этой сессии пока нет сохранённых идей.
@@ -507,10 +511,10 @@ const SessionsCollectionPage = observer(() => {
                 }
                 return (
                   <div className={styles.infoList}>
-                    {coreThought && (
+                    {displayThought && (
                       <div className={styles.infoItem}>
                         <div className={styles.infoItemTitle}>Мысль (шаг 3)</div>
-                        <div className={styles.ideaChip}>{coreThought}</div>
+                        <div className={styles.ideaChip}>{displayThought}</div>
                       </div>
                     )}
                     {importantIdeas.length > 0 && (
