@@ -209,7 +209,7 @@ function coreQuestion(step: number, subject: Subject, thought3?: string): string
     case 3:
       return `Как вы думаете, какая мысль/идея вызывает эту эмоцию?`;
     case 4:
-      return `Почему для вас это важно? Перечислите несколько вариантов.`;
+      return `Почему вы так думаете? Перечислите несколько причин.`;
     case 5: {
       const thought = (thought3 || "").trim();
       const suffix = thought ? `: «${thought}»?` : "?";

@@ -152,7 +152,7 @@
 }
 
 .actionButton {
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(15, 23, 42, 0.85);
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -165,12 +165,12 @@
 }
 
 .skipButton {
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(15, 23, 42, 0.85);
 }
 
 .actionButton:hover:not(:disabled),
 .skipButton:hover:not(:disabled) {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(2, 6, 23, 0.95);
   text-decoration: underline;
 }
 
@@ -215,14 +215,14 @@
   border: none;
   padding: 0;
   font: inherit;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(15, 23, 42, 0.85);
   font-weight: 650;
   cursor: pointer;
   transition: color 0.15s ease, opacity 0.15s ease;
 }
 
 .backButton:hover:not(:disabled) {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(2, 6, 23, 0.95);
   text-decoration: underline;
 }
 
@@ -231,17 +231,17 @@
   cursor: not-allowed;
 }
 
-/* Светлая тема: делаем кнопки контрастными */
-:global(:not(.dark)) .actionButton,
-:global(:not(.dark)) .skipButton,
-:global(:not(.dark)) .backButton {
-  color: rgba(30, 41, 59, 0.72);
+/* Тёмная тема: кнопки светлые */
+:global(.dark) .actionButton,
+:global(.dark) .skipButton,
+:global(.dark) .backButton {
+  color: rgba(255, 255, 255, 0.65);
 }
 
-:global(:not(.dark)) .actionButton:hover:not(:disabled),
-:global(:not(.dark)) .skipButton:hover:not(:disabled),
-:global(:not(.dark)) .backButton:hover:not(:disabled) {
-  color: rgba(15, 23, 42, 0.95);
+:global(.dark) .actionButton:hover:not(:disabled),
+:global(.dark) .skipButton:hover:not(:disabled),
+:global(.dark) .backButton:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* В non-chat wizard ответ пользователя не прижимаем к правому краю */

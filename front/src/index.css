@@ -122,3 +122,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Глобальный фикс: в светлой теме любые text-white* делаем тёмными для читаемости */
+:root:not(.dark) .text-white,
+:root:not(.dark) [class*="text-white"] {
+  color: rgb(15 23 42) !important;
+}
