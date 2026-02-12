@@ -84,6 +84,9 @@ export class UserProfileDto {
 
   @ApiPropertyOptional({ description: 'Роль пользователя', example: 'user' })
   role?: string;
+
+  @ApiPropertyOptional({ description: 'Telegram ID (если привязан)' })
+  telegramId?: string | null;
 }
 
 export class AuthResponseDto {

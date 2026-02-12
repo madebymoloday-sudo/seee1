@@ -17,4 +17,6 @@ export interface UserProfileDto {
   fullName?: string;
   /** URL аватара */
   avatarUrl?: string;
+  /** Telegram ID (если привязан) */
+  telegramId?: string | null;
 }

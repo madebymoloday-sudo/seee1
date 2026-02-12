@@ -442,6 +442,7 @@ export class AuthService {
       email: user.email,
       fullName: user.fullName,
       avatarUrl: user.avatarUrl,
+      telegramId: user.telegramId ?? null,
     };
   }
 }

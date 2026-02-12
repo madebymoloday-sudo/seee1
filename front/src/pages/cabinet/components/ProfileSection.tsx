@@ -2,6 +2,7 @@ import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TelegramAuthButton from "@/components/auth/TelegramAuthButton";
+import { TelegramIcon } from "@/components/auth/TelegramIcon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { UserProfileDto } from "@/api/schemas";
@@ -139,20 +140,35 @@ const ProfileSection = observer(({ profile }: ProfileSectionProps) => {
           </div>
         )}
 
-        {!(profile as any).telegramId ? (
+        {!profile.telegramId ? (
           <div className="mt-4">
             <p className="text-sm text-muted-foreground mb-2">
               Привяжите Telegram аккаунт для быстрого входа
             </p>
-            <TelegramAuthButton authType="link" className="w-full">
+            <TelegramAuthButton
+              authType="link"
+              className="w-full"
+              onLinkSuccess={() => mutate(getAuthControllerGetMeKey())}
+            >
               Привязать Telegram
             </TelegramAuthButton>
           </div>
         ) : (
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
-            <p className="text-sm text-green-800">
-              ✓ Telegram аккаунт привязан: @{(profile as any).telegramUsername || "N/A"}
-            </p>
+          <div className="mt-4 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                ✓ Привязано к Telegram
+              </span>
+            </div>
+            <a
+              href="https://t.me/SeeeAppBot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#2AABEE] px-4 py-2 text-sm font-medium text-white hover:bg-[#229ED9] transition-colors"
+            >
+              <TelegramIcon className="h-5 w-5" />
+              Открыть бота Seee
+            </a>
           </div>
         )}
       </CardContent>

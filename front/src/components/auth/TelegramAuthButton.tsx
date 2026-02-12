@@ -34,6 +34,7 @@ interface TelegramAuthButtonProps {
   authType?: "sign-in" | "sign-up" | "link";
   children?: React.ReactNode;
   className?: string;
+  onLinkSuccess?: () => void;
 }
 
 const TelegramAuthButton = observer(
@@ -41,6 +42,7 @@ const TelegramAuthButton = observer(
     authType = "sign-in",
     children = "Войти через Telegram",
     className,
+    onLinkSuccess,
   }: TelegramAuthButtonProps) => {
     const navigate = useNavigate();
     const auth = useAuth();
@@ -89,8 +91,12 @@ const TelegramAuthButton = observer(
 
             if (authType === "link") {
               // Привязка к существующему аккаунту
-              await apiAgent.post("/auth/telegram/link", payload);
+              await apiAgent.post<
+                typeof payload,
+                Record<string, unknown>
+              >("/auth/telegram/link", payload);
               toast.success("Telegram аккаунт успешно привязан");
+              onLinkSuccess?.();
             } else {
               // Вход/регистрация
               const response = await apiAgent.post<
