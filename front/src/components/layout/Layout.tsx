@@ -39,12 +39,12 @@ export const Layout = observer(({ children }: LayoutProps) => {
             <div className="flex items-center space-x-8">
               <Link
                 to="/"
-                className="flex items-center space-x-2 text-xl font-bold text-blue-600 hover:text-blue-700"
+                className="flex items-center space-x-2 text-xl font-bold text-foreground dark:text-white hover:opacity-90"
               >
                 <img
                   src="/seee-logo-128.png"
                   alt="Seee"
-                  className="h-7 w-7 rounded-full"
+                  className="h-10 w-10 rounded-full"
                   draggable={false}
                 />
                 <span>Seee</span>
