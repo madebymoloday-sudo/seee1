@@ -283,7 +283,10 @@ const SessionsCollectionPage = observer(() => {
       {/* Заголовок */}
       <div className={styles.header}>
         <div className={styles.headerTitle}>
-          <h1 className={styles.title}>Галерея сессий</h1>
+          <div className={styles.titleRow}>
+            <img src="/seee-logo-128.png" alt="Seee" className={styles.logo} />
+            <h1 className={styles.title}>Галерея сессий</h1>
+          </div>
           <Button
             onClick={handleCreateSession}
             className={styles.plusButton}

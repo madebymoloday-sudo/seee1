@@ -152,7 +152,7 @@
 }
 
 .actionButton {
-  color: white;
+  color: rgba(255, 255, 255, 0.65);
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -165,18 +165,18 @@
 }
 
 .skipButton {
-  color: white;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .actionButton:hover:not(:disabled),
 .skipButton:hover:not(:disabled) {
-  color: white;
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: underline;
 }
 
 .actionButton:disabled,
 .skipButton:disabled {
-  opacity: 0.55;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -215,19 +215,19 @@
   border: none;
   padding: 0;
   font: inherit;
-  color: white;
+  color: rgba(255, 255, 255, 0.65);
   font-weight: 650;
   cursor: pointer;
   transition: color 0.15s ease, opacity 0.15s ease;
 }
 
 .backButton:hover:not(:disabled) {
-  color: white;
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: underline;
 }
 
 .backButton:disabled {
-  opacity: 0.55;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 

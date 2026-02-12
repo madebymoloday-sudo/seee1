@@ -57,20 +57,39 @@ function loadState(sessionId: string): DialogState | null {
     if (!raw) return null;
     const parsed: any = JSON.parse(raw);
 
-    // v2
+    // v2 — восстанавливаем answers из importantText/situationText если они пустые или "—"
     if (parsed?.v === 2) {
       if (typeof parsed.coreStep !== "number" || typeof parsed.solveStep !== "number") return null;
-      return parsed as DialogStateV2;
+      const state = parsed as DialogStateV2;
+      const answers = { ...(state.answers || {}) };
+      const subj = state.subject || "situation";
+      const key1 = subj === "situation" ? "core:situation:1" : "core:thought:2";
+      const key4 = subj === "situation" ? "core:situation:4" : "core:thought:4";
+      const dash = "—";
+      if ((!answers[key1] || answers[key1].trim() === dash) && state.situationText?.trim() && state.situationText.trim() !== dash) {
+        answers[key1] = state.situationText.trim();
+      }
+      if ((!answers[key4] || answers[key4].trim() === dash) && state.importantText?.trim() && state.importantText.trim() !== dash) {
+        answers[key4] = state.importantText.trim();
+      }
+      return { ...state, answers };
     }
 
-    // v1 -> v2 migration
+    // v1 -> v2 migration — сохраняем situationText и importantText в answers
     if (parsed?.v === 1) {
       if (typeof parsed.coreStep !== "number" || typeof parsed.solveStep !== "number") return null;
       const v1 = parsed as DialogStateV1;
+      const answers: Record<string, string> = {};
+      if (v1.situationText?.trim()) {
+        answers[v1.subject === "situation" ? "core:situation:1" : "core:thought:2"] = v1.situationText.trim();
+      }
+      if (v1.importantText?.trim()) {
+        answers[v1.subject === "situation" ? "core:situation:4" : "core:thought:4"] = v1.importantText.trim();
+      }
       const migrated: DialogStateV2 = {
         ...v1,
         v: 2,
-        answers: {},
+        answers,
       };
       return migrated;
     }
