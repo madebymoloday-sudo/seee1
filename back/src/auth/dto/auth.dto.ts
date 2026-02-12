@@ -108,3 +108,32 @@ export class UpdateProfileDto {
   @MinLength(3)
   username?: string;
 }
+
+export class ForgotPasswordDto {
+  @ApiProperty({
+    description: 'Email пользователя',
+    example: 'user@example.com',
+  })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({
+    description: 'Токен сброса из письма или Telegram',
+  })
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+
+  @ApiProperty({
+    description: 'Новый пароль',
+    example: 'newpassword123',
+    minLength: 6,
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  newPassword: string;
+}

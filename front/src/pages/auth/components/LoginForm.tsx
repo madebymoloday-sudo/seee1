@@ -7,6 +7,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import TelegramAuthButton from "@/components/auth/TelegramAuthButton";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
@@ -106,6 +107,15 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
               className="text-red-200"
             />
           )}
+          <div className="mt-1 text-right">
+            <button
+              type="button"
+              onClick={() => navigate("/forgot-password")}
+              className="text-sm text-white/80 hover:text-white underline"
+            >
+              Забыли пароль?
+            </button>
+          </div>
         </FormItem>
       </FormField>
 
@@ -128,6 +138,19 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
           </Button>
         )}
       </div>
+
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-white/30" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-transparent px-2 text-white/60">или</span>
+        </div>
+      </div>
+
+      <TelegramAuthButton authType="sign-in" className="w-full">
+        Войти через Telegram
+      </TelegramAuthButton>
     </Form>
   );
 });

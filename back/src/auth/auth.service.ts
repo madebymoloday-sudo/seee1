@@ -16,8 +16,12 @@ import {
   AuthResponseDto,
   UserProfileDto,
   UpdateProfileDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
 } from './dto/auth.dto';
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
+import { PasswordResetService } from './password-reset.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -35,6 +39,8 @@ export class AuthService {
     private prisma: PrismaService,
     private tokenService: TokenService,
     private telegramAuthService: TelegramAuthService,
+    private passwordResetService: PasswordResetService,
+    private configService: ConfigService,
   ) {}
 
   async login(email: string, password: string): Promise<AuthResponseDto> {
@@ -347,6 +353,76 @@ export class AuthService {
     });
 
     return this.toUserProfileDto(updated);
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      select: {
+        id: true,
+        email: true,
+        telegramId: true,
+      },
+    });
+
+    // Всегда возвращаем одинаковый ответ для безопасности (не раскрываем, есть ли email)
+    const okMessage =
+      'Если аккаунт с таким email существует, ссылка для восстановления пароля отправлена на email и в Telegram (если привязан).';
+
+    if (!user) {
+      return { message: okMessage };
+    }
+
+    const EXPIRES_MINUTES = 60;
+    const token = randomBytes(32).toString('hex');
+
+    await this.prisma.passwordResetToken.create({
+      data: {
+        token,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + EXPIRES_MINUTES * 60 * 1000),
+      },
+    });
+
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+
+    await this.passwordResetService.sendResetLink({
+      email: user.email ?? undefined,
+      telegramId: user.telegramId ?? undefined,
+      resetLink,
+      expiresInMinutes: EXPIRES_MINUTES,
+    });
+
+    return { message: okMessage };
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
+    const record = await this.prisma.passwordResetToken.findUnique({
+      where: { token: dto.token },
+      include: { user: true },
+    });
+
+    if (!record || record.expiresAt < new Date()) {
+      throw new BadRequestException(
+        'Ссылка недействительна или истекла. Запросите новую.',
+      );
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 12);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: record.userId },
+        data: { passwordHash: hashedPassword },
+      }),
+      this.prisma.passwordResetToken.delete({
+        where: { id: record.id },
+      }),
+    ]);
+
+    return { message: 'Пароль успешно изменён. Войдите с новым паролем.' };
   }
 
   private composeDisplayName(validated: {

@@ -43,7 +43,7 @@ const TelegramAuthButton = observer(
     className,
   }: TelegramAuthButtonProps) => {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const auth = useAuth();
     const [isLoading, setIsLoading] = useState(false);
 
     const handleClick = () => {
@@ -105,9 +105,8 @@ const TelegramAuthButton = observer(
               localStorage.setItem("accessToken", response.accessToken);
               localStorage.setItem("refreshToken", response.refreshToken);
 
-              // Обновляем store через проверку авторизации
-              await login(response.user.email || "", "");
-              // Дальше решит EntryGate (онбординг или новая сессия)
+              // Обновляем store через проверку авторизации (токены уже в localStorage)
+              await auth.checkAuth();
               navigate("/", { replace: true });
             }
           } catch (error) {

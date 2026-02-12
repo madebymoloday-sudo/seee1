@@ -54,7 +54,9 @@ instance.interceptors.response.use(
 
     // Не пытаемся обновлять токен для запросов аутентификации
     const isAuthEndpoint = originalRequest?.url?.includes('/auth/login') ||
-                          originalRequest?.url?.includes('/auth/register');
+                          originalRequest?.url?.includes('/auth/register') ||
+                          originalRequest?.url?.includes('/auth/forgot-password') ||
+                          originalRequest?.url?.includes('/auth/reset-password');
 
     // Проверяем на 403 с сообщением об устаревшем токене или 401
     const isTokenExpired =

@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
 import { TelegramAuthService } from './telegram-auth.service';
+import { PasswordResetService } from './password-reset.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -30,6 +31,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     AuthService,
     TokenService,
     TelegramAuthService,
+    PasswordResetService,
     JwtStrategy,
     RefreshTokenStrategy,
   ],

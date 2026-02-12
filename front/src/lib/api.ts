@@ -54,7 +54,9 @@ class ApiAgent {
         // Не пытаемся обновлять токен для запросов аутентификации
         const isAuthEndpoint =
           error.config?.url?.includes("/auth/login") ||
-          error.config?.url?.includes("/auth/register");
+          error.config?.url?.includes("/auth/register") ||
+          error.config?.url?.includes("/auth/forgot-password") ||
+          error.config?.url?.includes("/auth/reset-password");
 
         // Проверяем на ошибку 503 с сообщением о не настроенном LLM
         const isLLMNotConfigured =

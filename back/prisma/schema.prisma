@@ -57,7 +57,8 @@ model User {
   balances           Balance[]
   transactions       Transaction[]
   paymentDetails     PaymentDetails?
-  refreshTokens      RefreshToken[]
+  refreshTokens        RefreshToken[]
+  passwordResetTokens  PasswordResetToken[]
   gptStatistics      GptStatistics[]
   pipelinePrograms   PipelineProgram[]
 
@@ -334,6 +335,21 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([token])
+  @@map("password_reset_tokens")
 }
 
 model PipelineState {

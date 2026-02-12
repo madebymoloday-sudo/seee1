@@ -26,6 +26,8 @@ import {
   AuthResponseDto,
   UserProfileDto,
   UpdateProfileDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
 } from './dto/auth.dto';
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
 
@@ -67,6 +69,36 @@ export class AuthController {
   })
   async register(@Body() dto: RegisterDto): Promise<AuthResponseDto> {
     return this.authService.register(dto);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Запросить восстановление пароля' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ссылка отправлена на email и/или в Telegram',
+  })
+  async forgotPassword(
+    @Body() dto: ForgotPasswordDto,
+  ): Promise<{ message: string }> {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Установить новый пароль по токену' })
+  @ApiResponse({
+    status: 200,
+    description: 'Пароль успешно изменён',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Токен недействителен или истёк',
+  })
+  async resetPassword(
+    @Body() dto: ResetPasswordDto,
+  ): Promise<{ message: string }> {
+    return this.authService.resetPassword(dto);
   }
 
   @Post('telegram/login')
