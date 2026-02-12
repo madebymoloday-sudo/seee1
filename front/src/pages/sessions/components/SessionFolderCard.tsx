@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Edit2, MessageSquareText, Lightbulb, MoreVertical, Trash2 } from "lucide-react";
@@ -96,6 +97,7 @@ const SessionFolderCard = observer(({
 }: SessionFolderCardProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -113,6 +115,7 @@ const SessionFolderCard = observer(({
       if (menuRef.current && !menuRef.current.contains(event.target as Node) &&
           menuButtonRef.current && !menuButtonRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
+        setMenuPosition(null);
       }
     };
 
@@ -136,11 +139,23 @@ const SessionFolderCard = observer(({
   const handleToggleMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsMenuOpen((p) => !p);
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+      setMenuPosition(null);
+    } else if (menuButtonRef.current) {
+      const rect = menuButtonRef.current.getBoundingClientRect();
+      setMenuPosition({ top: rect.bottom + 6, right: document.documentElement.clientWidth - rect.right });
+      setIsMenuOpen(true);
+    }
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+    setMenuPosition(null);
   };
 
   const handleRename = () => {
-    setIsMenuOpen(false);
+    closeMenu();
     if (onRename) {
       onRename();
     } else {
@@ -152,17 +167,17 @@ const SessionFolderCard = observer(({
   };
 
   const handleDelete = () => {
-    setIsMenuOpen(false);
+    closeMenu();
     if (onDelete) onDelete();
   };
 
   const handleShowFeedback = () => {
-    setIsMenuOpen(false);
+    closeMenu();
     if (onShowFeedback) onShowFeedback();
   };
 
   const handleShowIdeas = () => {
-    setIsMenuOpen(false);
+    closeMenu();
     if (onShowIdeas) onShowIdeas();
   };
 
@@ -217,27 +232,7 @@ const SessionFolderCard = observer(({
             ) : null}
           </div>
 
-          {/* Выпадающее меню */}
-          {showMenu && isMenuOpen && (
-            <div ref={menuRef} className={styles.dropdownMenu} onClick={(e) => e.stopPropagation()}>
-              <button onClick={handleRename} className={styles.menuItem}>
-                <Edit2 className={styles.menuIcon} />
-                Редактировать название
-              </button>
-              <button onClick={handleDelete} className={`${styles.menuItem} ${styles.menuDanger}`}>
-                <Trash2 className={styles.menuIcon} />
-                Удалить
-              </button>
-              <button onClick={handleShowFeedback} className={styles.menuItem}>
-                <MessageSquareText className={styles.menuIcon} />
-                Обратная связь
-              </button>
-              <button onClick={handleShowIdeas} className={styles.menuItem}>
-                <Lightbulb className={styles.menuIcon} />
-                Идеи
-              </button>
-            </div>
-          )}
+          {/* Выпадающее меню — рендерится через portal поверх всех слоёв, рядом с кнопкой */}
         </div>
 
         {/* Основная часть */}
@@ -265,6 +260,40 @@ const SessionFolderCard = observer(({
           </button>
         </div>
       </div>
+
+      {/* Portal: выпадающее меню поверх всех слоёв, выровнено по кнопке */}
+      {showMenu && isMenuOpen && menuPosition &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className={styles.dropdownMenu}
+            style={{
+              position: "fixed",
+              top: menuPosition.top,
+              right: menuPosition.right,
+              left: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button onClick={handleRename} className={styles.menuItem}>
+              <Edit2 className={styles.menuIcon} />
+              Редактировать название
+            </button>
+            <button onClick={handleDelete} className={`${styles.menuItem} ${styles.menuDanger}`}>
+              <Trash2 className={styles.menuIcon} />
+              Удалить
+            </button>
+            <button onClick={handleShowFeedback} className={styles.menuItem}>
+              <MessageSquareText className={styles.menuIcon} />
+              Обратная связь
+            </button>
+            <button onClick={handleShowIdeas} className={styles.menuItem}>
+              <Lightbulb className={styles.menuIcon} />
+              Идеи
+            </button>
+          </div>,
+          document.body
+        )}
     </div>
   );
 });

@@ -282,7 +282,7 @@ const SessionsCollectionPage = observer(() => {
       {/* Заголовок */}
       <div className={styles.header}>
         <div className={styles.headerTitle}>
-          <h1 className={styles.title}>Сессии</h1>
+          <h1 className={styles.title}>Галерея сессий</h1>
           <Button
             onClick={handleCreateSession}
             className={styles.plusButton}

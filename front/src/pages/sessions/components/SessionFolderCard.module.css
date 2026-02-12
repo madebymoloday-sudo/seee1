@@ -205,11 +205,9 @@
   color: rgba(0, 0, 0, 0.7);
 }
 
-/* Выпадающее меню */
+/* Выпадающее меню (позиция через inline style при рендере в portal) */
 .dropdownMenu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  left: 0;
+  position: fixed;
   min-width: 220px;
   background: linear-gradient(
     135deg,

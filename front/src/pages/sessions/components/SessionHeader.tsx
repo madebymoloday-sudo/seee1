@@ -222,7 +222,7 @@ const SessionHeader = observer(({ session }: SessionHeaderProps) => {
               </button>
               <button onClick={handleAllSessions} className={styles.menuItem}>
                 <List className={styles.menuIcon} />
-                Список сессий
+                Галерея сессий
               </button>
               <button onClick={handleDelete} className={`${styles.menuItem} ${styles.deleteItem}`}>
                 <Trash2 className={styles.menuIcon} />
