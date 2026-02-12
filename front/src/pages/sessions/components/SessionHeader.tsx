@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { MessageSquare, Edit2, Pause, Save, List, Plus, Trash2 } from "lucide-react";
+import { MessageSquare, ChevronDown, Edit2, Pause, Save, List, Plus, Trash2 } from "lucide-react";
 import apiAgent from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
@@ -245,11 +245,15 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
               setIsMenuOpen(!isMenuOpen);
             }}
             className={styles.sessionTitleButton}
+            aria-expanded={isMenuOpen}
+            aria-haspopup="true"
+            title="Меню"
           >
             <MessageSquare className={styles.icon} />
             <h2 className={styles.sessionTitle}>
               {session.title || "Новая сессия"}
             </h2>
+            <ChevronDown className={`${styles.chevron} ${isMenuOpen ? styles.chevronOpen : ""}`} />
           </button>
 
           {/* Выпадающее меню */}
