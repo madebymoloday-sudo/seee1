@@ -102,7 +102,85 @@
 .systemActionsRow {
   margin-top: 10px;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.actionsLeft {
+  flex: 1;
+  display: flex;
   justify-content: flex-start;
+}
+
+.actionsCenter {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.actionsRight {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actionButton,
+.skipButton {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.actionButton {
+  color: rgba(0, 0, 0, 0.62);
+}
+
+.skipButton {
+  color: rgba(0, 0, 0, 0.62);
+}
+
+.actionButton:hover:not(:disabled),
+.skipButton:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.actionButton:disabled,
+.skipButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+::global(.dark) .actionButton,
+::global(.dark) .skipButton {
+  color: white;
+}
+
+::global(.dark) .actionButton:hover:not(:disabled),
+::global(.dark) .skipButton:hover:not(:disabled) {
+  color: white;
+}
+
+.ideasList {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.ideasList li {
+  margin-bottom: 0.5rem;
+}
+
+.ideasList li:last-child {
+  margin-bottom: 0;
 }
 
 .backButton {
@@ -128,16 +206,37 @@
 }
 
 ::global(.dark) .backButton {
-  color: rgba(255, 255, 255, 0.72);
+  color: white;
 }
 
 ::global(.dark) .backButton:hover:not(:disabled) {
-  color: rgba(255, 255, 255, 0.9);
+  color: white;
+}
+
+/* Выравнивание поля ввода по левому краю сообщения (stage padding 12px, message max-width 680px) */
+.inputAlignWrapper {
+  padding: 0 12px;
+  width: 100%;
+}
+
+.inputAlignWrapper > div {
+  max-width: 680px;
+  width: calc(100% - 2rem);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.inputAlignWrapper > div > div {
+  max-width: none;
 }
 
 @media (max-width: 768px) {
   .stage {
     padding: 12px 10px;
     gap: 12px;
+  }
+
+  .inputAlignWrapper {
+    padding: 0 10px;
   }
 }

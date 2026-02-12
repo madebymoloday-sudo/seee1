@@ -345,6 +345,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [listTitle, setListTitle] = useState("");
   const [listNotes, setListNotes] = useState("");
   const [isListModalOpen, setIsListModalOpen] = useState(false);
+  const [isIdeasModalOpen, setIsIdeasModalOpen] = useState(false);
   const timersRef = useRef<number[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -355,17 +356,43 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return parseImportantOptions(importantTextForDeep).length > 0;
   }, [importantTextForDeep, isListModalOpen, isTransitioning, view.kind]);
 
+  /** Этап «мысль/идея» — core step 3+, вопрос «Как вы думаете, какая мысль/идея вызывает эту эмоцию?» */
+  const isIdeasStep = view.kind === "core" && view.step >= 3;
+
+  const ideasList = useMemo(() => {
+    const answer3 = state.answers["core:situation:3"] || state.answers["core:thought:3"] || "";
+    const answer4 = state.answers["core:situation:4"] || state.answers["core:thought:4"] || "";
+    const opts = parseImportantOptions(answer4);
+    const list: string[] = [];
+    if (answer3.trim()) list.push(answer3.trim());
+    list.push(...opts);
+    return list;
+  }, [state.answers]);
+
+  const canSkip = (() => {
+    if (isTransitioning || isListModalOpen || isIdeasModalOpen) return false;
+    if (!isTextAnswerView(view)) return false;
+    if (isDraftSession && view.kind === "core" && view.step === 1) return false;
+    return true;
+  })();
+
+  const goSkip = () => {
+    if (!canSkip) return;
+    onAnswer("—");
+  };
+
   useEffect(() => {
-    if (!isListModalOpen) return;
+    if (!isListModalOpen && !isIdeasModalOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
         setIsListModalOpen(false);
+        setIsIdeasModalOpen(false);
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isListModalOpen]);
+  }, [isListModalOpen, isIdeasModalOpen]);
 
   useEffect(() => {
     // cleanup on unmount
@@ -642,18 +669,50 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         >
           <div className={`${chatStyles.message} ${chatStyles.assistantMessage}`}>
             <p className={chatStyles.messageContent}>{prompt}</p>
-            {canGoBack && (
+            {(canGoBack || isIdeasStep || canSkip) && (
               <div className={styles.systemActionsRow}>
-                <button
-                  type="button"
-                  onClick={goBack}
-                  disabled={!canGoBack || isTransitioning}
-                  className={styles.backButton}
-                  aria-label="Назад"
-                  title="Назад"
-                >
-                  ← Назад
-                </button>
+                <div className={styles.actionsLeft}>
+                  {canGoBack && (
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      disabled={!canGoBack || isTransitioning}
+                      className={styles.backButton}
+                      aria-label="Назад"
+                      title="Назад"
+                    >
+                      ← Назад
+                    </button>
+                  )}
+                </div>
+                <div className={styles.actionsCenter}>
+                  {isIdeasStep && (
+                    <button
+                      type="button"
+                      onClick={() => setIsIdeasModalOpen(true)}
+                      disabled={isTransitioning}
+                      className={styles.actionButton}
+                      aria-label="Список идей"
+                      title="Список идей"
+                    >
+                      ↓ Идеи
+                    </button>
+                  )}
+                </div>
+                <div className={styles.actionsRight}>
+                  {canSkip && (
+                    <button
+                      type="button"
+                      onClick={goSkip}
+                      disabled={!canSkip || isTransitioning}
+                      className={styles.skipButton}
+                      aria-label="Пропустить"
+                      title="Пропустить"
+                    >
+                      Пропустить →
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -753,7 +812,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
       {/* Ввод ответа (только там, где нужен текст) */}
       {isTextAnswerView(view) && (
-        <div style={{ position: "relative" }}>
+        <div className={styles.inputAlignWrapper}>
           <MessageInput
             ref={inputRef}
             onSend={(v) => {
@@ -767,6 +826,36 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             value={inputText}
             onValueChange={setInputText}
           />
+        </div>
+      )}
+
+      {/* Модалка «Список идей» (ответы на вопрос «мысль/идея») */}
+      {isIdeasModalOpen && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setIsIdeasModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>Идеи</h3>
+            <div className={styles.modalBody}>
+              {ideasList.length === 0 ? (
+                <p className={styles.modalHint}>Пока нет идей</p>
+              ) : (
+                <ul className={styles.ideasList}>
+                  {ideasList.map((idea, i) => (
+                    <li key={i}>{idea}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className={styles.modalFooter}>
+              <Button variant="outline" onClick={() => setIsIdeasModalOpen(false)} className={chatStyles.glassButton}>
+                Закрыть
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
