@@ -100,6 +100,7 @@ const SessionFolderCard = observer(({
   const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuActionHandledRef = useRef(false);
 
   const colorSeed = String(session.id ?? session.createdAt ?? session.title ?? "");
   const paletteColors = palette === "toExplore" ? TO_EXPLORE_COLORS : FOLDER_COLORS;
@@ -129,6 +130,10 @@ const SessionFolderCard = observer(({
   }, [isMenuOpen]);
 
   const handleNavigate = () => {
+    if (menuActionHandledRef.current) {
+      menuActionHandledRef.current = false;
+      return;
+    }
     if (onOpen) {
       onOpen();
       return;
@@ -154,7 +159,11 @@ const SessionFolderCard = observer(({
     setMenuPosition(null);
   };
 
-  const handleRename = () => {
+  const handleRename = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    menuActionHandledRef.current = true;
+    setTimeout(() => { menuActionHandledRef.current = false; }, 150);
     closeMenu();
     if (onRename) {
       onRename();
@@ -166,19 +175,25 @@ const SessionFolderCard = observer(({
     }
   };
 
-  const handleDelete = () => {
+  const handleMenuAction = (e: React.MouseEvent, fn: () => void) => {
+    e.preventDefault();
+    e.stopPropagation();
+    menuActionHandledRef.current = true;
+    setTimeout(() => { menuActionHandledRef.current = false; }, 150);
     closeMenu();
-    if (onDelete) onDelete();
+    fn();
   };
 
-  const handleShowFeedback = () => {
-    closeMenu();
-    if (onShowFeedback) onShowFeedback();
+  const handleDelete = (e: React.MouseEvent) => {
+    handleMenuAction(e, () => { if (onDelete) onDelete(); });
   };
 
-  const handleShowIdeas = () => {
-    closeMenu();
-    if (onShowIdeas) onShowIdeas();
+  const handleShowFeedback = (e: React.MouseEvent) => {
+    handleMenuAction(e, () => { if (onShowFeedback) onShowFeedback(); });
+  };
+
+  const handleShowIdeas = (e: React.MouseEvent) => {
+    handleMenuAction(e, () => { if (onShowIdeas) onShowIdeas(); });
   };
 
   return (
