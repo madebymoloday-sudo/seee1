@@ -293,6 +293,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     saveState(session.id, state);
   }, [session.id, state]);
 
+  // Сохраняем при уходе со страницы (закрытие вкладки, навигация), чтобы сессия открывалась на последнем шаге
+  useEffect(() => {
+    const onBeforeUnload = () => saveState(session.id, state);
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [session.id, state]);
+
   const view: View = useMemo(() => {
     // Модальные режимы
     if (state.coreStep === 0) return { kind: "addToList" };
@@ -632,6 +639,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const showSolveChoice = view.kind === "solve" && view.step === 7;
 
   const canGoBack = (() => {
+    if (isDraftSession) return false;
     if (isTransitioning || isListModalOpen) return false;
     if (view.kind === "deepPick") return true;
     if (view.kind === "solve") return true;
@@ -790,6 +798,21 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           </div>
         )}
 
+        {/* Сохранённый ответ при возврате в сессию — показываем как отправленное сообщение, не в поле ввода */}
+        {(() => {
+          if (!isTextAnswerView(view) || isEditing || lastUserAnswer) return null;
+          const key = stepKey(view);
+          const saved = state.answers[key];
+          if (!saved || !saved.trim()) return null;
+          return (
+            <div className={`${chatStyles.messageWrapper} ${chatStyles.visible}`}>
+              <div className={`${chatStyles.message} ${chatStyles.userMessage}`}>
+                <p className={chatStyles.messageContent}>{saved}</p>
+              </div>
+            </div>
+          );
+        })()}
+
         {(state.situationText || view.kind === "core") && view.kind === "core" && view.step === 1 && (
           <p className={styles.helperText}>
             Напишите ответ ниже. После каждого ответа вы увидите следующий вопрос.
@@ -881,9 +904,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             }}
             disabled={isMutating}
             readOnly={isMutating || isTransitioning || !isEditing}
-            placeholder="Введите ответ..."
+            placeholder={!isEditing ? "Ваш ответ сохранён" : "Введите ответ..."}
             autoFocus
-            value={inputText}
+            value={isEditing ? inputText : ""}
             onValueChange={setInputText}
           />
         </div>
