@@ -152,7 +152,7 @@
 }
 
 .actionButton {
-  color: rgba(0, 0, 0, 0.62);
+  color: white;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -165,11 +165,12 @@
 }
 
 .skipButton {
-  color: rgba(0, 0, 0, 0.62);
+  color: white;
 }
 
 .actionButton:hover:not(:disabled),
 .skipButton:hover:not(:disabled) {
+  color: white;
   text-decoration: underline;
 }
 
@@ -177,16 +178,6 @@
 .skipButton:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-
-::global(.dark) .actionButton,
-::global(.dark) .skipButton {
-  color: white;
-}
-
-::global(.dark) .actionButton:hover:not(:disabled),
-::global(.dark) .skipButton:hover:not(:disabled) {
-  color: white;
 }
 
 .ideasList {
@@ -205,20 +196,33 @@
   margin-bottom: 0;
 }
 
+.ideasListButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.ideasListButtons .choiceButton {
+  width: 100%;
+  text-align: left;
+}
+
 .backButton {
   appearance: none;
   background: transparent;
   border: none;
   padding: 0;
   font: inherit;
-  color: rgba(0, 0, 0, 0.62);
+  color: white;
   font-weight: 650;
   cursor: pointer;
   transition: color 0.15s ease, opacity 0.15s ease;
 }
 
 .backButton:hover:not(:disabled) {
-  color: rgba(0, 0, 0, 0.78);
+  color: white;
   text-decoration: underline;
 }
 
@@ -227,29 +231,24 @@
   cursor: not-allowed;
 }
 
-::global(.dark) .backButton {
-  color: white;
-}
-
-::global(.dark) .backButton:hover:not(:disabled) {
-  color: white;
-}
-
-/* Выравнивание поля ввода по левому краю сообщения (stage padding 12px, message max-width 680px) */
+/* Фон строки ввода — на всю ширину. Само окно ввода — по левому краю сообщения. */
 .inputAlignWrapper {
-  padding: 0 12px;
   width: 100%;
 }
 
 .inputAlignWrapper > div {
+  /* messageInputContainer: полная ширина, фон не обрезан */
+  max-width: none;
+  width: 100%;
+  padding: 1.5rem 12px;
+}
+
+.inputAlignWrapper > div > div {
+  /* inputWrapper: та же ширина и центрирование, что у сообщения — левые края совпадают */
   max-width: 680px;
   width: calc(100% - 2rem);
   margin-left: auto;
   margin-right: auto;
-}
-
-.inputAlignWrapper > div > div {
-  max-width: none;
 }
 
 @media (max-width: 768px) {
@@ -258,7 +257,8 @@
     gap: 12px;
   }
 
-  .inputAlignWrapper {
-    padding: 0 10px;
+  .inputAlignWrapper > div {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }

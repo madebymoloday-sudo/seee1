@@ -38,6 +38,11 @@ type DialogStateV2 = Omit<DialogStateV1, "v"> & {
     solveStep: number;
     subject: Subject;
   };
+  ideasPickReturn?: {
+    coreStep: number;
+    solveStep: number;
+    subject: Subject;
+  };
 };
 
 type DialogState = DialogStateV2;
@@ -432,14 +437,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     const trimmed = answer.trim();
     if (!trimmed) return null;
 
-    // deepPick
+    // deepPick — сохраняем deepPickReturn для кнопки «Назад»
     if (view.kind === "deepPick") {
       return {
         ...state,
         subject: "thought",
         situationText: trimmed,
         coreStep: 2,
-        deepPickReturn: undefined,
       };
     }
 
@@ -576,6 +580,26 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     setListNotes("");
   };
 
+  const selectIdeaFromModal = (idea: string) => {
+    const trimmed = idea.trim();
+    if (!trimmed) return;
+    setIsIdeasModalOpen(false);
+    setState((s) => ({
+      ...s,
+      subject: "thought",
+      situationText: trimmed,
+      coreStep: 2,
+      ideasPickReturn: {
+        coreStep: s.coreStep,
+        solveStep: s.solveStep,
+        subject: s.subject,
+      },
+    }));
+    setInputText("");
+    setLastUserAnswer(null);
+    setIsEditing(true);
+  };
+
   const submitAddToList = async () => {
     const title = listTitle.trim();
     if (!title) {
@@ -613,7 +637,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     if (view.kind === "solve") return true;
     if (view.kind === "core") {
       const min = view.subject === "thought" ? 2 : 1;
-      return view.step > min;
+      if (view.step > min) return true;
+      // из списка идей или deepPick — можно вернуться к списку
+      if (view.step === 2 && view.subject === "thought" && (state.deepPickReturn || state.ideasPickReturn)) return true;
+      return false;
     }
     return false;
   })();
@@ -639,11 +666,27 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         return { coreStep: 10, solveStep: 1, subject: "situation" };
       }
       if (view.kind === "core") {
+        if (view.step === 2 && view.subject === "thought" && s.ideasPickReturn) {
+          return {
+            coreStep: s.ideasPickReturn.coreStep,
+            solveStep: s.ideasPickReturn.solveStep,
+            subject: s.ideasPickReturn.subject,
+            ideasPickReturn: undefined,
+          };
+        }
+        if (view.step === 2 && view.subject === "thought" && s.deepPickReturn) {
+          return {
+            coreStep: 99,
+            deepPickReturn: s.deepPickReturn,
+          };
+        }
         const min = view.subject === "thought" ? 2 : 1;
         return { coreStep: Math.max(min, s.coreStep - 1) };
       }
       return {};
     };
+
+    const hadIdeasPickReturn = view.kind === "core" && view.step === 2 && view.subject === "thought" && !!state.ideasPickReturn;
 
     setState((s) => {
       const backUpdate = applyBackState(s);
@@ -656,6 +699,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     if (answerToSave) {
       setLastUserAnswer(answerToSave);
       setInputText("");
+    }
+
+    if (hadIdeasPickReturn) {
+      setIsIdeasModalOpen(true);
     }
   };
 
@@ -705,11 +752,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                         onClick={goDeepPick}
                         disabled={isTransitioning || isListModalOpen}
                         className={styles.actionButton}
-                        aria-label="Нейросписок"
+                        aria-label="Идеи"
                         title='Показать идеи из ответа "Почему это важно"'
                       >
                         <ChevronDown className={styles.actionIcon} />
-                        Нейросписок
+                        Идеи
                       </button>
                     ) : (
                       <button
@@ -843,7 +890,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         </div>
       )}
 
-      {/* Модалка «Список идей» (ответы на вопрос «мысль/идея») */}
+      {/* Модалка «Список идей» — кликабельные идеи, выбор запускает этапы по этой идее */}
       {isIdeasModalOpen && (
         <div
           className={styles.modalOverlay}
@@ -857,11 +904,18 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               {ideasList.length === 0 ? (
                 <p className={styles.modalHint}>Пока нет идей</p>
               ) : (
-                <ul className={styles.ideasList}>
+                <div className={styles.ideasListButtons}>
                   {ideasList.map((idea, i) => (
-                    <li key={i}>{idea}</li>
+                    <Button
+                      key={i}
+                      variant="outline"
+                      className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+                      onClick={() => selectIdeaFromModal(idea)}
+                    >
+                      {idea}
+                    </Button>
                   ))}
-                </ul>
+                </div>
               )}
             </div>
             <div className={styles.modalFooter}>
