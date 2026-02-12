@@ -51,7 +51,7 @@ const TelegramAuthButton = observer(
     const handleClick = () => {
       if (isLoading) return;
 
-      const botId = import.meta.env.VITE_TELEGRAM_BOT_ID ?? "8225371483";
+      const botId = import.meta.env.VITE_TELEGRAM_BOT_ID || "8225371483";
       if (!botId) {
         console.error("TELEGRAM_BOT_ID не настроен");
         toast.error("Telegram авторизация не настроена");
