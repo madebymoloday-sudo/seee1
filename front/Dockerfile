@@ -16,8 +16,13 @@ RUN npm i
 COPY . .
 
 # Force rebuild cache bust (update to trigger)
-ARG CACHE_BUST=2026-01-14T20-35-DEPLOY
+ARG CACHE_BUST=2026-02-12-telegram
 RUN echo "CACHE_BUST(front)=$CACHE_BUST"
+
+# Telegram Bot ID для Login Widget (задаётся в Railway Variables)
+# Railway передаёт переменные окружения в билд — VITE_* доступны Vite
+ARG VITE_TELEGRAM_BOT_ID=8225371483
+ENV VITE_TELEGRAM_BOT_ID=$VITE_TELEGRAM_BOT_ID
 
 # Строим приложение с оптимизацией памяти для Node.js
 ENV NODE_OPTIONS="--max-old-space-size=1024"
