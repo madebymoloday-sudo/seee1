@@ -36,10 +36,10 @@ const ForgotPasswordPage = observer(() => {
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
-      const res = await apiAgent.post<{ message: string }>(
-        "/auth/forgot-password",
-        { email: data.email }
-      );
+      const res = await apiAgent.post<
+        { email: string },
+        { message: string }
+      >("/auth/forgot-password", { email: data.email });
       setSuccess(true);
       toast.success(res.message);
     } catch (err: any) {

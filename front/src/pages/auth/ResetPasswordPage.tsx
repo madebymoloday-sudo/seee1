@@ -48,7 +48,10 @@ const ResetPasswordPage = observer(() => {
   const onSubmit = async (data: ResetPasswordFormData) => {
     if (!token) return;
     try {
-      await apiAgent.post("/auth/reset-password", {
+      await apiAgent.post<
+        { token: string; newPassword: string },
+        { message: string }
+      >("/auth/reset-password", {
         token,
         newPassword: data.newPassword,
       });
