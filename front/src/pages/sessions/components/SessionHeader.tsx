@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { MessageSquare, ChevronDown, Edit2, Pause, Save, List, Plus, Trash2 } from "lucide-react";
+import { MessageSquare, ChevronDown, Edit2, Pause, Save, List, Plus, Trash2, Moon } from "lucide-react";
 import apiAgent from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
@@ -286,13 +286,17 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
                 Галерея сессий
               </button>
               <button onClick={handleThemeToggle} className={`${styles.menuItem} ${styles.themeItem}`}>
-                <span>Тёмная тема</span>
+                <span className={styles.themeLabel}>
+                  <Moon className={styles.menuIcon} />
+                  Тёмная тема
+                </span>
                 <span
                   className={`${styles.themeSwitch} ${isDarkMode ? styles.themeSwitchActive : ""}`}
                   aria-hidden="true"
                 >
                   <span className={styles.themeSwitchKnob} />
                 </span>
+                <span className={styles.themeStateText}>{isDarkMode ? "Вкл" : "Выкл"}</span>
               </button>
               <button onClick={handleDelete} className={`${styles.menuItem} ${styles.deleteItem}`}>
                 <Trash2 className={styles.menuIcon} />
