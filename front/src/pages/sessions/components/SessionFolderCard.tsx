@@ -227,8 +227,6 @@ const SessionFolderCard = observer(({
           boxShadow: `0 4px 12px ${folderColor}40`,
         }}
       >
-        <div className={styles.folderCardRim} aria-hidden="true" />
-
         {/* Верхняя строка: название + меню */}
         <div className={styles.folderSpine}>
           <div className={styles.spineRow}>
