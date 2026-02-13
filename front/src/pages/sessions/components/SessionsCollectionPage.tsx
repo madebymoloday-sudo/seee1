@@ -19,7 +19,7 @@ import { parseImportantOptions, clearDraftSession } from "@/lib/sessionUtils";
 
 type SortOption = "my_sessions" | "to_explore" | "freedom" | "happiness" | "recommended";
 
-type ToExploreCategory = "Свобода" | "Счастье";
+type ToExploreCategory = "Освобождение" | "Улучшение +1";
 
 const FREEDOM_AND_STABILITY_TITLES = [
   "Со мной что-то не так",
@@ -163,22 +163,22 @@ function buildDefaultToExploreTemplates(): ToExploreTemplate[] {
     // оставляем прежний формат id для обратной совместимости
     id: `to_explore:${slugify(title)}`,
     title,
-    category: "Свобода",
+    category: "Освобождение",
   }));
   const freedomNew: ToExploreTemplate[] = NEW_FREEDOM_AND_STABILITY_TITLES.map((title) => ({
     id: `to_explore:freedom:${slugify(title)}`,
     title,
-    category: "Свобода",
+    category: "Освобождение",
   }));
   const growth: ToExploreTemplate[] = GROWTH_AND_HAPPINESS_TITLES.map((title) => ({
     id: `to_explore:growth:${slugify(title)}`,
     title,
-    category: "Счастье",
+    category: "Улучшение +1",
   }));
   const growthNew: ToExploreTemplate[] = NEW_GROWTH_AND_HAPPINESS_TITLES.map((title) => ({
     id: `to_explore:growth:new:${slugify(title)}`,
     title,
-    category: "Счастье",
+    category: "Улучшение +1",
   }));
   return [...freedomBase, ...freedomNew, ...growth, ...growthNew];
 }
@@ -193,9 +193,10 @@ function loadToExploreTemplates(userKey: string): ToExploreTemplateWithSession[]
       .map((x: any) => {
         const category =
           String(x?.category ?? "").trim() === "Рост и счастье" ||
-          String(x?.category ?? "").trim() === "Счастье"
-            ? "Счастье"
-            : "Свобода";
+          String(x?.category ?? "").trim() === "Счастье" ||
+          String(x?.category ?? "").trim() === "Улучшение +1"
+            ? "Улучшение +1"
+            : "Освобождение";
         return {
           id: String(x?.id ?? ""),
           title: String(x?.title ?? ""),
@@ -335,8 +336,8 @@ function buildRecommendedTemplateIds(
       if (hasStem) score += 1;
     }
 
-    if (template.category === "Свобода" && distressSignal) score += 1;
-    if (template.category === "Счастье" && growthSignal) score += 1;
+    if (template.category === "Освобождение" && distressSignal) score += 1;
+    if (template.category === "Улучшение +1" && growthSignal) score += 1;
 
     return { id: template.id, score };
   });
@@ -437,8 +438,8 @@ const SessionsCollectionPage = observer(() => {
     const existingIds = new Set(existing.map((x) => x.id));
     const additions = buildDefaultToExploreTemplates().filter(
       (x) =>
-        x.category === "Счастье" ||
-        (x.category === "Свобода" && x.id.startsWith("to_explore:freedom:"))
+        x.category === "Улучшение +1" ||
+        (x.category === "Освобождение" && x.id.startsWith("to_explore:freedom:"))
     );
     for (const item of additions) {
       if (!existingIds.has(item.id)) withGrowth.push(item);
@@ -517,7 +518,7 @@ const SessionsCollectionPage = observer(() => {
     const movedTemplate: ToExploreTemplateWithSession = {
       id: templateId,
       title: (session.title || "Новая сессия").trim() || "Новая сессия",
-      category: "Свобода",
+      category: "Освобождение",
       sourceSessionId: movedId,
     };
 
@@ -550,8 +551,22 @@ const SessionsCollectionPage = observer(() => {
     [toExplore, sessions]
   );
 
+  const shuffledToExplore = useMemo(() => {
+    const hash = (s: string) => {
+      let h = 2166136261;
+      for (let i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    };
+    return [...toExplore].sort(
+      (a, b) => hash(`${userKey}:${a.id}`) - hash(`${userKey}:${b.id}`)
+    );
+  }, [toExplore, userKey]);
+
   const filteredToExplore = useMemo(() => {
-    let list = toExplore;
+    let list = shuffledToExplore;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
@@ -559,12 +574,12 @@ const SessionsCollectionPage = observer(() => {
       );
     }
 
-    if (sortOption === "freedom") return list.filter((t) => t.category === "Свобода");
-    if (sortOption === "happiness") return list.filter((t) => t.category === "Счастье");
+    if (sortOption === "freedom") return list.filter((t) => t.category === "Освобождение");
+    if (sortOption === "happiness") return list.filter((t) => t.category === "Улучшение +1");
     if (sortOption === "recommended") return list.filter((t) => recommendedTemplateIds.has(t.id));
     if (sortOption === "my_sessions") return [];
     return list;
-  }, [toExplore, searchQuery, sortOption, recommendedTemplateIds]);
+  }, [shuffledToExplore, searchQuery, sortOption, recommendedTemplateIds]);
 
   const showSessionList = sortOption === "my_sessions";
   const showToExploreList = sortOption !== "my_sessions";
@@ -634,7 +649,7 @@ const SessionsCollectionPage = observer(() => {
                   }}
                   className={`${styles.sortMenuItem} ${sortOption === "freedom" ? styles.sortMenuItemActive : ""}`}
                 >
-                  Свобода
+                  Освобождение
                 </button>
                 <button
                   onClick={() => {
@@ -643,7 +658,7 @@ const SessionsCollectionPage = observer(() => {
                   }}
                   className={`${styles.sortMenuItem} ${sortOption === "happiness" ? styles.sortMenuItemActive : ""}`}
                 >
-                  Счастье
+                  Улучшение +1
                 </button>
                 <button
                   onClick={() => {
