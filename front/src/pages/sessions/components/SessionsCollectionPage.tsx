@@ -574,8 +574,16 @@ const SessionsCollectionPage = observer(() => {
       );
     }
 
-    if (sortOption === "freedom") return list.filter((t) => t.category === "Освобождение");
-    if (sortOption === "happiness") return list.filter((t) => t.category === "Улучшение +1");
+    if (sortOption === "freedom") {
+      const selected = list.filter((t) => t.category === "Освобождение");
+      const rest = list.filter((t) => t.category !== "Освобождение");
+      return [...selected, ...rest];
+    }
+    if (sortOption === "happiness") {
+      const selected = list.filter((t) => t.category === "Улучшение +1");
+      const rest = list.filter((t) => t.category !== "Улучшение +1");
+      return [...selected, ...rest];
+    }
     if (sortOption === "recommended") return list.filter((t) => recommendedTemplateIds.has(t.id));
     if (sortOption === "my_sessions") return [];
     return list;
