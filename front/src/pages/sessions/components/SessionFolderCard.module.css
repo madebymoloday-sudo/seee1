@@ -359,6 +359,22 @@
   -webkit-backdrop-filter: blur(10px) saturate(180%);
 }
 
+.recommendationBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.96);
+  background: rgba(220, 38, 38, 0.78);
+  border: 1px solid rgba(254, 202, 202, 0.65);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.28);
+  backdrop-filter: blur(8px) saturate(170%);
+  -webkit-backdrop-filter: blur(8px) saturate(170%);
+}
+
 /* Кнопка перехода */
 .navigateButton {
   width: 44px;
@@ -458,4 +474,10 @@
 
 :global(.dark) .arrowIcon {
   color: rgba(255, 255, 255, 0.8);
+}
+
+:global(.dark) .recommendationBadge {
+  background: rgba(239, 68, 68, 0.72);
+  border-color: rgba(254, 202, 202, 0.48);
+  color: rgba(255, 255, 255, 0.96);
 }

@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { SessionResponseDto } from "@/api/schemas";
 import { parseImportantOptions, clearDraftSession } from "@/lib/sessionUtils";
 
-type SortOption = "default" | "negative" | "positive" | "to_explore";
+type SortOption = "my_sessions" | "to_explore" | "freedom" | "happiness" | "recommended";
 
 type ToExploreCategory = "Свобода" | "Счастье";
 
@@ -114,6 +114,8 @@ const NEW_GROWTH_AND_HAPPINESS_TITLES = [
 ] as const;
 
 type ToExploreTemplate = { id: string; title: string; category: ToExploreCategory };
+type ToExploreTemplateWithSession = ToExploreTemplate & { sourceSessionId?: string };
+const SESSION_NOTES_PREFIX = "seee_session_notes:";
 
 function decodeJwtPayload(token: string): any | null {
   try {
@@ -181,7 +183,7 @@ function buildDefaultToExploreTemplates(): ToExploreTemplate[] {
   return [...freedomBase, ...freedomNew, ...growth, ...growthNew];
 }
 
-function loadToExploreTemplates(userKey: string): ToExploreTemplate[] {
+function loadToExploreTemplates(userKey: string): ToExploreTemplateWithSession[] {
   try {
     const raw = localStorage.getItem(`seee_to_explore_templates:${userKey}`);
     if (!raw) return [];
@@ -198,7 +200,8 @@ function loadToExploreTemplates(userKey: string): ToExploreTemplate[] {
           id: String(x?.id ?? ""),
           title: String(x?.title ?? ""),
           category,
-        } as ToExploreTemplate;
+          sourceSessionId: x?.sourceSessionId ? String(x.sourceSessionId) : undefined,
+        } as ToExploreTemplateWithSession;
       })
       .filter((x) => x.id && x.title);
   } catch {
@@ -206,12 +209,144 @@ function loadToExploreTemplates(userKey: string): ToExploreTemplate[] {
   }
 }
 
-function saveToExploreTemplates(userKey: string, items: ToExploreTemplate[]) {
+function saveToExploreTemplates(userKey: string, items: ToExploreTemplateWithSession[]) {
   try {
     localStorage.setItem(`seee_to_explore_templates:${userKey}`, JSON.stringify(items));
   } catch {
     // ignore
   }
+}
+
+function loadMovedSessionIds(userKey: string): string[] {
+  try {
+    const raw = localStorage.getItem(`seee_moved_to_explore_sessions:${userKey}`);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((x) => String(x ?? "")).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function saveMovedSessionIds(userKey: string, ids: string[]) {
+  try {
+    localStorage.setItem(`seee_moved_to_explore_sessions:${userKey}`, JSON.stringify(ids));
+  } catch {
+    // ignore
+  }
+}
+
+const STOP_WORDS = new Set([
+  "и", "в", "во", "на", "не", "но", "а", "я", "мы", "вы", "он", "она", "они", "это", "как",
+  "что", "чтобы", "когда", "если", "ли", "же", "бы", "у", "о", "об", "от", "до", "за", "по",
+  "из", "под", "для", "с", "со", "над", "при", "или", "то", "так", "там", "тут", "уже", "еще",
+  "ещё", "мой", "моя", "мое", "моё", "мои", "твой", "твоя", "его", "ее", "её", "их"
+]);
+
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[^a-z0-9а-я\s-]/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenize(value: string): string[] {
+  return normalizeText(value)
+    .split(" ")
+    .map((x) => x.trim())
+    .filter((x) => x.length >= 3 && !STOP_WORDS.has(x));
+}
+
+function readSessionAnalysisText(session: SessionResponseDto): string {
+  const parts: string[] = [];
+  if ((session.title ?? "").trim()) parts.push(session.title!.trim());
+
+  try {
+    const rawState = localStorage.getItem(`seee_step_dialog_state:${session.id}`);
+    if (rawState) {
+      const parsed = JSON.parse(rawState) as { answers?: Record<string, string> };
+      const answers = parsed?.answers || {};
+      for (const value of Object.values(answers)) {
+        if ((value || "").trim()) parts.push(value.trim());
+      }
+    }
+  } catch {
+    // ignore malformed local state
+  }
+
+  try {
+    const notes = localStorage.getItem(`${SESSION_NOTES_PREFIX}${session.id}`);
+    if ((notes || "").trim()) parts.push((notes || "").trim());
+  } catch {
+    // ignore
+  }
+
+  return parts.join(" ");
+}
+
+function buildRecommendedTemplateIds(
+  templates: ToExploreTemplateWithSession[],
+  sessions: SessionResponseDto[]
+): Set<string> {
+  if (templates.length === 0 || sessions.length === 0) return new Set();
+
+  const recentSessions = [...sessions]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    )
+    .slice(0, 12);
+
+  const corpusText = normalizeText(
+    recentSessions.map((s) => readSessionAnalysisText(s)).join(" ")
+  );
+  if (corpusText.length < 20) return new Set();
+
+  const corpusTokens = tokenize(corpusText);
+  if (corpusTokens.length === 0) return new Set();
+
+  const tokenFreq = new Map<string, number>();
+  for (const t of corpusTokens) tokenFreq.set(t, (tokenFreq.get(t) ?? 0) + 1);
+
+  const distressMarkers = ["трев", "страх", "стыд", "боль", "вина", "зл", "контрол", "один", "отверг"];
+  const growthMarkers = ["рост", "радост", "поддерж", "успех", "баланс", "довер", "ресурс", "опор"];
+  const distressSignal = distressMarkers.some((m) => corpusText.includes(m));
+  const growthSignal = growthMarkers.some((m) => corpusText.includes(m));
+
+  const scored = templates.map((template) => {
+    const titleTokens = tokenize(template.title);
+    let score = 0;
+
+    for (const token of titleTokens) {
+      const exact = tokenFreq.get(token);
+      if (exact) {
+        score += 2 + Math.min(2, exact - 1);
+        continue;
+      }
+
+      const stem = token.slice(0, 5);
+      if (stem.length < 4) continue;
+      const hasStem = corpusTokens.some(
+        (ct) => ct.startsWith(stem) || stem.startsWith(ct.slice(0, 4))
+      );
+      if (hasStem) score += 1;
+    }
+
+    if (template.category === "Свобода" && distressSignal) score += 1;
+    if (template.category === "Счастье" && growthSignal) score += 1;
+
+    return { id: template.id, score };
+  });
+
+  const filtered = scored
+    .filter((x) => x.score >= 2)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8);
+
+  return new Set(filtered.map((x) => x.id));
 }
 
 function getIdeasCountFromLocalState(sessionId: string): number {
@@ -257,12 +392,13 @@ const SessionsCollectionPage = observer(() => {
   const navigate = useNavigate();
   const { sessions, isLoading, error, refetch } = useSessions();
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortOption, setSortOption] = useState<SortOption>("default");
+  const [sortOption, setSortOption] = useState<SortOption>("my_sessions");
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const userKey = useMemo(() => getUserKey(), []);
-  const [toExplore, setToExplore] = useState<ToExploreTemplate[]>(() => loadToExploreTemplates(userKey));
+  const [toExplore, setToExplore] = useState<ToExploreTemplateWithSession[]>(() => loadToExploreTemplates(userKey));
+  const [movedSessionIds, setMovedSessionIds] = useState<string[]>(() => loadMovedSessionIds(userKey));
 
   const [feedbackInfoSessionId, setFeedbackInfoSessionId] = useState<string | null>(null);
   const [ideasInfoSessionId, setIdeasInfoSessionId] = useState<string | null>(null);
@@ -313,32 +449,20 @@ const SessionsCollectionPage = observer(() => {
 
   // Фильтрация и поиск сессий
   const filteredAndSortedSessions = useMemo(() => {
-    let filtered = sessions;
+    if (sortOption !== "my_sessions") return [];
+    let filtered = sessions.filter((session) => !movedSessionIds.includes(session.id));
 
     // Поиск по названию, содержанию или убеждениям
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = sessions.filter((session) => {
+      filtered = filtered.filter((session) => {
         const titleMatch = session.title?.toLowerCase().includes(query);
         // TODO: Добавить поиск по содержанию и убеждениям, когда будет доступно
         return titleMatch;
       });
     }
-
-    // Сортировка
-    if (sortOption === "negative") {
-      // TODO: Сортировка по негативным установкам (когда будет доступно)
-      filtered = [...filtered];
-    } else if (sortOption === "positive") {
-      // TODO: Сортировка по позитивным установкам (когда будет доступно)
-      filtered = [...filtered];
-    } else if (sortOption === "to_explore") {
-      // В режиме "предстоит исследовать" скрываем основной список
-      filtered = [];
-    }
-
     return filtered;
-  }, [sessions, searchQuery, sortOption]);
+  }, [sessions, searchQuery, sortOption, movedSessionIds]);
 
   const handleCreateSession = async () => {
     try {
@@ -376,12 +500,40 @@ const SessionsCollectionPage = observer(() => {
     (async () => {
       try {
         await apiAgent.delete(`/sessions/${sessionId}`);
+        const nextMoved = movedSessionIds.filter((id) => id !== sessionId);
+        setMovedSessionIds(nextMoved);
+        saveMovedSessionIds(userKey, nextMoved);
         toast.success("Сессия удалена");
         await refetch();
       } catch (e: any) {
         toast.error(e?.response?.data?.message || "Не удалось удалить сессию");
       }
     })();
+  };
+
+  const handleMoveToExplore = (session: SessionResponseDto) => {
+    const movedId = session.id;
+    const templateId = `to_explore:moved:${movedId}`;
+    const movedTemplate: ToExploreTemplateWithSession = {
+      id: templateId,
+      title: (session.title || "Новая сессия").trim() || "Новая сессия",
+      category: "Свобода",
+      sourceSessionId: movedId,
+    };
+
+    const nextTemplates = toExplore.some((x) => x.id === templateId)
+      ? toExplore
+      : [...toExplore, movedTemplate];
+    setToExplore(nextTemplates);
+    saveToExploreTemplates(userKey, nextTemplates);
+
+    const nextMoved = movedSessionIds.includes(movedId)
+      ? movedSessionIds
+      : [...movedSessionIds, movedId];
+    setMovedSessionIds(nextMoved);
+    saveMovedSessionIds(userKey, nextMoved);
+
+    toast.success("Карточка перенесена в «Предстоит изучить»");
   };
 
   const getIdeasCountForSession = (session: SessionResponseDto) => {
@@ -393,15 +545,35 @@ const SessionsCollectionPage = observer(() => {
     return total;
   };
 
-  const filteredToExplore = useMemo(() => {
-    if (!searchQuery.trim()) return toExplore;
-    const q = searchQuery.toLowerCase();
-    return toExplore.filter(
-      (t) => t.title.toLowerCase().includes(q) || t.category.toLowerCase().includes(q)
-    );
-  }, [toExplore, searchQuery]);
+  const recommendedTemplateIds = useMemo(
+    () => buildRecommendedTemplateIds(toExplore, sessions),
+    [toExplore, sessions]
+  );
 
-  const openToExploreTemplate = (template: ToExploreTemplate) => {
+  const filteredToExplore = useMemo(() => {
+    let list = toExplore;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (t) => t.title.toLowerCase().includes(q) || t.category.toLowerCase().includes(q)
+      );
+    }
+
+    if (sortOption === "freedom") return list.filter((t) => t.category === "Свобода");
+    if (sortOption === "happiness") return list.filter((t) => t.category === "Счастье");
+    if (sortOption === "recommended") return list.filter((t) => recommendedTemplateIds.has(t.id));
+    if (sortOption === "my_sessions") return [];
+    return list;
+  }, [toExplore, searchQuery, sortOption, recommendedTemplateIds]);
+
+  const showSessionList = sortOption === "my_sessions";
+  const showToExploreList = sortOption !== "my_sessions";
+
+  const openToExploreTemplate = (template: ToExploreTemplateWithSession) => {
+    if (template.sourceSessionId) {
+      navigate(`/sessions/${template.sourceSessionId}`);
+      return;
+    }
     try {
       localStorage.setItem(`seee_draft_title:${userKey}`, template.title);
       localStorage.setItem(`seee_draft_to_explore_template:${userKey}`, template.id);
@@ -457,21 +629,30 @@ const SessionsCollectionPage = observer(() => {
               <div className={styles.sortMenu}>
                 <button
                   onClick={() => {
-                    setSortOption("negative");
+                    setSortOption("freedom");
                     setIsSortMenuOpen(false);
                   }}
-                  className={`${styles.sortMenuItem} ${sortOption === "negative" ? styles.sortMenuItemActive : ""}`}
+                  className={`${styles.sortMenuItem} ${sortOption === "freedom" ? styles.sortMenuItemActive : ""}`}
                 >
-                  Сначала Негативные установки
+                  Свобода
                 </button>
                 <button
                   onClick={() => {
-                    setSortOption("positive");
+                    setSortOption("happiness");
                     setIsSortMenuOpen(false);
                   }}
-                  className={`${styles.sortMenuItem} ${sortOption === "positive" ? styles.sortMenuItemActive : ""}`}
+                  className={`${styles.sortMenuItem} ${sortOption === "happiness" ? styles.sortMenuItemActive : ""}`}
                 >
-                  Сначала Позитивные
+                  Счастье
+                </button>
+                <button
+                  onClick={() => {
+                    setSortOption("my_sessions");
+                    setIsSortMenuOpen(false);
+                  }}
+                  className={`${styles.sortMenuItem} ${sortOption === "my_sessions" ? styles.sortMenuItemActive : ""}`}
+                >
+                  Мои сессии
                 </button>
                 <button
                   onClick={() => {
@@ -481,6 +662,15 @@ const SessionsCollectionPage = observer(() => {
                   className={`${styles.sortMenuItem} ${sortOption === "to_explore" ? styles.sortMenuItemActive : ""}`}
                 >
                   Предстоит изучить
+                </button>
+                <button
+                  onClick={() => {
+                    setSortOption("recommended");
+                    setIsSortMenuOpen(false);
+                  }}
+                  className={`${styles.sortMenuItem} ${sortOption === "recommended" ? styles.sortMenuItemActive : ""}`}
+                >
+                  Рекомендовано мне
                 </button>
               </div>
             )}
@@ -502,7 +692,7 @@ const SessionsCollectionPage = observer(() => {
           </div>
         ) : null}
         
-        {!isLoading && (error === undefined || error === null) && filteredAndSortedSessions.length === 0 && (
+        {!isLoading && showSessionList && (error === undefined || error === null) && filteredAndSortedSessions.length === 0 && (
           <div className={styles.emptyState}>
             <p>Сессии не найдены</p>
             {searchQuery && (
@@ -511,7 +701,7 @@ const SessionsCollectionPage = observer(() => {
           </div>
         )}
         
-        {!isLoading && (error === undefined || error === null) && filteredAndSortedSessions.length > 0 && (
+        {!isLoading && showSessionList && (error === undefined || error === null) && filteredAndSortedSessions.length > 0 && (
           <div className={styles.foldersList}>
             {filteredAndSortedSessions.map((session, index) => (
               <SessionFolderCard
@@ -520,6 +710,7 @@ const SessionsCollectionPage = observer(() => {
                 colorIndex={index}
                 onRename={() => handleRename(session.id)}
                 onDelete={() => handleDelete(session.id)}
+                onMoveToExplore={() => handleMoveToExplore(session)}
                 onShowFeedback={() => setFeedbackInfoSessionId(session.id)}
                 onShowIdeas={() => setIdeasInfoSessionId(session.id)}
                 ideasCount={getIdeasCountForSession(session)}
@@ -529,7 +720,7 @@ const SessionsCollectionPage = observer(() => {
         )}
 
         {/* Предстоит изучить (системные подсказки) — показываем ПОСЛЕ сессий пользователя */}
-        {filteredToExplore.length > 0 && (
+        {showToExploreList && filteredToExplore.length > 0 && (
           <div className="mt-8 mb-2">
             <div className="px-1 pb-3 text-sm font-semibold text-white/80">
               Предстоит изучить
@@ -551,6 +742,9 @@ const SessionsCollectionPage = observer(() => {
                     ideasCount={1}
                     tagLabel="Предстоит изучить"
                     categoryLabel={t.category}
+                    recommendationLabel={
+                      recommendedTemplateIds.has(t.id) ? "Рекомендация для вас" : undefined
+                    }
                     palette="toExplore"
                     showMenu={false}
                     onOpen={() => openToExploreTemplate(t)}
@@ -558,6 +752,13 @@ const SessionsCollectionPage = observer(() => {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {!isLoading && showToExploreList && (error === undefined || error === null) && filteredToExplore.length === 0 && (
+          <div className={styles.emptyState}>
+            <p>Карточки не найдены</p>
+            <p className={styles.emptyHint}>Попробуйте другую категорию или запрос</p>
           </div>
         )}
       </div>

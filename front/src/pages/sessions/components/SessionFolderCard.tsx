@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Edit2, MessageSquareText, Lightbulb, MoreVertical, Trash2 } from "lucide-react";
+import { ChevronRight, Edit2, MessageSquareText, Lightbulb, MoreVertical, Trash2, FolderPlus } from "lucide-react";
 import type { SessionResponseDto } from "@/api/schemas";
 import { toast } from "sonner";
 import styles from "./SessionFolderCard.module.css";
@@ -12,11 +12,13 @@ interface SessionFolderCardProps {
   colorIndex?: number;
   tagLabel?: string;
   categoryLabel?: string;
+  recommendationLabel?: string;
   palette?: "default" | "toExplore";
   onOpen?: () => void;
   showMenu?: boolean;
   onRename?: () => void;
   onDelete?: () => void;
+  onMoveToExplore?: () => void;
   onShowFeedback?: () => void;
   onShowIdeas?: () => void;
   ideasCount?: number;
@@ -88,11 +90,13 @@ const SessionFolderCard = observer(({
   colorIndex, 
   tagLabel,
   categoryLabel,
+  recommendationLabel,
   palette = "default",
   onOpen,
   showMenu = true,
   onRename,
   onDelete,
+  onMoveToExplore,
   onShowFeedback,
   onShowIdeas,
   ideasCount = 0 
@@ -269,6 +273,9 @@ const SessionFolderCard = observer(({
               {categoryLabel ? (
                 <span className={styles.tagBadge}>{categoryLabel}</span>
               ) : null}
+              {recommendationLabel ? (
+                <span className={styles.recommendationBadge}>{recommendationLabel}</span>
+              ) : null}
             </div>
           </div>
 
@@ -307,6 +314,12 @@ const SessionFolderCard = observer(({
               <Trash2 className={styles.menuIcon} />
               Удалить
             </button>
+            {onMoveToExplore ? (
+              <button onClick={(e) => handleMenuAction(e, onMoveToExplore)} className={styles.menuItem}>
+                <FolderPlus className={styles.menuIcon} />
+                Перенести в Предстоит изучить
+              </button>
+            ) : null}
             <button onClick={handleShowFeedback} className={styles.menuItem}>
               <MessageSquareText className={styles.menuIcon} />
               Обратная связь
