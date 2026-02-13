@@ -6,26 +6,27 @@
 
 /* Dark-mode overrides for colored folders (use !important to beat legacy rules below) */
 :global(.dark) .folderCard {
-  background-color: rgb(var(--folder-color-rgb, 80, 80, 80)) !important;
+  background-color: rgba(var(--folder-color-rgb, 80, 80, 80), 0.58) !important;
   background-image:
     linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.28) 0%,
-      rgba(255, 255, 255, 0.10) 35%,
-      rgba(0, 0, 0, 0.14) 100%
+      165deg,
+      rgba(173, 216, 255, 0.24) 0%,
+      rgba(255, 182, 193, 0.16) 45%,
+      rgba(0, 0, 0, 0.20) 100%
     ),
     linear-gradient(
-      130deg,
-      rgba(255, 255, 255, 0.14) 0%,
-      rgba(255, 255, 255, 0.00) 60%
+      235deg,
+      rgba(255, 255, 255, 0.24) 8%,
+      rgba(255, 255, 255, 0.00) 62%
     ) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border-color: rgba(255, 255, 255, 0.30) !important;
+  backdrop-filter: blur(18px) saturate(165%) brightness(1.06) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(165%) brightness(1.06) !important;
+  border-color: rgba(196, 235, 255, 0.48) !important;
   box-shadow:
-    0 10px 26px rgba(0, 0, 0, 0.35),
+    0 14px 34px rgba(3, 8, 20, 0.52),
+    0 0 0 1px rgba(150, 220, 255, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.18) !important;
+    inset 0 -8px 18px rgba(0, 0, 0, 0.22) !important;
 }
 
 :global(.dark) .folderTab {
@@ -64,51 +65,54 @@
   flex-direction: column;
   cursor: pointer;
   transition: all 0.3s ease;
-  background-color: rgb(var(--folder-color-rgb, 200, 200, 200));
+  background-color: rgba(var(--folder-color-rgb, 200, 200, 200), 0.62);
   background-image:
     linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.42) 0%,
-      rgba(255, 255, 255, 0.16) 38%,
-      rgba(0, 0, 0, 0.10) 100%
+      170deg,
+      rgba(184, 227, 255, 0.30) 0%,
+      rgba(255, 194, 220, 0.22) 42%,
+      rgba(13, 26, 44, 0.08) 100%
     ),
     linear-gradient(
-      128deg,
-      rgba(255, 255, 255, 0.20) 0%,
-      rgba(255, 255, 255, 0.00) 58%
+      232deg,
+      rgba(255, 255, 255, 0.34) 0%,
+      rgba(255, 255, 255, 0.08) 34%,
+      rgba(255, 255, 255, 0.00) 63%
     );
-  background-blend-mode: soft-light;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background-blend-mode: screen;
+  backdrop-filter: blur(18px) saturate(175%) brightness(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(175%) brightness(1.08);
+  border: 1px solid rgba(185, 232, 255, 0.62);
   box-shadow: 
-    0 10px 26px rgba(0, 0, 0, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.62),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.14);
+    0 14px 34px rgba(7, 18, 35, 0.28),
+    0 0 0 1px rgba(145, 220, 255, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -10px 22px rgba(18, 24, 38, 0.14);
   overflow: hidden; /* удерживаем блики внутри скругления */
 }
 
 .folderCard::before {
   content: "";
   position: absolute;
-  top: -48%;
-  left: -38%;
-  width: 160%;
-  height: 150%;
+  top: -44%;
+  right: -34%;
+  left: auto;
+  width: 155%;
+  height: 145%;
   background:
     radial-gradient(
-      circle at 34% 20%,
-      rgba(255, 255, 255, 0.72) 0%,
-      rgba(255, 255, 255, 0.28) 36%,
-      transparent 74%
+      circle at 68% 18%,
+      rgba(255, 255, 255, 0.86) 0%,
+      rgba(255, 255, 255, 0.42) 34%,
+      transparent 76%
     ),
     linear-gradient(
-      128deg,
-      rgba(255, 255, 255, 0.52) 10%,
-      rgba(255, 255, 255, 0.18) 28%,
-      rgba(255, 255, 255, 0.00) 48%
+      232deg,
+      rgba(195, 234, 255, 0.58) 8%,
+      rgba(255, 255, 255, 0.24) 24%,
+      rgba(255, 255, 255, 0.00) 50%
     );
-  opacity: 0.88;
+  opacity: 0.94;
   pointer-events: none;
   z-index: 0;
 }
@@ -120,11 +124,23 @@
   background:
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.12) 0%,
       rgba(255, 255, 255, 0.00) 24%,
-      rgba(0, 0, 0, 0.11) 100%
+      rgba(0, 0, 0, 0.13) 100%
+    ),
+    linear-gradient(
+      270deg,
+      rgba(144, 222, 255, 0.44) 0%,
+      rgba(144, 222, 255, 0.18) 10%,
+      rgba(144, 222, 255, 0.00) 28%
+    ),
+    linear-gradient(
+      96deg,
+      rgba(255, 166, 203, 0.26) 0%,
+      rgba(255, 166, 203, 0.10) 14%,
+      rgba(255, 166, 203, 0.00) 34%
     );
-  opacity: 0.54;
+  opacity: 0.66;
   pointer-events: none;
   z-index: 0;
 }
@@ -163,9 +179,10 @@
 .folderCard:hover {
   transform: translateY(-2px);
   box-shadow: 
-    0 14px 40px rgba(0, 0, 0, 0.24),
-    0 5px 14px rgba(0, 0, 0, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.64);
+    0 20px 44px rgba(8, 18, 36, 0.34),
+    0 6px 16px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -10px 22px rgba(12, 20, 34, 0.16);
 }
 
 /* Корешок папки (левая часть) */
