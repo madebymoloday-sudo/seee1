@@ -11,6 +11,7 @@ interface SessionFolderCardProps {
   session: SessionResponseDto;
   colorIndex?: number;
   tagLabel?: string;
+  categoryLabel?: string;
   palette?: "default" | "toExplore";
   onOpen?: () => void;
   showMenu?: boolean;
@@ -86,6 +87,7 @@ const SessionFolderCard = observer(({
   session, 
   colorIndex, 
   tagLabel,
+  categoryLabel,
   palette = "default",
   onOpen,
   showMenu = true,
@@ -263,6 +265,9 @@ const SessionFolderCard = observer(({
               </span>
               {tagLabel ? (
                 <span className={styles.tagBadge}>{tagLabel}</span>
+              ) : null}
+              {categoryLabel ? (
+                <span className={styles.tagBadge}>{categoryLabel}</span>
               ) : null}
             </div>
           </div>

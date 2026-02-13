@@ -19,7 +19,9 @@ import { parseImportantOptions, clearDraftSession } from "@/lib/sessionUtils";
 
 type SortOption = "default" | "negative" | "positive" | "to_explore";
 
-const TO_EXPLORE_TITLES = [
+type ToExploreCategory = "Свобода" | "Счастье";
+
+const FREEDOM_AND_STABILITY_TITLES = [
   "Со мной что-то не так",
   "Ревность",
   "Порядок",
@@ -32,7 +34,86 @@ const TO_EXPLORE_TITLES = [
   "Неуверенность в себе",
 ] as const;
 
-type ToExploreTemplate = { id: string; title: string };
+const NEW_FREEDOM_AND_STABILITY_TITLES = [
+  "Мои чувства никому не важны",
+  "Если я злюсь — значит, я плохой человек",
+  "Показывать грусть — это слабость",
+  "Я не имею права бояться",
+  "Если мне больно, значит, со мной что-то не так",
+  "Я должен(на) всегда держать себя в руках",
+  "Если я тревожусь, значит, я не справляюсь",
+  "Меня отвергнут, если увидят мои настоящие эмоции",
+  "Лучше молчать о чувствах, чтобы не быть обузой",
+  "Мои эмоции мешают другим",
+  "Если я расстроен(а), я непродуктивен(на) и бесполезен(на)",
+  "Сначала результат — потом чувства",
+  "Чтобы меня любили, нужно быть удобным(ой)",
+  "Если я ошибся(лась), я недостоин(на) уважения",
+  "Мне нельзя быть уязвимым(ой)",
+  "Я должен(на) справляться со всем в одиночку",
+  "Если я не контролирую всё, случится катастрофа",
+  "Мир небезопасен, расслабляться нельзя",
+  "Если я радуюсь, потом обязательно будет плохо",
+  "Со мной что-то не так в самой основе",
+] as const;
+
+const GROWTH_AND_HAPPINESS_TITLES = [
+  "Базовое принятие себя",
+  "Самоценность",
+  "Доверие к себе",
+  "Достоинство",
+  "Быть собой",
+  "Признание чувств",
+  "Экологичное выражение эмоций",
+  "Самоподдержка",
+  "Принятие в развитии",
+  "Рост через опыт",
+  "Внутренняя устойчивость",
+  "Осознанное действие",
+  "Жизнестойкость",
+  "Ресурсность",
+  "Поступательный рост",
+  "Разрешение на успех",
+  "Финансовая уверенность",
+  "Открытость возможностям",
+  "Созвучное окружение",
+  "Поддерживающая среда",
+  "Здоровые границы",
+  "Право на отказ",
+  "Право на отдых",
+  "Баланс жизни",
+  "Благодарность",
+  "Признание достижений",
+  "Фокус на решениях",
+  "Отпускание лишнего",
+  "Авторство своей жизни",
+  "Внутренняя опора",
+] as const;
+
+const NEW_GROWTH_AND_HAPPINESS_TITLES = [
+  "Мои чувства важны и заслуживают внимания",
+  "Я могу быть собой и оставаться в безопасности",
+  "Мне можно радоваться без чувства вины",
+  "Я имею право на удовольствие и легкость",
+  "Моя уязвимость — это сила, а не слабость",
+  "Я могу проживать эмоции бережно и экологично",
+  "Я достоин(на) любви просто потому, что я есть",
+  "Со мной все в порядке",
+  "Я доверяю себе и своим внутренним ощущениям",
+  "Мне можно просить поддержку",
+  "Я не обязан(а) быть идеальным(ой), чтобы быть ценным(ой)",
+  "Я выбираю относиться к себе с теплом и уважением",
+  "Я могу отпускать лишнее и чувствовать облегчение",
+  "Я разрешаю себе отдыхать и восстанавливаться",
+  "Я замечаю хорошее в своей жизни",
+  "Я благодарен(на) за то, что у меня уже есть",
+  "Я могу быть спокойным(ой), даже когда не все под контролем",
+  "Я способен(на) справляться с трудностями шаг за шагом",
+  "Я открыт(а) радости, близости и новым возможностям",
+  "Я создаю жизнь, в которой есть место счастью",
+] as const;
+
+type ToExploreTemplate = { id: string; title: string; category: ToExploreCategory };
 
 function decodeJwtPayload(token: string): any | null {
   try {
@@ -75,6 +156,31 @@ function slugify(s: string) {
     .replace(/-+/g, "-");
 }
 
+function buildDefaultToExploreTemplates(): ToExploreTemplate[] {
+  const freedomBase: ToExploreTemplate[] = FREEDOM_AND_STABILITY_TITLES.map((title) => ({
+    // оставляем прежний формат id для обратной совместимости
+    id: `to_explore:${slugify(title)}`,
+    title,
+    category: "Свобода",
+  }));
+  const freedomNew: ToExploreTemplate[] = NEW_FREEDOM_AND_STABILITY_TITLES.map((title) => ({
+    id: `to_explore:freedom:${slugify(title)}`,
+    title,
+    category: "Свобода",
+  }));
+  const growth: ToExploreTemplate[] = GROWTH_AND_HAPPINESS_TITLES.map((title) => ({
+    id: `to_explore:growth:${slugify(title)}`,
+    title,
+    category: "Счастье",
+  }));
+  const growthNew: ToExploreTemplate[] = NEW_GROWTH_AND_HAPPINESS_TITLES.map((title) => ({
+    id: `to_explore:growth:new:${slugify(title)}`,
+    title,
+    category: "Счастье",
+  }));
+  return [...freedomBase, ...freedomNew, ...growth, ...growthNew];
+}
+
 function loadToExploreTemplates(userKey: string): ToExploreTemplate[] {
   try {
     const raw = localStorage.getItem(`seee_to_explore_templates:${userKey}`);
@@ -82,7 +188,18 @@ function loadToExploreTemplates(userKey: string): ToExploreTemplate[] {
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
     return parsed
-      .map((x: any) => ({ id: String(x?.id ?? ""), title: String(x?.title ?? "") }))
+      .map((x: any) => {
+        const category =
+          String(x?.category ?? "").trim() === "Рост и счастье" ||
+          String(x?.category ?? "").trim() === "Счастье"
+            ? "Счастье"
+            : "Свобода";
+        return {
+          id: String(x?.id ?? ""),
+          title: String(x?.title ?? ""),
+          category,
+        } as ToExploreTemplate;
+      })
       .filter((x) => x.id && x.title);
   } catch {
     return [];
@@ -165,19 +282,33 @@ const SessionsCollectionPage = observer(() => {
     fetchMyFeedback
   );
 
-  // Seed "Предстоит исследовать" один раз на пользователя.
+  // Seed/migration "Предстоит изучить": старые карточки = "Свобода и устойчивость",
+  // добавляем карточки "Рост и счастье".
   useEffect(() => {
     const existing = loadToExploreTemplates(userKey);
-    if (existing.length > 0) {
-      setToExplore(existing);
+    if (existing.length === 0) {
+      const seeded = buildDefaultToExploreTemplates();
+      saveToExploreTemplates(userKey, seeded);
+      setToExplore(seeded);
       return;
     }
-    const seeded: ToExploreTemplate[] = TO_EXPLORE_TITLES.map((title) => ({
-      id: `to_explore:${slugify(title)}`,
-      title,
-    }));
-    saveToExploreTemplates(userKey, seeded);
-    setToExplore(seeded);
+
+    // Для существующих пользователей:
+    // - добавляем "Рост и счастье";
+    // - добавляем только новые карточки "Свобода и устойчивость" из отдельного списка;
+    // - не возвращаем удалённые старые карточки из исходного набора.
+    const withGrowth = [...existing];
+    const existingIds = new Set(existing.map((x) => x.id));
+    const additions = buildDefaultToExploreTemplates().filter(
+      (x) =>
+        x.category === "Счастье" ||
+        (x.category === "Свобода" && x.id.startsWith("to_explore:freedom:"))
+    );
+    for (const item of additions) {
+      if (!existingIds.has(item.id)) withGrowth.push(item);
+    }
+    saveToExploreTemplates(userKey, withGrowth);
+    setToExplore(withGrowth);
   }, [userKey]);
 
   // Фильтрация и поиск сессий
@@ -265,7 +396,9 @@ const SessionsCollectionPage = observer(() => {
   const filteredToExplore = useMemo(() => {
     if (!searchQuery.trim()) return toExplore;
     const q = searchQuery.toLowerCase();
-    return toExplore.filter((t) => t.title.toLowerCase().includes(q));
+    return toExplore.filter(
+      (t) => t.title.toLowerCase().includes(q) || t.category.toLowerCase().includes(q)
+    );
   }, [toExplore, searchQuery]);
 
   const openToExploreTemplate = (template: ToExploreTemplate) => {
@@ -417,6 +550,7 @@ const SessionsCollectionPage = observer(() => {
                     colorIndex={index}
                     ideasCount={1}
                     tagLabel="Предстоит изучить"
+                    categoryLabel={t.category}
                     palette="toExplore"
                     showMenu={false}
                     onOpen={() => openToExploreTemplate(t)}
