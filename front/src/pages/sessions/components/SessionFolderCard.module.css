@@ -6,27 +6,27 @@
 
 /* Dark-mode overrides for colored folders (use !important to beat legacy rules below) */
 :global(.dark) .folderCard {
-  background-color: rgba(var(--folder-color-rgb, 80, 80, 80), 0.58) !important;
+  background-color: rgba(170, 205, 230, 0.20) !important;
   background-image:
     linear-gradient(
-      165deg,
-      rgba(173, 216, 255, 0.24) 0%,
-      rgba(255, 182, 193, 0.16) 45%,
-      rgba(0, 0, 0, 0.20) 100%
+      180deg,
+      rgba(255, 255, 255, 0.32) 0%,
+      rgba(255, 255, 255, 0.10) 42%,
+      rgba(8, 18, 34, 0.22) 100%
     ),
     linear-gradient(
       235deg,
-      rgba(255, 255, 255, 0.24) 8%,
-      rgba(255, 255, 255, 0.00) 62%
+      rgba(255, 255, 255, 0.28) 10%,
+      rgba(255, 255, 255, 0.00) 60%
     ) !important;
-  backdrop-filter: blur(18px) saturate(165%) brightness(1.06) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(165%) brightness(1.06) !important;
-  border-color: rgba(196, 235, 255, 0.48) !important;
+  backdrop-filter: blur(20px) saturate(130%) brightness(1.02) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(130%) brightness(1.02) !important;
+  border-color: rgba(190, 225, 245, 0.44) !important;
   box-shadow:
-    0 14px 34px rgba(3, 8, 20, 0.52),
-    0 0 0 1px rgba(150, 220, 255, 0.24),
+    0 16px 36px rgba(2, 8, 18, 0.48),
     inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -8px 18px rgba(0, 0, 0, 0.22) !important;
+    inset 0 -10px 20px rgba(0, 0, 0, 0.24),
+    inset 0 36px 60px rgba(173, 216, 230, 0.08) !important;
 }
 
 :global(.dark) .folderTab {
@@ -65,29 +65,28 @@
   flex-direction: column;
   cursor: pointer;
   transition: all 0.3s ease;
-  background-color: rgba(var(--folder-color-rgb, 200, 200, 200), 0.62);
+  background-color: rgba(196, 224, 246, 0.24);
   background-image:
     linear-gradient(
-      170deg,
-      rgba(184, 227, 255, 0.30) 0%,
-      rgba(255, 194, 220, 0.22) 42%,
-      rgba(13, 26, 44, 0.08) 100%
+      180deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.16) 42%,
+      rgba(32, 54, 82, 0.11) 100%
     ),
     linear-gradient(
       232deg,
-      rgba(255, 255, 255, 0.34) 0%,
-      rgba(255, 255, 255, 0.08) 34%,
-      rgba(255, 255, 255, 0.00) 63%
+      rgba(255, 255, 255, 0.40) 0%,
+      rgba(255, 255, 255, 0.10) 32%,
+      rgba(255, 255, 255, 0.00) 62%
     );
   background-blend-mode: screen;
-  backdrop-filter: blur(18px) saturate(175%) brightness(1.08);
-  -webkit-backdrop-filter: blur(18px) saturate(175%) brightness(1.08);
-  border: 1px solid rgba(185, 232, 255, 0.62);
+  backdrop-filter: blur(20px) saturate(135%) brightness(1.04);
+  -webkit-backdrop-filter: blur(20px) saturate(135%) brightness(1.04);
+  border: 1px solid rgba(195, 224, 245, 0.58);
   box-shadow: 
-    0 14px 34px rgba(7, 18, 35, 0.28),
-    0 0 0 1px rgba(145, 220, 255, 0.20),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    inset 0 -10px 22px rgba(18, 24, 38, 0.14);
+    0 16px 36px rgba(10, 20, 38, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    inset 0 -12px 24px rgba(18, 27, 42, 0.16);
   overflow: hidden; /* удерживаем блики внутри скругления */
 }
 
@@ -101,15 +100,15 @@
   height: 145%;
   background:
     radial-gradient(
-      circle at 68% 18%,
-      rgba(255, 255, 255, 0.86) 0%,
-      rgba(255, 255, 255, 0.42) 34%,
+      circle at 70% 16%,
+      rgba(255, 255, 255, 0.88) 0%,
+      rgba(255, 255, 255, 0.44) 34%,
       transparent 76%
     ),
     linear-gradient(
       232deg,
-      rgba(195, 234, 255, 0.58) 8%,
-      rgba(255, 255, 255, 0.24) 24%,
+      rgba(210, 235, 255, 0.62) 8%,
+      rgba(255, 255, 255, 0.26) 24%,
       rgba(255, 255, 255, 0.00) 50%
     );
   opacity: 0.94;
@@ -130,19 +129,47 @@
     ),
     linear-gradient(
       270deg,
-      rgba(144, 222, 255, 0.44) 0%,
-      rgba(144, 222, 255, 0.18) 10%,
-      rgba(144, 222, 255, 0.00) 28%
+      rgba(146, 220, 255, 0.42) 0%,
+      rgba(146, 220, 255, 0.14) 10%,
+      rgba(146, 220, 255, 0.00) 28%
     ),
     linear-gradient(
       96deg,
-      rgba(255, 166, 203, 0.26) 0%,
-      rgba(255, 166, 203, 0.10) 14%,
-      rgba(255, 166, 203, 0.00) 34%
+      rgba(255, 184, 165, 0.20) 0%,
+      rgba(255, 184, 165, 0.08) 14%,
+      rgba(255, 184, 165, 0.00) 34%
     );
   opacity: 0.66;
   pointer-events: none;
   z-index: 0;
+}
+
+.folderCardLampGlow {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(62%, 420px);
+  height: 12px;
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 213, 165, 0.96) 0%,
+    rgba(255, 193, 138, 0.66) 40%,
+    rgba(255, 193, 138, 0.00) 100%
+  );
+  box-shadow:
+    0 0 18px rgba(255, 196, 142, 0.52),
+    0 0 36px rgba(255, 196, 142, 0.28);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.folderCardLampTop {
+  top: 10px;
+}
+
+.folderCardLampBottom {
+  bottom: 10px;
 }
 
 .folderTab {
@@ -179,7 +206,7 @@
 .folderCard:hover {
   transform: translateY(-2px);
   box-shadow: 
-    0 20px 44px rgba(8, 18, 36, 0.34),
+    0 22px 48px rgba(8, 18, 36, 0.36),
     0 6px 16px rgba(0, 0, 0, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.75),
     inset 0 -10px 22px rgba(12, 20, 34, 0.16);
