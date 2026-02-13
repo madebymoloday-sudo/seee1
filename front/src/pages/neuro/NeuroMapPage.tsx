@@ -124,12 +124,23 @@ function isTextStage(cursor: Cursor): cursor is Extract<
   );
 }
 
-function getPrompt(draft: DraftV1, hint: string | null, notice: string | null): string {
+function getPrompt(
+  draft: DraftV1,
+  hint: string | null,
+  notice: string | null,
+  isRefill: boolean
+): string {
   const s = draft.situations[draft.situationIndex];
   const cursor = draft.cursor;
 
   const base = (() => {
     if (cursor.kind === "situation") {
+      if (isRefill) {
+        return (
+          "Расскажите, какие ситуации происходят у вас в жизни, от которые вас беспокоят и от которых хотелось бы \"Освободиться\", и так же будем рады если вы поделитесь ситуациями которые для вас важны, положительно на вас влияют или ситуации которые вы хотели бы чтобы с вами произошли\n\n" +
+          "Запишем каждую ситуацию по-отдельности, так что пока что опишите первую ситуацию, которая вас беспокоит больше всего. Писать можно буквально любую ситуацию, я помогу с каждой из них"
+        );
+      }
       return (
         "Здравствуйте, перед тем как начать пользоваться нашим приложением Seee по работе с мышлением, расскажите, какая негативная ситуация у вас в жизни происходит и беспокоит?\n\n" +
         "Запишем каждую ситуацию по-отдельности, так что пока что опишите первую ситуацию, которая вас беспокоит больше всего. Писать можно буквально любую ситуацию, я помогу со всеми."
@@ -206,7 +217,10 @@ const NeuroMapPage = observer(() => {
     useEventMapControllerCreateEventMap();
   const { trigger: createSession } = useSessionsControllerCreateSession();
 
-  const prompt = useMemo(() => getPrompt(draft, hint, notice), [draft, hint, notice]);
+  const prompt = useMemo(
+    () => getPrompt(draft, hint, notice, isRefill),
+    [draft, hint, notice, isRefill]
+  );
 
   // Persist draft
   useEffect(() => {

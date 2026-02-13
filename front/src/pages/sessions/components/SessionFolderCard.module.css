@@ -23,7 +23,7 @@
   -webkit-backdrop-filter: blur(20px) saturate(130%) brightness(1.02) !important;
   border-color: rgba(190, 225, 245, 0.44) !important;
   box-shadow:
-    0 16px 36px rgba(2, 8, 18, 0.48),
+    0 10px 24px rgba(2, 8, 18, 0.36),
     inset 0 1px 0 rgba(255, 255, 255, 0.42),
     inset 0 -10px 20px rgba(0, 0, 0, 0.24),
     inset 0 36px 60px rgba(173, 216, 230, 0.08) !important;
@@ -84,7 +84,7 @@
   -webkit-backdrop-filter: blur(20px) saturate(135%) brightness(1.04);
   border: 1px solid rgba(195, 224, 245, 0.58);
   box-shadow: 
-    0 16px 36px rgba(10, 20, 38, 0.25),
+    0 10px 24px rgba(10, 20, 38, 0.20),
     inset 0 1px 0 rgba(255, 255, 255, 0.78),
     inset 0 -12px 24px rgba(18, 27, 42, 0.16);
   overflow: hidden; /* удерживаем блики внутри скругления */
@@ -99,6 +99,12 @@
   width: 155%;
   height: 145%;
   background:
+    radial-gradient(
+      circle at 84% 10%,
+      rgba(255, 214, 158, 0.62) 0%,
+      rgba(255, 214, 158, 0.30) 14%,
+      rgba(255, 214, 158, 0.00) 40%
+    ),
     radial-gradient(
       circle at 70% 16%,
       rgba(255, 255, 255, 0.88) 0%,
@@ -144,32 +150,32 @@
   z-index: 0;
 }
 
-.folderCardLampGlow {
+.folderCardRim {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(62%, 420px);
-  height: 12px;
-  border-radius: 999px;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(255, 213, 165, 0.96) 0%,
-    rgba(255, 193, 138, 0.66) 40%,
-    rgba(255, 193, 138, 0.00) 100%
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    150deg,
+    rgba(206, 240, 255, 0.82) 0%,
+    rgba(206, 240, 255, 0.38) 22%,
+    rgba(255, 255, 255, 0.16) 44%,
+    rgba(185, 226, 255, 0.30) 65%,
+    rgba(194, 236, 255, 0.74) 100%
   );
-  box-shadow:
-    0 0 18px rgba(255, 196, 142, 0.52),
-    0 0 36px rgba(255, 196, 142, 0.28);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.96;
   pointer-events: none;
-  z-index: 0;
+  z-index: 2;
 }
 
-.folderCardLampTop {
-  top: 10px;
-}
-
-.folderCardLampBottom {
-  bottom: 10px;
+.folderCardRim::before,
+.folderCardRim::after {
+  content: none;
 }
 
 .folderTab {
