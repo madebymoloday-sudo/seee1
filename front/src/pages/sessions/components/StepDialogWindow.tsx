@@ -16,6 +16,7 @@ import styles from "./StepDialogWindow.module.css";
 type Subject = "situation" | "thought";
 
 type View =
+  | { kind: "intro"; title: string; category: "Освобождение" | "Улучшение +1" }
   | { kind: "core"; step: number; subject: Subject }
   | { kind: "solve"; step: number }
   | { kind: "deepPick"; fromImportant: string }
@@ -50,6 +51,24 @@ type DialogState = DialogStateV2;
 const STORAGE_KEY_PREFIX = "seee_step_dialog_state:";
 const SESSION_KIND_PREFIX = "seee_session_kind:";
 const SESSION_NOTES_PREFIX = "seee_session_notes:";
+const DRAFT_TO_EXPLORE_CATEGORY_PREFIX = "seee_draft_to_explore_category:";
+
+function buildToExploreIntroText(title: string, category: "Освобождение" | "Улучшение +1"): string {
+  const topic = (title || "эту тему").trim();
+  if (category === "Освобождение") {
+    return `Тема этой сессии: «${topic}».
+
+Иногда такие идеи незаметно усиливают тревогу, напряжение и внутренний контроль. В этом разборе мы спокойно посмотрим, откуда появилась эта установка, как она влияет на вас в реальной жизни и что можно изменить, чтобы стало легче.
+
+Поделитесь ситуациями, где эта тема проявляется сильнее всего. Пойдём шаг за шагом и разберём это вместе.`;
+  }
+
+  return `Тема этой сессии: «${topic}».
+
+Эта карточка про развитие внутренней опоры и усиление полезных установок. В разборе мы найдём, какие ситуации уже помогают вам расти, что именно работает для вас и как превратить это в устойчивый личный путь.
+
+Опишите ситуации, связанные с этой темой, и начнём собирать вашу карту развития шаг за шагом.`;
+}
 
 function loadState(sessionId: string): DialogState | null {
   try {
@@ -254,6 +273,7 @@ function solveQuestion(step: number, important: string): string {
 }
 
 function isTextAnswerView(view: View): boolean {
+  if (view.kind === "intro") return false;
   if (view.kind === "addToList") return false;
   if (view.kind === "deepPick") return true;
   if (view.kind === "core") return view.step >= 1 && view.step <= 9;
@@ -268,6 +288,9 @@ function sanitizeThoughtValue(v?: string): string {
 }
 
 function getPrompt(view: View, importantText: string, situationText: string, answers?: Record<string, string>): string {
+  if (view.kind === "intro") {
+    return buildToExploreIntroText(view.title, view.category);
+  }
   if (view.kind === "core") {
     const primaryKey = `core:${view.subject}:3`;
     const secondaryKey =
@@ -302,6 +325,28 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const navigate = useNavigate();
   const { trigger: createSession, isMutating } = useSessionsControllerCreateSession();
   const isDraftSession = session.id === "new";
+  const userKey = useMemo(() => getUserKey(), []);
+  const [introStarted, setIntroStarted] = useState(false);
+
+  const draftToExploreIntro = useMemo(() => {
+    if (!isDraftSession) return null;
+    try {
+      const templateId = localStorage
+        .getItem(`seee_draft_to_explore_template:${userKey}`)
+        ?.trim();
+      if (!templateId) return null;
+
+      const title = localStorage.getItem(`seee_draft_title:${userKey}`)?.trim() || "";
+      const rawCategory = localStorage
+        .getItem(`${DRAFT_TO_EXPLORE_CATEGORY_PREFIX}${userKey}`)
+        ?.trim();
+      const category: "Освобождение" | "Улучшение +1" =
+        rawCategory === "Улучшение +1" ? "Улучшение +1" : "Освобождение";
+      return { title, category };
+    } catch {
+      return null;
+    }
+  }, [isDraftSession, userKey]);
 
   const [state, setState] = useState<DialogState>(() => {
     const existing = loadState(session.id);
@@ -333,6 +378,21 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   }, [session.id, state]);
 
   const view: View = useMemo(() => {
+    const firstSituationAnswer = (state.answers["core:situation:1"] || "").trim();
+    const shouldShowIntro =
+      !!draftToExploreIntro &&
+      !introStarted &&
+      state.subject === "situation" &&
+      state.coreStep === 1 &&
+      !firstSituationAnswer;
+    if (shouldShowIntro) {
+      return {
+        kind: "intro",
+        title: draftToExploreIntro.title,
+        category: draftToExploreIntro.category,
+      };
+    }
+
     // Модальные режимы
     if (state.coreStep === 0) return { kind: "addToList" };
     if (state.coreStep === 99) return { kind: "deepPick", fromImportant: state.importantText };
@@ -344,7 +404,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
     // Основной цикл
     return { kind: "core", step: state.coreStep, subject: state.subject };
-  }, [state]);
+  }, [state, draftToExploreIntro, introStarted]);
 
   const prompt = useMemo(
     () => getPrompt(view, state.importantText, state.situationText, state.answers),
@@ -567,6 +627,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         try {
           localStorage.removeItem(`seee_draft_title:${userKey}`);
           localStorage.removeItem(`seee_draft_to_explore_template:${userKey}`);
+          localStorage.removeItem(`${DRAFT_TO_EXPLORE_CATEGORY_PREFIX}${userKey}`);
         } catch {
           // ignore
         }
@@ -889,6 +950,17 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             </Button>
             <Button className={`${styles.choiceButton} ${chatStyles.glassButton}`} variant="outline" onClick={goDeepPick}>
               Разобраться глубже
+            </Button>
+          </div>
+        )}
+
+        {view.kind === "intro" && (
+          <div className={styles.choiceRow}>
+            <Button
+              className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+              onClick={() => setIntroStarted(true)}
+            >
+              Начать разбор
             </Button>
           </div>
         )}

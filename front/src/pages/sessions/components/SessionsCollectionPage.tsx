@@ -592,6 +592,7 @@ const SessionsCollectionPage = observer(() => {
     try {
       localStorage.setItem(`seee_draft_title:${userKey}`, template.title);
       localStorage.setItem(`seee_draft_to_explore_template:${userKey}`, template.id);
+      localStorage.setItem(`seee_draft_to_explore_category:${userKey}`, template.category);
     } catch {
       // ignore
     }
