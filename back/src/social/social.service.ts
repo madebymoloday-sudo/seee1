@@ -102,7 +102,7 @@ export class SocialService {
       const others = participants.filter((p) => p.id !== currentUserId);
       const title = chat.isGroup
         ? chat.name || 'Группа'
-        : others[0]?.username || 'Личный чат';
+        : others[0]?.username || 'Чат с собой';
 
       const pendingRequest = await this.prisma.chatModeRequest.findFirst({
         where: { chatId: chat.id, status: 'PENDING' },
@@ -446,6 +446,34 @@ export class SocialService {
     const target = await this.findUserByPublicId(friendUserId, currentUserId);
     const chat = await this.ensureDirectChat(currentUserId, target.id);
     return chat;
+  }
+
+  async createSelfChat(currentUserId: string) {
+    const candidates = await this.prisma.chat.findMany({
+      where: {
+        isGroup: false,
+        members: { some: { userId: currentUserId } },
+      },
+      include: { members: { select: { userId: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const existing = candidates.find((c) => {
+      const ids = c.members.map((m) => m.userId);
+      return ids.length === 1 && ids[0] === currentUserId;
+    });
+    if (existing) return existing;
+
+    return this.prisma.chat.create({
+      data: {
+        isGroup: false,
+        createdById: currentUserId,
+        name: 'Личное',
+        members: {
+          create: [{ userId: currentUserId }],
+        },
+      },
+    });
   }
 
   async createGroup(currentUserId: string, name: string, memberUserIds: string[]) {

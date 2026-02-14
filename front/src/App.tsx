@@ -37,15 +37,10 @@ const AppContent = observer(() => {
 
 function App() {
   useEffect(() => {
-    // Загружаем Telegram Login Widget
+    // Загружаем Telegram Login SDK (без data-атрибутов виджета в DOM,
+    // чтобы не рендерить ошибку "Username invalid" при bot_id формате).
     const script = document.createElement("script");
     script.src = "https://telegram.org/js/telegram-widget.js?22";
-    const botId = import.meta.env.VITE_TELEGRAM_BOT_ID || "8225371483";
-    if (botId) {
-      script.setAttribute("data-telegram-login", botId);
-      script.setAttribute("data-size", "large");
-      script.setAttribute("data-request-access", "write");
-    }
     script.async = true;
     document.body.appendChild(script);
 

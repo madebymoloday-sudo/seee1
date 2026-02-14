@@ -173,6 +173,17 @@ const PeoplePage = () => {
     }
   };
 
+  const handleCreateSelfChat = async () => {
+    try {
+      const chat = await apiAgent.post<undefined, { id: string }>("/social/chats/self");
+      await refreshChats();
+      setSelectedChatId(chat.id);
+      toast.success("Личный чат открыт");
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Не удалось открыть чат с собой");
+    }
+  };
+
   const handleSend = async () => {
     const text = messageInput.trim();
     if (!selectedChatId || !text) return;
@@ -296,6 +307,9 @@ const PeoplePage = () => {
               <div className={styles.row}>
                 <Button variant="outline" onClick={handleCreateGroup}>
                   Создать группу
+                </Button>
+                <Button variant="outline" onClick={handleCreateSelfChat}>
+                  Чат с собой
                 </Button>
                 <span className={styles.chatSubtitle}>Друзей: {friends.length}</span>
               </div>

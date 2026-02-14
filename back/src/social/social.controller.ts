@@ -68,6 +68,12 @@ export class SocialController {
     return this.socialService.createDirect(req.user.id, dto.friendUserId);
   }
 
+  @Post('chats/self')
+  @ApiOperation({ summary: 'Создать/получить чат с самим собой' })
+  createSelf(@Request() req: { user: { id: string } }) {
+    return this.socialService.createSelfChat(req.user.id);
+  }
+
   @Post('chats/group')
   @ApiOperation({ summary: 'Создать групповой чат' })
   createGroup(

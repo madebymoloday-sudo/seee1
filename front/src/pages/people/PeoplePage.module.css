@@ -288,3 +288,82 @@
   }
 }
 
+:global(.dark) .page {
+  background:
+    radial-gradient(120% 90% at 8% 0%, rgba(255, 214, 156, 0.06) 0%, rgba(255, 214, 156, 0) 55%),
+    linear-gradient(180deg, #141414 0%, #0a0a0a 100%);
+}
+
+:global(.dark) .shell {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(16, 16, 16, 0.82);
+}
+
+:global(.dark) .left,
+:global(.dark) .section,
+:global(.dark) .chatHeader,
+:global(.dark) .composer,
+:global(.dark) .stepControls {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+:global(.dark) .chatItem {
+  color: rgba(255, 255, 255, 0.9);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .chatItemActive {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .chatSubtitle,
+:global(.dark) .meta {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+:global(.dark) .modeBadge,
+:global(.dark) .questionCard,
+:global(.dark) .pendingCard {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(28, 28, 28, 0.9);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:global(.dark) .bubble {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(34, 34, 34, 0.92);
+  color: rgba(255, 255, 255, 0.94);
+}
+
+:global(.dark) .mine {
+  background: rgba(44, 44, 44, 0.95);
+}
+
+:global(.dark) .modeList {
+  background: #111;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+:global(.dark) .modeBtn {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .modeBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+:global(.dark) .notesModal {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(
+    155deg,
+    rgba(32, 32, 32, 0.9) 0%,
+    rgba(18, 18, 18, 0.88) 100%
+  );
+}
+
+:global(.dark) .notesTextarea {
+  background: rgba(20, 20, 20, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.92);
+}
+
