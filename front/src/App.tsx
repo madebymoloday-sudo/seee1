@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useAuth } from "./hooks/useAuth";
+import { useMobileUiScale } from "./hooks/useMobileUiScale";
 import { useTheme } from "./hooks/useTheme";
 import { protectedRouter } from "./router/protectedRouter";
 import { publicRouter } from "./router/publicRouter";
@@ -12,6 +13,8 @@ const AppContent = observer(() => {
   const { isAuthenticated, isLoading } = useAuth();
   // Инициализируем тему при загрузке
   useTheme();
+  // Инициализируем мобильный масштаб интерфейса при загрузке
+  useMobileUiScale();
 
   // Показываем загрузку пока проверяем авторизацию
   if (isLoading) {

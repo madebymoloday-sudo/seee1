@@ -7,6 +7,10 @@
   background: transparent;
 }
 
+.composerDock {
+  position: relative;
+}
+
 .messagesContainer {
   flex: 1;
   overflow-y: auto;
@@ -371,6 +375,7 @@
 @media (max-width: 768px) {
   .messagesContainer {
     padding: 1rem 0.75rem;
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom));
     gap: 1rem;
   }
 
@@ -404,11 +409,20 @@
   .emotionCarouselWrapper {
     margin: 1rem 0;
   }
+
+  .composerDock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--keyboard-offset, 0px);
+    z-index: 70;
+  }
 }
 
 @media (max-width: 480px) {
   .messagesContainer {
     padding: 0.75rem 0.5rem;
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
     gap: 0.75rem;
   }
 

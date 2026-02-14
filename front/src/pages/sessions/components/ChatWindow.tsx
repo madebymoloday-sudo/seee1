@@ -48,6 +48,7 @@ const ChatWindow = ({
   const [visibleMessages, setVisibleMessages] = useState<{ message: Message; isVisible: boolean; fadeOut?: boolean }[]>([]);
   const [showEmotionCarousel, setShowEmotionCarousel] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const fadeOutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Передаем функцию refresh в родительский компонент
@@ -256,6 +257,27 @@ const ChatWindow = ({
     setIsSettingsOpen((prev) => !prev);
   };
 
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const updateKeyboardOffset = () => {
+      const offset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      setKeyboardOffset(offset);
+    };
+
+    updateKeyboardOffset();
+    viewport.addEventListener("resize", updateKeyboardOffset);
+    viewport.addEventListener("scroll", updateKeyboardOffset);
+    window.addEventListener("orientationchange", updateKeyboardOffset);
+
+    return () => {
+      viewport.removeEventListener("resize", updateKeyboardOffset);
+      viewport.removeEventListener("scroll", updateKeyboardOffset);
+      window.removeEventListener("orientationchange", updateKeyboardOffset);
+    };
+  }, []);
+
   return (
     <div className={styles.chatWindow}>
       {/* Контейнер сообщений */}
@@ -324,7 +346,12 @@ const ChatWindow = ({
       </div>
 
       {/* Поле ввода */}
-      <div style={{ position: "relative" }}>
+      <div
+        className={styles.composerDock}
+        style={{
+          ["--keyboard-offset" as any]: `${keyboardOffset}px`,
+        }}
+      >
         <MessageInput 
           onSend={handleSend} 
           onSettingsClick={handleSettingsClick}
