@@ -8,17 +8,52 @@ import ReferralSystem from "./components/ReferralSystem";
 import MyFeedback from "./components/MyFeedback";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import FeedbackModal from "../sessions/components/FeedbackModal";
 
 const CabinetPage = observer(() => {
   const { data: profile } = useAuthControllerGetMe();
   const navigate = useNavigate();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [chatNotes, setChatNotes] = useState<
+    Array<{ chatId: string; chatTitle: string; text: string; updatedAt: string }>
+  >([]);
+  const userSub = useMemo(() => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return "";
+      const [, payload] = token.split(".");
+      return JSON.parse(atob(payload)).sub || "";
+    } catch {
+      return "";
+    }
+  }, []);
 
   const handleNeurocardClick = () => {
     navigate("/map");
   };
+
+  useEffect(() => {
+    if (!userSub) return;
+    const indexKey = `seee_people_chat_notes:index:${userSub}`;
+    const raw = localStorage.getItem(indexKey);
+    if (!raw) {
+      setChatNotes([]);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw) as Record<string, any>;
+      const list = Object.values(parsed || {})
+        .filter((x: any) => (x?.text || "").trim().length > 0)
+        .sort(
+          (a: any, b: any) =>
+            new Date(b?.updatedAt || 0).getTime() - new Date(a?.updatedAt || 0).getTime()
+        );
+      setChatNotes(list as any);
+    } catch {
+      setChatNotes([]);
+    }
+  }, [userSub, profile?.id]);
 
   return (
     <Layout>
@@ -69,6 +104,24 @@ const CabinetPage = observer(() => {
         {/* Моя обратная связь */}
         <div className="mb-6">
           <MyFeedback />
+        </div>
+
+        <div className="mb-6 rounded-xl border bg-card p-4">
+          <h2 className="mb-3 text-lg font-semibold">Заметки из чатов</h2>
+          {chatNotes.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Пока нет заметок из раздела «Люди».
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {chatNotes.map((note) => (
+                <div key={note.chatId} className="rounded-lg border p-3">
+                  <div className="mb-1 text-sm font-medium">{note.chatTitle || "Чат"}</div>
+                  <div className="text-sm whitespace-pre-wrap">{note.text}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />

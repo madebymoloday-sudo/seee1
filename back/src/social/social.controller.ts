@@ -14,7 +14,12 @@ import {
   AddFriendDto,
   CreateDirectChatDto,
   CreateGroupChatDto,
+  ExplainEditAnswerDto,
+  ExplainSessionActionDto,
+  ExplainStepAnswerDto,
+  RespondModeRequestDto,
   SendChatMessageDto,
+  StartModeRequestDto,
 } from './dto/social.dto';
 
 @ApiTags('Social')
@@ -89,6 +94,72 @@ export class SocialController {
     @Body() dto: SendChatMessageDto,
   ) {
     return this.socialService.sendMessage(req.user.id, chatId, dto.content, dto.mode);
+  }
+
+  @Get('chats/:chatId/mode-state')
+  @ApiOperation({ summary: 'Текущее состояние режима в чате' })
+  getModeState(
+    @Request() req: { user: { id: string } },
+    @Param('chatId') chatId: string,
+  ) {
+    return this.socialService.getModeState(req.user.id, chatId);
+  }
+
+  @Post('chats/:chatId/mode-requests')
+  @ApiOperation({ summary: 'Запросить запуск режима в чате' })
+  startModeRequest(
+    @Request() req: { user: { id: string } },
+    @Param('chatId') chatId: string,
+    @Body() dto: StartModeRequestDto,
+  ) {
+    return this.socialService.startModeRequest(req.user.id, chatId, dto.mode);
+  }
+
+  @Post('chats/:chatId/mode-requests/:requestId/respond')
+  @ApiOperation({ summary: 'Ответить на запрос запуска режима' })
+  respondModeRequest(
+    @Request() req: { user: { id: string } },
+    @Param('chatId') chatId: string,
+    @Param('requestId') requestId: string,
+    @Body() dto: RespondModeRequestDto,
+  ) {
+    return this.socialService.respondModeRequest(req.user.id, chatId, requestId, !!dto.accepted);
+  }
+
+  @Post('chats/:chatId/explain/answer')
+  @ApiOperation({ summary: 'Добавить ответ на текущий этап режима Объяснить' })
+  addExplainAnswer(
+    @Request() req: { user: { id: string } },
+    @Param('chatId') chatId: string,
+    @Body() dto: ExplainStepAnswerDto,
+  ) {
+    return this.socialService.submitExplainAnswer(req.user.id, chatId, dto.text);
+  }
+
+  @Post('chats/:chatId/explain/control')
+  @ApiOperation({ summary: 'Управление шагами режима Объяснить' })
+  controlExplain(
+    @Request() req: { user: { id: string } },
+    @Param('chatId') chatId: string,
+    @Body() dto: ExplainSessionActionDto,
+  ) {
+    return this.socialService.controlExplainSession(req.user.id, chatId, dto.action);
+  }
+
+  @Post('chats/:chatId/explain/edit')
+  @ApiOperation({ summary: 'Редактирование ответа режима Объяснить' })
+  editExplainAnswer(
+    @Request() req: { user: { id: string } },
+    @Param('chatId') chatId: string,
+    @Body() dto: ExplainEditAnswerDto,
+  ) {
+    return this.socialService.editExplainAnswer(
+      req.user.id,
+      chatId,
+      Number(dto.step),
+      Number(dto.answerIndex),
+      dto.text,
+    );
   }
 }
 

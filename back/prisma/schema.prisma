@@ -38,6 +38,12 @@ enum FriendshipStatus {
   ACCEPTED
 }
 
+enum ChatModeRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 // Models
 model User {
   id            String   @id @default(uuid())
@@ -70,6 +76,7 @@ model User {
   receivedFriendships Friendship[]   @relation("friendship_receiver")
   chatMembers        ChatMember[]
   sentChatMessages   ChatMessage[]
+  chatModeApprovals  ChatModeApproval[]
 
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -104,6 +111,8 @@ model Chat {
 
   members     ChatMember[]
   messages    ChatMessage[]
+  modeRequests ChatModeRequest[]
+  explainSessions ChatExplainSession[]
 
   @@index([createdById])
   @@map("chats")
@@ -130,6 +139,7 @@ model ChatMessage {
   content   String
   mode      String
   createdAt DateTime @default(now()) @map("created_at")
+  meta      Json?
 
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
@@ -137,6 +147,58 @@ model ChatMessage {
   @@index([chatId, createdAt])
   @@index([senderId])
   @@map("chat_messages")
+}
+
+model ChatModeRequest {
+  id            String                @id @default(uuid())
+  chatId         String                @map("chat_id")
+  mode           String
+  initiatedById  String                @map("initiated_by_id")
+  status         ChatModeRequestStatus @default(PENDING)
+  expiresAt      DateTime              @map("expires_at")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  chat           Chat                  @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  approvals      ChatModeApproval[]
+
+  @@index([chatId, status])
+  @@map("chat_mode_requests")
+}
+
+model ChatModeApproval {
+  id         String          @id @default(uuid())
+  requestId  String          @map("request_id")
+  userId     String          @map("user_id")
+  accepted   Boolean
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+
+  request    ChatModeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, userId])
+  @@index([userId])
+  @@map("chat_mode_approvals")
+}
+
+model ChatExplainSession {
+  id            String   @id @default(uuid())
+  chatId         String   @map("chat_id")
+  initiatorId    String   @map("initiator_id")
+  isActive       Boolean  @default(true) @map("is_active")
+  currentStep    Int      @default(1) @map("current_step")
+  currentIdea    String?  @map("current_idea")
+  currentPart    String?  @map("current_part")
+  answersJson    Json     @map("answers_json")
+  pathStackJson  Json     @map("path_stack_json")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  chat           Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId, isActive])
+  @@map("chat_explain_sessions")
 }
 
 model Session {
