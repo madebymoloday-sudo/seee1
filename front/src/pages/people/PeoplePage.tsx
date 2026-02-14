@@ -340,9 +340,16 @@ const PeoplePage = () => {
               <>
                 <div className={styles.chatHeader}>
                   <span>{selectedChat.title}</span>
-                  <span className={styles.modeBadge}>
-                    {modeState?.activeMode === "Объяснить" ? 'Режим: "Объяснить"' : "Обычный режим"}
-                  </span>
+                  <div className={styles.headerActions}>
+                    <span className={styles.modeBadge}>
+                      {modeState?.activeMode === "Объяснить" ? 'Режим: "Объяснить"' : "Обычный режим"}
+                    </span>
+                    {modeState?.canControl && modeState.activeMode === "Объяснить" ? (
+                      <Button size="sm" variant="ghost" onClick={() => handleExplainControl("finish")}>
+                        Закончить
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
                 {modeState?.pendingRequest && (
                   <div className={styles.pendingCard}>
@@ -376,9 +383,6 @@ const PeoplePage = () => {
                           <Button size="sm" onClick={() => handleExplainControl("next")}>
                             Далее
                           </Button>
-                          <Button size="sm" variant="ghost" onClick={() => handleExplainControl("finish")}>
-                            Закончить
-                          </Button>
                         </div>
                       ) : null}
                     </div>
@@ -407,19 +411,6 @@ const PeoplePage = () => {
                     );
                   })}
                 </div>
-                {modeState?.canControl && modeState.activeMode === "Объяснить" ? (
-                  <div className={styles.stepControls}>
-                    <Button size="sm" variant="outline" onClick={() => handleExplainControl("back")}>
-                      Назад
-                    </Button>
-                    <Button size="sm" onClick={() => handleExplainControl("next")}>
-                      Далее
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleExplainControl("finish")}>
-                      Закончить
-                    </Button>
-                  </div>
-                ) : null}
                 <div className={styles.composer}>
                   <div className={styles.modeWrap}>
                     <Button
@@ -432,6 +423,24 @@ const PeoplePage = () => {
                     </Button>
                     {modeOpen && (
                       <div className={styles.modeList}>
+                        {modeState?.activeMode === "Объяснить" && modeState?.canControl ? (
+                          <button
+                            type="button"
+                            className={styles.modeBtn}
+                            onClick={() => {
+                              setModeOpen(false);
+                              setNotesOpen(true);
+                            }}
+                          >
+                            <span className={styles.modeBtnIcon}>
+                              <StickyNote className="h-4 w-4" />
+                            </span>
+                            Заметка
+                          </button>
+                        ) : null}
+                        {modeState?.activeMode === "Объяснить" && modeState?.canControl ? (
+                          <div className={styles.modeDivider} />
+                        ) : null}
                         {MODES.map((item) => (
                           <button
                             key={item}
@@ -445,31 +454,10 @@ const PeoplePage = () => {
                       </div>
                     )}
                   </div>
-
-                  {modeState?.activeMode === "Объяснить" ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className={styles.notesButton}
-                      title="Приватные заметки"
-                      onClick={() => setNotesOpen(true)}
-                    >
-                      <StickyNote className="h-4 w-4" />
-                    </Button>
-                  ) : null}
                   <Input
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
-                    placeholder={
-                      modeState?.activeMode === "Объяснить"
-                        ? `Режим "Объяснить" · ${
-                            modeState.canControl
-                              ? "ответьте и нажмите Далее"
-                              : "обычные сообщения доступны"
-                          }`
-                        : "Введите сообщение"
-                    }
+                    placeholder="Введите сообщение"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();

@@ -93,6 +93,12 @@
   gap: 0.75rem;
 }
 
+.headerActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .modeBadge {
   font-size: 0.75rem;
   font-weight: 700;
@@ -171,14 +177,6 @@
   align-items: center;
 }
 
-.stepControls {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  padding: 0.4rem 0.8rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
 .modeWrap {
   position: relative;
 }
@@ -197,6 +195,9 @@
 }
 
 .modeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   width: 100%;
   text-align: left;
   background: transparent;
@@ -207,6 +208,19 @@
 
 .modeBtn:hover {
   background: rgba(59, 130, 246, 0.1);
+}
+
+.modeBtnIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+}
+
+.modeDivider {
+  height: 1px;
+  margin: 0.3rem 0.35rem;
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .placeholder {
@@ -305,8 +319,7 @@
 :global(.dark) .left,
 :global(.dark) .section,
 :global(.dark) .chatHeader,
-:global(.dark) .composer,
-:global(.dark) .stepControls {
+:global(.dark) .composer {
   border-color: rgba(255, 255, 255, 0.14);
 }
 
@@ -353,6 +366,10 @@
 
 :global(.dark) .modeBtn:hover {
   background: rgba(255, 255, 255, 0.12);
+}
+
+:global(.dark) .modeDivider {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 :global(.dark) .notesModal {
