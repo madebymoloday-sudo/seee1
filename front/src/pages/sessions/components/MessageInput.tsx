@@ -131,7 +131,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           disabled={disabled}
           readOnly={readOnly}
           className={styles.textarea}
-          rows={3}
+          rows={1}
         />
 
         {/* Кнопка отправки (стрелка вверх) */}

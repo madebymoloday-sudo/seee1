@@ -68,14 +68,6 @@ function hexToRgb(hex: string) {
   };
 }
 
-function mixRgb(a: { r: number; g: number; b: number }, b: { r: number; g: number; b: number }, t: number) {
-  const clamped = Math.max(0, Math.min(1, t));
-  const r = Math.round(a.r + (b.r - a.r) * clamped);
-  const g = Math.round(a.g + (b.g - a.g) * clamped);
-  const b2 = Math.round(a.b + (b.b - a.b) * clamped);
-  return `rgb(${r} ${g} ${b2})`;
-}
-
 function getRussianIdeaWord(count: number) {
   const n = Math.abs(count) % 100;
   const n1 = n % 10;
@@ -116,8 +108,6 @@ const SessionFolderCard = observer(({
       : stableModuloFromString(colorSeed, paletteColors.length);
   const folderColor = paletteColors[resolvedColorIndex];
   const folderRgb = hexToRgb(folderColor);
-  const tabColor = mixRgb(folderRgb, { r: 255, g: 255, b: 255 }, 0.14);
-  const borderColor = mixRgb(folderRgb, { r: 0, g: 0, b: 0 }, 0.22);
 
   // Закрытие меню при клике вне его
   useEffect(() => {
@@ -207,16 +197,6 @@ const SessionFolderCard = observer(({
 
   return (
     <div className={`${styles.folderContainer} ${isMenuOpen ? styles.folderContainerOpen : ""}`}>
-      {/* Маленький корешок/язычок сверху (без подписи) */}
-      <div
-        className={styles.folderTab}
-        aria-hidden="true"
-        style={{
-          ["--folder-tab-color" as any]: tabColor,
-          ["--folder-border-color" as any]: borderColor,
-        }}
-      />
-
       <div
         className={styles.folderCard}
         onClick={handleNavigate}
