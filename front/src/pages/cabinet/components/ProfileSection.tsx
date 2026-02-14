@@ -22,12 +22,20 @@ const ProfileSection = observer(({ profile }: ProfileSectionProps) => {
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState("");
   const [isSavingUsername, setIsSavingUsername] = useState(false);
+  const [isEditingUserId, setIsEditingUserId] = useState(false);
+  const [userIdDraft, setUserIdDraft] = useState("");
+  const [isSavingUserId, setIsSavingUserId] = useState(false);
 
   useEffect(() => {
     if (!profile?.username) return;
     if (isEditingUsername) return;
     setUsernameDraft(profile.username);
   }, [isEditingUsername, profile?.username]);
+
+  useEffect(() => {
+    if (isEditingUserId) return;
+    setUserIdDraft(profile?.userId || "");
+  }, [isEditingUserId, profile?.userId]);
 
   if (!profile) {
     return (
@@ -127,6 +135,97 @@ const ProfileSection = observer(({ profile }: ProfileSectionProps) => {
               </div>
               <p className="text-xs text-muted-foreground">
                 Минимум 3 символа.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-muted-foreground">
+            Публичный ID
+          </label>
+          {!isEditingUserId ? (
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-lg break-all">
+                {profile.userId || "Не задан"}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setUserIdDraft(profile.userId || "");
+                  setIsEditingUserId(true);
+                }}
+              >
+                Редактировать
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={userIdDraft}
+                  onChange={(e) => setUserIdDraft(e.target.value)}
+                  placeholder="Например: SEEE_USER_01"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  disabled={isSavingUserId}
+                />
+                <Button
+                  onClick={async () => {
+                    const nextUserId = userIdDraft.trim();
+                    if (nextUserId.length < 4) {
+                      toast.error("ID должен быть не короче 4 символов");
+                      return;
+                    }
+                    if (!/^[A-Za-z0-9_]+$/.test(nextUserId)) {
+                      toast.error("Допустимы только буквы, цифры и underscore");
+                      return;
+                    }
+
+                    setIsSavingUserId(true);
+                    try {
+                      const updated = await apiAgent.patch<
+                        { userId: string },
+                        UserProfileDto
+                      >("/auth/me", { userId: nextUserId });
+
+                      await mutate(getAuthControllerGetMeKey());
+
+                      if (auth.user?.id && auth.user.id === updated.id) {
+                        auth.user = { ...auth.user, userId: updated.userId ?? null };
+                      }
+
+                      toast.success("Публичный ID обновлён");
+                      setIsEditingUserId(false);
+                    } catch (err: any) {
+                      const msg = err?.response?.data?.message;
+                      toast.error(
+                        typeof msg === "string"
+                          ? msg
+                          : "Не удалось обновить ID пользователя"
+                      );
+                    } finally {
+                      setIsSavingUserId(false);
+                    }
+                  }}
+                  disabled={isSavingUserId}
+                >
+                  Сохранить
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setUserIdDraft(profile.userId || "");
+                    setIsEditingUserId(false);
+                  }}
+                  disabled={isSavingUserId}
+                >
+                  Отмена
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Используется для добавления в друзья. Уникален в системе.
               </p>
             </div>
           )}

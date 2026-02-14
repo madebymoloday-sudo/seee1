@@ -10,6 +10,7 @@ import { EventMapModule } from './event-map/event-map.module';
 import { PipelineModule } from './pipeline/pipeline.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
+import { SocialModule } from './social/social.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
     PipelineModule,
     FeedbackModule,
     TelegramBotModule,
+    SocialModule,
   ],
   controllers: [],
   providers: [],

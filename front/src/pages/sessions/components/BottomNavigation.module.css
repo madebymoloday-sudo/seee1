@@ -36,9 +36,24 @@
 }
 
 .navButton:hover {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
   transform: translateY(-2px);
+}
+
+.navIconBubble {
+  width: 2.05rem;
+  height: 2.05rem;
+  border-radius: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.32) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(0, 0, 0, 0.08) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .navIcon {
@@ -48,9 +63,22 @@
   transition: all 0.2s ease;
 }
 
+.emojiIcon {
+  font-size: 1rem;
+  line-height: 1;
+  filter: saturate(0.82) contrast(0.95);
+}
+
 .navButton:hover .navIcon {
   color: rgba(0, 0, 0, 0.9);
-  transform: scale(1.1);
+  transform: scale(1.02);
+}
+
+.navButton:hover .navIconBubble {
+  transform: translateY(-1px) scale(1.04);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86);
 }
 
 .navLabel {
@@ -75,7 +103,7 @@
 }
 
 :global(.dark) .navButton:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
 }
 
 :global(.dark) .navIcon {
@@ -84,6 +112,16 @@
 
 :global(.dark) .navButton:hover .navIcon {
   color: white;
+}
+
+:global(.dark) .navIconBubble {
+  background:
+    linear-gradient(165deg, rgba(58, 58, 58, 0.92) 0%, rgba(24, 24, 24, 0.9) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(0, 0, 0, 0.24) 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 :global(.dark) .navLabel {

@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import SessionFolderCard from "./SessionFolderCard";
 import BottomNavigation from "./BottomNavigation";
 import NotesModal from "./NotesModal";
-import FeedbackModal from "./FeedbackModal";
 import styles from "./SessionsCollectionPage.module.css";
 import { toast } from "sonner";
 import apiAgent from "@/lib/api";
@@ -396,7 +395,6 @@ const SessionsCollectionPage = observer(() => {
   const [sortOption, setSortOption] = useState<SortOption>("my_sessions");
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const userKey = useMemo(() => getUserKey(), []);
   const [toExplore, setToExplore] = useState<ToExploreTemplateWithSession[]>(() => loadToExploreTemplates(userKey));
   const [movedSessionIds, setMovedSessionIds] = useState<string[]>(() => loadMovedSessionIds(userKey));
@@ -789,15 +787,14 @@ const SessionsCollectionPage = observer(() => {
 
       {/* Нижняя панель навигации */}
       <BottomNavigation
-        onFeedback={() => setIsFeedbackOpen(true)}
         onCabinet={() => navigate("/cabinet")}
         onNotes={() => setIsNotesOpen(true)}
+        onPeople={() => navigate("/people")}
         onNewSession={handleCreateSession}
       />
 
       {/* Модальные окна */}
       <NotesModal isOpen={isNotesOpen} onClose={() => setIsNotesOpen(false)} />
-      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
       {/* Инфо по обратной связи конкретной сессии */}
       {feedbackInfoSessionId && (

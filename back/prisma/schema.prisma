@@ -33,6 +33,11 @@ enum FeedbackStatus {
   RESOLVED
 }
 
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
 // Models
 model User {
   id            String   @id @default(uuid())
@@ -61,11 +66,77 @@ model User {
   passwordResetTokens  PasswordResetToken[]
   gptStatistics      GptStatistics[]
   pipelinePrograms   PipelineProgram[]
+  sentFriendships    Friendship[]    @relation("friendship_sender")
+  receivedFriendships Friendship[]   @relation("friendship_receiver")
+  chatMembers        ChatMember[]
+  sentChatMessages   ChatMessage[]
 
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("users")
+}
+
+model Friendship {
+  id          String           @id @default(uuid())
+  requesterId String           @map("requester_id")
+  addresseeId String           @map("addressee_id")
+  status      FriendshipStatus @default(ACCEPTED)
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  requester   User             @relation("friendship_sender", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User             @relation("friendship_receiver", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
+  @@map("friendships")
+}
+
+model Chat {
+  id          String      @id @default(uuid())
+  name        String?
+  isGroup     Boolean     @default(false) @map("is_group")
+  createdById String      @map("created_by_id")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  members     ChatMember[]
+  messages    ChatMessage[]
+
+  @@index([createdById])
+  @@map("chats")
+}
+
+model ChatMember {
+  id        String   @id @default(uuid())
+  chatId    String   @map("chat_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatId, userId])
+  @@index([userId])
+  @@map("chat_members")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  chatId    String   @map("chat_id")
+  senderId  String   @map("sender_id")
+  content   String
+  mode      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([chatId, createdAt])
+  @@index([senderId])
+  @@map("chat_messages")
 }
 
 model Session {

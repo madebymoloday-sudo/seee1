@@ -4,7 +4,7 @@ import apiAgent from "../../lib/api";
 
 export default class AuthStore {
   rootStore: RootStore;
-  user: { id: string; username: string; email?: string; role?: string } | null = null;
+  user: { id: string; username: string; email?: string; role?: string; userId?: string | null } | null = null;
   isAuthenticated = false;
   isLoading = false;
 
@@ -100,6 +100,7 @@ export default class AuthStore {
         username: string;
         email?: string;
         role?: string;
+        userId?: string | null;
       }>("/auth/me");
       runInAction(() => {
         this.user = user;

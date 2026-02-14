@@ -19,4 +19,6 @@ export interface UserProfileDto {
   avatarUrl?: string;
   /** Telegram ID (если привязан) */
   telegramId?: string | null;
+  /** Публичный уникальный ID пользователя */
+  userId?: string | null;
 }

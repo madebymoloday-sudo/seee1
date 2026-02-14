@@ -8,6 +8,7 @@ import EntryGatePage from "../pages/EntryGatePage";
 import SessionPage from "../pages/sessions/SessionPage";
 import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
 import WizardDemoPage from "../pages/sessions/WizardDemoPage";
+import PeoplePage from "../pages/people/PeoplePage";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 /**
@@ -53,6 +54,10 @@ export const protectedRouter = createBrowserRouter([
       {
         path: "cabinet",
         element: <CabinetPage />,
+      },
+      {
+        path: "people",
+        element: <PeoplePage />,
       },
       {
         path: "journal",

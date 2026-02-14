@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsString, IsNotEmpty, IsOptional, MinLength } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty, IsOptional, MinLength, Matches, MaxLength } from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({
@@ -87,6 +87,12 @@ export class UserProfileDto {
 
   @ApiPropertyOptional({ description: 'Telegram ID (если привязан)' })
   telegramId?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Публичный уникальный ID пользователя',
+    example: 'SEEE_USER_01',
+  })
+  userId?: string | null;
 }
 
 export class AuthResponseDto {
@@ -110,6 +116,21 @@ export class UpdateProfileDto {
   @IsString()
   @MinLength(3)
   username?: string;
+
+  @ApiPropertyOptional({
+    description: 'Уникальный публичный ID пользователя (для добавления в друзья)',
+    example: 'SEEE_USER_01',
+    minLength: 4,
+    maxLength: 32,
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(4)
+  @MaxLength(32)
+  @Matches(/^[A-Za-z0-9_]+$/, {
+    message: 'userId может содержать только латинские буквы, цифры и underscore',
+  })
+  userId?: string;
 }
 
 export class ForgotPasswordDto {

@@ -8,10 +8,13 @@ import ReferralSystem from "./components/ReferralSystem";
 import MyFeedback from "./components/MyFeedback";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import FeedbackModal from "../sessions/components/FeedbackModal";
 
 const CabinetPage = observer(() => {
   const { data: profile } = useAuthControllerGetMe();
   const navigate = useNavigate();
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const handleNeurocardClick = () => {
     navigate("/map");
@@ -49,6 +52,13 @@ const CabinetPage = observer(() => {
             />
             Нейрокарта
           </Button>
+          <Button
+            onClick={() => setIsFeedbackOpen(true)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            Обратная связь
+          </Button>
         </div>
 
         {/* Реферальная система */}
@@ -61,6 +71,7 @@ const CabinetPage = observer(() => {
           <MyFeedback />
         </div>
       </div>
+      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
     </Layout>
   );
 });

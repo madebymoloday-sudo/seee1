@@ -28,6 +28,7 @@ export class AuthService {
   private readonly authUserSelect = {
     id: true,
     username: true,
+    userId: true,
     email: true,
     fullName: true,
     avatarUrl: true,
@@ -312,7 +313,7 @@ export class AuthService {
       throw new NotFoundException('Пользователь не найден');
     }
 
-    const dataToUpdate: { username?: string } = {};
+    const dataToUpdate: { username?: string; userId?: string } = {};
 
     if (typeof dto.username === 'string') {
       const nextUsername = dto.username.trim();
@@ -339,6 +340,32 @@ export class AuthService {
         }
 
         dataToUpdate.username = nextUsername;
+      }
+    }
+
+    if (typeof dto.userId === 'string') {
+      const nextUserId = dto.userId.trim();
+      if (nextUserId.length < 4) {
+        throw new BadRequestException('ID пользователя должен быть не короче 4 символов');
+      }
+
+      if (nextUserId !== user.userId) {
+        const sameUserId = await this.prisma.user.findFirst({
+          where: {
+            userId: nextUserId,
+            NOT: { id: userId },
+          },
+          select: { id: true },
+        });
+
+        if (sameUserId) {
+          throw new ConflictException({
+            message: 'Пользователь с таким ID уже существует',
+            field: 'userId',
+          });
+        }
+
+        dataToUpdate.userId = nextUserId;
       }
     }
 
@@ -443,6 +470,7 @@ export class AuthService {
       fullName: user.fullName,
       avatarUrl: user.avatarUrl,
       telegramId: user.telegramId ?? null,
+      userId: user.userId ?? null,
     };
   }
 }
