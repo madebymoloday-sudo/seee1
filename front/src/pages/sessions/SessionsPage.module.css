@@ -240,11 +240,9 @@
 :global(.dark) .sessionsPage {
   background: linear-gradient(
     135deg,
-    #1a1a1a 0%,
-    #2d2d2d 25%,
-    #1a1a1a 50%,
-    #2d2d2d 75%,
-    #1a1a1a 100%
+    #161616 0%,
+    #0d0d0d 50%,
+    #161616 100%
   );
 }
 
@@ -291,18 +289,14 @@
 }
 
 :global(.dark) .sessionsPage {
-  background: linear-gradient(
-    135deg,
-    #0f172a 0%,
-    #1e293b 25%,
-    #0f172a 50%,
-    #1e293b 75%,
-    #0f172a 100%
-  );
+  background:
+    radial-gradient(120% 90% at 10% 0%, rgba(255, 213, 150, 0.07) 0%, rgba(255, 213, 150, 0) 52%),
+    radial-gradient(110% 95% at 88% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, #151515 0%, #0a0a0a 100%);
 }
 
 :global(.dark) .title {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(147, 197, 253, 0.8) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.7) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -311,46 +305,46 @@
 :global(.dark) .newSessionButton {
   background: linear-gradient(
     135deg,
-    rgba(59, 130, 246, 0.9) 0%,
-    rgba(99, 102, 241, 0.9) 100%
+    rgba(44, 44, 44, 0.95) 0%,
+    rgba(20, 20, 20, 0.95) 100%
   );
   box-shadow: 
-    0 4px 12px rgba(59, 130, 246, 0.4),
-    0 2px 4px rgba(59, 130, 246, 0.3);
+    0 4px 12px rgba(0, 0, 0, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.35);
 }
 
 :global(.dark) .newSessionButton:hover:not(:disabled) {
   box-shadow: 
-    0 6px 20px rgba(59, 130, 246, 0.5),
-    0 3px 8px rgba(59, 130, 246, 0.4);
+    0 6px 20px rgba(0, 0, 0, 0.55),
+    0 3px 8px rgba(0, 0, 0, 0.42);
 }
 
 :global(.dark) .searchInput {
-  background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(20, 20, 20, 0.9);
+  border-color: rgba(255, 255, 255, 0.16);
   color: rgba(255, 255, 255, 0.9);
 }
 
 :global(.dark) .searchInput:focus {
-  background: rgba(30, 41, 59, 0.95);
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 2px 6px rgba(0, 0, 0, 0.3);
+  background: rgba(24, 24, 24, 0.98);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12), 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
 :global(.dark) .filterButton {
-  background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(20, 20, 20, 0.92);
+  border-color: rgba(255, 255, 255, 0.16);
   color: rgba(255, 255, 255, 0.9);
 }
 
 :global(.dark) .filterButton:hover {
-  background: rgba(30, 41, 59, 0.95);
-  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(28, 28, 28, 0.98);
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
 :global(.dark) .filterDropdown {
-  background: rgba(15, 23, 42, 0.98);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(10, 10, 10, 0.98);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 :global(.dark) .filterOption {
@@ -358,6 +352,6 @@
 }
 
 :global(.dark) .filterOption:hover {
-  background: rgba(59, 130, 246, 0.15);
-  color: rgba(147, 197, 253, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.98);
 }

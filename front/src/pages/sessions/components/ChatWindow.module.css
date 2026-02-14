@@ -286,8 +286,8 @@
 :global(.dark) .message {
   background: linear-gradient(
     135deg,
-    rgba(30, 41, 59, 0.95) 0%,
-    rgba(15, 23, 42, 0.95) 100%
+    rgba(26, 26, 26, 0.96) 0%,
+    rgba(12, 12, 12, 0.96) 100%
   );
   border-color: rgba(255, 255, 255, 0.1);
 }
@@ -299,24 +299,24 @@
 :global(.dark) .userMessage {
   background: linear-gradient(
     135deg,
-    rgba(59, 130, 246, 0.2) 0%,
-    rgba(99, 102, 241, 0.15) 100%
+    rgba(44, 44, 44, 0.96) 0%,
+    rgba(18, 18, 18, 0.96) 100%
   );
-  border-color: rgba(59, 130, 246, 0.3);
+  border-color: rgba(255, 255, 255, 0.16);
   margin-left: auto;
   margin-right: 0;
 }
 
 :global(.dark) .userMessage .messageContent {
-  color: rgba(147, 197, 253, 0.95);
+  color: rgba(255, 255, 255, 0.95);
   text-align: right;
 }
 
 :global(.dark) .assistantMessage {
   background: linear-gradient(
     135deg,
-    rgba(30, 41, 59, 0.95) 0%,
-    rgba(15, 23, 42, 0.95) 100%
+    rgba(24, 24, 24, 0.96) 0%,
+    rgba(10, 10, 10, 0.96) 100%
   );
   border-color: rgba(255, 255, 255, 0.1);
 }
@@ -326,7 +326,7 @@
 }
 
 :global(.dark) .emptyIcon {
-  color: rgba(147, 197, 253, 0.6);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 :global(.dark) .emptyTitle {
@@ -338,11 +338,11 @@
 }
 
 :global(.dark) .loader {
-  color: rgba(147, 197, 253, 0.8);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 :global(.dark) .thinkingLoader {
-  color: rgba(147, 197, 253, 0.8);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 :global(.dark) .thinkingText {
@@ -352,8 +352,8 @@
 :global(.dark) .glassButton {
   background: linear-gradient(
     135deg,
-    rgba(30, 41, 59, 0.95) 0%,
-    rgba(15, 23, 42, 0.95) 100%
+    rgba(36, 36, 36, 0.95) 0%,
+    rgba(18, 18, 18, 0.95) 100%
   ) !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
   color: rgba(255, 255, 255, 0.9) !important;
@@ -369,6 +369,13 @@
 
 :global(.dark) .messagesContainer::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+:global(.dark) .chatWindow {
+  background:
+    radial-gradient(130% 95% at 12% 2%, rgba(255, 214, 170, 0.06) 0%, rgba(255, 214, 170, 0) 55%),
+    radial-gradient(110% 75% at 88% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, #141414 0%, #0b0b0b 100%);
 }
 
 /* Адаптивные стили для мобильных устройств */
