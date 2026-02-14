@@ -25,23 +25,23 @@ interface SessionFolderCardProps {
 }
 
 const FOLDER_COLORS = [
-  "#9FC5C7", // Sea mist
-  "#86B8C8", // Shallow bay blue
-  "#9ABFA9", // Sea grass
-  "#C4B8A7", // Beach shell
-  "#7FA8B2", // Coastal slate
-  "#A7C9BE", // Soft algae
-  "#B7C7D6", // Cloudy lagoon
-  "#A8B5A4", // Dune moss
+  "#9DBBD2", // Lagoon blue
+  "#A9CBB8", // Sea grass
+  "#D3B2A1", // Coral sand
+  "#D6A9A9", // Soft reef pink
+  "#BFAED8", // Lilac anemone
+  "#CDBE9E", // Shell gold
+  "#99C4C0", // Aqua bloom
+  "#D7B7C7", // Tropical fish blush
 ];
 
 const TO_EXPLORE_COLORS = [
-  "#9BC3CC", // Calm reef
-  "#88B7B1", // Sea foam
-  "#AFC3B6", // Kelp light
-  "#9AB0C9", // Gulf haze
-  "#B8C8B4", // Driftwood sage
-  "#A6BCC8", // Tide glass
+  "#9EC6D6", // Reef water
+  "#CFAFA0", // Coral branch
+  "#B6B0D6", // Sea orchid
+  "#A6CDBD", // Bay algae
+  "#D8C09F", // Warm shell
+  "#D0B2C8", // Fish scale rose
 ];
 
 function stableModuloFromString(value: string, modulo: number) {

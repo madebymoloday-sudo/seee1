@@ -448,7 +448,6 @@ const SessionsCollectionPage = observer(() => {
 
   // Фильтрация и поиск сессий
   const filteredAndSortedSessions = useMemo(() => {
-    if (sortOption !== "my_sessions") return [];
     let filtered = sessions.filter((session) => !movedSessionIds.includes(session.id));
 
     // Поиск по названию, содержанию или убеждениям
@@ -461,7 +460,7 @@ const SessionsCollectionPage = observer(() => {
       });
     }
     return filtered;
-  }, [sessions, searchQuery, sortOption, movedSessionIds]);
+  }, [sessions, searchQuery, movedSessionIds]);
 
   const handleCreateSession = async () => {
     try {
@@ -583,12 +582,8 @@ const SessionsCollectionPage = observer(() => {
       return [...selected, ...rest];
     }
     if (sortOption === "recommended") return list.filter((t) => recommendedTemplateIds.has(t.id));
-    if (sortOption === "my_sessions") return [];
     return list;
   }, [shuffledToExplore, searchQuery, sortOption, recommendedTemplateIds]);
-
-  const showSessionList = sortOption === "my_sessions";
-  const showToExploreList = sortOption !== "my_sessions";
 
   const openToExploreTemplate = (template: ToExploreTemplateWithSession) => {
     if (template.sourceSessionId) {
@@ -604,6 +599,33 @@ const SessionsCollectionPage = observer(() => {
     }
     navigate("/sessions/new");
   };
+
+  type GalleryCardItem =
+    | { kind: "session"; session: SessionResponseDto }
+    | { kind: "template"; template: ToExploreTemplateWithSession };
+
+  const combinedCards = useMemo<GalleryCardItem[]>(() => {
+    const sessionItems: GalleryCardItem[] = filteredAndSortedSessions.map((session) => ({
+      kind: "session",
+      session,
+    }));
+    const templateItems: GalleryCardItem[] = filteredToExplore.map((template) => ({
+      kind: "template",
+      template,
+    }));
+
+    // Всегда один длинный список всех карточек.
+    // Сортировка лишь определяет приоритет блока.
+    if (
+      sortOption === "to_explore" ||
+      sortOption === "freedom" ||
+      sortOption === "happiness" ||
+      sortOption === "recommended"
+    ) {
+      return [...templateItems, ...sessionItems];
+    }
+    return [...sessionItems, ...templateItems];
+  }, [filteredAndSortedSessions, filteredToExplore, sortOption]);
 
   return (
     <div className={styles.collectionPage}>
@@ -714,73 +736,60 @@ const SessionsCollectionPage = observer(() => {
           </div>
         ) : null}
         
-        {!isLoading && showSessionList && (error === undefined || error === null) && filteredAndSortedSessions.length === 0 && (
+        {!isLoading && (error === undefined || error === null) && combinedCards.length === 0 && (
           <div className={styles.emptyState}>
-            <p>Сессии не найдены</p>
+            <p>Карточки не найдены</p>
             {searchQuery && (
               <p className={styles.emptyHint}>Попробуйте изменить поисковый запрос</p>
             )}
           </div>
         )}
         
-        {!isLoading && showSessionList && (error === undefined || error === null) && filteredAndSortedSessions.length > 0 && (
+        {!isLoading && (error === undefined || error === null) && combinedCards.length > 0 && (
           <div className={styles.foldersList}>
-            {filteredAndSortedSessions.map((session, index) => (
-              <SessionFolderCard
-                key={session.id}
-                session={session}
-                colorIndex={index}
-                onRename={() => handleRename(session.id)}
-                onDelete={() => handleDelete(session.id)}
-                onMoveToExplore={() => handleMoveToExplore(session)}
-                onShowFeedback={() => setFeedbackInfoSessionId(session.id)}
-                onShowIdeas={() => setIdeasInfoSessionId(session.id)}
-                ideasCount={getIdeasCountForSession(session)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Предстоит изучить (системные подсказки) — показываем ПОСЛЕ сессий пользователя */}
-        {showToExploreList && filteredToExplore.length > 0 && (
-          <div className="mt-8 mb-2">
-            <div className="px-1 pb-3 text-sm font-semibold text-white/80">
-              Предстоит изучить
-            </div>
-            <div className={styles.foldersList}>
-              {filteredToExplore.map((t, index) => {
-                const fakeSession = {
-                  id: t.id,
-                  title: t.title,
-                  createdAt: new Date().toISOString(),
-                  messageCount: 0,
-                } as unknown as SessionResponseDto;
-
+            {combinedCards.map((item, index) => {
+              if (item.kind === "session") {
+                const session = item.session;
                 return (
                   <SessionFolderCard
-                    key={t.id}
-                    session={fakeSession}
+                    key={session.id}
+                    session={session}
                     colorIndex={index}
-                    ideasCount={1}
-                    tagLabel="Предстоит изучить"
-                    categoryLabel={t.category}
-                    recommendationLabel={
-                      recommendedTemplateIds.has(t.id) ? "Рекомендация для вас" : undefined
-                    }
-                    palette="toExplore"
-                    showMenu={false}
-                    onOpen={() => openToExploreTemplate(t)}
+                    onRename={() => handleRename(session.id)}
+                    onDelete={() => handleDelete(session.id)}
+                    onMoveToExplore={() => handleMoveToExplore(session)}
+                    onShowFeedback={() => setFeedbackInfoSessionId(session.id)}
+                    onShowIdeas={() => setIdeasInfoSessionId(session.id)}
+                    ideasCount={getIdeasCountForSession(session)}
                   />
                 );
-              })}
-            </div>
-          </div>
-        )}
+              }
 
-        {!isLoading && showToExploreList && (error === undefined || error === null) && filteredToExplore.length === 0 && (
-          <div className={styles.emptyState}>
-            <p>Карточки не найдены</p>
-            <p className={styles.emptyHint}>Попробуйте другую категорию или запрос</p>
+              const t = item.template;
+              const fakeSession = {
+                id: t.id,
+                title: t.title,
+                createdAt: new Date().toISOString(),
+                messageCount: 0,
+              } as unknown as SessionResponseDto;
+
+              return (
+                <SessionFolderCard
+                  key={t.id}
+                  session={fakeSession}
+                  colorIndex={index}
+                  ideasCount={1}
+                  tagLabel="Предстоит изучить"
+                  categoryLabel={t.category}
+                  recommendationLabel={
+                    recommendedTemplateIds.has(t.id) ? "Рекомендация для вас" : undefined
+                  }
+                  palette="toExplore"
+                  showMenu={false}
+                  onOpen={() => openToExploreTemplate(t)}
+                />
+              );
+            })}
           </div>
         )}
       </div>
