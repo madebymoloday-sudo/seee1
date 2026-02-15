@@ -438,8 +438,19 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [listNotes, setListNotes] = useState("");
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isIdeasModalOpen, setIsIdeasModalOpen] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const timersRef = useRef<number[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const focusInputWithoutScroll = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    try {
+      el.focus({ preventScroll: true });
+    } catch {
+      el.focus();
+    }
+  };
 
   const canDeepNow = useMemo(() => {
     // button should be available during the session after step 4 is answered at least once
@@ -505,7 +516,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     if (isTransitioning) return;
     if (!isTextAnswerView(view)) return;
 
-    const t = window.setTimeout(() => inputRef.current?.focus(), 0);
+    const t = window.setTimeout(() => focusInputWithoutScroll(), 0);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -534,6 +545,27 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       setIsEditing(true);
     }
   }, [state.answers, view]);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const updateKeyboardOffset = () => {
+      const offset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      setKeyboardOffset(offset);
+    };
+
+    updateKeyboardOffset();
+    viewport.addEventListener("resize", updateKeyboardOffset);
+    viewport.addEventListener("scroll", updateKeyboardOffset);
+    window.addEventListener("orientationchange", updateKeyboardOffset);
+
+    return () => {
+      viewport.removeEventListener("resize", updateKeyboardOffset);
+      viewport.removeEventListener("scroll", updateKeyboardOffset);
+      window.removeEventListener("orientationchange", updateKeyboardOffset);
+    };
+  }, []);
 
   const computeNextState = (answer: string): DialogState | null => {
     const trimmed = answer.trim();
@@ -984,7 +1016,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                 variant="secondary"
                 onClick={() => {
                   setIsEditing(true);
-                  window.setTimeout(() => inputRef.current?.focus(), 0);
+                  window.setTimeout(() => focusInputWithoutScroll(), 0);
                 }}
                 className={chatStyles.glassButton}
               >
@@ -1012,7 +1044,12 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
       {/* Ввод ответа (только там, где нужен текст) */}
       {isTextAnswerView(view) && (
-        <div className={styles.inputAlignWrapper}>
+        <div
+          className={styles.inputAlignWrapper}
+          style={{
+            ["--keyboard-offset" as any]: `${keyboardOffset}px`,
+          }}
+        >
           <MessageInput
             ref={inputRef}
             onSend={(v) => {

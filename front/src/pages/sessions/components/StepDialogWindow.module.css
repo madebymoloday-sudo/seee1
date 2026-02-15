@@ -277,7 +277,16 @@
 @media (max-width: 768px) {
   .stage {
     padding: 12px 10px;
+    padding-bottom: calc(8.75rem + env(safe-area-inset-bottom));
     gap: 12px;
+  }
+
+  .inputAlignWrapper {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--keyboard-offset, 0px);
+    z-index: 70;
   }
 
   .inputAlignWrapper > div {

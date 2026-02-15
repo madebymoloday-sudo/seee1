@@ -24,6 +24,15 @@ function setCombinedRefs<T>(value: T, refs: Array<React.Ref<T> | undefined>) {
   }
 }
 
+function focusTextareaWithoutScroll(el: HTMLTextAreaElement | null) {
+  if (!el) return;
+  try {
+    el.focus({ preventScroll: true });
+  } catch {
+    el.focus();
+  }
+}
+
 const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
   (
     {
@@ -58,7 +67,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
   useEffect(() => {
     if (!autoFocus) return;
     if (disabled) return;
-    const t = window.setTimeout(() => localRef.current?.focus(), 0);
+    const t = window.setTimeout(() => focusTextareaWithoutScroll(localRef.current), 0);
     return () => window.clearTimeout(t);
   }, [autoFocus, disabled]);
 
@@ -80,7 +89,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       onSend(message.trim());
       setMessage("");
       // Не теряем фокус после отправки (особенно на мобильных)
-      window.setTimeout(() => localRef.current?.focus(), 0);
+      window.setTimeout(() => focusTextareaWithoutScroll(localRef.current), 0);
     }
   };
 
