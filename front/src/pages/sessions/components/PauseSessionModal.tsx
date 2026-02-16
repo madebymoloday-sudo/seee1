@@ -13,9 +13,23 @@ interface PauseSessionModalProps {
   sessionId: string;
 }
 
+const PAUSE_FEEDBACK_DRAFT_PREFIX = "seee_pause_feedback_draft:";
+
+type PauseFeedbackAnswers = {
+  situation: string;
+  emotion: string;
+  thoughts: string;
+  nextTopics: string;
+  overall: string;
+};
+
+function buildPauseDraftKey(sessionId: string) {
+  return `${PAUSE_FEEDBACK_DRAFT_PREFIX}${sessionId}`;
+}
+
 const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProps) => {
   const navigate = useNavigate();
-  const [answers, setAnswers] = useState({
+  const [answers, setAnswers] = useState<PauseFeedbackAnswers>({
     situation: "",
     emotion: "",
     thoughts: "",
@@ -26,6 +40,24 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
 
   useEffect(() => {
     if (!isOpen) return;
+    const draftKey = buildPauseDraftKey(sessionId);
+
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<PauseFeedbackAnswers>;
+        setAnswers({
+          situation: String(parsed?.situation ?? ""),
+          emotion: String(parsed?.emotion ?? ""),
+          thoughts: String(parsed?.thoughts ?? ""),
+          nextTopics: String(parsed?.nextTopics ?? ""),
+          overall: String(parsed?.overall ?? ""),
+        });
+      }
+    } catch {
+      // ignore
+    }
+
     // Close mobile keyboard and lock background scroll (prevents iOS modal jumping)
     try {
       const el = document.activeElement;
@@ -34,8 +66,18 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
       // ignore
     }
 
+    const scrollY = window.scrollY;
+    const prevBody = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      width: document.body.style.width,
+    };
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -46,9 +88,22 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
     window.addEventListener("keydown", onKeyDown);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = prevOverflow;
+      document.body.style.overflow = prevBody.overflow || prevOverflow;
+      document.body.style.position = prevBody.position;
+      document.body.style.top = prevBody.top;
+      document.body.style.width = prevBody.width;
+      window.scrollTo(0, scrollY);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, sessionId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    try {
+      localStorage.setItem(buildPauseDraftKey(sessionId), JSON.stringify(answers));
+    } catch {
+      // ignore
+    }
+  }, [answers, isOpen, sessionId]);
 
   if (!isOpen) return null;
 
@@ -82,6 +137,12 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
         description,
         feedbackType: "FULL",
       });
+
+      try {
+        localStorage.removeItem(buildPauseDraftKey(sessionId));
+      } catch {
+        // ignore
+      }
 
       toast.success("Обратная связь сохранена");
 
