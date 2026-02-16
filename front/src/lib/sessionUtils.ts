@@ -43,13 +43,23 @@ export function parseImportantOptions(text: string): string[] {
   const normalized = (text || "").replace(/\r\n/g, "\n").trim();
   if (!normalized) return [];
 
-  // Разбиваем по: переносам, ; , • , — , " - ", нумерованным спискам, связкам "Второе -" "В третьих -"
-  const raw = normalized
+  // 1) Базовое разбиение по структурным разделителям
+  const coarse = normalized
     .split(
       /\r?\n|;\s*|•\s*|\u2022\s*|\s+—\s+|\s+-\s+(?=\S)|\*\s*|\d+[\)\.]\s+|(?:Второе|В третьих|Во-первых|Первое|Третье|Во-вторых)\s*[—\-]\s*/gi
     )
     .map((s) => s.replace(/^\d+[\)\.\-]\s*/, "").replace(/^[—\-]\s*/, "").trim())
     .filter((s) => s.length >= 3 && !isTransitionOnly(s));
+
+  // 2) Доп. разбиение длинных кусков на отдельные предложения,
+  // чтобы "глубже" показывал идеи поштучно
+  const raw = coarse.flatMap((chunk) => {
+    const sentenceParts = chunk
+      .split(/(?<=[.!?])\s+(?=[A-ZА-ЯЁ])/g)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return sentenceParts.length > 1 ? sentenceParts : [chunk];
+  });
 
   const unique: string[] = [];
   for (const item of raw) {

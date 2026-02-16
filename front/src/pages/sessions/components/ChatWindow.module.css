@@ -139,6 +139,7 @@
 .message {
   max-width: 680px;
   width: calc(100% - 2rem);
+  box-sizing: border-box;
   padding: 1.5rem 2rem;
   border-radius: 1.25rem;
   background: linear-gradient(
@@ -191,6 +192,7 @@
   line-height: 1.7;
   white-space: pre-wrap;
   word-wrap: break-word;
+  overflow-wrap: anywhere;
   margin: 0;
   letter-spacing: 0.01em;
 }
