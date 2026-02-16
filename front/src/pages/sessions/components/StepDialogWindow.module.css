@@ -10,8 +10,12 @@
 .choiceButton {
   min-width: 220px;
   max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   white-space: normal;
+  white-space: pre-wrap !important;
   word-break: break-word;
+  overflow-wrap: anywhere;
   text-align: left;
   justify-content: flex-start;
   padding: 0.75rem 1rem;
@@ -213,6 +217,7 @@
 .deepIdeasList {
   width: 100%;
   max-width: 680px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
@@ -220,10 +225,12 @@
 
 .deepIdeaItem {
   position: relative;
+  min-width: 0;
 }
 
 .deepIdeaButton {
   width: 100%;
+  min-width: 0;
 }
 
 .deepIdeaMenu {
@@ -238,10 +245,15 @@
 
 .deepIdeaMenuItem {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   text-align: left;
   padding: 0.6rem 0.75rem;
   border: none;
   background: transparent;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
   color: rgba(255, 255, 255, 0.92);
   font-size: 0.9rem;
   font-weight: 500;
@@ -291,10 +303,16 @@
 .centeredUserBubble {
   margin-left: auto !important;
   margin-right: auto !important;
+  width: calc(100% - 1rem);
+  max-width: 680px;
+  min-width: 0;
 }
 
 .centeredUserBubble .messageContent {
   text-align: left !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* Фон строки ввода — на всю ширину. Само окно ввода — по левому краю сообщения. */

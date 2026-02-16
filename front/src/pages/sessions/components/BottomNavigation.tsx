@@ -23,11 +23,11 @@ const BottomNavigation = ({
         <span className={styles.navLabel}>Заметки</span>
       </button>
 
-      <button onClick={onPeople} className={styles.navButton} title="Люди">
+      <button onClick={onPeople} className={styles.navButton} title="Чаты">
         <span className={styles.navIconBubble}>
-          <span className={styles.emojiIcon} role="img" aria-label="Люди">🫂</span>
+          <span className={styles.emojiIcon} role="img" aria-label="Чаты">🫂</span>
         </span>
-        <span className={styles.navLabel}>Люди</span>
+        <span className={styles.navLabel}>Чаты</span>
       </button>
       
       <button onClick={onNewSession} className={styles.navButton} title="Новая сессия">

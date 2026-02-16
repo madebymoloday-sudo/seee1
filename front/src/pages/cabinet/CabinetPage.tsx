@@ -73,20 +73,7 @@ const CabinetPage = observer(() => {
         </div>
 
         {/* Кнопки действий */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Button
-            onClick={handleNeurocardClick}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <img
-              src="/seee-logo-128.png"
-              alt="Seee"
-              className="h-5 w-5 rounded-full"
-              draggable={false}
-            />
-            Нейрокарта
-          </Button>
+        <div className="mb-6">
           <Button
             onClick={() => setIsFeedbackOpen(true)}
             variant="outline"
@@ -110,7 +97,7 @@ const CabinetPage = observer(() => {
           <h2 className="mb-3 text-lg font-semibold">Заметки из чатов</h2>
           {chatNotes.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Пока нет заметок из раздела «Люди».
+              Пока нет заметок из раздела «Чаты».
             </p>
           ) : (
             <div className="space-y-3">
@@ -122,6 +109,24 @@ const CabinetPage = observer(() => {
               ))}
             </div>
           )}
+        </div>
+
+        <div className="mb-6 rounded-xl border bg-card p-4">
+          <h2 className="mb-3 text-lg font-semibold">Разделы</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Button variant="outline" onClick={() => navigate("/sessions/list")}>
+              Галерея сессий
+            </Button>
+            <Button variant="outline" onClick={handleNeurocardClick}>
+              Нейрокарта
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/journal")}>
+              Журнал
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/people")}>
+              Чаты
+            </Button>
+          </div>
         </div>
       </div>
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
