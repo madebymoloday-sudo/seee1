@@ -434,6 +434,17 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     [view, state.importantText, state.situationText, state.answers]
   );
 
+  const importantOptions = useMemo(() => {
+    if (view.kind !== "deepPick") return [];
+    const text =
+      view.fromImportant ||
+      state.answers["core:situation:4"] ||
+      state.answers["core:thought:4"] ||
+      state.importantText ||
+      "";
+    return parseImportantOptions(text);
+  }, [view, state.answers, state.importantText]);
+
   const importantTextForDeep = useMemo(() => {
     return (
       state.answers["core:situation:4"] ||
@@ -452,8 +463,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [listNotes, setListNotes] = useState("");
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isIdeasModalOpen, setIsIdeasModalOpen] = useState(false);
-  const [deepPickItems, setDeepPickItems] = useState<string[]>([]);
-  const [activeDeepPickIndex, setActiveDeepPickIndex] = useState<number | null>(null);
+  const [activeIdeaMenu, setActiveIdeaMenu] = useState<string | null>(null);
   const timersRef = useRef<number[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const forceEditOnStepSyncRef = useRef(false);
@@ -571,22 +581,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       setIsEditing(true);
     }
   }, [state.answers, view]);
-
-  useEffect(() => {
-    if (view.kind !== "deepPick") {
-      setActiveDeepPickIndex(null);
-      return;
-    }
-    const sourceText =
-      view.fromImportant ||
-      state.answers["core:situation:4"] ||
-      state.answers["core:thought:4"] ||
-      state.importantText ||
-      "";
-    const parsed = parseImportantOptions(sourceText);
-    setDeepPickItems(parsed);
-    setActiveDeepPickIndex(null);
-  }, [view, state.answers, state.importantText]);
 
   const computeNextState = (answer: string): DialogState | null => {
     const trimmed = answer.trim();
@@ -730,26 +724,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     setState((s) => ({ ...s, coreStep: 100, solveStep: 1, subject: "situation" }));
   };
 
-  const syncDeepPickItemsToState = (items: string[]) => {
-    const cleaned = items
-      .map((x) => x.trim())
-      .filter(Boolean)
-      .filter((x, i, arr) => arr.findIndex((y) => y.toLowerCase() === x.toLowerCase()) === i);
-    const nextImportantText = cleaned.join("; ");
-    setDeepPickItems(cleaned);
-    setState((s) => {
-      const answerKey = s.subject === "thought" ? "core:thought:4" : "core:situation:4";
-      return {
-        ...s,
-        importantText: nextImportantText,
-        answers: {
-          ...s.answers,
-          [answerKey]: nextImportantText,
-        },
-      };
-    });
-  };
-
   const openAddToList = () => {
     setIsListModalOpen(true);
     setListTitle("");
@@ -802,6 +776,44 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       console.error(e);
       toast.error("Не удалось добавить мысль");
     }
+  };
+
+  const updateImportantIdeas = (ideas: string[]) => {
+    const nextText = ideas.join("\n");
+    const answerKey = state.subject === "thought" ? "core:thought:4" : "core:situation:4";
+    setState((s) => ({
+      ...s,
+      importantText: nextText,
+      answers: {
+        ...s.answers,
+        [answerKey]: nextText,
+      },
+    }));
+  };
+
+  const handleEditIdea = (idea: string) => {
+    const next = window.prompt("Редактировать мысль", idea)?.trim();
+    setActiveIdeaMenu(null);
+    if (!next) return;
+    const current = parseImportantOptions(importantTextForDeep);
+    const updated = current.map((x) => (x === idea ? next : x));
+    updateImportantIdeas(updated);
+  };
+
+  const handleDeleteIdea = (idea: string) => {
+    setActiveIdeaMenu(null);
+    const current = parseImportantOptions(importantTextForDeep);
+    const updated = current.filter((x) => x !== idea);
+    updateImportantIdeas(updated);
+  };
+
+  const handleAppendIdea = () => {
+    const next = window.prompt("Введите новую мысль")?.trim();
+    setActiveIdeaMenu(null);
+    if (!next) return;
+    const current = parseImportantOptions(importantTextForDeep);
+    const updated = [...current, next];
+    updateImportantIdeas(updated);
   };
 
   const showCoreChoice = view.kind === "core" && view.step === 10;
@@ -999,28 +1011,26 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           </p>
         )}
 
-        {view.kind === "deepPick" && deepPickItems.length > 0 && (
-          <div className={styles.choiceRow}>
-            {deepPickItems.map((opt, index) => (
-              <div key={`${opt}:${index}`} className={styles.deepPickItemWrap}>
+        {view.kind === "deepPick" && importantOptions.length > 0 && (
+          <div className={styles.deepIdeasList}>
+            {importantOptions.map((opt) => (
+              <div key={opt} className={styles.deepIdeaItem}>
                 <button
                   type="button"
-                  className={`${styles.choiceButton} ${chatStyles.glassButton} ${styles.deepPickTrigger}`}
-                  onClick={() => {
-                    setActiveDeepPickIndex((prev) => (prev === index ? null : index));
-                  }}
+                  className={`${styles.choiceButton} ${chatStyles.glassButton} ${styles.deepIdeaButton}`}
+                  onClick={() => setActiveIdeaMenu((prev) => (prev === opt ? null : opt))}
                   disabled={isTransitioning}
-                  title={opt}
                 >
                   {opt}
                 </button>
-                {activeDeepPickIndex === index && (
-                  <div className={styles.deepPickMenu}>
+
+                {activeIdeaMenu === opt && (
+                  <div className={styles.deepIdeaMenu}>
                     <button
                       type="button"
-                      className={styles.deepPickMenuItem}
+                      className={styles.deepIdeaMenuItem}
                       onClick={() => {
-                        setActiveDeepPickIndex(null);
+                        setActiveIdeaMenu(null);
                         onAnswer(opt);
                       }}
                     >
@@ -1028,47 +1038,22 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                     </button>
                     <button
                       type="button"
-                      className={styles.deepPickMenuItem}
-                      onClick={() => {
-                        const next = window.prompt("Редактировать мысль", opt);
-                        if (next === null) return;
-                        const updated = next.trim();
-                        if (!updated) return;
-                        const cloned = [...deepPickItems];
-                        cloned[index] = updated;
-                        syncDeepPickItemsToState(cloned);
-                        setActiveDeepPickIndex(index);
-                      }}
+                      className={styles.deepIdeaMenuItem}
+                      onClick={() => handleEditIdea(opt)}
                     >
                       Редактировать
                     </button>
                     <button
                       type="button"
-                      className={`${styles.deepPickMenuItem} ${styles.deepPickMenuDanger}`}
-                      onClick={() => {
-                        const cloned = deepPickItems.filter((_, i) => i !== index);
-                        syncDeepPickItemsToState(cloned);
-                        setActiveDeepPickIndex(null);
-                      }}
+                      className={styles.deepIdeaMenuItem}
+                      onClick={() => handleDeleteIdea(opt)}
                     >
                       Удалить
                     </button>
                     <button
                       type="button"
-                      className={styles.deepPickMenuItem}
-                      onClick={() => {
-                        const next = window.prompt(
-                          "Напишите мысль, которую хотите добавить",
-                          ""
-                        );
-                        if (next === null) return;
-                        const added = next.trim();
-                        if (!added) return;
-                        const cloned = [...deepPickItems];
-                        cloned.splice(index + 1, 0, added);
-                        syncDeepPickItemsToState(cloned);
-                        setActiveDeepPickIndex(index + 1);
-                      }}
+                      className={styles.deepIdeaMenuItem}
+                      onClick={handleAppendIdea}
                     >
                       Добавить ещё одну мысль
                     </button>
