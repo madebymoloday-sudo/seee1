@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, StickyNote } from "lucide-react";
+import { ChevronLeft, Plus, Search, StickyNote, Users } from "lucide-react";
 import { toast } from "sonner";
 import apiAgent from "@/lib/api";
 import styles from "./PeoplePage.module.css";
@@ -47,6 +47,8 @@ type ModeState = {
 
 const MODES = ["Объяснить", "Разобрать", "Помириться", "Узнать друг друга ближе", "Поиграть"] as const;
 const CHAT_NOTES_PREFIX = "seee_people_chat_notes:";
+type ChatFilter = "all" | "direct" | "group";
+
 const decodeSub = () => {
   try {
     const raw = localStorage.getItem("accessToken");
@@ -66,9 +68,14 @@ const PeoplePage = () => {
   const [friendIdInput, setFriendIdInput] = useState("");
   const [messageInput, setMessageInput] = useState("");
   const [modeOpen, setModeOpen] = useState(false);
+  const [chatSearch, setChatSearch] = useState("");
+  const [chatFilter, setChatFilter] = useState<ChatFilter>("all");
+  const [mobilePane, setMobilePane] = useState<"list" | "chat">("list");
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const [modeState, setModeState] = useState<ModeState | null>(null);
   const [notesOpen, setNotesOpen] = useState(false);
   const [notesText, setNotesText] = useState("");
+  const quickActionsRef = useRef<HTMLDivElement | null>(null);
   const myUserId = useMemo(() => decodeSub(), []);
   const myUsername = useMemo(() => {
     try {
@@ -86,6 +93,18 @@ const PeoplePage = () => {
     () => chats.find((c) => c.id === selectedChatId) || null,
     [chats, selectedChatId]
   );
+  const filteredChats = useMemo(() => {
+    const q = chatSearch.trim().toLowerCase();
+    return chats.filter((chat) => {
+      if (chatFilter === "direct" && chat.isGroup) return false;
+      if (chatFilter === "group" && !chat.isGroup) return false;
+      if (!q) return true;
+      const title = (chat.title || "").toLowerCase();
+      const preview = (chat.lastMessage?.content || "").toLowerCase();
+      return title.includes(q) || preview.includes(q);
+    });
+  }, [chatFilter, chatSearch, chats]);
+
   const pendingNeedsMyResponse = useMemo(() => {
     if (!modeState?.pendingRequest) return false;
     const already = modeState.pendingRequest.approvals.some((a) => a.userId === myUserId);
@@ -103,7 +122,10 @@ const PeoplePage = () => {
     ]);
     setFriends(friendsData);
     setChats(chatsData);
-    if (!selectedChatId && chatsData.length > 0) setSelectedChatId(chatsData[0].id);
+    if (!selectedChatId && chatsData.length > 0) {
+      setSelectedChatId(chatsData[0].id);
+      setMobilePane("chat");
+    }
   };
 
   const loadMessages = async (chatId: string) => {
@@ -138,20 +160,18 @@ const PeoplePage = () => {
     setNotesText(saved || "");
   }, [notesKey]);
 
-  const handleAddFriend = async () => {
-    const target = friendIdInput.trim();
-    if (!target) return;
-    try {
-      await apiAgent.post<{ friendUserId: string }, { ok: boolean }>("/social/friends/add", {
-        friendUserId: target,
-      });
-      setFriendIdInput("");
-      await refreshChats();
-      toast.success("Пользователь добавлен");
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || "Не удалось добавить пользователя");
+  useEffect(() => {
+    const onOutside = (event: MouseEvent) => {
+      if (!quickActionsRef.current) return;
+      if (!quickActionsRef.current.contains(event.target as Node)) {
+        setIsQuickActionsOpen(false);
+      }
+    };
+    if (isQuickActionsOpen) {
+      document.addEventListener("mousedown", onOutside);
     }
-  };
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, [isQuickActionsOpen]);
 
   const handleCreateGroup = async () => {
     const name = window.prompt("Название группы:", "Новая группа");
@@ -168,6 +188,8 @@ const PeoplePage = () => {
       >("/social/chats/group", { name: name.trim(), memberUserIds });
       await refreshChats();
       setSelectedChatId(group.id);
+      setMobilePane("chat");
+      setIsQuickActionsOpen(false);
     } catch (e: any) {
       toast.error(e?.response?.data?.message || "Не удалось создать группу");
     }
@@ -178,6 +200,8 @@ const PeoplePage = () => {
       const chat = await apiAgent.post<undefined, { id: string }>("/social/chats/self");
       await refreshChats();
       setSelectedChatId(chat.id);
+      setMobilePane("chat");
+      setIsQuickActionsOpen(false);
       toast.success("Личный чат открыт");
     } catch (e: any) {
       toast.error(e?.response?.data?.message || "Не удалось открыть чат с собой");
@@ -265,6 +289,34 @@ const PeoplePage = () => {
     }
   };
 
+  const openAddFriendPrompt = async () => {
+    const value = window.prompt("Введите публичный ID пользователя", friendIdInput || "");
+    if (value === null) return;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    setFriendIdInput(trimmed);
+    try {
+      await apiAgent.post<{ friendUserId: string }, { ok: boolean }>("/social/friends/add", {
+        friendUserId: trimmed,
+      });
+      setFriendIdInput("");
+      await refreshChats();
+      setIsQuickActionsOpen(false);
+      toast.success("Пользователь добавлен");
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || "Не удалось добавить пользователя");
+    }
+  };
+
+  const formatPreviewTime = (iso?: string) => {
+    if (!iso) return "";
+    try {
+      return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
+    }
+  };
+
   const saveNotes = () => {
     localStorage.setItem(notesKey, notesText);
     const indexKey = `${CHAT_NOTES_PREFIX}index:${myUserId}`;
@@ -289,57 +341,122 @@ const PeoplePage = () => {
     <Layout>
       <div className={styles.page}>
         <div className={styles.shell}>
-          <aside className={styles.left}>
-            <div className={styles.section}>
-              <h3 className={styles.title}>Добавить в друзья по ID</h3>
-              <div className={styles.row}>
-                <Input
-                  value={friendIdInput}
-                  onChange={(e) => setFriendIdInput(e.target.value)}
-                  placeholder="Введите ID пользователя"
-                  className={styles.input}
-                />
-                <Button onClick={handleAddFriend}>Добавить</Button>
+          <aside className={`${styles.left} ${mobilePane === "chat" ? styles.leftHiddenOnMobile : ""}`}>
+            <div className={styles.sidebarTop}>
+              <div className={styles.sidebarHeader}>
+                <div className={styles.sidebarTitleWrap}>
+                  <Users className={styles.sidebarTitleIcon} />
+                  <h2 className={styles.sidebarTitle}>Чаты</h2>
+                </div>
+                <div className={styles.quickActionsWrap} ref={quickActionsRef}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className={styles.quickAddBtn}
+                    onClick={() => setIsQuickActionsOpen((v) => !v)}
+                    title="Действия"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  {isQuickActionsOpen && (
+                    <div className={styles.quickActionsMenu}>
+                      <button type="button" className={styles.quickMenuItem} onClick={openAddFriendPrompt}>
+                        Добавить по ID
+                      </button>
+                      <button type="button" className={styles.quickMenuItem} onClick={handleCreateGroup}>
+                        Создать группу
+                      </button>
+                      <button type="button" className={styles.quickMenuItem} onClick={handleCreateSelfChat}>
+                        Чат с собой
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-
-            <div className={styles.section}>
-              <div className={styles.row}>
-                <Button variant="outline" onClick={handleCreateGroup}>
-                  Создать группу
-                </Button>
-                <Button variant="outline" onClick={handleCreateSelfChat}>
-                  Чат с собой
-                </Button>
-                <span className={styles.chatSubtitle}>Друзей: {friends.length}</span>
+              <div className={styles.searchWrap}>
+                <Search className={styles.searchListIcon} />
+                <Input
+                  value={chatSearch}
+                  onChange={(e) => setChatSearch(e.target.value)}
+                  placeholder="Поиск"
+                  className={styles.chatSearchInput}
+                />
+              </div>
+              <div className={styles.filterRow}>
+                <button
+                  type="button"
+                  className={`${styles.filterChip} ${chatFilter === "all" ? styles.filterChipActive : ""}`}
+                  onClick={() => setChatFilter("all")}
+                >
+                  Все
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.filterChip} ${chatFilter === "direct" ? styles.filterChipActive : ""}`}
+                  onClick={() => setChatFilter("direct")}
+                >
+                  Личные
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.filterChip} ${chatFilter === "group" ? styles.filterChipActive : ""}`}
+                  onClick={() => setChatFilter("group")}
+                >
+                  Группы
+                </button>
+                <span className={styles.friendCount}>Друзей: {friends.length}</span>
               </div>
             </div>
 
             <div className={styles.chatsList}>
-              {chats.map((chat) => (
+              {filteredChats.map((chat) => (
                 <button
                   key={chat.id}
                   className={`${styles.chatItem} ${selectedChatId === chat.id ? styles.chatItemActive : ""}`}
-                  onClick={() => setSelectedChatId(chat.id)}
+                  onClick={() => {
+                    setSelectedChatId(chat.id);
+                    setMobilePane("chat");
+                  }}
                 >
-                  <div className={styles.chatTitle}>{chat.title}</div>
-                  <div className={styles.chatSubtitle}>
-                    {chat.lastMessage
-                      ? `[${chat.lastMessage.mode}] ${chat.lastMessage.content}`
-                      : chat.isGroup
-                      ? "Групповой чат"
-                      : "Личный чат"}
+                  <div className={styles.chatAvatar}>
+                    {(chat.title || "Ч").slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className={styles.chatMain}>
+                    <div className={styles.chatMainTop}>
+                      <div className={styles.chatTitle}>{chat.title}</div>
+                      <div className={styles.chatTime}>
+                        {formatPreviewTime(chat.lastMessage?.createdAt)}
+                      </div>
+                    </div>
+                    <div className={styles.chatSubtitle}>
+                      {chat.lastMessage
+                        ? `[${chat.lastMessage.mode}] ${chat.lastMessage.content}`
+                        : chat.isGroup
+                        ? "Групповой чат"
+                        : "Личный чат"}
+                    </div>
                   </div>
                 </button>
               ))}
             </div>
           </aside>
 
-          <section className={styles.right}>
+          <section className={`${styles.right} ${mobilePane === "list" ? styles.rightHiddenOnMobile : ""}`}>
             {selectedChat ? (
               <>
                 <div className={styles.chatHeader}>
-                  <span>{selectedChat.title}</span>
+                  <div className={styles.chatHeaderMain}>
+                    <button
+                      type="button"
+                      className={styles.backToListButton}
+                      onClick={() => setMobilePane("list")}
+                      aria-label="Назад к чатам"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span>{selectedChat.title}</span>
+                  </div>
                   <div className={styles.headerActions}>
                     <span className={styles.modeBadge}>
                       {modeState?.activeMode === "Объяснить" ? 'Режим: "Объяснить"' : "Обычный режим"}
@@ -469,7 +586,7 @@ const PeoplePage = () => {
                 </div>
               </>
             ) : (
-              <div className={styles.placeholder}>Выберите чат или добавьте друга</div>
+              <div className={styles.placeholder}>Выберите чат</div>
             )}
           </section>
         </div>

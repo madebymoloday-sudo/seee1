@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import FeedbackModal from "../sessions/components/FeedbackModal";
+import { useAuth } from "@/hooks/useAuth";
 
 const CabinetPage = observer(() => {
   const { data: profile } = useAuthControllerGetMe();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [chatNotes, setChatNotes] = useState<
     Array<{ chatId: string; chatTitle: string; text: string; updatedAt: string }>
@@ -31,6 +33,11 @@ const CabinetPage = observer(() => {
 
   const handleNeurocardClick = () => {
     navigate("/map");
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
   };
 
   useEffect(() => {
@@ -127,6 +134,12 @@ const CabinetPage = observer(() => {
               Чаты
             </Button>
           </div>
+        </div>
+
+        <div className="pb-6 pt-2">
+          <Button variant="destructive" onClick={handleLogout} className="w-full sm:w-auto">
+            Выйти
+          </Button>
         </div>
       </div>
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
