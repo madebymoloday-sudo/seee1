@@ -463,11 +463,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [listNotes, setListNotes] = useState("");
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isIdeasModalOpen, setIsIdeasModalOpen] = useState(false);
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const timersRef = useRef<number[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const forceEditOnStepSyncRef = useRef(false);
-  const viewportBaseHeightRef = useRef<number>(typeof window !== "undefined" ? window.innerHeight : 0);
 
   const focusInputWithoutScroll = () => {
     const el = inputRef.current;
@@ -582,29 +580,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       setIsEditing(true);
     }
   }, [state.answers, view]);
-
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-
-    const updateKeyboardOffset = () => {
-      const nextBase = Math.max(viewportBaseHeightRef.current, window.innerHeight);
-      viewportBaseHeightRef.current = nextBase;
-      const rawOffset = Math.max(0, nextBase - viewport.height - viewport.offsetTop);
-      setKeyboardOffset(rawOffset < 20 ? 0 : rawOffset);
-    };
-
-    updateKeyboardOffset();
-    viewport.addEventListener("resize", updateKeyboardOffset);
-    viewport.addEventListener("scroll", updateKeyboardOffset);
-    window.addEventListener("orientationchange", updateKeyboardOffset);
-
-    return () => {
-      viewport.removeEventListener("resize", updateKeyboardOffset);
-      viewport.removeEventListener("scroll", updateKeyboardOffset);
-      window.removeEventListener("orientationchange", updateKeyboardOffset);
-    };
-  }, []);
 
   const computeNextState = (answer: string): DialogState | null => {
     const trimmed = answer.trim();
@@ -1084,12 +1059,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
       {/* Ввод ответа (только там, где нужен текст) */}
       {isTextAnswerView(view) && (
-        <div
-          className={styles.inputAlignWrapper}
-          style={{
-            ["--keyboard-offset" as any]: `${keyboardOffset}px`,
-          }}
-        >
+        <div className={styles.inputAlignWrapper}>
           <MessageInput
             ref={inputRef}
             onSend={(v) => {

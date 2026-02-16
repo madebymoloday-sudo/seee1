@@ -48,9 +48,7 @@ const ChatWindow = ({
   const [visibleMessages, setVisibleMessages] = useState<{ message: Message; isVisible: boolean; fadeOut?: boolean }[]>([]);
   const [showEmotionCarousel, setShowEmotionCarousel] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const fadeOutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const viewportBaseHeightRef = useRef<number>(typeof window !== "undefined" ? window.innerHeight : 0);
 
   // Передаем функцию refresh в родительский компонент
   useEffect(() => {
@@ -258,29 +256,6 @@ const ChatWindow = ({
     setIsSettingsOpen((prev) => !prev);
   };
 
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-
-    const updateKeyboardOffset = () => {
-      const nextBase = Math.max(viewportBaseHeightRef.current, window.innerHeight);
-      viewportBaseHeightRef.current = nextBase;
-      const rawOffset = Math.max(0, nextBase - viewport.height - viewport.offsetTop);
-      setKeyboardOffset(rawOffset < 20 ? 0 : rawOffset);
-    };
-
-    updateKeyboardOffset();
-    viewport.addEventListener("resize", updateKeyboardOffset);
-    viewport.addEventListener("scroll", updateKeyboardOffset);
-    window.addEventListener("orientationchange", updateKeyboardOffset);
-
-    return () => {
-      viewport.removeEventListener("resize", updateKeyboardOffset);
-      viewport.removeEventListener("scroll", updateKeyboardOffset);
-      window.removeEventListener("orientationchange", updateKeyboardOffset);
-    };
-  }, []);
-
   return (
     <div className={styles.chatWindow}>
       {/* Контейнер сообщений */}
@@ -349,12 +324,7 @@ const ChatWindow = ({
       </div>
 
       {/* Поле ввода */}
-      <div
-        className={styles.composerDock}
-        style={{
-          ["--keyboard-offset" as any]: `${keyboardOffset}px`,
-        }}
-      >
+      <div className={styles.composerDock}>
         <MessageInput 
           onSend={handleSend} 
           onSettingsClick={handleSettingsClick}

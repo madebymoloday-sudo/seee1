@@ -92,6 +92,7 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .stage {
@@ -277,17 +278,15 @@
 @media (max-width: 768px) {
   .stage {
     padding: 12px 10px;
-    padding-bottom: calc(8.75rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
     justify-content: flex-start;
     gap: 12px;
-    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
   }
 
   .inputAlignWrapper {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: var(--keyboard-offset, 0px);
+    position: sticky;
+    bottom: 0;
     z-index: 70;
   }
 

@@ -57,7 +57,7 @@ const SessionPage = observer(() => {
     } as unknown as SessionResponseDto;
 
     return (
-      <div className="flex flex-col overflow-hidden h-[100svh] min-h-[100svh] max-h-[100svh] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="flex flex-col overflow-hidden h-[100dvh] min-h-[100dvh] max-h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <SessionHeader session={draftSession} isDraft />
         <div className="flex-1 overflow-hidden">
           <StepDialogWindow key={draftSession.id} session={draftSession} />
@@ -93,7 +93,7 @@ const SessionPage = observer(() => {
   }
 
   return (
-    <div className="flex flex-col overflow-hidden h-[100svh] min-h-[100svh] max-h-[100svh] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="flex flex-col overflow-hidden h-[100dvh] min-h-[100dvh] max-h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <SessionHeader session={session} />
       <div className="flex-1 overflow-hidden">
         <StepDialogWindow key={session.id} session={session} />
