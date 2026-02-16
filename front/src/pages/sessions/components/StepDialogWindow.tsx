@@ -230,7 +230,11 @@ function removeToExploreTemplate(userKey: string, templateId: string) {
 }
 
 function coreQuestion(step: number, subject: Subject, thought3?: string): string {
-  const thing = subject === "thought" ? "эта мысль" : "эта ситуация";
+  const thought = (thought3 || "").trim();
+  const thoughtNominative = thought ? `мысль «${thought}»` : "эта мысль";
+  const thoughtAccusative = thought ? `мысль «${thought}»` : "эту мысль";
+  const thoughtGenitive = thought ? `мысли «${thought}»` : "этой мысли";
+  const thing = subject === "thought" ? thoughtNominative : "эта ситуация";
   switch (step) {
     case 1:
       return "Расскажите, какая ситуация вас беспокоит";
@@ -241,25 +245,23 @@ function coreQuestion(step: number, subject: Subject, thought3?: string): string
     case 4:
       return `Почему вы так думаете? Перечислите несколько причин.`;
     case 5: {
-      const thought = (thought3 || "").trim();
       const suffix = thought ? `: «${thought}»?` : "?";
       return `Как вы думаете, кто заразил вас этой мыслью${suffix} Это может быть человек, сообщество, вы сами, родители и прочее. Если не знаете, то так и напишите "не знаю".`;
     }
     case 6:
-      return `Как думаете, с какой эгоистичной целью эта мысль/идея была вам сказана?`;
+      return `Как думаете, с какой эгоистичной целью ${thoughtNominative} была вам сказана?`;
     case 7: {
-      const thought = (thought3 || "").trim();
       if (thought) {
         return `Какие эмоциональные последствия принесла вам мысль «${thought}»?`;
       }
       return `Какие эмоциональные последствия принесла вам мысль?`;
     }
     case 8:
-      return `Какие физические последствия понесла за собой эта мысль?`;
+      return `Какие физические последствия понесла за собой ${thoughtNominative}?`;
     case 9:
-      return `Какой вывод вы можете сделать по этой мысли? Нужна вам она или нет?`;
+      return `Какой вывод вы можете сделать по ${thoughtGenitive}? Нужна вам она или нет?`;
     case 10:
-      return `Хотите ли вы решить конкретно ${subject === "thought" ? "эту мысль" : "эту ситуацию"} или готовы разобраться в вопросе глубже?`;
+      return `Хотите ли вы решить конкретно ${subject === "thought" ? thoughtAccusative : "эту ситуацию"} или готовы разобраться в вопросе глубже?`;
     default:
       return "";
   }
