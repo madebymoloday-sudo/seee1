@@ -510,6 +510,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return true;
   })();
 
+  const showBottomEditorActions = isTextAnswerView(view) && view.kind !== "deepPick";
+
   const goSkip = () => {
     if (!canSkip) return;
     if (isTextAnswerView(view)) {
@@ -534,6 +536,14 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isListModalOpen, isIdeasModalOpen]);
+
+  useEffect(() => {
+    if (view.kind !== "deepPick") return;
+    // На этапе выбора мысли нижний input не нужен:
+    // убираем фокус, чтобы не всплывала клавиатура на мобильных.
+    const active = document.activeElement as HTMLElement | null;
+    active?.blur();
+  }, [view.kind]);
 
   useEffect(() => {
     // cleanup on unmount
@@ -1099,7 +1109,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       </div>
 
       {/* Кнопки управления (редактирование/дальше) и «Добавить мысль в Нейросписок» */}
-      {isTextAnswerView(view) && (
+      {showBottomEditorActions && (
         <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
           {!isEditing && (
             <>
@@ -1134,7 +1144,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       )}
 
       {/* Ввод ответа (только там, где нужен текст) */}
-      {isTextAnswerView(view) && (
+      {showBottomEditorActions && (
         <div className={styles.inputAlignWrapper}>
           <MessageInput
             ref={inputRef}
