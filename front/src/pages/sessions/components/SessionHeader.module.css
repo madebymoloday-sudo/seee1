@@ -18,9 +18,28 @@
 .headerContent {
   display: flex;
   align-items: center;
+  flex-direction: column;
   justify-content: center;
+  gap: 0.6rem;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.deferThoughtButton {
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.8);
+  color: rgba(0, 0, 0, 0.85);
+  border-radius: 0.7rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deferThoughtButton:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(59, 130, 246, 0.35);
 }
 
 .sessionTitleWrapper {
@@ -268,6 +287,73 @@
   background: rgba(239, 68, 68, 0.15);
 }
 
+.deferOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10020;
+}
+
+.deferModal {
+  width: min(560px, calc(100% - 24px));
+  border-radius: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  padding: 1rem;
+}
+
+.deferTitle {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.86);
+}
+
+.deferTextarea {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(0, 0, 0, 0.9);
+  padding: 0.75rem 0.85rem;
+  resize: vertical;
+  min-height: 96px;
+}
+
+.deferActions {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.deferCancelButton,
+.deferSubmitButton {
+  border-radius: 0.65rem;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+}
+
+.deferCancelButton {
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.deferSubmitButton {
+  background: rgba(30, 64, 175, 0.92);
+  color: #fff;
+  border-color: rgba(30, 64, 175, 0.9);
+}
+
 /* Темная тема */
 :global(.dark) .sessionHeader {
   background:
@@ -334,6 +420,38 @@
 :global(.dark) .deleteConfirmModal {
   background: rgba(10, 10, 10, 0.98);
   border-color: rgba(255, 255, 255, 0.12);
+}
+
+:global(.dark) .deferThoughtButton {
+  background: rgba(24, 24, 24, 0.92);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .deferThoughtButton:hover {
+  background: rgba(34, 34, 34, 0.96);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+:global(.dark) .deferModal {
+  background: rgba(10, 10, 10, 0.98);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+:global(.dark) .deferTitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .deferTextarea {
+  background: rgba(20, 20, 20, 0.92);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:global(.dark) .deferCancelButton {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 :global(.dark) .deleteConfirmTitle {

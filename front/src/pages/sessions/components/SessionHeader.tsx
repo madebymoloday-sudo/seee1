@@ -32,6 +32,29 @@ function getSessionUserKey(): string {
   }
 }
 
+type DeferredTemplate = {
+  id: string;
+  title: string;
+  category: "отложено на разбор";
+  sourceSessionId?: string;
+};
+
+function saveDeferredTemplate(userKey: string, item: DeferredTemplate) {
+  try {
+    const key = `seee_to_explore_templates:${userKey}`;
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? (JSON.parse(raw) as any[]) : [];
+    const safeArray = Array.isArray(parsed) ? parsed : [];
+    const exists = safeArray.some((x) => String(x?.id ?? "") === item.id);
+    if (!exists) {
+      safeArray.push(item);
+      localStorage.setItem(key, JSON.stringify(safeArray));
+    }
+  } catch {
+    // ignore
+  }
+}
+
 interface SessionHeaderProps {
   session: SessionResponseDto;
   isDraft?: boolean;
@@ -133,6 +156,8 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeferredModalOpen, setIsDeferredModalOpen] = useState(false);
+  const [deferredThought, setDeferredThought] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Закрытие меню при клике вне его
@@ -239,6 +264,27 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
     toggleDarkMode();
   };
 
+  const handleSaveDeferredThought = () => {
+    const title = deferredThought.trim();
+    if (!title) {
+      toast.error("Введите мысль для отложенного разбора");
+      return;
+    }
+
+    const userKey = getSessionUserKey();
+    const id = `to_explore:deferred:${session.id}:${Date.now()}`;
+    const item: DeferredTemplate = {
+      id,
+      title,
+      category: "отложено на разбор",
+    };
+
+    saveDeferredTemplate(userKey, item);
+    setDeferredThought("");
+    setIsDeferredModalOpen(false);
+    toast.success("Мысль записана в галерею");
+  };
+
   return (
     <div className={styles.sessionHeader}>
       <div className={styles.headerContent}>
@@ -305,6 +351,13 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
             </div>
           )}
         </div>
+        <button
+          type="button"
+          className={styles.deferThoughtButton}
+          onClick={() => setIsDeferredModalOpen(true)}
+        >
+          записать мысль на разбор
+        </button>
       </div>
 
       <PauseSessionModal
@@ -329,6 +382,40 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
                 className={`${styles.deleteConfirmButton} ${styles.deleteConfirmButtonYes}`}
               >
                 Да
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDeferredModalOpen && (
+        <div className={styles.deferOverlay} onClick={() => setIsDeferredModalOpen(false)}>
+          <div className={styles.deferModal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.deferTitle}>
+              напишите мысль которую вы хотели бы разобрать в будущем
+            </h3>
+            <textarea
+              value={deferredThought}
+              onChange={(e) => setDeferredThought(e.target.value)}
+              className={styles.deferTextarea}
+              placeholder="Введите мысль..."
+              rows={4}
+              autoFocus
+            />
+            <div className={styles.deferActions}>
+              <button
+                type="button"
+                className={styles.deferCancelButton}
+                onClick={() => setIsDeferredModalOpen(false)}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                className={styles.deferSubmitButton}
+                onClick={handleSaveDeferredThought}
+              >
+                отправить в галерею
               </button>
             </div>
           </div>

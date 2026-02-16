@@ -16,9 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import type { SessionResponseDto } from "@/api/schemas";
 import { parseImportantOptions, clearDraftSession } from "@/lib/sessionUtils";
 
-type SortOption = "my_sessions" | "to_explore" | "freedom" | "happiness" | "recommended";
+type SortOption = "my_sessions" | "to_explore" | "freedom" | "happiness" | "deferred" | "recommended";
 
-type ToExploreCategory = "Освобождение" | "Улучшение +1";
+type ToExploreCategory = "Освобождение" | "Улучшение +1" | "отложено на разбор";
 
 const FREEDOM_AND_STABILITY_TITLES = [
   "Со мной что-то не так",
@@ -195,6 +195,8 @@ function loadToExploreTemplates(userKey: string): ToExploreTemplateWithSession[]
           String(x?.category ?? "").trim() === "Счастье" ||
           String(x?.category ?? "").trim() === "Улучшение +1"
             ? "Улучшение +1"
+            : String(x?.category ?? "").trim().toLowerCase() === "отложено на разбор"
+              ? "отложено на разбор"
             : "Освобождение";
         return {
           id: String(x?.id ?? ""),
@@ -581,6 +583,11 @@ const SessionsCollectionPage = observer(() => {
       const rest = list.filter((t) => t.category !== "Улучшение +1");
       return [...selected, ...rest];
     }
+    if (sortOption === "deferred") {
+      const selected = list.filter((t) => t.category === "отложено на разбор");
+      const rest = list.filter((t) => t.category !== "отложено на разбор");
+      return [...selected, ...rest];
+    }
     if (sortOption === "recommended") return list.filter((t) => recommendedTemplateIds.has(t.id));
     return list;
   }, [shuffledToExplore, searchQuery, sortOption, recommendedTemplateIds]);
@@ -620,6 +627,7 @@ const SessionsCollectionPage = observer(() => {
       sortOption === "to_explore" ||
       sortOption === "freedom" ||
       sortOption === "happiness" ||
+      sortOption === "deferred" ||
       sortOption === "recommended"
     ) {
       return [...templateItems, ...sessionItems];
@@ -706,6 +714,15 @@ const SessionsCollectionPage = observer(() => {
                   className={`${styles.sortMenuItem} ${sortOption === "to_explore" ? styles.sortMenuItemActive : ""}`}
                 >
                   Предстоит изучить
+                </button>
+                <button
+                  onClick={() => {
+                    setSortOption("deferred");
+                    setIsSortMenuOpen(false);
+                  }}
+                  className={`${styles.sortMenuItem} ${sortOption === "deferred" ? styles.sortMenuItemActive : ""}`}
+                >
+                  Отложено на разбор
                 </button>
                 <button
                   onClick={() => {

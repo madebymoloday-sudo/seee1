@@ -16,7 +16,7 @@ import styles from "./StepDialogWindow.module.css";
 type Subject = "situation" | "thought";
 
 type View =
-  | { kind: "intro"; title: string; category: "Освобождение" | "Улучшение +1" }
+  | { kind: "intro"; title: string; category: "Освобождение" | "Улучшение +1" | "отложено на разбор" }
   | { kind: "core"; step: number; subject: Subject }
   | { kind: "solve"; step: number }
   | { kind: "deepPick"; fromImportant: string }
@@ -53,7 +53,10 @@ const SESSION_KIND_PREFIX = "seee_session_kind:";
 const SESSION_NOTES_PREFIX = "seee_session_notes:";
 const DRAFT_TO_EXPLORE_CATEGORY_PREFIX = "seee_draft_to_explore_category:";
 
-function buildToExploreIntroText(title: string, category: "Освобождение" | "Улучшение +1"): string {
+function buildToExploreIntroText(
+  title: string,
+  category: "Освобождение" | "Улучшение +1" | "отложено на разбор"
+): string {
   const topic = (title || "эту тему").trim();
   if (category === "Освобождение") {
     return `Тема этой сессии: «${topic}».
@@ -61,6 +64,14 @@ function buildToExploreIntroText(title: string, category: "Освобожден�
 Иногда такие идеи незаметно усиливают тревогу, напряжение и внутренний контроль. В этом разборе мы спокойно посмотрим, откуда появилась эта установка, как она влияет на вас в реальной жизни и что можно изменить, чтобы стало легче.
 
 Поделитесь ситуациями, где эта тема проявляется сильнее всего. Пойдём шаг за шагом и разберём это вместе.`;
+  }
+
+  if (category === "отложено на разбор") {
+    return `Тема этой сессии: «${topic}».
+
+Эта мысль была отложена на разбор. В этой сессии вы сможете спокойно пройти шаги и разобраться, как она влияет на вас и что с ней делать дальше.
+
+Опишите ситуацию, где эта мысль проявляется сильнее всего, и начнём разбор.`;
   }
 
   return `Тема этой сессии: «${topic}».
@@ -343,8 +354,12 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       const rawCategory = localStorage
         .getItem(`${DRAFT_TO_EXPLORE_CATEGORY_PREFIX}${userKey}`)
         ?.trim();
-      const category: "Освобождение" | "Улучшение +1" =
-        rawCategory === "Улучшение +1" ? "Улучшение +1" : "Освобождение";
+      const category: "Освобождение" | "Улучшение +1" | "отложено на разбор" =
+        rawCategory === "Улучшение +1"
+          ? "Улучшение +1"
+          : rawCategory?.toLowerCase() === "отложено на разбор"
+            ? "отложено на разбор"
+            : "Освобождение";
       return { title, category };
     } catch {
       return null;
