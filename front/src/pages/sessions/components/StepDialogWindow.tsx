@@ -257,7 +257,10 @@ function coreQuestion(step: number, subject: Subject, thought3?: string): string
       return `Какие эмоциональные последствия принесла вам мысль?`;
     }
     case 8:
-      return `Какие физические последствия понесла за собой ${thoughtNominative}?`;
+      if (thought) {
+        return `Какие практические последствия в вашей жизни принесла мысль: "${thought}"`;
+      }
+      return `Какие практические последствия в вашей жизни принесла мысль?`;
     case 9:
       return `Какой вывод вы можете сделать по ${thoughtGenitive}? Нужна вам она или нет?`;
     case 10:
