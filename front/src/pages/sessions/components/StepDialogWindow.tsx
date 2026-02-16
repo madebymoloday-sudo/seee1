@@ -236,8 +236,13 @@ function coreQuestion(step: number, subject: Subject, thought3?: string): string
     }
     case 6:
       return `Как думаете, с какой эгоистичной целью эта мысль/идея была вам сказана?`;
-    case 7:
-      return `Какие эмоциональные последствия вы понесли из-за этой мысли?`;
+    case 7: {
+      const thought = (thought3 || "").trim();
+      if (thought) {
+        return `Какие эмоциональные последствия принесла вам мысль «${thought}»?`;
+      }
+      return `Какие эмоциональные последствия принесла вам мысль?`;
+    }
     case 8:
       return `Какие физические последствия понесла за собой эта мысль?`;
     case 9:
