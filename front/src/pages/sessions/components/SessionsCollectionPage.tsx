@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
 import { useSessions } from "@/hooks/useSessions";
@@ -396,7 +397,10 @@ const SessionsCollectionPage = observer(() => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("my_sessions");
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+  const [sortMenuPosition, setSortMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const sortButtonRef = useRef<HTMLButtonElement | null>(null);
+  const sortMenuRef = useRef<HTMLDivElement | null>(null);
   const userKey = useMemo(() => getUserKey(), []);
   const [toExplore, setToExplore] = useState<ToExploreTemplateWithSession[]>(() => loadToExploreTemplates(userKey));
   const [movedSessionIds, setMovedSessionIds] = useState<string[]>(() => loadMovedSessionIds(userKey));
@@ -474,6 +478,51 @@ const SessionsCollectionPage = observer(() => {
       toast.error("Не удалось создать сессию");
     }
   };
+
+  const closeSortMenu = () => {
+    setIsSortMenuOpen(false);
+    setSortMenuPosition(null);
+  };
+
+  const updateSortMenuPosition = () => {
+    const button = sortButtonRef.current;
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    setSortMenuPosition({
+      top: rect.bottom + 8,
+      right: Math.max(8, window.innerWidth - rect.right),
+    });
+  };
+
+  const toggleSortMenu = () => {
+    if (isSortMenuOpen) {
+      closeSortMenu();
+      return;
+    }
+    updateSortMenuPosition();
+    setIsSortMenuOpen(true);
+  };
+
+  useEffect(() => {
+    if (!isSortMenuOpen) return;
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (sortMenuRef.current?.contains(target)) return;
+      if (sortButtonRef.current?.contains(target)) return;
+      closeSortMenu();
+    };
+    const onLayoutChange = () => updateSortMenuPosition();
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    window.addEventListener("resize", onLayoutChange);
+    window.addEventListener("scroll", onLayoutChange, true);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+      window.removeEventListener("resize", onLayoutChange);
+      window.removeEventListener("scroll", onLayoutChange, true);
+    };
+  }, [isSortMenuOpen]);
 
   const handleRename = (sessionId: string) => {
     const session = sessions.find(s => s.id === sessionId);
@@ -669,20 +718,26 @@ const SessionsCollectionPage = observer(() => {
           
           <div className={styles.sortWrapper}>
             <Button
-              onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
+              ref={sortButtonRef}
+              onClick={toggleSortMenu}
               className={styles.sortButton}
               size="icon"
               variant="outline"
             >
               <SlidersHorizontal className={styles.sortIcon} />
             </Button>
-            
-            {isSortMenuOpen && (
-              <div className={styles.sortMenu}>
+
+            {isSortMenuOpen && sortMenuPosition &&
+              createPortal(
+              <div
+                ref={sortMenuRef}
+                className={styles.sortMenu}
+                style={{ top: sortMenuPosition.top, right: sortMenuPosition.right }}
+              >
                 <button
                   onClick={() => {
                     setSortOption("freedom");
-                    setIsSortMenuOpen(false);
+                    closeSortMenu();
                   }}
                   className={`${styles.sortMenuItem} ${sortOption === "freedom" ? styles.sortMenuItemActive : ""}`}
                 >
@@ -691,7 +746,7 @@ const SessionsCollectionPage = observer(() => {
                 <button
                   onClick={() => {
                     setSortOption("happiness");
-                    setIsSortMenuOpen(false);
+                    closeSortMenu();
                   }}
                   className={`${styles.sortMenuItem} ${sortOption === "happiness" ? styles.sortMenuItemActive : ""}`}
                 >
@@ -700,7 +755,7 @@ const SessionsCollectionPage = observer(() => {
                 <button
                   onClick={() => {
                     setSortOption("my_sessions");
-                    setIsSortMenuOpen(false);
+                    closeSortMenu();
                   }}
                   className={`${styles.sortMenuItem} ${sortOption === "my_sessions" ? styles.sortMenuItemActive : ""}`}
                 >
@@ -709,7 +764,7 @@ const SessionsCollectionPage = observer(() => {
                 <button
                   onClick={() => {
                     setSortOption("to_explore");
-                    setIsSortMenuOpen(false);
+                    closeSortMenu();
                   }}
                   className={`${styles.sortMenuItem} ${sortOption === "to_explore" ? styles.sortMenuItemActive : ""}`}
                 >
@@ -718,7 +773,7 @@ const SessionsCollectionPage = observer(() => {
                 <button
                   onClick={() => {
                     setSortOption("deferred");
-                    setIsSortMenuOpen(false);
+                    closeSortMenu();
                   }}
                   className={`${styles.sortMenuItem} ${sortOption === "deferred" ? styles.sortMenuItemActive : ""}`}
                 >
@@ -727,13 +782,14 @@ const SessionsCollectionPage = observer(() => {
                 <button
                   onClick={() => {
                     setSortOption("recommended");
-                    setIsSortMenuOpen(false);
+                    closeSortMenu();
                   }}
                   className={`${styles.sortMenuItem} ${sortOption === "recommended" ? styles.sortMenuItemActive : ""}`}
                 >
                   Рекомендовано мне
                 </button>
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         </div>

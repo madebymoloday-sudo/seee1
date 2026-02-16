@@ -13,6 +13,8 @@
 
 /* Заголовок */
 .header {
+  position: relative;
+  z-index: 100;
   padding: 2rem 1.5rem 1.5rem;
   background: linear-gradient(
     135deg,
@@ -160,8 +162,8 @@
 }
 
 .sortMenu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
+  position: fixed;
+  top: 0;
   right: 0;
   min-width: 250px;
   background: linear-gradient(
@@ -177,7 +179,7 @@
     0 8px 32px rgba(0, 0, 0, 0.2),
     0 1px 0 rgba(255, 255, 255, 0.7) inset;
   padding: 0.5rem;
-  z-index: 1000;
+  z-index: 22000;
   animation: fadeInDown 0.2s ease;
 }
 
@@ -218,6 +220,8 @@
 
 /* Контейнер папок */
 .foldersContainer {
+  position: relative;
+  z-index: 1;
   flex: 1;
   padding: 1.5rem;
   padding-bottom: 180px;

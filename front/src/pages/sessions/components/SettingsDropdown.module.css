@@ -19,7 +19,7 @@
     0 2px 8px rgba(0, 0, 0, 0.08),
     0 1px 0 rgba(255, 255, 255, 0.8) inset;
   padding: 0.5rem;
-  z-index: 1000;
+  z-index: 22000;
   animation: fadeInDown 0.2s ease;
 }
 
