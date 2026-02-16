@@ -50,6 +50,7 @@ const ChatWindow = ({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
   const fadeOutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const viewportBaseHeightRef = useRef<number>(typeof window !== "undefined" ? window.innerHeight : 0);
 
   // Передаем функцию refresh в родительский компонент
   useEffect(() => {
@@ -262,8 +263,10 @@ const ChatWindow = ({
     if (!viewport) return;
 
     const updateKeyboardOffset = () => {
-      const offset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
-      setKeyboardOffset(offset);
+      const nextBase = Math.max(viewportBaseHeightRef.current, window.innerHeight);
+      viewportBaseHeightRef.current = nextBase;
+      const rawOffset = Math.max(0, nextBase - viewport.height - viewport.offsetTop);
+      setKeyboardOffset(rawOffset < 20 ? 0 : rawOffset);
     };
 
     updateKeyboardOffset();

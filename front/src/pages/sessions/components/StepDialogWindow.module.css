@@ -278,7 +278,9 @@
   .stage {
     padding: 12px 10px;
     padding-bottom: calc(8.75rem + env(safe-area-inset-bottom));
+    justify-content: flex-start;
     gap: 12px;
+    overscroll-behavior: contain;
   }
 
   .inputAlignWrapper {

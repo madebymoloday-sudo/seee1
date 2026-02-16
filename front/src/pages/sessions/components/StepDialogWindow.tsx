@@ -441,6 +441,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [keyboardOffset, setKeyboardOffset] = useState(0);
   const timersRef = useRef<number[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const forceEditOnStepSyncRef = useRef(false);
+  const viewportBaseHeightRef = useRef<number>(typeof window !== "undefined" ? window.innerHeight : 0);
 
   const focusInputWithoutScroll = () => {
     const el = inputRef.current;
@@ -486,6 +488,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const goSkip = () => {
     if (!canSkip) return;
+    if (isTextAnswerView(view)) {
+      const existingAnswer = (state.answers[stepKey(view)] || "").trim();
+      if (existingAnswer && existingAnswer !== "—") {
+        onAnswer(existingAnswer);
+        return;
+      }
+    }
     onAnswer("—");
   };
 
@@ -533,13 +542,16 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     if (!isTextAnswerView(view)) {
       setInputText("");
       setIsEditing(false);
+      forceEditOnStepSyncRef.current = false;
       return;
     }
     const key = stepKey(view);
     const saved = state.answers[key];
+    const forceEdit = forceEditOnStepSyncRef.current;
+    forceEditOnStepSyncRef.current = false;
     if (saved !== undefined) {
       setInputText(saved);
-      setIsEditing(false);
+      setIsEditing(forceEdit ? true : false);
     } else {
       setInputText("");
       setIsEditing(true);
@@ -551,8 +563,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     if (!viewport) return;
 
     const updateKeyboardOffset = () => {
-      const offset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
-      setKeyboardOffset(offset);
+      const nextBase = Math.max(viewportBaseHeightRef.current, window.innerHeight);
+      viewportBaseHeightRef.current = nextBase;
+      const rawOffset = Math.max(0, nextBase - viewport.height - viewport.offsetTop);
+      setKeyboardOffset(rawOffset < 20 ? 0 : rawOffset);
     };
 
     updateKeyboardOffset();
@@ -784,6 +798,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const goBack = () => {
     if (!canGoBack) return;
     const answerToSave = inputText.trim();
+    forceEditOnStepSyncRef.current = true;
 
     const applyBackState = (s: DialogState): Partial<DialogState> => {
       if (view.kind === "deepPick") {
