@@ -6,14 +6,14 @@
 
 /* Dark-mode overrides for colored folders (use !important to beat legacy rules below) */
 :global(.dark) .folderCard {
-  background-color: rgb(var(--folder-color-rgb, 80, 80, 80)) !important;
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(0, 0, 0, 0.10) 100%
-  ) !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25) !important;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.0) 55%),
+    linear-gradient(180deg, rgba(20, 20, 20, 0.92) 0%, rgba(10, 10, 10, 0.92) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.55),
+    0 6px 14px rgba(0, 0, 0, 0.32),
+    0 26px 30px -20px rgba(var(--folder-color-rgb, 120, 180, 255), 0.42) !important;
 }
 
 :global(.dark) .tagBadge {
@@ -38,29 +38,45 @@
   position: relative;
   width: 100%;
   min-height: 120px;
-  border-radius: 0.5rem;
-  padding: 1rem 1.5rem;
+  border-radius: 26px;
+  padding: 1.1rem 1.4rem;
   display: flex;
   flex-direction: column;
   cursor: pointer;
   transition: all 0.3s ease;
-  background-color: rgb(var(--folder-color-rgb, 200, 200, 200));
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.22) 0%,
-    rgba(0, 0, 0, 0.06) 100%
-  );
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
-  overflow: hidden;
+  background:
+    radial-gradient(140% 105% at 50% 0%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.0) 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(242, 244, 247, 0.96) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  box-shadow:
+    0 18px 35px rgba(0, 0, 0, 0.12),
+    0 6px 14px rgba(0, 0, 0, 0.08),
+    0 26px 30px -20px rgba(var(--folder-color-rgb, 120, 180, 255), 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  overflow: visible;
+  isolation: isolate;
+}
+
+.folderCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 26px;
+  background:
+    radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.0) 60%),
+    radial-gradient(95% 80% at 90% 88%, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.0) 62%),
+    radial-gradient(90% 70% at 50% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.14) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 62%);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .folderCard:hover {
   transform: translateY(-2px);
-  box-shadow: 
-    0 14px 40px rgba(0, 0, 0, 0.24),
-    0 5px 14px rgba(0, 0, 0, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.64);
+  box-shadow:
+    0 24px 55px rgba(0, 0, 0, 0.16),
+    0 8px 18px rgba(0, 0, 0, 0.10),
+    0 32px 36px -22px rgba(var(--folder-color-rgb, 120, 180, 255), 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.90);
 }
 
 /* Корешок папки (левая часть) */
@@ -85,20 +101,20 @@
   border: none;
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--folder-fg-strong, rgba(0, 0, 0, 0.85));
+  color: rgba(0, 0, 0, 0.82);
   cursor: pointer;
   text-align: left;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   transition: all 0.2s ease;
-  text-shadow: var(--folder-text-shadow, 0 1px 2px rgba(255, 255, 255, 0.5));
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.55);
   flex: 1;
   min-width: 0;
 }
 
 .folderTitle:hover {
   background: rgba(0, 0, 0, 0.05);
-  color: var(--folder-fg-strong, rgba(0, 0, 0, 0.9));
+  color: rgba(0, 0, 0, 0.9);
 }
 
 .actionsButton {
@@ -125,7 +141,7 @@
 .actionsIcon {
   width: 18px;
   height: 18px;
-  color: var(--folder-fg, rgba(0, 0, 0, 0.75));
+  color: rgba(0, 0, 0, 0.68);
 }
 
 /* Выпадающее меню (позиция через inline style при рендере в portal) */
@@ -216,7 +232,7 @@
 
 .ideasCount {
   font-size: 0.9rem;
-  color: var(--folder-fg-muted, rgba(0, 0, 0, 0.7));
+  color: rgba(0, 0, 0, 0.64);
   font-weight: 500;
 }
 
@@ -313,12 +329,12 @@
 .arrowIcon {
   width: 20px;
   height: 20px;
-  color: var(--folder-fg, rgba(0, 0, 0, 0.75));
+  color: rgba(0, 0, 0, 0.68);
 }
 
 :global(.dark) .folderTitle:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: var(--folder-fg-strong, rgba(255, 255, 255, 0.95));
+  color: rgba(255, 255, 255, 0.98);
 }
 
 :global(.dark) .actionsButton {
@@ -331,11 +347,11 @@
 }
 
 :global(.dark) .actionsIcon {
-  color: var(--folder-fg, rgba(255, 255, 255, 0.9));
+  color: rgba(255, 255, 255, 0.85);
 }
 
 :global(.dark) .ideasCount {
-  color: var(--folder-fg-muted, rgba(255, 255, 255, 0.75));
+  color: rgba(255, 255, 255, 0.75);
 }
 
 :global(.dark) .dropdownMenu {
@@ -369,7 +385,7 @@
 }
 
 :global(.dark) .arrowIcon {
-  color: var(--folder-fg, rgba(255, 255, 255, 0.9));
+  color: rgba(255, 255, 255, 0.85);
 }
 
 :global(.dark) .recommendationBadge {

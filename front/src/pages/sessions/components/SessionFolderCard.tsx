@@ -76,11 +76,6 @@ function hexToRgb(hex: string) {
   };
 }
 
-function relativeLuma({ r, g, b }: { r: number; g: number; b: number }) {
-  // Simple perceptual luma (0..255). Good enough for picking black/white text.
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
 function getRussianIdeaWord(count: number) {
   const n = Math.abs(count) % 100;
   const n1 = n % 10;
@@ -121,14 +116,6 @@ const SessionFolderCard = observer(({
       : stableModuloFromString(colorSeed, paletteColors.length);
   const folderColor = paletteColors[resolvedColorIndex];
   const folderRgb = hexToRgb(folderColor);
-  const luma = relativeLuma(folderRgb);
-  const isDarkBg = luma < 145;
-  const folderFg = isDarkBg ? "rgba(255, 255, 255, 0.9)" : "rgba(0, 0, 0, 0.82)";
-  const folderFgStrong = isDarkBg ? "rgba(255, 255, 255, 0.98)" : "rgba(0, 0, 0, 0.88)";
-  const folderFgMuted = isDarkBg ? "rgba(255, 255, 255, 0.75)" : "rgba(0, 0, 0, 0.66)";
-  const folderTextShadow = isDarkBg
-    ? "0 1px 2px rgba(0, 0, 0, 0.35)"
-    : "0 1px 2px rgba(255, 255, 255, 0.55)";
 
   // Закрытие меню при клике вне его
   useEffect(() => {
@@ -225,10 +212,6 @@ const SessionFolderCard = observer(({
           // CSS использует background-image + эту подложку для "текстуры"
           ["--folder-color" as any]: folderColor,
           ["--folder-color-rgb" as any]: `${folderRgb.r}, ${folderRgb.g}, ${folderRgb.b}`,
-          ["--folder-fg" as any]: folderFg,
-          ["--folder-fg-strong" as any]: folderFgStrong,
-          ["--folder-fg-muted" as any]: folderFgMuted,
-          ["--folder-text-shadow" as any]: folderTextShadow,
           boxShadow: `0 4px 12px ${folderColor}40`,
         }}
       >
