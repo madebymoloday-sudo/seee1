@@ -4,13 +4,13 @@
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-/* Dark-mode: iOS16 subtle cards on black */
+/* Dark-mode: Neumorphism on deep navy */
 :global(.dark) .folderCard {
-  background: rgba(0, 0, 0, 0.34) !important;
-  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: #0b1220 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
   box-shadow:
-    0 18px 48px rgba(0, 0, 0, 0.60),
-    0 6px 16px rgba(0, 0, 0, 0.34) !important;
+    14px 14px 28px rgba(0, 0, 0, 0.55),
+    -14px -14px 28px rgba(255, 255, 255, 0.04) !important;
 }
 
 :global(.dark) .tagBadge {
@@ -41,47 +41,45 @@
   flex-direction: column;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #eef3f9;
+  border: 1px solid rgba(255, 255, 255, 0.55);
   box-shadow:
-    0 16px 40px rgba(15, 23, 42, 0.10),
-    0 4px 12px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    14px 14px 28px rgba(15, 23, 42, 0.12),
+    -14px -14px 28px rgba(255, 255, 255, 0.92);
   overflow: hidden;
   isolation: isolate;
 }
 
 .folderCard::before {
-  /* Subtle accent tint (no rim, no heavy specular) */
+  /* Neumorphism: keep a gentle color accent only */
   content: "";
   position: absolute;
   inset: 0;
   border-radius: 22px;
   background:
-    radial-gradient(120% 90% at 14% 12%, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.0) 58%),
-    radial-gradient(120% 95% at 90% 115%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.24) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 62%),
-    radial-gradient(110% 90% at 32% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.14) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 60%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.0) 48%);
+    radial-gradient(140% 110% at 18% 12%, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.0) 62%),
+    radial-gradient(120% 95% at 88% 115%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.22) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 62%);
   z-index: 0;
   pointer-events: none;
 }
 
 :global(.dark) .folderCard::before {
   background:
-    radial-gradient(120% 90% at 14% 12%, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.0) 58%),
-    radial-gradient(120% 95% at 90% 115%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.30) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 62%),
-    radial-gradient(110% 90% at 32% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.20) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 60%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.0) 48%);
+    radial-gradient(140% 110% at 18% 12%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.0) 62%),
+    radial-gradient(120% 95% at 88% 115%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.22) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 62%);
 }
 
 .folderCard:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 22px 54px rgba(15, 23, 42, 0.14),
-    0 6px 16px rgba(15, 23, 42, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    16px 16px 34px rgba(15, 23, 42, 0.14),
+    -16px -16px 34px rgba(255, 255, 255, 0.96);
+}
+
+:global(.dark) .folderCard:hover {
+  box-shadow:
+    16px 16px 34px rgba(0, 0, 0, 0.62),
+    -16px -16px 34px rgba(255, 255, 255, 0.05);
 }
 
 /* Корешок папки (левая часть) */
@@ -126,21 +124,23 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  background: rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: #eef3f9;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow:
+    6px 6px 14px rgba(15, 23, 42, 0.14),
+    -6px -6px 14px rgba(255, 255, 255, 0.9);
 }
 
 .actionsButton:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.45);
+  box-shadow:
+    8px 8px 16px rgba(15, 23, 42, 0.16),
+    -8px -8px 16px rgba(255, 255, 255, 0.95);
 }
 
 .actionsIcon {
@@ -344,11 +344,16 @@
 
 :global(.dark) .actionsButton {
   border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(0, 0, 0, 0.25);
+  background: #0b1220;
+  box-shadow:
+    6px 6px 14px rgba(0, 0, 0, 0.55),
+    -6px -6px 14px rgba(255, 255, 255, 0.05);
 }
 
 :global(.dark) .actionsButton:hover {
-  background: rgba(0, 0, 0, 0.35);
+  box-shadow:
+    8px 8px 16px rgba(0, 0, 0, 0.62),
+    -8px -8px 16px rgba(255, 255, 255, 0.06);
 }
 
 :global(.dark) .actionsIcon {
