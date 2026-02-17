@@ -57,7 +57,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
   return (
     <Form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {errors.root && (
-        <div className="bg-red-500/20 border border-red-400 text-white px-4 py-3 rounded-md">
+        <div className="bg-red-500/12 border border-red-500/35 text-red-800 dark:text-red-200 px-4 py-3 rounded-md">
           {errors.root.message}
         </div>
       )}
@@ -74,7 +74,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             autoComplete="email"
             aria-invalid={errors.email ? "true" : "false"}
             className={cn(
-              "bg-white border-black/15 text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-zinc-900/20 dark:bg-white/10 dark:border-white/30 dark:text-white dark:placeholder:text-white/60 dark:focus-visible:ring-white/50",
+              "bg-transparent border-black/15 text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-zinc-900/20 dark:bg-transparent dark:border-white/30 dark:text-white dark:placeholder:text-white/60 dark:focus-visible:ring-white/50",
               errors.email &&
                 "border-red-400 focus-visible:ring-red-400"
             )}
@@ -100,7 +100,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             autoComplete="current-password"
             aria-invalid={errors.password ? "true" : "false"}
             className={cn(
-              "bg-white border-black/15 text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-zinc-900/20 dark:bg-white/10 dark:border-white/30 dark:text-white dark:placeholder:text-white/60 dark:focus-visible:ring-white/50",
+              "bg-transparent border-black/15 text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-zinc-900/20 dark:bg-transparent dark:border-white/30 dark:text-white dark:placeholder:text-white/60 dark:focus-visible:ring-white/50",
               errors.password &&
                 "border-red-400 focus-visible:ring-red-400"
             )}
@@ -126,7 +126,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
       <div className="flex gap-3">
         <Button 
           type="submit" 
-          className="flex-1 bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white/20 dark:border-white/30 dark:text-white dark:hover:bg-white/30 dark:hover:text-white"
+          className="flex-1 bg-white/14 hover:bg-white/18 text-white border border-white/22"
           disabled={isLoading}
         >
           {isLoading ? "Вход..." : "Войти"}
@@ -136,7 +136,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             type="button"
             onClick={onSwitchToRegister}
             variant="outline"
-            className="flex-1 bg-white border-black/15 text-zinc-900 hover:bg-zinc-50 dark:bg-white/10 dark:border-white/30 dark:text-white dark:hover:bg-white/20 dark:hover:text-white"
+            className="flex-1 bg-white/10 hover:bg-white/14 text-white border border-white/18"
           >
             Регистрация
           </Button>

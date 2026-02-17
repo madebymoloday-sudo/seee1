@@ -24,32 +24,32 @@ interface SessionFolderCardProps {
   ideasCount?: number;
 }
 
-// Soft "underwater fauna & flora" palette (jellyfish / corals / turquoise water),
-// but muted enough to feel calm and premium.
+// Glass-on-black works best with higher chroma colors (still not "acid"),
+// because the tint is partially transparent.
 const FOLDER_COLORS = [
-  "#39B6D8", // Soft turquoise water
-  "#D86BA3", // Muted jellyfish pink
-  "#E67A4A", // Coral orange (soft)
-  "#E6C35C", // Warm coral yellow (muted)
-  "#4BBE86", // Turtle green (soft)
-  "#2FAE9A", // Calm teal
-  "#7B63D4", // Sea purple (muted)
-  "#3F79D7", // Ocean blue (muted)
-  "#E05B73", // Coral red (soft)
-  "#A8D26A", // Algae lime (muted)
-  "#E79A5B", // Reef orange (muted)
-  "#45C9B6", // Mint teal (soft)
+  "#38BDF8", // Neon water cyan
+  "#FB7185", // Jellyfish pink
+  "#F97316", // Coral orange
+  "#FACC15", // Sun coral yellow
+  "#4ADE80", // Turtle green
+  "#2DD4BF", // Tropical teal
+  "#A78BFA", // Electric purple
+  "#60A5FA", // Ocean blue
+  "#F43F5E", // Hot coral red
+  "#A3E635", // Algae lime
+  "#FB923C", // Reef orange
+  "#22C55E", // Seaweed green
 ];
 
 const TO_EXPLORE_COLORS = [
-  "#4FC1DA", // Reef water
-  "#E28B62", // Coral branch
-  "#D36E97", // Jellyfish blush
-  "#4BC6A0", // Seaweed
-  "#E5C16B", // Sun-coral
-  "#7A67C8", // Purple depth
-  "#4C74C9", // Deep blue
-  "#E06A6A", // Reef red
+  "#22D3EE", // Reef glow
+  "#FB923C", // Coral branch
+  "#F472B6", // Jellyfish blush
+  "#34D399", // Seaweed
+  "#FDE047", // Sun-coral
+  "#8B5CF6", // Purple depth
+  "#3B82F6", // Deep blue
+  "#FB7185", // Reef red
 ];
 
 function stableModuloFromString(value: string, modulo: number) {
@@ -74,6 +74,11 @@ function hexToRgb(hex: string) {
     g: (n >> 8) & 255,
     b: n & 255,
   };
+}
+
+function relativeLuma({ r, g, b }: { r: number; g: number; b: number }) {
+  // Simple perceptual luma (0..255). Good enough for picking black/white text.
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
 function getRussianIdeaWord(count: number) {
@@ -116,6 +121,20 @@ const SessionFolderCard = observer(({
       : stableModuloFromString(colorSeed, paletteColors.length);
   const folderColor = paletteColors[resolvedColorIndex];
   const folderRgb = hexToRgb(folderColor);
+  const luma = relativeLuma(folderRgb);
+  const isDarkBg = luma < 140;
+  const folderFg = isDarkBg
+    ? "rgba(255, 255, 255, 0.92)"
+    : "rgba(0, 0, 0, 0.82)";
+  const folderFgStrong = isDarkBg
+    ? "rgba(255, 255, 255, 0.98)"
+    : "rgba(0, 0, 0, 0.90)";
+  const folderFgMuted = isDarkBg
+    ? "rgba(255, 255, 255, 0.75)"
+    : "rgba(0, 0, 0, 0.64)";
+  const folderTextShadow = isDarkBg
+    ? "0 1px 2px rgba(0, 0, 0, 0.42)"
+    : "0 1px 2px rgba(255, 255, 255, 0.55)";
 
   // Закрытие меню при клике вне его
   useEffect(() => {
@@ -212,6 +231,10 @@ const SessionFolderCard = observer(({
           // CSS использует background-image + эту подложку для "текстуры"
           ["--folder-color" as any]: folderColor,
           ["--folder-color-rgb" as any]: `${folderRgb.r}, ${folderRgb.g}, ${folderRgb.b}`,
+          ["--folder-fg" as any]: folderFg,
+          ["--folder-fg-strong" as any]: folderFgStrong,
+          ["--folder-fg-muted" as any]: folderFgMuted,
+          ["--folder-text-shadow" as any]: folderTextShadow,
           boxShadow: `0 4px 12px ${folderColor}40`,
         }}
       >
