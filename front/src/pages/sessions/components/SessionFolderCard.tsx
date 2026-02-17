@@ -24,32 +24,32 @@ interface SessionFolderCardProps {
   ideasCount?: number;
 }
 
-// Bright "underwater fauna & flora" palette (jellyfish / corals / turquoise water).
-// Keep them vivid so cards don't look washed out.
+// Soft "underwater fauna & flora" palette (jellyfish / corals / turquoise water),
+// but muted enough to feel calm and premium.
 const FOLDER_COLORS = [
-  "#00D7FF", // Neon cyan water
-  "#FF3DA6", // Neon jellyfish pink
-  "#FF6A00", // Coral orange
-  "#FFD400", // Bright coral yellow
-  "#2EEA7A", // Turtle green
-  "#00BFA6", // Tropical teal
-  "#8A2BFF", // Electric purple
-  "#2E6BFF", // Neon ocean blue
-  "#FF2D55", // Hot coral red
-  "#B7FF2A", // Acid-lime algae
-  "#FF8A00", // Reef orange
-  "#00FFB2", // Mint neon
+  "#39B6D8", // Soft turquoise water
+  "#D86BA3", // Muted jellyfish pink
+  "#E67A4A", // Coral orange (soft)
+  "#E6C35C", // Warm coral yellow (muted)
+  "#4BBE86", // Turtle green (soft)
+  "#2FAE9A", // Calm teal
+  "#7B63D4", // Sea purple (muted)
+  "#3F79D7", // Ocean blue (muted)
+  "#E05B73", // Coral red (soft)
+  "#A8D26A", // Algae lime (muted)
+  "#E79A5B", // Reef orange (muted)
+  "#45C9B6", // Mint teal (soft)
 ];
 
 const TO_EXPLORE_COLORS = [
-  "#00E5FF", // Reef glow
-  "#FF7A00", // Bright coral
-  "#FF3D7F", // Jellyfish blush
-  "#22E3A2", // Seaweed neon
-  "#FFD000", // Sun-coral
-  "#7C3AED", // Deep purple
-  "#1D4ED8", // Deep blue
-  "#FF4D4D", // Reef red
+  "#4FC1DA", // Reef water
+  "#E28B62", // Coral branch
+  "#D36E97", // Jellyfish blush
+  "#4BC6A0", // Seaweed
+  "#E5C16B", // Sun-coral
+  "#7A67C8", // Purple depth
+  "#4C74C9", // Deep blue
+  "#E06A6A", // Reef red
 ];
 
 function stableModuloFromString(value: string, modulo: number) {
