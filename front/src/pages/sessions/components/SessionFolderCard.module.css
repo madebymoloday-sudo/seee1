@@ -57,6 +57,8 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.75);
   overflow: hidden;
   isolation: isolate;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .folderCard::before {
@@ -101,7 +103,25 @@
   background:
     radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.0) 62%),
     radial-gradient(130% 95% at 88% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.16) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 64%),
+    /* Animated caustics (unexpected deep-sea vibe) */
+    repeating-radial-gradient(
+      circle at 20% 30%,
+      rgba(255, 255, 255, 0.0) 0px,
+      rgba(255, 255, 255, 0.0) 14px,
+      rgba(255, 255, 255, 0.10) 18px,
+      rgba(255, 255, 255, 0.0) 26px
+    ),
+    repeating-radial-gradient(
+      circle at 85% 70%,
+      rgba(255, 255, 255, 0.0) 0px,
+      rgba(255, 255, 255, 0.0) 18px,
+      rgba(255, 255, 255, 0.08) 22px,
+      rgba(255, 255, 255, 0.0) 32px
+    ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.0) 50%);
+  background-size: 100% 100%, 100% 100%, 220% 220%, 180% 180%, 100% 100%;
+  background-position: 0 0, 0 0, 0% 0%, 100% 100%, 0 0;
+  animation: seeeCaustics 9.5s linear infinite;
   opacity: 1;
   pointer-events: none;
   z-index: 1;
@@ -111,11 +131,28 @@
   background:
     radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.0) 62%),
     radial-gradient(130% 95% at 88% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.22) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 64%),
+    repeating-radial-gradient(
+      circle at 20% 30%,
+      rgba(255, 255, 255, 0.0) 0px,
+      rgba(255, 255, 255, 0.0) 14px,
+      rgba(255, 255, 255, 0.09) 18px,
+      rgba(255, 255, 255, 0.0) 26px
+    ),
+    repeating-radial-gradient(
+      circle at 85% 70%,
+      rgba(255, 255, 255, 0.0) 0px,
+      rgba(255, 255, 255, 0.0) 18px,
+      rgba(255, 255, 255, 0.07) 22px,
+      rgba(255, 255, 255, 0.0) 32px
+    ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.0) 50%);
+  background-size: 100% 100%, 100% 100%, 240% 240%, 190% 190%, 100% 100%;
+  background-position: 0 0, 0 0, 0% 0%, 100% 100%, 0 0;
+  animation-duration: 10.5s;
 }
 
 .folderCard:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) perspective(900px) rotateX(1.25deg);
   box-shadow:
     0 22px 54px rgba(15, 23, 42, 0.14),
     0 6px 16px rgba(15, 23, 42, 0.08),
@@ -222,6 +259,29 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes seeeCaustics {
+  0% {
+    background-position: 0 0, 0 0, 0% 0%, 100% 100%, 0 0;
+  }
+  50% {
+    background-position: 0 0, 0 0, 100% 50%, 0% 40%, 0 0;
+  }
+  100% {
+    background-position: 0 0, 0 0, 0% 100%, 100% 0%, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .folderCard,
+  .folderCard::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .folderCard:hover {
+    transform: none !important;
   }
 }
 
