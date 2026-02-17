@@ -8,6 +8,9 @@ import { useEventMapControllerGetEventMap } from "@/api/seee.swr";
 const ONBOARDING_DONE_PREFIX = "seee_onboarding_neuro_done:";
 
 const EntryGatePage = observer(() => {
+  const subscriptionGateEnabled =
+    String(import.meta.env.VITE_REQUIRE_SUBSCRIPTION || "").toLowerCase() ===
+    "true";
   const navigate = useNavigate();
   const { user } = useAuth();
   const startedRef = useRef(false);
@@ -49,7 +52,7 @@ const EntryGatePage = observer(() => {
     startedRef.current = true;
 
     const hasActiveSubscription = !!user.subscriptionActive;
-    if (!hasActiveSubscription) {
+    if (subscriptionGateEnabled && !hasActiveSubscription) {
       navigate("/subscription", { replace: true });
       return;
     }
@@ -57,7 +60,13 @@ const EntryGatePage = observer(() => {
     // ВАЖНО: не создаём пустую сессию на сервере при входе.
     // Сессия должна появляться только после первого ответа в /sessions/new.
     navigate("/sessions", { replace: true });
-  }, [navigate, onboardingDone, user?.id, user?.subscriptionActive]);
+  }, [
+    navigate,
+    onboardingDone,
+    subscriptionGateEnabled,
+    user?.id,
+    user?.subscriptionActive,
+  ]);
 
   if (!user?.id) {
     return (

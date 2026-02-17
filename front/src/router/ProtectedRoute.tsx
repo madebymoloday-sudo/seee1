@@ -3,6 +3,9 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 export const ProtectedRoute = observer(() => {
+  const subscriptionGateEnabled =
+    String(import.meta.env.VITE_REQUIRE_SUBSCRIPTION || "").toLowerCase() ===
+    "true";
   const {
     isAuthenticated,
     isLoading,
@@ -32,11 +35,11 @@ export const ProtectedRoute = observer(() => {
   const isSubscriptionPage = location.pathname === "/subscription";
   const hasActiveSubscription = !!user?.subscriptionActive;
 
-  if (!hasActiveSubscription && !isSubscriptionPage) {
+  if (subscriptionGateEnabled && !hasActiveSubscription && !isSubscriptionPage) {
     return <Navigate to="/subscription" replace />;
   }
 
-  if (hasActiveSubscription && isSubscriptionPage) {
+  if (subscriptionGateEnabled && hasActiveSubscription && isSubscriptionPage) {
     return <Navigate to="/sessions/list" replace />;
   }
 

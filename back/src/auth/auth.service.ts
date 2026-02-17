@@ -26,6 +26,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
+  private static readonly FREE_ACCESS_PROMO_CODE = 'SEEEFREEE';
   private readonly authUserSelect = {
     id: true,
     username: true,
@@ -414,6 +415,42 @@ export class AuthService {
         subscriptionStatus: 'CANCELED',
         subscriptionActive: false,
         subscriptionCanceledAt: new Date(),
+      },
+      select: {
+        subscriptionStatus: true,
+        subscriptionActive: true,
+        subscriptionEndsAt: true,
+      },
+    });
+
+    return {
+      status: updated.subscriptionStatus,
+      isActive: updated.subscriptionActive,
+      endsAt: updated.subscriptionEndsAt?.toISOString() ?? null,
+    };
+  }
+
+  async redeemPromoCode(
+    userId: string,
+    promoCodeRaw: string,
+  ): Promise<SubscriptionStatusDto> {
+    const promoCode = (promoCodeRaw || '').trim().toUpperCase();
+    if (!promoCode) {
+      throw new BadRequestException('Введите промокод');
+    }
+    if (promoCode !== AuthService.FREE_ACCESS_PROMO_CODE) {
+      throw new BadRequestException('Неверный промокод');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        subscriptionStatus: 'ACTIVE',
+        subscriptionActive: true,
+        subscriptionEndsAt: null,
+        subscriptionCanceledAt: null,
+        subscriptionProvider: 'promo',
+        subscriptionExternalId: promoCode,
       },
       select: {
         subscriptionStatus: true,

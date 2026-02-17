@@ -17,6 +17,8 @@ const LAVA_WIDGET_URL =
 const SubscriptionGatePage = () => {
   const auth = useAuth();
   const [isChecking, setIsChecking] = useState(true);
+  const [promoCode, setPromoCode] = useState("");
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [subscription, setSubscription] =
     useState<SubscriptionStatusResponse | null>(null);
 
@@ -54,6 +56,35 @@ const SubscriptionGatePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const applyPromoCode = async () => {
+    const code = promoCode.trim();
+    if (!code) {
+      toast.error("Введите промокод");
+      return;
+    }
+    setIsApplyingPromo(true);
+    try {
+      const data = await apiAgent.post<
+        { promoCode: string },
+        SubscriptionStatusResponse
+      >("/auth/subscription/redeem-promo", { promoCode: code });
+      setSubscription(data);
+      auth.user = auth.user
+        ? {
+            ...auth.user,
+            subscriptionActive: data.isActive,
+            subscriptionStatus: data.status,
+            subscriptionEndsAt: data.endsAt ?? null,
+          }
+        : auth.user;
+      toast.success("Промокод применён. Доступ открыт!");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Не удалось применить промокод");
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
   if (hasActiveSubscription) {
     return <Navigate to="/sessions/list" replace />;
   }
@@ -85,6 +116,28 @@ const SubscriptionGatePage = () => {
           >
             {isChecking ? "Проверяем..." : "Я оформил подписку"}
           </button>
+        </div>
+
+        <div className="mt-5 border-t border-black/10 dark:border-white/15 pt-4">
+          <p className="text-sm font-medium text-center mb-3">Есть промокод?</p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              placeholder="Введите промокод"
+              className="w-full rounded-lg border border-black/10 dark:border-white/20 bg-white/75 dark:bg-zinc-900/75 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400/45"
+              autoCapitalize="characters"
+            />
+            <button
+              type="button"
+              onClick={applyPromoCode}
+              className="rounded-lg border border-black/10 dark:border-white/20 px-4 py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 whitespace-nowrap"
+              disabled={isApplyingPromo}
+            >
+              {isApplyingPromo ? "Применяем..." : "Применить"}
+            </button>
+          </div>
         </div>
 
         {isChecking && (

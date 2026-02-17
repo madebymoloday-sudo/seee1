@@ -133,6 +133,16 @@ export class SubscriptionStatusDto {
   endsAt?: string | null;
 }
 
+export class RedeemPromoCodeDto {
+  @ApiProperty({
+    description: 'Промокод для бесплатного доступа',
+    example: 'SEEEFREEE',
+  })
+  @IsString()
+  @IsNotEmpty()
+  promoCode: string;
+}
+
 export class AuthResponseDto {
   @ApiProperty({ description: 'Access token' })
   accessToken: string;

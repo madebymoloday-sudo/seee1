@@ -30,6 +30,7 @@ import {
   ForgotPasswordDto,
   ResetPasswordDto,
   SubscriptionStatusDto,
+  RedeemPromoCodeDto,
 } from './dto/auth.dto';
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
 
@@ -223,6 +224,22 @@ export class AuthController {
     @Request() req: { user: { id: string } },
   ): Promise<SubscriptionStatusDto> {
     return this.authService.cancelSubscription(req.user.id);
+  }
+
+  @Post('subscription/redeem-promo')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Активировать подписку по промокоду' })
+  @ApiResponse({
+    status: 200,
+    description: 'Промокод применён, подписка активирована',
+    type: SubscriptionStatusDto,
+  })
+  async redeemPromoCode(
+    @Request() req: { user: { id: string } },
+    @Body() dto: RedeemPromoCodeDto,
+  ): Promise<SubscriptionStatusDto> {
+    return this.authService.redeemPromoCode(req.user.id, dto.promoCode);
   }
 
   @Post('subscription/webhook')
