@@ -64,7 +64,9 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
 
       <FormField>
         <FormItem>
-          <FormLabel htmlFor="email" className="text-white">Email</FormLabel>
+          <FormLabel htmlFor="email" className="text-zinc-800 dark:text-white">
+            Email
+          </FormLabel>
           <Input
             id="email"
             type="email"
@@ -72,7 +74,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             autoComplete="email"
             aria-invalid={errors.email ? "true" : "false"}
             className={cn(
-              "bg-white/10 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white/50",
+              "bg-white border-black/15 text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-zinc-900/20 dark:bg-white/10 dark:border-white/30 dark:text-white dark:placeholder:text-white/60 dark:focus-visible:ring-white/50",
               errors.email &&
                 "border-red-400 focus-visible:ring-red-400"
             )}
@@ -80,7 +82,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
           {errors.email?.message && (
             <FormMessage 
               message={errors.email?.message} 
-              className="text-red-200"
+              className="text-red-600 dark:text-red-200"
             />
           )}
         </FormItem>
@@ -88,7 +90,9 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
 
       <FormField>
         <FormItem>
-          <FormLabel htmlFor="password" className="text-white">Пароль</FormLabel>
+          <FormLabel htmlFor="password" className="text-zinc-800 dark:text-white">
+            Пароль
+          </FormLabel>
           <Input
             id="password"
             type="password"
@@ -96,7 +100,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             autoComplete="current-password"
             aria-invalid={errors.password ? "true" : "false"}
             className={cn(
-              "bg-white/10 border-white/30 text-white placeholder:text-white/60 focus-visible:ring-white/50",
+              "bg-white border-black/15 text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-zinc-900/20 dark:bg-white/10 dark:border-white/30 dark:text-white dark:placeholder:text-white/60 dark:focus-visible:ring-white/50",
               errors.password &&
                 "border-red-400 focus-visible:ring-red-400"
             )}
@@ -104,14 +108,14 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
           {errors.password?.message && (
             <FormMessage 
               message={errors.password?.message}
-              className="text-red-200"
+              className="text-red-600 dark:text-red-200"
             />
           )}
           <div className="mt-1 text-right">
             <button
               type="button"
               onClick={() => navigate("/forgot-password")}
-              className="text-sm text-white/80 hover:text-white underline"
+              className="text-sm text-zinc-600 hover:text-zinc-800 underline dark:text-white/80 dark:hover:text-white"
             >
               Забыли пароль?
             </button>
@@ -122,7 +126,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
       <div className="flex gap-3">
         <Button 
           type="submit" 
-          className="flex-1 bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white" 
+          className="flex-1 bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white/20 dark:border-white/30 dark:text-white dark:hover:bg-white/30 dark:hover:text-white"
           disabled={isLoading}
         >
           {isLoading ? "Вход..." : "Войти"}
@@ -132,7 +136,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             type="button"
             onClick={onSwitchToRegister}
             variant="outline"
-            className="flex-1 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white" 
+            className="flex-1 bg-white border-black/15 text-zinc-900 hover:bg-zinc-50 dark:bg-white/10 dark:border-white/30 dark:text-white dark:hover:bg-white/20 dark:hover:text-white"
           >
             Регистрация
           </Button>
@@ -141,10 +145,12 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
 
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-white/30" />
+          <span className="w-full border-t border-black/10 dark:border-white/30" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-transparent px-2 text-white/60">или</span>
+          <span className="bg-transparent px-2 text-zinc-500 dark:text-white/60">
+            или
+          </span>
         </div>
       </div>
 

@@ -28,9 +28,9 @@ const HomePage = observer(() => {
   // Если пользователь не авторизован, показываем форму логина
   if (!authLoading && !isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="w-full max-w-md px-6 py-8">
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-2xl">
+          <div className="bg-white/85 dark:bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-black/10 dark:border-white/20 shadow-2xl">
             <div className="text-center mb-8">
               <div className="flex items-center justify-center gap-3 mb-3">
                 <img
@@ -39,24 +39,28 @@ const HomePage = observer(() => {
                   className="h-10 w-10 rounded-full bg-white/90"
                   draggable={false}
                 />
-                <h1 className="text-3xl font-bold text-white">Seee</h1>
+                <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
+                  Seee
+                </h1>
               </div>
-              <p className="text-white/80">Войдите в свой аккаунт</p>
+              <p className="text-zinc-600 dark:text-white/80">
+                Войдите в свой аккаунт
+              </p>
             </div>
             {showRegister ? (
               <div>
-                <p className="text-white/80 text-sm mb-4 text-center">
+                <p className="text-zinc-600 dark:text-white/80 text-sm mb-4 text-center">
                   Уже есть аккаунт?{" "}
                   <button
                     onClick={() => setShowRegister(false)}
-                    className="text-white underline hover:text-white/80"
+                    className="text-zinc-900 dark:text-white underline hover:text-zinc-700 dark:hover:text-white/80"
                   >
                     Войти
                   </button>
                 </p>
                 <Button
                   onClick={() => navigate("/register")}
-                  className="w-full bg-white/20 border-white/30 text-white hover:bg-white/30"
+                  className="w-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white/20 dark:border-white/30 dark:text-white dark:hover:bg-white/30"
                 >
                   Перейти к регистрации
                 </Button>
@@ -64,11 +68,11 @@ const HomePage = observer(() => {
             ) : (
               <>
                 <LoginForm />
-                <p className="text-white/80 text-sm mt-4 text-center">
+                <p className="text-zinc-600 dark:text-white/80 text-sm mt-4 text-center">
                   Нет аккаунта?{" "}
                   <button
                     onClick={() => setShowRegister(true)}
-                    className="text-white underline hover:text-white/80"
+                    className="text-zinc-900 dark:text-white underline hover:text-zinc-700 dark:hover:text-white/80"
                   >
                     Зарегистрироваться
                   </button>
