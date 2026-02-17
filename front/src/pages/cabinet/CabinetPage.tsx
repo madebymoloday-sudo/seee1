@@ -110,6 +110,24 @@ const CabinetPage = observer(() => {
           Личный кабинет
         </h1>
 
+        <div className="mb-6 rounded-xl border bg-card p-4">
+          <h2 className="mb-3 text-lg font-semibold">Разделы</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Button variant="outline" onClick={() => navigate("/sessions/list")}>
+              Галерея сессий
+            </Button>
+            <Button variant="outline" onClick={handleNeurocardClick}>
+              Нейрокарта
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/journal")}>
+              Журнал
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/people")}>
+              Чаты
+            </Button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <ProfileSection profile={profile} />
         </div>
@@ -156,24 +174,6 @@ const CabinetPage = observer(() => {
               ))}
             </div>
           )}
-        </div>
-
-        <div className="mb-6 rounded-xl border bg-card p-4">
-          <h2 className="mb-3 text-lg font-semibold">Разделы</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Button variant="outline" onClick={() => navigate("/sessions/list")}>
-              Галерея сессий
-            </Button>
-            <Button variant="outline" onClick={handleNeurocardClick}>
-              Нейрокарта
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/journal")}>
-              Журнал
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/people")}>
-              Чаты
-            </Button>
-          </div>
         </div>
 
         <div className="mb-6 rounded-xl border bg-card p-4">

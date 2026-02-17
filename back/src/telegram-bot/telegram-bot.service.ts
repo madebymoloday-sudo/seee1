@@ -45,7 +45,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private readonly passwordResetModeChats = new Set<number>();
   private readonly cabinetModeChats = new Set<number>();
 
-  private readonly launchButton = 'Запустить Seee ботик';
+  private readonly launchButton = 'Запускаемся';
+  private readonly legacyLaunchButton = 'Запустить Seee ботик';
   private readonly supportButton = 'Обратиться в поддержку';
   private readonly exitSupportButton = 'Выйти из поддержки';
   private readonly cabinetButton = 'Личный кабинет';
@@ -173,7 +174,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    if (text === this.launchButton) {
+    if (text === this.launchButton || text === this.legacyLaunchButton) {
       this.launchedChats.add(chatId);
       this.supportModeChats.delete(chatId);
       this.passwordResetModeChats.delete(chatId);
@@ -283,8 +284,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     await this.sendMessage(
       chatId,
       this.t(chatId, {
-        ru: 'Нажмите "Запустить Seee ботик", чтобы начать.',
-        en: 'Tap "Launch Seee bot" to begin.',
+        ru: 'Нажмите "Запускаемся", чтобы начать.',
+        en: "Tap 'Let's start' to begin.",
       }),
       this.getKeyboard(chatId),
     );
@@ -294,8 +295,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     await this.sendMessage(
       chatId,
       this.t(chatId, {
-        ru: 'Привет! Я бот Seee. Нажмите "Запустить Seee ботик". Кнопки языка и смены пароля находятся в "Личном кабинете".',
-        en: 'Hi! I am Seee bot. Tap "Launch Seee bot". Language and password change are in "Personal cabinet".',
+        ru: 'Привет! Я бот Seee. Нажмите "Запускаемся". Кнопки языка и смены пароля находятся в "Личном кабинете".',
+        en: "Hi! I am Seee bot. Tap 'Let's start'. Language and password change are in 'Personal cabinet'.",
       }),
       this.getKeyboard(chatId),
     );
