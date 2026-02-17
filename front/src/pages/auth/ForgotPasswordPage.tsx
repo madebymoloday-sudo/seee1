@@ -74,7 +74,7 @@ const ForgotPasswordPage = observer(() => {
               Открыть @SeeeAppBot
             </a>
             <Button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/login")}
               className="w-full bg-white/20 border-white/30 text-white hover:bg-white/30"
             >
               Вернуться к входу
@@ -135,7 +135,7 @@ const ForgotPasswordPage = observer(() => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/login")}
                 className="flex-1 bg-white/10 border-white/30 text-white hover:bg-white/20"
               >
                 Назад
@@ -147,7 +147,7 @@ const ForgotPasswordPage = observer(() => {
             <p className={`text-sm ${styles.loginSubtitle}`}>
               Вспомнили пароль?{" "}
               <button
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/login")}
                 className="underline hover:text-white/80"
               >
                 Войти

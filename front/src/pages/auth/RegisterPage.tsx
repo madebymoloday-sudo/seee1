@@ -178,7 +178,7 @@ const RegisterPage = observer(() => {
           <p className={`text-sm ${styles.loginSubtitle}`}>
             Уже есть аккаунт?{" "}
             <button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/login")}
               className="underline hover:text-white/80"
             >
               Войти

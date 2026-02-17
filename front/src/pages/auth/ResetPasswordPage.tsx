@@ -91,7 +91,7 @@ const ResetPasswordPage = observer(() => {
               Пароль успешно изменён. Войдите с новым паролем.
             </p>
             <Button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/login")}
               className="w-full bg-white/20 border-white/30 text-white hover:bg-white/30"
             >
               Перейти к входу
@@ -189,7 +189,7 @@ const ResetPasswordPage = observer(() => {
           <p className={`text-sm ${styles.loginSubtitle}`}>
             Вспомнили пароль?{" "}
             <button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/login")}
               className="underline hover:text-white/80"
             >
               Войти

@@ -5,6 +5,7 @@ import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import SessionPage from "../pages/sessions/SessionPage";
 import WizardDemoPage from "../pages/sessions/WizardDemoPage";
 import HomePage from "../pages/HomePage";
+import LandingPage from "../pages/LandingPage";
 import { PublicRoute } from "./PublicRoute";
 import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
 
@@ -14,6 +15,14 @@ import SessionsCollectionPage from "../pages/sessions/components/SessionsCollect
 export const publicRouter = createBrowserRouter([
   {
     path: "/",
+    element: (
+      <PublicRoute>
+        <LandingPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/login",
     element: (
       <PublicRoute>
         <HomePage />
