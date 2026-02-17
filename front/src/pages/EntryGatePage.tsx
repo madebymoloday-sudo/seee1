@@ -48,10 +48,16 @@ const EntryGatePage = observer(() => {
     if (startedRef.current) return;
     startedRef.current = true;
 
+    const hasActiveSubscription = !!user.subscriptionActive;
+    if (!hasActiveSubscription) {
+      navigate("/subscription", { replace: true });
+      return;
+    }
+
     // ВАЖНО: не создаём пустую сессию на сервере при входе.
     // Сессия должна появляться только после первого ответа в /sessions/new.
     navigate("/sessions", { replace: true });
-  }, [navigate, onboardingDone, user?.id]);
+  }, [navigate, onboardingDone, user?.id, user?.subscriptionActive]);
 
   if (!user?.id) {
     return (

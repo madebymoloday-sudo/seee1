@@ -11,15 +11,18 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import FeedbackModal from "../sessions/components/FeedbackModal";
 import { useAuth } from "@/hooks/useAuth";
+import apiAgent from "@/lib/api";
+import { toast } from "sonner";
 
 const CabinetPage = observer(() => {
   const { data: profile } = useAuthControllerGetMe();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [chatNotes, setChatNotes] = useState<
     Array<{ chatId: string; chatTitle: string; text: string; updatedAt: string }>
   >([]);
+  const [isCancelingSubscription, setIsCancelingSubscription] = useState(false);
   const userSub = useMemo(() => {
     try {
       const token = localStorage.getItem("accessToken");
@@ -38,6 +41,43 @@ const CabinetPage = observer(() => {
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  const subscriptionEndsAtText = useMemo(() => {
+    if (!profile?.subscriptionEndsAt) return "—";
+    const d = new Date(profile.subscriptionEndsAt);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString();
+  }, [profile?.subscriptionEndsAt]);
+
+  const subscriptionDaysLeft = useMemo(() => {
+    if (!profile?.subscriptionEndsAt) return null;
+    const d = new Date(profile.subscriptionEndsAt);
+    if (Number.isNaN(d.getTime())) return null;
+    const ms = d.getTime() - Date.now();
+    return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+  }, [profile?.subscriptionEndsAt]);
+
+  const handleCancelSubscription = async () => {
+    if (!window.confirm("Точно отменить подписку? Доступ к приложению будет заблокирован.")) {
+      return;
+    }
+    setIsCancelingSubscription(true);
+    try {
+      const result = await apiAgent.post<undefined, { status: string; isActive: boolean }>(
+        "/auth/subscription/cancel",
+      );
+      if (user) {
+        user.subscriptionStatus = result.status as any;
+        user.subscriptionActive = result.isActive;
+      }
+      toast.success("Подписка отменена. Доступ ограничен.");
+      navigate("/subscription", { replace: true });
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Не удалось отменить подписку");
+    } finally {
+      setIsCancelingSubscription(false);
+    }
   };
 
   useEffect(() => {
@@ -132,6 +172,36 @@ const CabinetPage = observer(() => {
             </Button>
             <Button variant="outline" onClick={() => navigate("/people")}>
               Чаты
+            </Button>
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-xl border bg-card p-4">
+          <h2 className="mb-3 text-lg font-semibold">Подписка</h2>
+          <div className="space-y-2 text-sm">
+            <p>
+              Статус:{" "}
+              <span className="font-semibold">
+                {profile?.subscriptionActive ? "Активна" : "Не активна"}
+              </span>
+            </p>
+            <p>
+              Дата окончания: <span className="font-semibold">{subscriptionEndsAtText}</span>
+            </p>
+            <p>
+              Осталось дней:{" "}
+              <span className="font-semibold">
+                {subscriptionDaysLeft === null ? "—" : subscriptionDaysLeft}
+              </span>
+            </p>
+          </div>
+          <div className="mt-3">
+            <Button
+              variant="destructive"
+              onClick={handleCancelSubscription}
+              disabled={!profile?.subscriptionActive || isCancelingSubscription}
+            >
+              {isCancelingSubscription ? "Отмена..." : "Отменить подписку"}
             </Button>
           </div>
         </div>

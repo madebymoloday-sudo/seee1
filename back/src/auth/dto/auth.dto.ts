@@ -93,6 +93,44 @@ export class UserProfileDto {
     example: 'SEEE_USER_01',
   })
   userId?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Статус подписки',
+    example: 'ACTIVE',
+  })
+  subscriptionStatus?: 'NONE' | 'ACTIVE' | 'CANCELED';
+
+  @ApiPropertyOptional({
+    description: 'Активна ли подписка',
+    example: true,
+  })
+  subscriptionActive?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Дата окончания подписки',
+    example: '2026-03-10T00:00:00.000Z',
+  })
+  subscriptionEndsAt?: string | null;
+}
+
+export class SubscriptionStatusDto {
+  @ApiProperty({
+    description: 'Статус подписки',
+    example: 'ACTIVE',
+  })
+  status: 'NONE' | 'ACTIVE' | 'CANCELED';
+
+  @ApiProperty({
+    description: 'Активна ли подписка',
+    example: true,
+  })
+  isActive: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Дата окончания подписки',
+    example: '2026-03-10T00:00:00.000Z',
+  })
+  endsAt?: string | null;
 }
 
 export class AuthResponseDto {

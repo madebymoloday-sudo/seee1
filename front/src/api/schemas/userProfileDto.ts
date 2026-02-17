@@ -21,4 +21,10 @@ export interface UserProfileDto {
   telegramId?: string | null;
   /** Публичный уникальный ID пользователя */
   userId?: string | null;
+  /** Статус подписки */
+  subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
+  /** Активна ли подписка */
+  subscriptionActive?: boolean;
+  /** Дата окончания подписки */
+  subscriptionEndsAt?: string | null;
 }

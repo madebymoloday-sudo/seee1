@@ -18,6 +18,7 @@ import {
   UpdateProfileDto,
   ForgotPasswordDto,
   ResetPasswordDto,
+  SubscriptionStatusDto,
 } from './dto/auth.dto';
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
 import { PasswordResetService } from './password-reset.service';
@@ -34,6 +35,9 @@ export class AuthService {
     avatarUrl: true,
     telegramId: true,
     role: true,
+    subscriptionStatus: true,
+    subscriptionActive: true,
+    subscriptionEndsAt: true,
   };
 
   constructor(
@@ -382,6 +386,149 @@ export class AuthService {
     return this.toUserProfileDto(updated);
   }
 
+  async getSubscriptionStatus(userId: string): Promise<SubscriptionStatusDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        subscriptionStatus: true,
+        subscriptionActive: true,
+        subscriptionEndsAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    return {
+      status: user.subscriptionStatus,
+      isActive: user.subscriptionActive,
+      endsAt: user.subscriptionEndsAt?.toISOString() ?? null,
+    };
+  }
+
+  async cancelSubscription(userId: string): Promise<SubscriptionStatusDto> {
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        subscriptionStatus: 'CANCELED',
+        subscriptionActive: false,
+        subscriptionCanceledAt: new Date(),
+      },
+      select: {
+        subscriptionStatus: true,
+        subscriptionActive: true,
+        subscriptionEndsAt: true,
+      },
+    });
+
+    return {
+      status: updated.subscriptionStatus,
+      isActive: updated.subscriptionActive,
+      endsAt: updated.subscriptionEndsAt?.toISOString() ?? null,
+    };
+  }
+
+  async handleSubscriptionWebhook(
+    apiKey: string | undefined,
+    payload: Record<string, any>,
+  ): Promise<void> {
+    const configuredApiKey =
+      this.configService.get<string>('LAVATOP_WEBHOOK_API_KEY') || '';
+
+    if (!configuredApiKey || apiKey !== configuredApiKey) {
+      throw new UnauthorizedException('Invalid webhook API key');
+    }
+
+    const normalizedPayload = payload || {};
+    const rawStatus = String(
+      normalizedPayload?.status ??
+        normalizedPayload?.payment_status ??
+        normalizedPayload?.event ??
+        '',
+    )
+      .trim()
+      .toLowerCase();
+
+    const userId = String(
+      normalizedPayload?.metadata?.userId ??
+        normalizedPayload?.userId ??
+        '',
+    ).trim();
+    const email = String(
+      normalizedPayload?.metadata?.email ??
+        normalizedPayload?.email ??
+        normalizedPayload?.customer_email ??
+        '',
+    ).trim().toLowerCase();
+
+    const periodEndRaw =
+      normalizedPayload?.period_end ??
+      normalizedPayload?.expires_at ??
+      normalizedPayload?.next_payment_at ??
+      null;
+
+    const periodEndDate =
+      periodEndRaw && !Number.isNaN(new Date(periodEndRaw).getTime())
+        ? new Date(periodEndRaw)
+        : new Date(Date.now() + 31 * 24 * 60 * 60 * 1000);
+
+    const isCancelEvent =
+      rawStatus.includes('cancel') ||
+      rawStatus.includes('refund') ||
+      rawStatus.includes('fail') ||
+      rawStatus.includes('chargeback');
+
+    const where =
+      userId.length > 0
+        ? { id: userId }
+        : email.length > 0
+          ? { email }
+          : null;
+
+    if (!where) {
+      throw new BadRequestException('Webhook payload must contain userId or email');
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where,
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь для подписки не найден');
+    }
+
+    if (isCancelEvent) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          subscriptionStatus: 'CANCELED',
+          subscriptionActive: false,
+          subscriptionCanceledAt: new Date(),
+        },
+      });
+      return;
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        subscriptionStatus: 'ACTIVE',
+        subscriptionActive: true,
+        subscriptionEndsAt: periodEndDate,
+        subscriptionCanceledAt: null,
+        subscriptionProvider: 'lava.top',
+        subscriptionExternalId: String(
+          normalizedPayload?.subscription_id ??
+            normalizedPayload?.id ??
+            normalizedPayload?.payment_id ??
+            '',
+        ).trim() || null,
+      },
+    });
+  }
+
   async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -471,6 +618,11 @@ export class AuthService {
       avatarUrl: user.avatarUrl,
       telegramId: user.telegramId ?? null,
       userId: user.userId ?? null,
+      subscriptionStatus: user.subscriptionStatus,
+      subscriptionActive: !!user.subscriptionActive,
+      subscriptionEndsAt: user.subscriptionEndsAt
+        ? new Date(user.subscriptionEndsAt).toISOString()
+        : null,
     };
   }
 }

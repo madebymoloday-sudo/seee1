@@ -4,6 +4,7 @@ import {
   Get,
   Patch,
   Body,
+  Headers,
   UseGuards,
   Request,
   HttpCode,
@@ -28,6 +29,7 @@ import {
   UpdateProfileDto,
   ForgotPasswordDto,
   ResetPasswordDto,
+  SubscriptionStatusDto,
 } from './dto/auth.dto';
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
 
@@ -191,6 +193,51 @@ export class AuthController {
     @Body() dto: UpdateProfileDto,
   ): Promise<UserProfileDto> {
     return this.authService.updateMe(req.user.id, dto);
+  }
+
+  @Get('subscription')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Получить текущий статус подписки' })
+  @ApiResponse({
+    status: 200,
+    description: 'Статус подписки пользователя',
+    type: SubscriptionStatusDto,
+  })
+  async getSubscription(
+    @Request() req: { user: { id: string } },
+  ): Promise<SubscriptionStatusDto> {
+    return this.authService.getSubscriptionStatus(req.user.id);
+  }
+
+  @Post('subscription/cancel')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Отменить подписку и заблокировать доступ' })
+  @ApiResponse({
+    status: 200,
+    description: 'Подписка отменена',
+    type: SubscriptionStatusDto,
+  })
+  async cancelSubscription(
+    @Request() req: { user: { id: string } },
+  ): Promise<SubscriptionStatusDto> {
+    return this.authService.cancelSubscription(req.user.id);
+  }
+
+  @Post('subscription/webhook')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Webhook от Lava для обновления подписки' })
+  @ApiResponse({
+    status: 200,
+    description: 'Webhook обработан',
+  })
+  async lavaWebhook(
+    @Headers('x-api-key') apiKey: string | undefined,
+    @Body() payload: Record<string, any>,
+  ): Promise<{ ok: boolean }> {
+    await this.authService.handleSubscriptionWebhook(apiKey, payload);
+    return { ok: true };
   }
 }
 

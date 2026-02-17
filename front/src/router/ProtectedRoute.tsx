@@ -6,14 +6,9 @@ export const ProtectedRoute = observer(() => {
   const {
     isAuthenticated,
     isLoading,
+    user,
   } = useAuth();
   const location = useLocation();
-
-  console.log("ProtectedRoute", {
-    isAuthenticated,
-    isLoading,
-    location,
-  });
 
   // Показываем загрузку пока проверяем авторизацию
   if (isLoading) {
@@ -32,6 +27,17 @@ export const ProtectedRoute = observer(() => {
     }
     // Для других страниц редиректим на главную
     return <Navigate to="/" replace />;
+  }
+
+  const isSubscriptionPage = location.pathname === "/subscription";
+  const hasActiveSubscription = !!user?.subscriptionActive;
+
+  if (!hasActiveSubscription && !isSubscriptionPage) {
+    return <Navigate to="/subscription" replace />;
+  }
+
+  if (hasActiveSubscription && isSubscriptionPage) {
+    return <Navigate to="/sessions/list" replace />;
   }
 
   // Авторизован — разрешаем доступ ко всем страницам

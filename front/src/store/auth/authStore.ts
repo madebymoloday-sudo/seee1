@@ -4,7 +4,18 @@ import apiAgent from "../../lib/api";
 
 export default class AuthStore {
   rootStore: RootStore;
-  user: { id: string; username: string; email?: string; role?: string; userId?: string | null } | null = null;
+  user:
+    | {
+        id: string;
+        username: string;
+        email?: string;
+        role?: string;
+        userId?: string | null;
+        subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
+        subscriptionActive?: boolean;
+        subscriptionEndsAt?: string | null;
+      }
+    | null = null;
   isAuthenticated = false;
   isLoading = false;
 
@@ -30,7 +41,16 @@ export default class AuthStore {
         {
           accessToken: string;
           refreshToken: string;
-          user: { id: string; username: string; email?: string; role?: string };
+          user: {
+            id: string;
+            username: string;
+            email?: string;
+            role?: string;
+            userId?: string | null;
+            subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
+            subscriptionActive?: boolean;
+            subscriptionEndsAt?: string | null;
+          };
         }
       >("/auth/login", { email, password });
 
@@ -58,7 +78,16 @@ export default class AuthStore {
         {
           accessToken: string;
           refreshToken: string;
-          user: { id: string; username: string; email?: string; role?: string };
+          user: {
+            id: string;
+            username: string;
+            email?: string;
+            role?: string;
+            userId?: string | null;
+            subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
+            subscriptionActive?: boolean;
+            subscriptionEndsAt?: string | null;
+          };
         }
       >("/auth/register", data);
 
@@ -101,6 +130,9 @@ export default class AuthStore {
         email?: string;
         role?: string;
         userId?: string | null;
+        subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
+        subscriptionActive?: boolean;
+        subscriptionEndsAt?: string | null;
       }>("/auth/me");
       runInAction(() => {
         this.user = user;

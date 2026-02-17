@@ -44,6 +44,12 @@ enum ChatModeRequestStatus {
   REJECTED
 }
 
+enum SubscriptionStatus {
+  NONE
+  ACTIVE
+  CANCELED
+}
+
 // Models
 model User {
   id            String   @id @default(uuid())
@@ -57,6 +63,12 @@ model User {
   userId        String?  @unique @map("user_id")
   avatarUrl     String?  @map("avatar_url")
   role          String   @default("user") // 'user' | 'admin'
+  subscriptionStatus      SubscriptionStatus @default(NONE) @map("subscription_status")
+  subscriptionActive      Boolean  @default(false) @map("subscription_active")
+  subscriptionEndsAt      DateTime? @map("subscription_ends_at")
+  subscriptionCanceledAt  DateTime? @map("subscription_canceled_at")
+  subscriptionProvider    String?   @map("subscription_provider")
+  subscriptionExternalId  String?   @map("subscription_external_id")
 
   sessions           Session[]
   eventMap           EventMap[]
