@@ -4,13 +4,17 @@
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-/* Dark-mode: Neumorphism on deep navy */
+/* Dark-mode: aurora outline cards */
 :global(.dark) .folderCard {
-  background: #0b1220 !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
+  --card-bg: rgba(10, 12, 18, 0.78);
+  --card-fg: rgba(255, 255, 255, 0.92);
+  --card-fg-muted: rgba(255, 255, 255, 0.72);
+  --card-border: rgba(255, 255, 255, 0.12);
+  background: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
   box-shadow:
-    14px 14px 28px rgba(0, 0, 0, 0.55),
-    -14px -14px 28px rgba(255, 255, 255, 0.04) !important;
+    0 18px 52px rgba(0, 0, 0, 0.60),
+    0 6px 16px rgba(0, 0, 0, 0.34) !important;
 }
 
 :global(.dark) .tagBadge {
@@ -35,51 +39,93 @@
   position: relative;
   width: 100%;
   min-height: 120px;
-  border-radius: 22px;
+  border-radius: 20px;
   padding: 1.1rem 1.4rem;
   display: flex;
   flex-direction: column;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #eef3f9;
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --card-fg: rgba(15, 23, 42, 0.92);
+  --card-fg-muted: rgba(15, 23, 42, 0.64);
+  --card-border: rgba(15, 23, 42, 0.08);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   box-shadow:
-    14px 14px 28px rgba(15, 23, 42, 0.12),
-    -14px -14px 28px rgba(255, 255, 255, 0.92);
+    0 16px 40px rgba(15, 23, 42, 0.10),
+    0 4px 12px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
   overflow: hidden;
   isolation: isolate;
 }
 
 .folderCard::before {
-  /* Neumorphism: keep a gentle color accent only */
+  /* Aurora border ring (per-card) */
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 22px;
+  border-radius: 20px;
+  padding: 1.25px;
   background:
-    radial-gradient(140% 110% at 18% 12%, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.0) 62%),
-    radial-gradient(120% 95% at 88% 115%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.22) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 62%);
+    conic-gradient(
+      from 220deg,
+      rgba(var(--folder-color-rgb, 120, 180, 255), 0.92),
+      rgba(255, 120, 200, 0.70),
+      rgba(255, 215, 140, 0.62),
+      rgba(140, 255, 220, 0.66),
+      rgba(var(--folder-color-rgb, 120, 180, 255), 0.92)
+    );
+  opacity: 0.52;
   z-index: 0;
   pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
 }
 
 :global(.dark) .folderCard::before {
+  opacity: 0.68;
+}
+
+.folderCard::after {
+  /* Mesh tint + highlight inside the card */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
   background:
-    radial-gradient(140% 110% at 18% 12%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.0) 62%),
-    radial-gradient(120% 95% at 88% 115%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.22) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 62%);
+    radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.0) 62%),
+    radial-gradient(130% 95% at 88% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.16) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 64%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.0) 50%);
+  opacity: 1;
+  pointer-events: none;
+  z-index: 1;
+}
+
+:global(.dark) .folderCard::after {
+  background:
+    radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.0) 62%),
+    radial-gradient(130% 95% at 88% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.22) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 64%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.0) 50%);
 }
 
 .folderCard:hover {
   transform: translateY(-2px);
   box-shadow:
-    16px 16px 34px rgba(15, 23, 42, 0.14),
-    -16px -16px 34px rgba(255, 255, 255, 0.96);
+    0 22px 54px rgba(15, 23, 42, 0.14),
+    0 6px 16px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
 :global(.dark) .folderCard:hover {
   box-shadow:
-    16px 16px 34px rgba(0, 0, 0, 0.62),
-    -16px -16px 34px rgba(255, 255, 255, 0.05);
+    0 24px 66px rgba(0, 0, 0, 0.66),
+    0 10px 24px rgba(0, 0, 0, 0.38);
 }
 
 /* Корешок папки (левая часть) */
@@ -104,49 +150,47 @@
   border: none;
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--folder-fg-strong, rgba(0, 0, 0, 0.85));
+  color: var(--card-fg, rgba(15, 23, 42, 0.92));
   cursor: pointer;
   text-align: left;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   transition: all 0.2s ease;
-  text-shadow: var(--folder-text-shadow, 0 1px 2px rgba(255, 255, 255, 0.55));
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.35);
   flex: 1;
   min-width: 0;
 }
 
 .folderTitle:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--folder-fg-strong, rgba(0, 0, 0, 0.9));
+  background: rgba(255, 255, 255, 0.35);
+  color: rgba(0, 0, 0, 0.92);
 }
 
 .actionsButton {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: #eef3f9;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow:
-    6px 6px 14px rgba(15, 23, 42, 0.14),
-    -6px -6px 14px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.10);
 }
 
 .actionsButton:hover {
   transform: translateY(-1px);
-  box-shadow:
-    8px 8px 16px rgba(15, 23, 42, 0.16),
-    -8px -8px 16px rgba(255, 255, 255, 0.95);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14);
 }
 
 .actionsIcon {
   width: 18px;
   height: 18px;
-  color: var(--folder-fg, rgba(0, 0, 0, 0.75));
+  color: rgba(0, 0, 0, 0.72);
 }
 
 /* Выпадающее меню (позиция через inline style при рендере в portal) */
@@ -226,7 +270,7 @@
   justify-content: space-between;
   align-items: center;
   flex: 1;
-  z-index: 2;
+  z-index: 3;
 }
 
 .folderInfo {
@@ -237,7 +281,7 @@
 
 .ideasCount {
   font-size: 0.9rem;
-  color: var(--folder-fg-muted, rgba(0, 0, 0, 0.7));
+  color: var(--card-fg-muted, rgba(15, 23, 42, 0.64));
   font-weight: 500;
 }
 
@@ -334,34 +378,30 @@
 .arrowIcon {
   width: 20px;
   height: 20px;
-  color: var(--folder-fg, rgba(0, 0, 0, 0.75));
+  color: rgba(0, 0, 0, 0.72);
 }
 
 :global(.dark) .folderTitle:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--folder-fg-strong, rgba(255, 255, 255, 0.95));
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.96);
 }
 
 :global(.dark) .actionsButton {
-  border-color: rgba(255, 255, 255, 0.22);
-  background: #0b1220;
-  box-shadow:
-    6px 6px 14px rgba(0, 0, 0, 0.55),
-    -6px -6px 14px rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.38);
 }
 
 :global(.dark) .actionsButton:hover {
-  box-shadow:
-    8px 8px 16px rgba(0, 0, 0, 0.62),
-    -8px -8px 16px rgba(255, 255, 255, 0.06);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.48);
 }
 
 :global(.dark) .actionsIcon {
-  color: var(--folder-fg, rgba(255, 255, 255, 0.9));
+  color: rgba(255, 255, 255, 0.86);
 }
 
 :global(.dark) .ideasCount {
-  color: var(--folder-fg-muted, rgba(255, 255, 255, 0.75));
+  color: rgba(255, 255, 255, 0.72);
 }
 
 :global(.dark) .dropdownMenu {
