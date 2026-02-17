@@ -235,6 +235,7 @@ const SessionFolderCard = observer(({
           ["--folder-fg-strong" as any]: folderFgStrong,
           ["--folder-fg-muted" as any]: folderFgMuted,
           ["--folder-text-shadow" as any]: folderTextShadow,
+          boxShadow: `0 4px 12px ${folderColor}40`,
         }}
       >
         {/* Верхняя строка: название + меню */}
