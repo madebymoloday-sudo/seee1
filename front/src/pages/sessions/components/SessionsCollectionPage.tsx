@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
@@ -684,6 +684,72 @@ const SessionsCollectionPage = observer(() => {
     return [...sessionItems, ...templateItems];
   }, [filteredAndSortedSessions, filteredToExplore, sortOption]);
 
+  // Horizontal infinite carousel:
+  // We render 3 copies and keep the scroll position in the middle copy.
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+  const isCarouselJumpingRef = useRef(false);
+
+  const carouselCards = useMemo(() => {
+    if (combinedCards.length === 0) return [] as Array<GalleryCardItem & { __copy: number; __idx: number }>;
+    const makeCopy = (copy: number) =>
+      combinedCards.map((x, idx) => Object.assign({}, x, { __copy: copy, __idx: idx }));
+    return [...makeCopy(0), ...makeCopy(1), ...makeCopy(2)];
+  }, [combinedCards]);
+
+  const centerCarousel = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    // scrollWidth is total; we want to land at the start of the middle copy.
+    const third = el.scrollWidth / 3;
+    if (!Number.isFinite(third) || third <= 0) return;
+    isCarouselJumpingRef.current = true;
+    el.scrollLeft = third;
+    // allow scroll handler after a tick
+    window.setTimeout(() => {
+      isCarouselJumpingRef.current = false;
+    }, 0);
+  }, []);
+
+  useEffect(() => {
+    if (combinedCards.length === 0) return;
+    // Center after layout.
+    const id = window.requestAnimationFrame(() => centerCarousel());
+    return () => window.cancelAnimationFrame(id);
+  }, [combinedCards.length, centerCarousel]);
+
+  useEffect(() => {
+    // Keep centered when viewport changes (important for mobile rotation).
+    window.addEventListener("resize", centerCarousel);
+    return () => window.removeEventListener("resize", centerCarousel);
+  }, [centerCarousel]);
+
+  const handleCarouselScroll = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    if (isCarouselJumpingRef.current) return;
+    const third = el.scrollWidth / 3;
+    if (!Number.isFinite(third) || third <= 0) return;
+    const left = el.scrollLeft;
+    // When user reaches near edges, jump back to the middle copy.
+    const min = third * 0.25;
+    const max = third * 1.75;
+    if (left < min) {
+      isCarouselJumpingRef.current = true;
+      el.scrollLeft = left + third;
+      window.setTimeout(() => {
+        isCarouselJumpingRef.current = false;
+      }, 0);
+      return;
+    }
+    if (left > max) {
+      isCarouselJumpingRef.current = true;
+      el.scrollLeft = left - third;
+      window.setTimeout(() => {
+        isCarouselJumpingRef.current = false;
+      }, 0);
+    }
+  }, []);
+
   return (
     <div className={styles.collectionPage}>
       {/* Заголовок */}
@@ -819,50 +885,67 @@ const SessionsCollectionPage = observer(() => {
         )}
         
         {!isLoading && (error === undefined || error === null) && combinedCards.length > 0 && (
-          <div className={styles.foldersList}>
-            {combinedCards.map((item, index) => {
-              if (item.kind === "session") {
-                const session = item.session;
-                return (
-                  <SessionFolderCard
-                    key={session.id}
-                    session={session}
-                    colorIndex={index}
-                    onRename={() => handleRename(session.id)}
-                    onDelete={() => handleDelete(session.id)}
-                    onMoveToExplore={() => handleMoveToExplore(session)}
-                    onShowFeedback={() => setFeedbackInfoSessionId(session.id)}
-                    onShowIdeas={() => setIdeasInfoSessionId(session.id)}
-                    ideasCount={getIdeasCountForSession(session)}
-                  />
-                );
-              }
+          <div className={styles.carouselShell}>
+            <div
+              ref={carouselRef}
+              className={styles.carousel}
+              onScroll={handleCarouselScroll}
+              role="region"
+              aria-label="Галерея карточек"
+            >
+              <div className={styles.carouselInner}>
+                {carouselCards.map((item) => {
+                  const copyKey =
+                    item.kind === "session"
+                      ? `s:${item.session.id}:${item.__copy}`
+                      : `t:${item.template.id}:${item.__copy}`;
 
-              const t = item.template;
-              const fakeSession = {
-                id: t.id,
-                title: t.title,
-                createdAt: new Date().toISOString(),
-                messageCount: 0,
-              } as unknown as SessionResponseDto;
-
-              return (
-                <SessionFolderCard
-                  key={t.id}
-                  session={fakeSession}
-                  colorIndex={index}
-                  ideasCount={1}
-                  tagLabel="Предстоит изучить"
-                  categoryLabel={t.category}
-                  recommendationLabel={
-                    recommendedTemplateIds.has(t.id) ? "Рекомендация для вас" : undefined
+                  if (item.kind === "session") {
+                    const session = item.session;
+                    return (
+                      <div key={copyKey} className={styles.carouselItem}>
+                        <SessionFolderCard
+                          session={session}
+                          colorIndex={item.__idx}
+                          onRename={() => handleRename(session.id)}
+                          onDelete={() => handleDelete(session.id)}
+                          onMoveToExplore={() => handleMoveToExplore(session)}
+                          onShowFeedback={() => setFeedbackInfoSessionId(session.id)}
+                          onShowIdeas={() => setIdeasInfoSessionId(session.id)}
+                          ideasCount={getIdeasCountForSession(session)}
+                        />
+                      </div>
+                    );
                   }
-                  palette="toExplore"
-                  showMenu={false}
-                  onOpen={() => openToExploreTemplate(t)}
-                />
-              );
-            })}
+
+                  const t = item.template;
+                  const fakeSession = {
+                    id: t.id,
+                    title: t.title,
+                    createdAt: new Date().toISOString(),
+                    messageCount: 0,
+                  } as unknown as SessionResponseDto;
+
+                  return (
+                    <div key={copyKey} className={styles.carouselItem}>
+                      <SessionFolderCard
+                        session={fakeSession}
+                        colorIndex={item.__idx}
+                        ideasCount={1}
+                        tagLabel="Предстоит изучить"
+                        categoryLabel={t.category}
+                        recommendationLabel={
+                          recommendedTemplateIds.has(t.id) ? "Рекомендация для вас" : undefined
+                        }
+                        palette="toExplore"
+                        showMenu={false}
+                        onOpen={() => openToExploreTemplate(t)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
       </div>
