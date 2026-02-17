@@ -115,7 +115,7 @@ export class PasswordResetService {
       return;
     }
 
-    const text = `🔐 Восстановление пароля Seee\n\nПерейдите по ссылке, чтобы задать новый пароль:\n${resetLink}\n\nСсылка действительна ${expiresInMinutes} мин.`;
+    const text = `🔐 Восстановление пароля Seee\n\nНажмите кнопку ниже, чтобы задать новый пароль.\n\nСсылка действительна ${expiresInMinutes} мин.\n\nЕсли кнопка не открывается, скопируйте ссылку:\n${resetLink}`;
 
     try {
       await axios.post(
@@ -123,6 +123,11 @@ export class PasswordResetService {
         {
           chat_id: telegramId,
           text,
+          // URL-кнопка гарантированно кликабельна, даже если клиент не "линкует" текст.
+          reply_markup: {
+            inline_keyboard: [[{ text: 'Сменить пароль', url: resetLink }]],
+          },
+          disable_web_page_preview: true,
         },
         { timeout: 10000 },
       );
