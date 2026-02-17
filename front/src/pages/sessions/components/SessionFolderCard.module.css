@@ -85,20 +85,20 @@
   border: none;
   font-size: 1.1rem;
   font-weight: 700;
-  color: rgba(0, 0, 0, 0.8);
+  color: var(--folder-fg-strong, rgba(0, 0, 0, 0.85));
   cursor: pointer;
   text-align: left;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   transition: all 0.2s ease;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  text-shadow: var(--folder-text-shadow, 0 1px 2px rgba(255, 255, 255, 0.5));
   flex: 1;
   min-width: 0;
 }
 
 .folderTitle:hover {
   background: rgba(0, 0, 0, 0.05);
-  color: rgba(0, 0, 0, 0.9);
+  color: var(--folder-fg-strong, rgba(0, 0, 0, 0.9));
 }
 
 .actionsButton {
@@ -125,7 +125,7 @@
 .actionsIcon {
   width: 18px;
   height: 18px;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--folder-fg, rgba(0, 0, 0, 0.75));
 }
 
 /* Выпадающее меню (позиция через inline style при рендере в portal) */
@@ -216,7 +216,7 @@
 
 .ideasCount {
   font-size: 0.9rem;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--folder-fg-muted, rgba(0, 0, 0, 0.7));
   font-weight: 500;
 }
 
@@ -313,16 +313,12 @@
 .arrowIcon {
   width: 20px;
   height: 20px;
-  color: rgba(0, 0, 0, 0.7);
-}
-
-:global(.dark) .folderTitle {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--folder-fg, rgba(0, 0, 0, 0.75));
 }
 
 :global(.dark) .folderTitle:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: white;
+  color: var(--folder-fg-strong, rgba(255, 255, 255, 0.95));
 }
 
 :global(.dark) .actionsButton {
@@ -335,11 +331,11 @@
 }
 
 :global(.dark) .actionsIcon {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--folder-fg, rgba(255, 255, 255, 0.9));
 }
 
 :global(.dark) .ideasCount {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--folder-fg-muted, rgba(255, 255, 255, 0.75));
 }
 
 :global(.dark) .dropdownMenu {
@@ -373,7 +369,7 @@
 }
 
 :global(.dark) .arrowIcon {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--folder-fg, rgba(255, 255, 255, 0.9));
 }
 
 :global(.dark) .recommendationBadge {

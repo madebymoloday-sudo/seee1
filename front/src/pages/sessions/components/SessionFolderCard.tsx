@@ -24,24 +24,32 @@ interface SessionFolderCardProps {
   ideasCount?: number;
 }
 
+// Bright "underwater fauna & flora" palette (jellyfish / corals / turquoise water).
+// Keep them vivid so cards don't look washed out.
 const FOLDER_COLORS = [
-  "#9DBBD2", // Lagoon blue
-  "#A9CBB8", // Sea grass
-  "#D3B2A1", // Coral sand
-  "#D6A9A9", // Soft reef pink
-  "#BFAED8", // Lilac anemone
-  "#CDBE9E", // Shell gold
-  "#99C4C0", // Aqua bloom
-  "#D7B7C7", // Tropical fish blush
+  "#00D7FF", // Neon cyan water
+  "#FF3DA6", // Neon jellyfish pink
+  "#FF6A00", // Coral orange
+  "#FFD400", // Bright coral yellow
+  "#2EEA7A", // Turtle green
+  "#00BFA6", // Tropical teal
+  "#8A2BFF", // Electric purple
+  "#2E6BFF", // Neon ocean blue
+  "#FF2D55", // Hot coral red
+  "#B7FF2A", // Acid-lime algae
+  "#FF8A00", // Reef orange
+  "#00FFB2", // Mint neon
 ];
 
 const TO_EXPLORE_COLORS = [
-  "#9EC6D6", // Reef water
-  "#CFAFA0", // Coral branch
-  "#B6B0D6", // Sea orchid
-  "#A6CDBD", // Bay algae
-  "#D8C09F", // Warm shell
-  "#D0B2C8", // Fish scale rose
+  "#00E5FF", // Reef glow
+  "#FF7A00", // Bright coral
+  "#FF3D7F", // Jellyfish blush
+  "#22E3A2", // Seaweed neon
+  "#FFD000", // Sun-coral
+  "#7C3AED", // Deep purple
+  "#1D4ED8", // Deep blue
+  "#FF4D4D", // Reef red
 ];
 
 function stableModuloFromString(value: string, modulo: number) {
@@ -66,6 +74,11 @@ function hexToRgb(hex: string) {
     g: (n >> 8) & 255,
     b: n & 255,
   };
+}
+
+function relativeLuma({ r, g, b }: { r: number; g: number; b: number }) {
+  // Simple perceptual luma (0..255). Good enough for picking black/white text.
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
 function getRussianIdeaWord(count: number) {
@@ -108,6 +121,14 @@ const SessionFolderCard = observer(({
       : stableModuloFromString(colorSeed, paletteColors.length);
   const folderColor = paletteColors[resolvedColorIndex];
   const folderRgb = hexToRgb(folderColor);
+  const luma = relativeLuma(folderRgb);
+  const isDarkBg = luma < 145;
+  const folderFg = isDarkBg ? "rgba(255, 255, 255, 0.9)" : "rgba(0, 0, 0, 0.82)";
+  const folderFgStrong = isDarkBg ? "rgba(255, 255, 255, 0.98)" : "rgba(0, 0, 0, 0.88)";
+  const folderFgMuted = isDarkBg ? "rgba(255, 255, 255, 0.75)" : "rgba(0, 0, 0, 0.66)";
+  const folderTextShadow = isDarkBg
+    ? "0 1px 2px rgba(0, 0, 0, 0.35)"
+    : "0 1px 2px rgba(255, 255, 255, 0.55)";
 
   // Закрытие меню при клике вне его
   useEffect(() => {
@@ -204,6 +225,10 @@ const SessionFolderCard = observer(({
           // CSS использует background-image + эту подложку для "текстуры"
           ["--folder-color" as any]: folderColor,
           ["--folder-color-rgb" as any]: `${folderRgb.r}, ${folderRgb.g}, ${folderRgb.b}`,
+          ["--folder-fg" as any]: folderFg,
+          ["--folder-fg-strong" as any]: folderFgStrong,
+          ["--folder-fg-muted" as any]: folderFgMuted,
+          ["--folder-text-shadow" as any]: folderTextShadow,
           boxShadow: `0 4px 12px ${folderColor}40`,
         }}
       >
