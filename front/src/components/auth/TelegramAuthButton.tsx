@@ -19,6 +19,7 @@ type TelegramWidgetUser = {
 
 declare global {
   interface Window {
+    __telegramWidgetLoadPromise?: Promise<void>;
     Telegram?: {
       Login?: {
         auth: (
@@ -28,6 +29,47 @@ declare global {
       };
     };
   }
+}
+
+function loadTelegramWidgetScript(): Promise<void> {
+  if (window.Telegram?.Login?.auth) {
+    return Promise.resolve();
+  }
+
+  if (window.__telegramWidgetLoadPromise) {
+    return window.__telegramWidgetLoadPromise;
+  }
+
+  window.__telegramWidgetLoadPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[src="https://telegram.org/js/telegram-widget.js?22"]'
+    );
+
+    if (existing) {
+      const startedAt = Date.now();
+      const timer = window.setInterval(() => {
+        if (window.Telegram?.Login?.auth) {
+          window.clearInterval(timer);
+          resolve();
+          return;
+        }
+        if (Date.now() - startedAt > 8000) {
+          window.clearInterval(timer);
+          reject(new Error("Telegram SDK load timeout"));
+        }
+      }, 100);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://telegram.org/js/telegram-widget.js?22";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Telegram SDK"));
+    document.body.appendChild(script);
+  });
+
+  return window.__telegramWidgetLoadPromise;
 }
 
 interface TelegramAuthButtonProps {
@@ -48,7 +90,7 @@ const TelegramAuthButton = observer(
     const auth = useAuth();
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleClick = () => {
+    const handleClick = async () => {
       if (isLoading) return;
 
       const botId = import.meta.env.VITE_TELEGRAM_BOT_ID || "8225371483";
@@ -58,14 +100,24 @@ const TelegramAuthButton = observer(
         return;
       }
 
+      setIsLoading(true);
+
+      try {
+        await loadTelegramWidgetScript();
+      } catch (e) {
+        console.error("Telegram SDK load error:", e);
+        toast.error("Не удалось загрузить Telegram. Проверьте интернет и попробуйте снова.");
+        setIsLoading(false);
+        return;
+      }
+
       const authFn = window.Telegram?.Login?.auth;
       if (!authFn) {
         console.error("Telegram Login Widget недоступен");
         toast.error("Telegram Login Widget не загружен");
+        setIsLoading(false);
         return;
       }
-
-      setIsLoading(true);
 
       authFn(
         {

@@ -1,6 +1,8 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import * as bcrypt from 'bcrypt';
+import { PrismaService } from '../prisma/prisma.service';
 
 type Lang = 'ru' | 'en';
 
@@ -14,6 +16,8 @@ interface TelegramMessage {
   text?: string;
   chat: {
     id: number;
+    type?: 'private' | 'group' | 'supergroup' | 'channel';
+    title?: string;
   };
   from?: {
     id: number;
@@ -28,6 +32,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(TelegramBotService.name);
   private readonly token?: string;
   private readonly supportChatId?: string;
+  private supportChatIdRuntime: number | null = null;
   private readonly pollingEnabled: boolean;
 
   private offset = 0;
@@ -37,16 +42,30 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private readonly languageByChat = new Map<number, Lang>();
   private readonly launchedChats = new Set<number>();
   private readonly supportModeChats = new Set<number>();
+  private readonly passwordResetModeChats = new Set<number>();
+  private readonly cabinetModeChats = new Set<number>();
 
   private readonly launchButton = 'Запустить Seee ботик';
   private readonly supportButton = 'Обратиться в поддержку';
   private readonly exitSupportButton = 'Выйти из поддержки';
+  private readonly cabinetButton = 'Личный кабинет';
+  private readonly cabinetLangButton = 'Выбор языка';
+  private readonly cabinetChangePasswordButton = 'Изменить пароль';
+  private readonly cabinetBackButton = 'Назад';
   private readonly langRuButton = 'Русский';
   private readonly langEnButton = 'English';
+  private readonly bindSupportCommand = '/set_support_group';
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {
     this.token = this.configService.get<string>('TELEGRAM_LOGIN_BOT_TOKEN');
     this.supportChatId = this.configService.get<string>('TELEGRAM_SUPPORT_CHAT_ID');
+    if (this.supportChatId) {
+      const parsed = Number(this.supportChatId);
+      this.supportChatIdRuntime = Number.isFinite(parsed) ? parsed : null;
+    }
     this.pollingEnabled =
       this.configService.get<string>('TELEGRAM_BOT_POLLING_ENABLED', 'true') !==
       'false';
@@ -126,6 +145,11 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     const text = (message.text || '').trim();
     if (!text) return;
 
+    if (chatId < 0) {
+      await this.handleGroupMessage(message);
+      return;
+    }
+
     if (!this.languageByChat.has(chatId)) {
       const initialLang = message.from?.language_code?.startsWith('ru')
         ? 'ru'
@@ -152,11 +176,13 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     if (text === this.launchButton) {
       this.launchedChats.add(chatId);
       this.supportModeChats.delete(chatId);
+      this.passwordResetModeChats.delete(chatId);
+      this.cabinetModeChats.delete(chatId);
       await this.sendMessage(
         chatId,
         this.t(chatId, {
-          ru: 'Seee ботик запущен. Если нужна помощь — нажмите "Обратиться в поддержку".',
-          en: 'Seee bot is ready. If you need help, tap "Contact support".',
+          ru: 'Seee ботик запущен. Откройте "Личный кабинет" для смены языка и пароля.',
+          en: 'Seee bot is ready. Open "Personal cabinet" to change language and password.',
         }),
         this.getKeyboard(chatId),
       );
@@ -166,6 +192,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     if (text === this.supportButton) {
       this.launchedChats.add(chatId);
       this.supportModeChats.add(chatId);
+      this.passwordResetModeChats.delete(chatId);
       await this.sendMessage(
         chatId,
         this.t(chatId, {
@@ -177,8 +204,61 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    if (text === this.cabinetButton) {
+      this.launchedChats.add(chatId);
+      this.supportModeChats.delete(chatId);
+      this.passwordResetModeChats.delete(chatId);
+      this.cabinetModeChats.add(chatId);
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Личный кабинет: выберите действие ниже.',
+          en: 'Personal cabinet: choose an action below.',
+        }),
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    if (text === this.cabinetBackButton) {
+      this.cabinetModeChats.delete(chatId);
+      this.passwordResetModeChats.delete(chatId);
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Возвращаемся в главное меню.',
+          en: 'Returning to the main menu.',
+        }),
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    if (text === this.cabinetLangButton) {
+      this.cabinetModeChats.add(chatId);
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Выберите язык:',
+          en: 'Choose language:',
+        }),
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    if (text === this.cabinetChangePasswordButton) {
+      this.launchedChats.add(chatId);
+      this.supportModeChats.delete(chatId);
+      this.cabinetModeChats.add(chatId);
+      await this.startPasswordReset(chatId);
+      return;
+    }
+
     if (text === this.exitSupportButton) {
       this.supportModeChats.delete(chatId);
+      this.passwordResetModeChats.delete(chatId);
+      this.cabinetModeChats.delete(chatId);
       await this.sendMessage(
         chatId,
         this.t(chatId, {
@@ -187,6 +267,11 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         }),
         this.getKeyboard(chatId),
       );
+      return;
+    }
+
+    if (this.passwordResetModeChats.has(chatId)) {
+      await this.handlePasswordResetMessage(chatId, text);
       return;
     }
 
@@ -209,8 +294,114 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     await this.sendMessage(
       chatId,
       this.t(chatId, {
-        ru: 'Привет! Я бот Seee. Выберите язык и нажмите "Запустить Seee ботик".',
-        en: 'Hi! I am Seee bot. Choose language and tap "Launch Seee bot".',
+        ru: 'Привет! Я бот Seee. Нажмите "Запустить Seee ботик". Кнопки языка и смены пароля находятся в "Личном кабинете".',
+        en: 'Hi! I am Seee bot. Tap "Launch Seee bot". Language and password change are in "Personal cabinet".',
+      }),
+      this.getKeyboard(chatId),
+    );
+  }
+
+  private async handleGroupMessage(message: TelegramMessage) {
+    const chatId = message.chat.id;
+    const text = (message.text || '').trim();
+    if (!text) return;
+
+    if (text === this.bindSupportCommand) {
+      this.supportChatIdRuntime = chatId;
+      await this.sendRawMessage(
+        chatId,
+        `✅ Группа поддержки привязана.\nТеперь сообщения из режима "Обратиться в поддержку" будут приходить сюда.\nchat_id: ${chatId}`,
+      );
+    }
+  }
+
+  private async startPasswordReset(chatId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { telegramId: String(chatId) },
+      select: { id: true },
+    });
+
+    if (!user) {
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Этот Telegram не привязан к аккаунту Seee. Сначала привяжите Telegram в личном кабинете, затем попробуйте снова.',
+          en: 'This Telegram is not linked to a Seee account. Link Telegram in profile first, then try again.',
+        }),
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    this.passwordResetModeChats.add(chatId);
+    await this.sendMessage(
+      chatId,
+      this.t(chatId, {
+        ru: 'Введите новый пароль (минимум 6 символов). Для отмены отправьте: отмена',
+        en: 'Enter your new password (at least 6 characters). To cancel, send: cancel',
+      }),
+      this.getKeyboard(chatId),
+    );
+  }
+
+  private async handlePasswordResetMessage(chatId: number, text: string) {
+    const isCancel =
+      text.toLowerCase() === 'отмена' || text.toLowerCase() === 'cancel';
+    if (isCancel) {
+      this.passwordResetModeChats.delete(chatId);
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Восстановление пароля отменено.',
+          en: 'Password reset canceled.',
+        }),
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    if (text.length < 6) {
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Пароль слишком короткий. Введите минимум 6 символов.',
+          en: 'Password is too short. Enter at least 6 characters.',
+        }),
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { telegramId: String(chatId) },
+      select: { id: true },
+    });
+
+    if (!user) {
+      this.passwordResetModeChats.delete(chatId);
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Не найден привязанный аккаунт. Привяжите Telegram в профиле и попробуйте снова.',
+          en: 'Linked account not found. Link Telegram in profile and try again.',
+        }),
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(text, 12);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    });
+
+    this.passwordResetModeChats.delete(chatId);
+    await this.sendMessage(
+      chatId,
+      this.t(chatId, {
+        ru: 'Пароль успешно обновлён. Теперь вы можете войти с новым паролем.',
+        en: 'Password updated successfully. You can now log in with the new password.',
       }),
       this.getKeyboard(chatId),
     );
@@ -228,15 +419,15 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       .filter(Boolean)
       .join(' | ');
 
-    if (!this.supportChatId) {
+    if (!this.supportChatIdRuntime) {
       this.logger.warn(
         `Support message received but TELEGRAM_SUPPORT_CHAT_ID is missing. ${userLine}. Message: ${text}`,
       );
       await this.sendMessage(
         chatId,
         this.t(chatId, {
-          ru: 'Сообщение получено, но поддержка сейчас не подключена. Попробуйте позже.',
-          en: 'Message received, but support is not connected right now. Please try later.',
+          ru: 'Сообщение получено, но поддержка не привязана. Добавьте бота в вашу группу и отправьте там команду /set_support_group.',
+          en: 'Message received, but support group is not linked. Add bot to your group and send /set_support_group there.',
         }),
         this.getKeyboard(chatId),
       );
@@ -244,7 +435,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     }
 
     await this.sendRawMessage(
-      Number(this.supportChatId),
+      this.supportChatIdRuntime,
       `📩 Новое обращение в поддержку\n${userLine}\n\n${text}`,
     );
 
@@ -263,7 +454,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return {
         keyboard: [
           [{ text: this.exitSupportButton }],
-          [{ text: this.langRuButton }, { text: this.langEnButton }],
+          [{ text: this.cabinetButton }],
         ],
         resize_keyboard: true,
       };
@@ -273,7 +464,19 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return {
         keyboard: [
           [{ text: this.launchButton }],
+          [{ text: this.cabinetButton }],
+        ],
+        resize_keyboard: true,
+      };
+    }
+
+    if (this.cabinetModeChats.has(chatId)) {
+      return {
+        keyboard: [
+          [{ text: this.cabinetLangButton }],
+          [{ text: this.cabinetChangePasswordButton }],
           [{ text: this.langRuButton }, { text: this.langEnButton }],
+          [{ text: this.cabinetBackButton }],
         ],
         resize_keyboard: true,
       };
@@ -282,7 +485,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     return {
       keyboard: [
         [{ text: this.supportButton }],
-        [{ text: this.langRuButton }, { text: this.langEnButton }],
+        [{ text: this.cabinetButton }],
       ],
       resize_keyboard: true,
     };
