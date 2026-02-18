@@ -96,33 +96,16 @@
 }
 
 .folderCard::after {
-  /* Mesh tint + highlight inside the card */
+  /* Tint + highlight inside the card (no circle pattern) */
   content: "";
   position: absolute;
   inset: 0;
   border-radius: 20px;
   background:
-    radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.0) 62%),
-    radial-gradient(130% 95% at 88% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.30) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 66%),
-    /* Animated caustics (unexpected deep-sea vibe) */
-    repeating-radial-gradient(
-      circle at 20% 30%,
-      rgba(255, 255, 255, 0.0) 0px,
-      rgba(255, 255, 255, 0.0) 14px,
-      rgba(255, 255, 255, 0.14) 18px,
-      rgba(255, 255, 255, 0.0) 26px
-    ),
-    repeating-radial-gradient(
-      circle at 85% 70%,
-      rgba(255, 255, 255, 0.0) 0px,
-      rgba(255, 255, 255, 0.0) 18px,
-      rgba(255, 255, 255, 0.12) 22px,
-      rgba(255, 255, 255, 0.0) 32px
-    ),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.0) 50%);
-  background-size: 100% 100%, 100% 100%, 220% 220%, 180% 180%, 100% 100%;
-  background-position: 0 0, 0 0, 0% 0%, 100% 100%, 0 0;
-  animation: seeeCaustics 9.5s linear infinite;
+    radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.0) 62%),
+    radial-gradient(130% 95% at 88% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.26) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 66%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.0) 56%);
+  animation: none !important;
   opacity: 1;
   pointer-events: none;
   z-index: 1;
@@ -149,6 +132,13 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.0) 50%);
   background-size: 100% 100%, 100% 100%, 240% 240%, 190% 190%, 100% 100%;
   background-position: 0 0, 0 0, 0% 0%, 100% 100%, 0 0;
+  /* Override to remove circle pattern completely */
+  background:
+    radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.0) 62%),
+    radial-gradient(130% 95% at 88% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.34) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 66%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.0) 56%);
+  background-size: 100% 100%;
+  background-position: 0 0;
   /* Disable caustics animation in dark mode */
   animation: none !important;
 }
