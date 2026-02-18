@@ -54,6 +54,21 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
+  private isSupportKeyValid(keyRaw: string | undefined): boolean {
+    const key = String(keyRaw || '').trim();
+    if (!key) return false;
+    // Use existing bot token as support key so no extra env setup is required.
+    const configured = this.configService.get<string>('TELEGRAM_LOGIN_BOT_TOKEN');
+    if (!configured) return false;
+    return key === configured;
+  }
+
+  assertSupportKey(keyRaw: string | undefined): void {
+    if (!this.isSupportKeyValid(keyRaw)) {
+      throw new UnauthorizedException('Invalid support key');
+    }
+  }
+
   async adminGeneratePasswordResetLink(
     dto: AdminGeneratePasswordResetLinkDto,
   ): Promise<AdminGeneratePasswordResetLinkResponseDto> {
@@ -130,6 +145,61 @@ export class AuthService {
     }
     const { url, expiresAt } = await this.createTelegramBotLinkToken(user.id);
     return { url, expiresAt, telegramLinked: !!user.telegramId };
+  }
+
+  async supportGeneratePasswordResetLink(
+    supportKey: string | undefined,
+    emailRaw: string,
+    expiresInMinutesRaw?: number,
+  ): Promise<AdminGeneratePasswordResetLinkResponseDto> {
+    this.assertSupportKey(supportKey);
+    const email = (emailRaw || '').trim().toLowerCase();
+    const expiresInMinutes =
+      typeof expiresInMinutesRaw === 'number' && Number.isFinite(expiresInMinutesRaw)
+        ? expiresInMinutesRaw
+        : 60;
+
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, telegramId: true },
+    });
+    if (!user?.email) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000);
+    await this.prisma.passwordResetToken.create({
+      data: { token, userId: user.id, expiresAt },
+    });
+
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+
+    return {
+      email: user.email,
+      resetLink,
+      expiresAt: expiresAt.toISOString(),
+      telegramLinked: !!user.telegramId,
+    };
+  }
+
+  async supportGenerateTelegramLink(
+    supportKey: string | undefined,
+    emailRaw: string,
+  ): Promise<{ email: string; url: string; expiresAt: string; telegramLinked: boolean }> {
+    this.assertSupportKey(supportKey);
+    const email = (emailRaw || '').trim().toLowerCase();
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, telegramId: true },
+    });
+    if (!user?.email) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+    const { url, expiresAt } = await this.createTelegramBotLinkToken(user.id);
+    return { email: user.email, url, expiresAt, telegramLinked: !!user.telegramId };
   }
 
   async login(email: string, password: string): Promise<AuthResponseDto> {

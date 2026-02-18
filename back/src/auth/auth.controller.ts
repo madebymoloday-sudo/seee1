@@ -204,6 +204,34 @@ export class AuthController {
     return this.authService.adminCreateTelegramBotLinkToken(req.user, dto.email);
   }
 
+  @Post('support/password-reset-link')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Support: получить reset link по email (возвращает ссылку)',
+  })
+  async supportPasswordResetLink(
+    @Headers('x-support-key') supportKey: string | undefined,
+    @Body() dto: { email: string; expiresInMinutes?: number },
+  ): Promise<AdminGeneratePasswordResetLinkResponseDto> {
+    return this.authService.supportGeneratePasswordResetLink(
+      supportKey,
+      dto.email,
+      dto.expiresInMinutes,
+    );
+  }
+
+  @Post('support/telegram-link')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Support: получить ссылку привязки Telegram через бота по email',
+  })
+  async supportTelegramLink(
+    @Headers('x-support-key') supportKey: string | undefined,
+    @Body() dto: { email: string },
+  ): Promise<{ email: string; url: string; expiresAt: string; telegramLinked: boolean }> {
+    return this.authService.supportGenerateTelegramLink(supportKey, dto.email);
+  }
+
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshTokenGuard)
