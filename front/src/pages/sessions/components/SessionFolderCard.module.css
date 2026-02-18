@@ -149,7 +149,8 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.0) 50%);
   background-size: 100% 100%, 100% 100%, 240% 240%, 190% 190%, 100% 100%;
   background-position: 0 0, 0 0, 0% 0%, 100% 100%, 0 0;
-  animation-duration: 10.5s;
+  /* Disable caustics animation in dark mode */
+  animation: none !important;
 }
 
 .folderCard:hover {
