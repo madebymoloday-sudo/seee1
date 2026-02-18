@@ -74,6 +74,32 @@ const LandingPage = observer(() => {
     []
   );
 
+  const domainChipClasses = useMemo(
+    () => [
+      "border-emerald-200/70 bg-emerald-50 text-emerald-950 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-100",
+      "border-fuchsia-200/70 bg-fuchsia-50 text-fuchsia-950 dark:border-fuchsia-400/20 dark:bg-fuchsia-500/10 dark:text-fuchsia-100",
+      "border-amber-200/70 bg-amber-50 text-amber-950 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100",
+      "border-cyan-200/70 bg-cyan-50 text-cyan-950 dark:border-cyan-400/20 dark:bg-cyan-500/10 dark:text-cyan-100",
+      "border-violet-200/70 bg-violet-50 text-violet-950 dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-100",
+      "border-rose-200/70 bg-rose-50 text-rose-950 dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-100",
+      "border-sky-200/70 bg-sky-50 text-sky-950 dark:border-sky-400/20 dark:bg-sky-500/10 dark:text-sky-100",
+      "border-orange-200/70 bg-orange-50 text-orange-950 dark:border-orange-400/20 dark:bg-orange-500/10 dark:text-orange-100",
+      "border-teal-200/70 bg-teal-50 text-teal-950 dark:border-teal-400/20 dark:bg-teal-500/10 dark:text-teal-100",
+      "border-indigo-200/70 bg-indigo-50 text-indigo-950 dark:border-indigo-400/20 dark:bg-indigo-500/10 dark:text-indigo-100",
+    ],
+    []
+  );
+
+  const featureAccentClasses = useMemo(
+    () => [
+      "bg-cyan-100 text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-200",
+      "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-500/15 dark:text-fuchsia-200",
+      "bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200",
+      "bg-emerald-100 text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-200",
+    ],
+    []
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
       {/* Top bar */}
@@ -257,29 +283,36 @@ const LandingPage = observer(() => {
 
       {/* Features */}
       <section className="mx-auto max-w-6xl px-4 py-10">
-        <h2 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white">
-          Почему это работает
-        </h2>
-        <p className="mt-2 text-zinc-700 dark:text-zinc-300">
-          Seee основан на логике сильного ИИ, который шаг за шагом повторяет
-          структуру человеческого мышления, но не “лечит”, а помогает понять.
-        </p>
+        <div className="rounded-[2rem] border border-black/10 dark:border-white/15 bg-gradient-to-br from-white/90 to-slate-50/60 dark:from-white/5 dark:to-white/0 backdrop-blur p-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white">
+            Почему это работает
+          </h2>
+          <p className="mt-2 text-zinc-700 dark:text-zinc-300">
+            Seee основан на логике сильного ИИ, который шаг за шагом повторяет
+            структуру человеческого мышления, но не “лечит”, а помогает понять.
+          </p>
 
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {features.map(({ title, text, Icon }) => (
-            <div
-              key={title}
-              className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/80 dark:bg-white/5 backdrop-blur p-4"
-            >
-              <div className="flex items-center gap-2 text-zinc-900 dark:text-white font-semibold">
-                <Icon className="h-5 w-5" />
-                {title}
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {features.map(({ title, text, Icon }, idx) => (
+              <div
+                key={title}
+                className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/80 dark:bg-white/5 backdrop-blur p-4"
+              >
+                <div className="flex items-center gap-2 text-zinc-900 dark:text-white font-semibold">
+                  <span
+                    className={`inline-flex h-8 w-8 items-center justify-center rounded-2xl border border-black/10 dark:border-white/15 ${featureAccentClasses[idx % featureAccentClasses.length]}`}
+                    aria-hidden="true"
+                  >
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  {title}
+                </div>
+                <div className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+                  {text}
+                </div>
               </div>
-              <div className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
-                {text}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
@@ -294,10 +327,10 @@ const LandingPage = observer(() => {
             одинакова: ситуация → мысль → эмоция → последствия → вывод.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
-            {domains.map((d) => (
+            {domains.map((d, idx) => (
               <span
                 key={d}
-                className="rounded-full border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5 px-3 py-1 text-sm text-zinc-800 dark:text-zinc-200"
+                className={`rounded-full border px-3 py-1 text-sm ${domainChipClasses[idx % domainChipClasses.length]}`}
               >
                 {d}
               </span>
