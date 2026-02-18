@@ -41,7 +41,7 @@
   /* Folder tab */
   content: "";
   position: absolute;
-  left: 18px;
+  right: 18px;
   top: -12px;
   width: min(56%, 320px);
   height: 42px;
