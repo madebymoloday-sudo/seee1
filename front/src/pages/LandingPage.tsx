@@ -152,6 +152,25 @@ const LandingPage = observer(() => {
                   src={LAVA_WIDGET_URL}
                 />
               </div>
+              <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-400 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <a
+                  href="https://t.me/SeeeAppBot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline"
+                >
+                  Связь с поддержкой (Telegram)
+                </a>
+                <Link to="/legal/offer" className="hover:underline">
+                  Оферта
+                </Link>
+                <Link to="/legal/privacy" className="hover:underline">
+                  Персональные данные
+                </Link>
+                <Link to="/legal/refund" className="hover:underline">
+                  Возвраты
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -336,11 +355,28 @@ const LandingPage = observer(() => {
             <span>Seee</span>
           </div>
           <div className="flex items-center gap-4">
+            <a
+              href="https://t.me/SeeeAppBot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline"
+            >
+              Связь с поддержкой
+            </a>
             <Link to="/forgot-password" className="hover:underline">
               Забыли пароль?
             </Link>
             <Link to="/register" className="hover:underline">
               Регистрация
+            </Link>
+            <Link to="/legal/offer" className="hover:underline">
+              Оферта
+            </Link>
+            <Link to="/legal/privacy" className="hover:underline">
+              Политика ПДн
+            </Link>
+            <Link to="/legal/refund" className="hover:underline">
+              Возвраты
             </Link>
           </div>
         </div>

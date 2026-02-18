@@ -8,6 +8,9 @@ import HomePage from "../pages/HomePage";
 import LandingPage from "../pages/LandingPage";
 import { PublicRoute } from "./PublicRoute";
 import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
+import OfferPage from "../pages/legal/OfferPage";
+import PrivacyPolicyPage from "../pages/legal/PrivacyPolicyPage";
+import RefundPolicyPage from "../pages/legal/RefundPolicyPage";
 
 /**
  * Роутер для неавторизованных пользователей
@@ -68,6 +71,18 @@ export const publicRouter = createBrowserRouter([
         <ResetPasswordPage />
       </PublicRoute>
     ),
+  },
+  {
+    path: "/legal/offer",
+    element: <OfferPage />,
+  },
+  {
+    path: "/legal/privacy",
+    element: <PrivacyPolicyPage />,
+  },
+  {
+    path: "/legal/refund",
+    element: <RefundPolicyPage />,
   },
   ...(import.meta.env.DEV
     ? [
