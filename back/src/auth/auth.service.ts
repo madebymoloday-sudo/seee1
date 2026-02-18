@@ -23,6 +23,10 @@ import {
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
 import { PasswordResetService } from './password-reset.service';
 import { ConfigService } from '@nestjs/config';
+import {
+  AdminGeneratePasswordResetLinkDto,
+  AdminGeneratePasswordResetLinkResponseDto,
+} from './dto/admin.dto';
 
 @Injectable()
 export class AuthService {
@@ -48,6 +52,54 @@ export class AuthService {
     private passwordResetService: PasswordResetService,
     private configService: ConfigService,
   ) {}
+
+  isAdminKeyValid(adminKey: string | undefined): boolean {
+    const key = String(adminKey || '').trim();
+    if (!key) return false;
+    const configured =
+      this.configService.get<string>('ADMIN_API_KEY') ||
+      this.configService.get<string>('LAVATOP_WEBHOOK_API_KEY') ||
+      '';
+    if (!configured) return false;
+    return key === configured;
+  }
+
+  async adminGeneratePasswordResetLink(
+    dto: AdminGeneratePasswordResetLinkDto,
+  ): Promise<AdminGeneratePasswordResetLinkResponseDto> {
+    const email = (dto.email || '').trim().toLowerCase();
+    const expiresInMinutes =
+      typeof dto.expiresInMinutes === 'number' && Number.isFinite(dto.expiresInMinutes)
+        ? dto.expiresInMinutes
+        : 60;
+
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, telegramId: true },
+    });
+
+    if (!user?.email) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000);
+
+    await this.prisma.passwordResetToken.create({
+      data: { token, userId: user.id, expiresAt },
+    });
+
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+
+    return {
+      email: user.email,
+      resetLink,
+      expiresAt: expiresAt.toISOString(),
+      telegramLinked: !!user.telegramId,
+    };
+  }
 
   async login(email: string, password: string): Promise<AuthResponseDto> {
     const user = await this.prisma.user.findUnique({

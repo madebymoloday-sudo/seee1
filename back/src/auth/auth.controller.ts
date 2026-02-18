@@ -9,6 +9,7 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -33,6 +34,10 @@ import {
   RedeemPromoCodeDto,
 } from './dto/auth.dto';
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
+import {
+  AdminGeneratePasswordResetLinkDto,
+  AdminGeneratePasswordResetLinkResponseDto,
+} from './dto/admin.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -141,6 +146,30 @@ export class AuthController {
     @Body() dto: TelegramLinkDto,
   ): Promise<UserProfileDto> {
     return this.authService.linkTelegramAccount(req.user.id, dto);
+  }
+
+  @Post('admin/password-reset-link')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Админ: сгенерировать reset link и вернуть в ответе (для ручной поддержки)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Ссылка сгенерирована',
+    type: AdminGeneratePasswordResetLinkResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Неверный admin key' })
+  @ApiResponse({ status: 404, description: 'Пользователь не найден' })
+  async adminGeneratePasswordResetLink(
+    @Headers('x-admin-key') adminKey: string | undefined,
+    @Body() dto: AdminGeneratePasswordResetLinkDto,
+  ): Promise<AdminGeneratePasswordResetLinkResponseDto> {
+    // Minimal guard: single secret header. Keeps support flow simple.
+    if (!this.authService.isAdminKeyValid(adminKey)) {
+      throw new UnauthorizedException('Invalid admin key');
+    }
+    return this.authService.adminGeneratePasswordResetLink(dto);
   }
 
   @Post('refresh')
