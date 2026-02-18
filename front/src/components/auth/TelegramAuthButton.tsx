@@ -93,11 +93,19 @@ const TelegramAuthButton = observer(
     const handleClick = async () => {
       if (isLoading) return;
 
-      const botId = import.meta.env.VITE_TELEGRAM_BOT_ID || "8225371483";
-      if (!botId) {
-        console.error("TELEGRAM_BOT_ID не настроен");
-        toast.error("Telegram авторизация не настроена");
-        return;
+      const fallbackBotId = "8225371483";
+      const envBotId = import.meta.env.VITE_TELEGRAM_BOT_ID;
+      const botId =
+        typeof envBotId === "string" && /^\d+$/.test(envBotId.trim())
+          ? envBotId.trim()
+          : fallbackBotId;
+
+      // Common production misconfig: setting username/token instead of numeric bot_id.
+      if (envBotId && botId === fallbackBotId && envBotId !== fallbackBotId) {
+        console.warn(
+          "VITE_TELEGRAM_BOT_ID must be a numeric bot id. Falling back to default.",
+          { envBotId }
+        );
       }
 
       setIsLoading(true);
@@ -125,7 +133,13 @@ const TelegramAuthButton = observer(
           request_access: "write",
         },
         async (telegramUser) => {
-          if (!telegramUser || !telegramUser.hash) {
+          if (!telegramUser) {
+            toast.message("Telegram вход отменён");
+            setIsLoading(false);
+            return;
+          }
+          if (!telegramUser.hash) {
+            toast.error("Telegram не вернул подпись (hash). Попробуйте ещё раз.");
             setIsLoading(false);
             return;
           }
