@@ -1,30 +1,4 @@
-:global(.dark) .ideasBadge {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(0, 0, 0, 0.35);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-/* Dark-mode: aurora outline cards */
-:global(.dark) .folderCard {
-  --card-bg: rgba(10, 12, 18, 0.78);
-  --card-fg: rgba(255, 255, 255, 0.92);
-  --card-fg-muted: rgba(255, 255, 255, 0.72);
-  --card-border: rgba(255, 255, 255, 0.12);
-  background: var(--card-bg) !important;
-  border-color: var(--card-border) !important;
-  box-shadow:
-    0 18px 52px rgba(0, 0, 0, 0.60),
-    0 6px 16px rgba(0, 0, 0, 0.34),
-    0 34px 48px -26px rgba(var(--folder-color-rgb, 120, 180, 255), 0.45) !important;
-}
-
-:global(.dark) .tagBadge {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(0, 0, 0, 0.28);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-/* Папка архивариуса в стиле Apple 2007 */
+/* Paper folder card (session gallery) */
 
 .folderContainer {
   margin-bottom: 1rem;
@@ -41,130 +15,86 @@
   width: 100%;
   min-height: 120px;
   border-radius: 20px;
-  padding: 1.1rem 1.4rem;
+  padding: 1.15rem 1.35rem;
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  transition: all 0.3s ease;
-  --card-bg: rgba(255, 255, 255, 0.92);
-  --card-fg: rgba(15, 23, 42, 0.92);
-  --card-fg-muted: rgba(15, 23, 42, 0.64);
-  --card-border: rgba(15, 23, 42, 0.08);
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  /* Paper base (pastel from --folder-color-rgb) */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.10) 56%),
+    radial-gradient(110% 90% at 20% 10%, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.0) 58%),
+    radial-gradient(120% 110% at 100% 120%, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.0) 62%),
+    rgb(var(--folder-color-rgb, 235, 235, 235));
+  border: 1px solid rgba(0, 0, 0, 0.10);
   box-shadow:
-    0 16px 40px rgba(15, 23, 42, 0.10),
-    0 4px 12px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    0 18px 46px rgba(15, 23, 42, 0.14),
+    0 5px 14px rgba(15, 23, 42, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.06);
   overflow: hidden;
   isolation: isolate;
-  transform-style: preserve-3d;
-  will-change: transform;
 }
 
 .folderCard::before {
-  /* Aurora border ring (per-card) */
+  /* Folder tab */
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  padding: 1.25px;
+  left: 18px;
+  top: -12px;
+  width: min(56%, 320px);
+  height: 42px;
+  border-radius: 16px 16px 14px 14px;
   background:
-    conic-gradient(
-      from 220deg,
-      rgba(var(--folder-color-rgb, 120, 180, 255), 0.98),
-      rgba(255, 120, 200, 0.82),
-      rgba(255, 215, 140, 0.74),
-      rgba(140, 255, 220, 0.78),
-      rgba(var(--folder-color-rgb, 120, 180, 255), 0.98)
-    );
-  opacity: 0.68;
-  z-index: 0;
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.12) 58%),
+    rgb(var(--folder-color-rgb, 235, 235, 235));
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  box-shadow:
+    0 14px 26px rgba(15, 23, 42, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
   pointer-events: none;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-}
-
-:global(.dark) .folderCard::before {
-  opacity: 0.82;
+  z-index: 0;
 }
 
 .folderCard::after {
-  /* Tint + highlight inside the card (no circle pattern) */
+  /* Paper grain */
   content: "";
   position: absolute;
   inset: 0;
   border-radius: 20px;
   background:
-    radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.0) 62%),
-    radial-gradient(130% 95% at 88% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.26) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 66%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.0) 56%);
-  animation: none !important;
-  opacity: 1;
+    repeating-linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.10) 0px,
+      rgba(255, 255, 255, 0.10) 1px,
+      rgba(0, 0, 0, 0.06) 2px,
+      rgba(0, 0, 0, 0.06) 3px
+    ),
+    radial-gradient(120% 80% at 20% 0%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.0) 58%),
+    radial-gradient(90% 60% at 80% 80%, rgba(0, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.0) 62%);
+  opacity: 0.22;
+  mix-blend-mode: soft-light;
   pointer-events: none;
   z-index: 1;
 }
 
-:global(.dark) .folderCard::after {
-  background:
-    radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.0) 62%),
-    radial-gradient(130% 95% at 88% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.38) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 66%),
-    repeating-radial-gradient(
-      circle at 20% 30%,
-      rgba(255, 255, 255, 0.0) 0px,
-      rgba(255, 255, 255, 0.0) 14px,
-      rgba(255, 255, 255, 0.12) 18px,
-      rgba(255, 255, 255, 0.0) 26px
-    ),
-    repeating-radial-gradient(
-      circle at 85% 70%,
-      rgba(255, 255, 255, 0.0) 0px,
-      rgba(255, 255, 255, 0.0) 18px,
-      rgba(255, 255, 255, 0.10) 22px,
-      rgba(255, 255, 255, 0.0) 32px
-    ),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.0) 50%);
-  background-size: 100% 100%, 100% 100%, 240% 240%, 190% 190%, 100% 100%;
-  background-position: 0 0, 0 0, 0% 0%, 100% 100%, 0 0;
-  /* Override to remove circle pattern completely */
-  background:
-    radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.0) 62%),
-    radial-gradient(130% 95% at 88% 110%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.34) 0%, rgba(var(--folder-color-rgb, 120, 180, 255), 0.0) 66%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.0) 56%);
-  background-size: 100% 100%;
-  background-position: 0 0;
-  /* Disable caustics animation in dark mode */
-  animation: none !important;
-}
-
 .folderCard:hover {
-  transform: translateY(-2px) perspective(900px) rotateX(1.25deg);
+  transform: translateY(-2px);
   box-shadow:
-    0 22px 54px rgba(15, 23, 42, 0.14),
-    0 6px 16px rgba(15, 23, 42, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    0 22px 56px rgba(15, 23, 42, 0.16),
+    0 7px 18px rgba(15, 23, 42, 0.11),
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.07);
 }
 
-:global(.dark) .folderCard:hover {
-  box-shadow:
-    0 24px 66px rgba(0, 0, 0, 0.66),
-    0 10px 24px rgba(0, 0, 0, 0.38);
-}
-
-/* Корешок папки (левая часть) */
+/* Верхняя строка: название + меню */
 .folderSpine {
   position: relative;
   width: 100%;
-  padding: 0.75rem 0;
-  border-bottom: none;
-  margin-bottom: 0.75rem;
-  z-index: 1;
+  padding: 0.25rem 0;
+  margin-bottom: 0.65rem;
+  z-index: 2;
 }
 
 .spineRow {
@@ -178,37 +108,36 @@
   background: transparent;
   border: none;
   font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--card-fg, rgba(15, 23, 42, 0.92));
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.84);
   cursor: pointer;
   text-align: left;
   padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  transition: all 0.2s ease;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.35);
+  border-radius: 0.5rem;
+  transition: background 0.15s ease, opacity 0.15s ease;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
   flex: 1;
   min-width: 0;
 }
 
 .folderTitle:hover {
-  background: rgba(255, 255, 255, 0.35);
-  color: rgba(0, 0, 0, 0.92);
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .actionsButton {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px) saturate(160%);
-  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.10);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
 }
 
 .actionsButton:hover {
@@ -222,59 +151,16 @@
   color: rgba(0, 0, 0, 0.72);
 }
 
-/* Выпадающее меню (позиция через inline style при рендере в portal) */
+/* Выпадающее меню (portal) */
 .dropdownMenu {
   position: fixed;
   min-width: 220px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(255, 255, 255, 0.9) 100%
-  );
-  backdrop-filter: blur(30px) saturate(200%) brightness(1.1);
-  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.1);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.22);
   padding: 0.5rem;
   z-index: 22000;
-  animation: fadeInDown 0.2s ease;
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes seeeCaustics {
-  0% {
-    background-position: 0 0, 0 0, 0% 0%, 100% 100%, 0 0;
-  }
-  50% {
-    background-position: 0 0, 0 0, 100% 50%, 0% 40%, 0 0;
-  }
-  100% {
-    background-position: 0 0, 0 0, 0% 100%, 100% 0%, 0 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .folderCard,
-  .folderCard::after {
-    animation: none !important;
-    transition: none !important;
-  }
-  .folderCard:hover {
-    transform: none !important;
-  }
 }
 
 .menuItem {
@@ -285,23 +171,23 @@
   padding: 0.75rem 1rem;
   background: transparent;
   border: none;
-  border-radius: 0.5rem;
-  color: rgba(0, 0, 0, 0.8);
+  border-radius: 0.75rem;
+  color: rgba(0, 0, 0, 0.82);
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .menuItem:hover {
   background: rgba(0, 0, 0, 0.05);
-  transform: translateX(4px);
+  transform: translateX(3px);
 }
 
 .menuIcon {
   height: 1rem;
   width: 1rem;
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(0, 0, 0, 0.60);
 }
 
 .menuDanger {
@@ -316,41 +202,19 @@
   background: rgba(239, 68, 68, 0.12);
 }
 
-/* Основная часть папки */
+/* Основная часть */
 .folderBody {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex: 1;
-  z-index: 3;
+  z-index: 2;
 }
 
 .folderInfo {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-}
-
-.ideasCount {
-  font-size: 0.9rem;
-  color: var(--card-fg-muted, rgba(15, 23, 42, 0.64));
-  font-weight: 500;
-}
-
-.ideasBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.85);
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(10px) saturate(180%);
-  -webkit-backdrop-filter: blur(10px) saturate(180%);
 }
 
 .badgesRow {
@@ -360,20 +224,19 @@
   flex-wrap: wrap;
 }
 
+.ideasBadge,
 .tagBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25rem 0.55rem;
+  padding: 0.25rem 0.60rem;
   border-radius: 999px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.72);
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.76);
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(0, 0, 0, 0.10);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.10);
-  backdrop-filter: blur(10px) saturate(180%);
-  -webkit-backdrop-filter: blur(10px) saturate(180%);
 }
 
 .recommendationBadge {
@@ -382,49 +245,37 @@
   justify-content: center;
   padding: 0.25rem 0.55rem;
   border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 800;
+  font-size: 0.80rem;
+  font-weight: 900;
   color: rgba(255, 255, 255, 0.96);
-  background: rgba(220, 38, 38, 0.78);
+  background: rgba(220, 38, 38, 0.82);
   border: 1px solid rgba(254, 202, 202, 0.65);
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.28);
-  backdrop-filter: blur(8px) saturate(170%);
-  -webkit-backdrop-filter: blur(8px) saturate(170%);
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.22);
 }
 
-/* Кнопка перехода */
+.ideasCount {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.62);
+  font-weight: 600;
+}
+
 .navigateButton {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.4) 0%,
-    rgba(255, 255, 255, 0.3) 100%
-  );
-  backdrop-filter: blur(15px) saturate(180%);
-  -webkit-backdrop-filter: blur(15px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.70);
+  border: 1px solid rgba(0, 0, 0, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
 }
 
 .navigateButton:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(255, 255, 255, 0.4) 100%
-  );
-  transform: scale(1.1);
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14);
 }
 
 .arrowIcon {
@@ -433,65 +284,50 @@
   color: rgba(0, 0, 0, 0.72);
 }
 
-:global(.dark) .folderTitle:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.96);
+/* Dark theme tweaks */
+:global(.dark) .folderTitle {
+  color: rgba(0, 0, 0, 0.86);
 }
 
-:global(.dark) .actionsButton {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(0, 0, 0, 0.28);
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.38);
+:global(.dark) .folderCard {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 22px 62px rgba(0, 0, 0, 0.62),
+    0 6px 18px rgba(0, 0, 0, 0.34);
 }
 
-:global(.dark) .actionsButton:hover {
-  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.48);
-}
-
-:global(.dark) .actionsIcon {
-  color: rgba(255, 255, 255, 0.86);
-}
-
-:global(.dark) .ideasCount {
-  color: rgba(255, 255, 255, 0.72);
+:global(.dark) .folderCard::after {
+  opacity: 0.18;
 }
 
 :global(.dark) .dropdownMenu {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.8) 0%,
-    rgba(0, 0, 0, 0.7) 100%
-  );
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(8, 10, 14, 0.92);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 :global(.dark) .menuItem {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.92);
 }
 
 :global(.dark) .menuItem:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.10);
 }
 
 :global(.dark) .menuIcon {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.70);
 }
 
-:global(.dark) .navigateButton {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.2) 0%,
-    rgba(255, 255, 255, 0.15) 100%
-  );
-  border-color: rgba(255, 255, 255, 0.3);
+:global(.dark) .actionsButton {
+  background: rgba(255, 255, 255, 0.70);
+  border-color: rgba(0, 0, 0, 0.14);
 }
 
-:global(.dark) .arrowIcon {
-  color: var(--folder-fg, rgba(255, 255, 255, 0.9));
+@media (max-width: 520px) {
+  .folderCard {
+    padding: 1.05rem 1.1rem;
+  }
+  .folderTitle {
+    font-size: 1.02rem;
+  }
 }
 
-:global(.dark) .recommendationBadge {
-  background: rgba(239, 68, 68, 0.72);
-  border-color: rgba(254, 202, 202, 0.48);
-  color: rgba(255, 255, 255, 0.96);
-}

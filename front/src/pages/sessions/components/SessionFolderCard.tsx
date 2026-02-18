@@ -24,32 +24,30 @@ interface SessionFolderCardProps {
   ideasCount?: number;
 }
 
-// Glass-on-black works best with higher chroma colors (still not "acid"),
-// because the tint is partially transparent.
 const FOLDER_COLORS = [
-  "#38BDF8", // Neon water cyan
-  "#FB7185", // Jellyfish pink
-  "#F97316", // Coral orange
-  "#FACC15", // Sun coral yellow
-  "#4ADE80", // Turtle green
-  "#2DD4BF", // Tropical teal
-  "#A78BFA", // Electric purple
-  "#60A5FA", // Ocean blue
-  "#F43F5E", // Hot coral red
-  "#A3E635", // Algae lime
-  "#FB923C", // Reef orange
-  "#22C55E", // Seaweed green
+  "#D6E7F7", // paper sky
+  "#F2D6DC", // paper rose
+  "#EFE2CF", // paper sand
+  "#F3C7B6", // paper peach
+  "#DEE0F4", // paper lavender
+  "#D7ECE4", // paper mint
+  "#F4E6C7", // paper wheat
+  "#DDE8E0", // paper sage
+  "#E7D8F2", // paper lilac
+  "#DCEAF6", // paper ice
+  "#F2DCC8", // paper clay
+  "#E6E6E6", // paper gray
 ];
 
 const TO_EXPLORE_COLORS = [
-  "#22D3EE", // Reef glow
-  "#FB923C", // Coral branch
-  "#F472B6", // Jellyfish blush
-  "#34D399", // Seaweed
-  "#FDE047", // Sun-coral
-  "#8B5CF6", // Purple depth
-  "#3B82F6", // Deep blue
-  "#FB7185", // Reef red
+  "#D6E7F7",
+  "#F2D6DC",
+  "#EFE2CF",
+  "#F3C7B6",
+  "#D7ECE4",
+  "#DEE0F4",
+  "#F4E6C7",
+  "#DDE8E0",
 ];
 
 function stableModuloFromString(value: string, modulo: number) {
@@ -235,7 +233,6 @@ const SessionFolderCard = observer(({
           ["--folder-fg-strong" as any]: folderFgStrong,
           ["--folder-fg-muted" as any]: folderFgMuted,
           ["--folder-text-shadow" as any]: folderTextShadow,
-          boxShadow: `0 4px 12px ${folderColor}40`,
         }}
       >
         {/* Верхняя строка: название + меню */}
