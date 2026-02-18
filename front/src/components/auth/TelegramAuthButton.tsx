@@ -134,7 +134,16 @@ const TelegramAuthButton = observer(
         },
         async (telegramUser) => {
           if (!telegramUser) {
-            toast.message("Telegram вход отменён");
+            const host = typeof window !== "undefined" ? window.location.host : "";
+            const proto = typeof window !== "undefined" ? window.location.protocol : "";
+            const isHttps = proto === "https:";
+
+            toast.error(
+              `Telegram не вернул данные для входа/привязки. ` +
+                `Проверьте домен бота (/setdomain в BotFather: ${host || "ваш домен"})` +
+                `${isHttps ? "" : " и откройте сайт по HTTPS"}. ` +
+                `Также попробуйте открыть в обычном браузере (не внутри Telegram/Instagram) и разрешить всплывающие окна.`
+            );
             setIsLoading(false);
             return;
           }
