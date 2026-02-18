@@ -25,6 +25,7 @@ const ProfileSection = observer(({ profile }: ProfileSectionProps) => {
   const [isEditingUserId, setIsEditingUserId] = useState(false);
   const [userIdDraft, setUserIdDraft] = useState("");
   const [isSavingUserId, setIsSavingUserId] = useState(false);
+  const [isGeneratingTelegramLink, setIsGeneratingTelegramLink] = useState(false);
 
   useEffect(() => {
     if (!profile?.username) return;
@@ -251,6 +252,43 @@ const ProfileSection = observer(({ profile }: ProfileSectionProps) => {
             >
               Привязать Telegram
             </TelegramAuthButton>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full mt-2"
+              disabled={isGeneratingTelegramLink}
+              onClick={async () => {
+                if (isGeneratingTelegramLink) return;
+                setIsGeneratingTelegramLink(true);
+                try {
+                  const res = await apiAgent.post<
+                    undefined,
+                    { url: string; expiresAt: string }
+                  >("/auth/telegram/link-token", undefined);
+
+                  try {
+                    await navigator.clipboard.writeText(res.url);
+                    toast.success("Ссылка скопирована. Откройте её в Telegram.");
+                  } catch {
+                    toast.message("Откройте ссылку для привязки Telegram");
+                  }
+
+                  window.open(res.url, "_blank", "noopener,noreferrer");
+                } catch (err: any) {
+                  const msg = err?.response?.data?.message;
+                  toast.error(
+                    typeof msg === "string"
+                      ? msg
+                      : "Не удалось сгенерировать ссылку для Telegram"
+                  );
+                } finally {
+                  setIsGeneratingTelegramLink(false);
+                }
+              }}
+            >
+              {isGeneratingTelegramLink ? "Генерация..." : "Привязать через бота"}
+            </Button>
           </div>
         ) : (
           <div className="mt-4 flex flex-col gap-2">
