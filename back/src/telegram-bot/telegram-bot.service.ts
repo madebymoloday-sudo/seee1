@@ -158,7 +158,13 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       this.languageByChat.set(chatId, initialLang);
     }
 
-    if (text === '/start') {
+    if (text === '/start' || text.startsWith('/start ')) {
+      const payload = text.startsWith('/start ') ? text.slice('/start '.length).trim() : '';
+      if (payload.startsWith('link_')) {
+        const token = payload.slice('link_'.length).trim();
+        await this.tryLinkAccountFromStartPayload(message, token);
+        return;
+      }
       await this.sendWelcome(chatId);
       return;
     }
@@ -287,6 +293,77 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         ru: 'Нажмите "Запускаемся", чтобы начать.',
         en: "Tap 'Let's start' to begin.",
       }),
+      this.getKeyboard(chatId),
+    );
+  }
+
+  private async tryLinkAccountFromStartPayload(
+    message: TelegramMessage,
+    token: string,
+  ) {
+    const chatId = message.chat.id;
+    const fromId = message.from?.id;
+    if (!fromId) {
+      await this.sendMessage(
+        chatId,
+        'Не удалось получить ваш Telegram ID. Попробуйте открыть ссылку ещё раз.',
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    if (!token) {
+      await this.sendMessage(
+        chatId,
+        'Ссылка для привязки повреждена. Запросите новую в личном кабинете Seee.',
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    const record = await this.prisma.telegramLinkToken.findUnique({
+      where: { token },
+      select: { id: true, userId: true, expiresAt: true },
+    });
+
+    if (!record || record.expiresAt < new Date()) {
+      await this.sendMessage(
+        chatId,
+        'Ссылка для привязки недействительна или истекла. Запросите новую в личном кабинете Seee.',
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    const telegramId = String(fromId);
+
+    // Make sure telegramId isn't already linked to someone else.
+    const existing = await this.prisma.user.findUnique({
+      where: { telegramId },
+      select: { id: true },
+    });
+    if (existing && existing.id !== record.userId) {
+      await this.sendMessage(
+        chatId,
+        'Этот Telegram уже привязан к другому аккаунту Seee.',
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: record.userId },
+        data: { telegramId },
+      }),
+      this.prisma.telegramLinkToken.delete({
+        where: { id: record.id },
+      }),
+    ]);
+
+    await this.sendMessage(
+      chatId,
+      '✅ Готово! Telegram привязан к вашему аккаунту Seee. Теперь можно входить и восстанавливать пароль через Telegram.',
       this.getKeyboard(chatId),
     );
   }

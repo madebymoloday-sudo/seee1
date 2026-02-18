@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -150,6 +151,8 @@ export class AuthController {
 
   @Post('admin/password-reset-link')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary:
       'Админ: сгенерировать reset link и вернуть в ответе (для ручной поддержки)',
@@ -162,14 +165,43 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Неверный admin key' })
   @ApiResponse({ status: 404, description: 'Пользователь не найден' })
   async adminGeneratePasswordResetLink(
-    @Headers('x-admin-key') adminKey: string | undefined,
+    @Request() req: { user: { id: string; role?: string } },
     @Body() dto: AdminGeneratePasswordResetLinkDto,
   ): Promise<AdminGeneratePasswordResetLinkResponseDto> {
-    // Minimal guard: single secret header. Keeps support flow simple.
-    if (!this.authService.isAdminKeyValid(adminKey)) {
-      throw new UnauthorizedException('Invalid admin key');
+    if ((req.user?.role || '').toLowerCase() !== 'admin') {
+      throw new ForbiddenException('Admin only');
     }
     return this.authService.adminGeneratePasswordResetLink(dto);
+  }
+
+  @Post('telegram/link-token')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Сгенерировать ссылку для привязки Telegram через бота',
+  })
+  async createTelegramLinkToken(
+    @Request() req: { user: { id: string } },
+  ): Promise<{ url: string; expiresAt: string }> {
+    return this.authService.createTelegramBotLinkToken(req.user.id);
+  }
+
+  @Post('admin/telegram/link-token')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Админ: сгенерировать ссылку привязки Telegram по email',
+  })
+  async adminCreateTelegramLinkToken(
+    @Request() req: { user: { id: string; role?: string } },
+    @Body() dto: { email: string },
+  ): Promise<{ url: string; expiresAt: string; telegramLinked: boolean }> {
+    if (!req.user?.id) {
+      throw new ForbiddenException('No user');
+    }
+    return this.authService.adminCreateTelegramBotLinkToken(req.user, dto.email);
   }
 
   @Post('refresh')

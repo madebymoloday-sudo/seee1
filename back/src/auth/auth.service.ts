@@ -27,6 +27,7 @@ import {
   AdminGeneratePasswordResetLinkDto,
   AdminGeneratePasswordResetLinkResponseDto,
 } from './dto/admin.dto';
+import { ForbiddenException } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
@@ -52,17 +53,6 @@ export class AuthService {
     private passwordResetService: PasswordResetService,
     private configService: ConfigService,
   ) {}
-
-  isAdminKeyValid(adminKey: string | undefined): boolean {
-    const key = String(adminKey || '').trim();
-    if (!key) return false;
-    const configured =
-      this.configService.get<string>('ADMIN_API_KEY') ||
-      this.configService.get<string>('LAVATOP_WEBHOOK_API_KEY') ||
-      '';
-    if (!configured) return false;
-    return key === configured;
-  }
 
   async adminGeneratePasswordResetLink(
     dto: AdminGeneratePasswordResetLinkDto,
@@ -99,6 +89,47 @@ export class AuthService {
       expiresAt: expiresAt.toISOString(),
       telegramLinked: !!user.telegramId,
     };
+  }
+
+  async createTelegramBotLinkToken(userId: string): Promise<{
+    url: string;
+    expiresAt: string;
+  }> {
+    const EXPIRES_MINUTES = 30;
+    const token = randomBytes(24).toString('hex');
+    const expiresAt = new Date(Date.now() + EXPIRES_MINUTES * 60 * 1000);
+
+    // One active token per user.
+    await this.prisma.telegramLinkToken.upsert({
+      where: { userId },
+      update: { token, expiresAt },
+      create: { token, userId, expiresAt },
+      select: { id: true },
+    });
+
+    const botUsername =
+      this.configService.get<string>('TELEGRAM_BOT_USERNAME') || 'SeeeAppBot';
+    const url = `https://t.me/${botUsername}?start=link_${token}`;
+    return { url, expiresAt: expiresAt.toISOString() };
+  }
+
+  async adminCreateTelegramBotLinkToken(
+    adminUser: { id: string; role?: string },
+    emailRaw: string,
+  ): Promise<{ url: string; expiresAt: string; telegramLinked: boolean }> {
+    if ((adminUser.role || '').toLowerCase() !== 'admin') {
+      throw new ForbiddenException('Admin only');
+    }
+    const email = (emailRaw || '').trim().toLowerCase();
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, telegramId: true, email: true },
+    });
+    if (!user?.id) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+    const { url, expiresAt } = await this.createTelegramBotLinkToken(user.id);
+    return { url, expiresAt, telegramLinked: !!user.telegramId };
   }
 
   async login(email: string, password: string): Promise<AuthResponseDto> {
