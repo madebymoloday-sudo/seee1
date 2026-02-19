@@ -42,11 +42,11 @@ const HomePage = observer(() => {
                 />
                 <h1 className={`text-3xl font-bold ${styles.loginTitle}`}>Seee</h1>
               </div>
-              <p className={`text-base ${styles.loginSubtitle}`}>Войдите в свой аккаунт</p>
+              <p className="text-base text-white/90">Войдите в свой аккаунт</p>
             </div>
             {showRegister ? (
               <div>
-                <p className={`text-sm mb-4 text-center ${styles.loginSubtitle}`}>
+                <p className="text-sm mb-4 text-center text-white/90">
                   Уже есть аккаунт?{" "}
                   <button
                     onClick={() => setShowRegister(false)}
@@ -76,11 +76,12 @@ const HomePage = observer(() => {
             ) : (
               <>
                 <LoginForm />
-                <p className={`text-sm mt-4 text-center ${styles.loginSubtitle}`}>
+                <p className="text-sm mt-4 text-center text-white/90">
                   Нет аккаунта?{" "}
                   <button
+                    type="button"
                     onClick={() => setShowRegister(true)}
-                    className="underline hover:opacity-80"
+                    className="text-white underline hover:text-white/90"
                   >
                     Оформить подписку и зарегистрироваться
                   </button>

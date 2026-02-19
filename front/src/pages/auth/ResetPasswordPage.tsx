@@ -80,7 +80,7 @@ const ResetPasswordPage = observer(() => {
             />
             <h1 className={`text-3xl font-bold ${styles.loginTitle}`}>Seee</h1>
           </div>
-          <p className={`mt-2 ${styles.loginSubtitle}`}>
+          <p className="mt-2 text-white/90">
             {success ? "Пароль изменён" : "Новый пароль"}
           </p>
         </div>
@@ -186,11 +186,12 @@ const ResetPasswordPage = observer(() => {
         )}
 
         <div className="mt-6 text-center">
-          <p className={`text-sm ${styles.loginSubtitle}`}>
+          <p className="text-sm text-white/90">
             Вспомнили пароль?{" "}
             <button
+              type="button"
               onClick={() => navigate("/login")}
-              className="underline hover:text-white/80"
+              className="text-white underline hover:text-white"
             >
               Войти
             </button>

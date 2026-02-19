@@ -178,8 +178,10 @@
   border: 1px solid rgba(255, 255, 255, 0.24) !important;
 }
 
-.loginFormContainer label {
-  color: rgba(255, 255, 255, 0.86) !important;
+.loginFormContainer label,
+.loginFormContainer .loginSubtitle,
+.loginFormContainer p {
+  color: rgba(255, 255, 255, 0.92) !important;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
 }
 
