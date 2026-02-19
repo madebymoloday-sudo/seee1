@@ -64,7 +64,22 @@ function loadTelegramWidgetScript(): Promise<void> {
     const script = document.createElement("script");
     script.src = "https://telegram.org/js/telegram-widget.js?22";
     script.async = true;
-    script.onload = () => resolve();
+    script.onload = () => {
+      // Виджет может выставить Telegram.Login.auth не сразу после onload
+      const startedAt = Date.now();
+      const poll = () => {
+        if (window.Telegram?.Login?.auth) {
+          resolve();
+          return;
+        }
+        if (Date.now() - startedAt > 8000) {
+          reject(new Error("Telegram SDK load timeout"));
+          return;
+        }
+        setTimeout(poll, 150);
+      };
+      poll();
+    };
     script.onerror = () => reject(new Error("Failed to load Telegram SDK"));
     document.body.appendChild(script);
   });
@@ -127,12 +142,21 @@ const TelegramAuthButton = observer(
         return;
       }
 
+      // Таймаут: если callback не вызвался (редирект в том же окне или popup заблокирован), снять "Загрузка..."
+      const loadingTimeout = window.setTimeout(() => {
+        setIsLoading(false);
+        toast.info(
+          "Если открылось окно Telegram — завершите вход там. Если ничего не открылось — разрешите всплывающие окна или попробуйте снова."
+        );
+      }, 12000);
+
       authFn(
         {
           bot_id: botId,
           request_access: "write",
         },
         async (telegramUser) => {
+          window.clearTimeout(loadingTimeout);
           if (!telegramUser) {
             const host = typeof window !== "undefined" ? window.location.host : "";
             const proto = typeof window !== "undefined" ? window.location.protocol : "";

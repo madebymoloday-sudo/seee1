@@ -5,6 +5,11 @@ import { Toaster } from "sonner";
 import { useAuth } from "./hooks/useAuth";
 import { useMobileUiScale } from "./hooks/useMobileUiScale";
 import { useTheme } from "./hooks/useTheme";
+import apiAgent from "./lib/api";
+import {
+  getTelegramAuthFromUrl,
+  clearTelegramAuthFromUrl,
+} from "./lib/telegramAuthFromUrl";
 import { protectedRouter } from "./router/protectedRouter";
 import { publicRouter } from "./router/publicRouter";
 import { RootStoreContext, rootStore } from "./store/rootStore";
@@ -36,6 +41,41 @@ const AppContent = observer(() => {
 });
 
 function App() {
+  // Обработка возврата из Telegram при редиректе в том же окне (мобильные / блокировка popup)
+  useEffect(() => {
+    if (localStorage.getItem("accessToken")) return;
+    const payload = getTelegramAuthFromUrl();
+    if (!payload) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await apiAgent.post<
+          typeof payload,
+          { accessToken: string; refreshToken: string }
+        >("/auth/telegram/login", {
+          id: payload.id,
+          first_name: payload.first_name,
+          last_name: payload.last_name,
+          username: payload.username,
+          photo_url: payload.photo_url,
+          auth_date: payload.auth_date,
+          hash: payload.hash,
+        });
+        if (cancelled) return;
+        localStorage.setItem("accessToken", response.accessToken);
+        localStorage.setItem("refreshToken", response.refreshToken);
+        clearTelegramAuthFromUrl();
+        window.location.reload();
+      } catch {
+        if (!cancelled) clearTelegramAuthFromUrl();
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     // Загружаем Telegram Login SDK (без data-атрибутов виджета в DOM,
     // чтобы не рендерить ошибку "Username invalid" при bot_id формате).
@@ -45,7 +85,6 @@ function App() {
     document.body.appendChild(script);
 
     return () => {
-      // Удаляем скрипт при размонтировании
       const existingScript = document.querySelector(
         'script[src="https://telegram.org/js/telegram-widget.js?22"]'
       );
