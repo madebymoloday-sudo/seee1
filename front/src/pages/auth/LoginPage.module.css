@@ -125,14 +125,14 @@
   z-index: 2;
 }
 
-/* Заголовок */
+/* Заголовок и подзаголовки — всегда белые */
 .loginTitle {
-  color: rgba(255, 255, 255, 0.96);
+  color: rgba(255, 255, 255, 0.98) !important;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.55);
 }
 
 .loginSubtitle {
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.95) !important;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
 }
 
@@ -178,16 +178,27 @@
   border: 1px solid rgba(255, 255, 255, 0.24) !important;
 }
 
+/* Все подписи и текст в форме входа — белые (в т.ч. на мобильных) */
 .loginFormContainer label,
-.loginFormContainer .loginSubtitle,
-.loginFormContainer p {
-  color: rgba(255, 255, 255, 0.92) !important;
+.loginFormContainer .label,
+.loginFormContainer p,
+.loginFormContainer span,
+.loginFormContainer a {
+  color: rgba(255, 255, 255, 0.95) !important;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+}
+
+.loginFormContainer a:hover {
+  color: rgba(255, 255, 255, 1) !important;
+}
+
+.loginFormContainer button {
+  color: rgba(255, 255, 255, 0.95) !important;
 }
 
 /* Стили для label */
 .label {
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(255, 255, 255, 0.95) !important;
   font-size: 0.875rem;
   font-weight: 500;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
