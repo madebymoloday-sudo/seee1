@@ -949,6 +949,10 @@ export class AuthService {
   }
 
   private toUserProfileDto(user: any): UserProfileDto {
+    const adminEmail = (this.configService.get<string>('ADMIN_EMAIL') || 'gulopavel@gmail.com').trim().toLowerCase();
+    const isAdminByEmail = adminEmail && user.email && user.email.toLowerCase() === adminEmail;
+    const role = isAdminByEmail ? 'admin' : (user.role || 'user');
+
     return {
       id: user.id,
       username: user.username,
@@ -957,6 +961,7 @@ export class AuthService {
       avatarUrl: user.avatarUrl,
       telegramId: user.telegramId ?? null,
       userId: user.userId ?? null,
+      role,
       subscriptionStatus: user.subscriptionStatus,
       subscriptionActive: !!user.subscriptionActive,
       subscriptionEndsAt: user.subscriptionEndsAt

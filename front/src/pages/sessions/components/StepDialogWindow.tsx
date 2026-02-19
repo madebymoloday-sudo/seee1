@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import type { SessionResponseDto } from "@/api/schemas";
 import { parseImportantOptions } from "@/lib/sessionUtils";
+import { getTestModeFromStorage } from "@/hooks/useTestMode";
 import MessageInput from "./MessageInput";
 import chatStyles from "./ChatWindow.module.css";
 import styles from "./StepDialogWindow.module.css";
@@ -464,6 +465,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isIdeasModalOpen, setIsIdeasModalOpen] = useState(false);
   const [activeIdeaMenu, setActiveIdeaMenu] = useState<string | null>(null);
+  const [showReactiveCard, setShowReactiveCard] = useState(false);
+  const pendingTransitionRef = useRef<DialogState | null>(null);
   const timersRef = useRef<number[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const forceEditOnStepSyncRef = useRef(false);
@@ -701,6 +704,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     setIsTransitioning(true);
     setIsFadingOut(false);
 
+    const isTestMode = getTestModeFromStorage();
+    if (isTestMode) {
+      pendingTransitionRef.current = nextStateWithAnswer;
+      setShowReactiveCard(true);
+      return;
+    }
+
     for (const t of timersRef.current) window.clearTimeout(t);
     timersRef.current = [];
 
@@ -714,6 +724,21 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         // for the next step we'll switch to edit/review depending on saved answer (effect)
       }, 850)
     );
+  };
+
+  const applyPendingTransition = () => {
+    const pending = pendingTransitionRef.current;
+    if (!pending) {
+      setShowReactiveCard(false);
+      setIsTransitioning(false);
+      return;
+    }
+    pendingTransitionRef.current = null;
+    setShowReactiveCard(false);
+    setState(pending);
+    setLastUserAnswer(null);
+    setIsFadingOut(false);
+    setIsTransitioning(false);
   };
 
   const goDeepPick = () => {
@@ -1143,8 +1168,20 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         </div>
       )}
 
+      {/* Тестовый режим: карточка реакции на ответ (уточнения, подсказки, переход к мысли) */}
+      {showReactiveCard && (
+        <div className={styles.reactiveCard}>
+          <p className={styles.reactiveCardText}>
+            В тестовом режиме здесь будут уточняющие вопросы по вашему ответу, подсказки и возможность перейти к разбору конкретной мысли.
+          </p>
+          <Button onClick={applyPendingTransition} className={chatStyles.glassButton}>
+            Продолжить
+          </Button>
+        </div>
+      )}
+
       {/* Ввод ответа (только там, где нужен текст) */}
-      {showBottomEditorActions && (
+      {showBottomEditorActions && !showReactiveCard && (
         <div className={styles.inputAlignWrapper}>
           <MessageInput
             ref={inputRef}

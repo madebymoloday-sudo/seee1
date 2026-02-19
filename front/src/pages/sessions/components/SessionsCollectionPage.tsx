@@ -3,12 +3,13 @@ import { createPortal } from "react-dom";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
 import { useSessions } from "@/hooks/useSessions";
-import { Plus, Search, SlidersHorizontal } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SessionFolderCard from "./SessionFolderCard";
 import BottomNavigation from "./BottomNavigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useTestMode } from "@/hooks/useTestMode";
 import NotesModal from "./NotesModal";
 import styles from "./SessionsCollectionPage.module.css";
 import { toast } from "sonner";
@@ -409,7 +410,8 @@ const SessionsCollectionPage = observer(() => {
   const [feedbackInfoSessionId, setFeedbackInfoSessionId] = useState<string | null>(null);
   const [ideasInfoSessionId, setIdeasInfoSessionId] = useState<string | null>(null);
 
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const { isTestMode, toggleTestMode, canUseTestMode } = useTestMode();
   const [showTelegramPrompt, setShowTelegramPrompt] = useState(false);
 
   useEffect(() => {
@@ -710,14 +712,28 @@ const SessionsCollectionPage = observer(() => {
             <img src="/seee-logo-128.png" alt="Seee" className={styles.logo} />
             <h1 className={styles.title}>Галерея сессий</h1>
           </div>
-          <Button
-            onClick={handleCreateSession}
-            className={styles.plusButton}
-            size="icon"
-            title="Новая сессия"
-          >
-            <Plus className={styles.plusIcon} />
-          </Button>
+          <div className={styles.headerActions}>
+            {canUseTestMode && (
+              <Button
+                onClick={toggleTestMode}
+                variant={isTestMode ? "default" : "outline"}
+                size="sm"
+                className={styles.testModeButton}
+                title={isTestMode ? "Выключить тестовый режим" : "Включить тестовый режим"}
+              >
+                <FlaskConical className={styles.testModeIcon} />
+                {isTestMode ? "Тестовый вкл" : "Тестовый режим"}
+              </Button>
+            )}
+            <Button
+              onClick={handleCreateSession}
+              className={styles.plusButton}
+              size="icon"
+              title="Новая сессия"
+            >
+              <Plus className={styles.plusIcon} />
+            </Button>
+          </div>
         </div>
 
         {/* Поиск и сортировка */}

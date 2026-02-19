@@ -11,13 +11,16 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import FeedbackModal from "../sessions/components/FeedbackModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useTestMode } from "@/hooks/useTestMode";
 import apiAgent from "@/lib/api";
 import { toast } from "sonner";
+import { FlaskConical } from "lucide-react";
 
 const CabinetPage = observer(() => {
   const { data: profile } = useAuthControllerGetMe();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const { isTestMode, setTestMode, canUseTestMode } = useTestMode();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [chatNotes, setChatNotes] = useState<
     Array<{ chatId: string; chatTitle: string; text: string; updatedAt: string }>
@@ -109,6 +112,35 @@ const CabinetPage = observer(() => {
           <User className="h-8 w-8" />
           Личный кабинет
         </h1>
+
+        {canUseTestMode && (
+          <div className="mb-6 rounded-xl border bg-card p-4">
+            <h2 className="mb-3 text-lg font-semibold flex items-center gap-2">
+              <FlaskConical className="h-5 w-5" />
+              Режим тестирования
+            </h2>
+            <p className="text-sm text-muted-foreground mb-3">
+              Включите, чтобы видеть экспериментальные функции в сессиях (уточняющие вопросы, подсказки, переход к мысли).
+            </p>
+            <div className="flex items-center gap-3">
+              <Button
+                variant={isTestMode ? "default" : "outline"}
+                onClick={() => setTestMode(true)}
+              >
+                Включить
+              </Button>
+              <Button
+                variant={isTestMode ? "outline" : "default"}
+                onClick={() => setTestMode(false)}
+              >
+                Выключить
+              </Button>
+              {isTestMode && (
+                <span className="text-sm text-emerald-600 dark:text-emerald-400">Включён</span>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="mb-6 rounded-xl border bg-card p-4">
           <h2 className="mb-3 text-lg font-semibold">Разделы</h2>
