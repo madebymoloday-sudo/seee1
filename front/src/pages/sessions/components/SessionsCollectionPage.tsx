@@ -608,10 +608,7 @@ const SessionsCollectionPage = observer(() => {
   const getIdeasCountForSession = (session: SessionResponseDto) => {
     const fromLocal = getIdeasCountFromLocalState(session.id);
     const base = typeof session.messageCount === "number" ? session.messageCount : 0;
-    const total = Math.max(fromLocal, base);
-    // Если у сессии есть название — считаем, что 1 идея/концепция есть всегда.
-    if ((session.title ?? "").trim().length > 0) return Math.max(1, total);
-    return total;
+    return Math.max(fromLocal, base);
   };
 
   const recommendedTemplateIds = useMemo(
