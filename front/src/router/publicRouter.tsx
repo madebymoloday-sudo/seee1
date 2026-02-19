@@ -11,6 +11,7 @@ import SessionsCollectionPage from "../pages/sessions/components/SessionsCollect
 import OfferPage from "../pages/legal/OfferPage";
 import PrivacyPolicyPage from "../pages/legal/PrivacyPolicyPage";
 import RefundPolicyPage from "../pages/legal/RefundPolicyPage";
+import PublicSubscriptionPage from "../pages/subscription/PublicSubscriptionPage";
 
 /**
  * Роутер для неавторизованных пользователей
@@ -69,6 +70,14 @@ export const publicRouter = createBrowserRouter([
     element: (
       <PublicRoute>
         <ResetPasswordPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/subscription",
+    element: (
+      <PublicRoute>
+        <PublicSubscriptionPage />
       </PublicRoute>
     ),
   },

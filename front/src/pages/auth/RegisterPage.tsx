@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff } from "lucide-react";
@@ -12,6 +12,7 @@ import styles from "./LoginPage.module.css";
 const RegisterPage = observer(() => {
   const { isAuthenticated, register: registerUser, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -51,7 +52,17 @@ const RegisterPage = observer(() => {
       });
 
       toast.success("Регистрация успешна! Вы вошли в систему.");
-      // Редирект произойдёт автоматически через isAuthenticated
+      // If user came from a referral link — send them to subscription page.
+      const ref = searchParams.get("ref");
+      if (ref) {
+        try {
+          localStorage.setItem("seee_ref", ref);
+        } catch {
+          // ignore
+        }
+        navigate("/subscription", { replace: true });
+        return;
+      }
       navigate("/neuro", { replace: true });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Ошибка регистрации";

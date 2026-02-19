@@ -31,7 +31,7 @@ const ReferralSystem = () => {
           userId: user?.id || "unknown",
           balance: 0,
           promoCode: `PROMO${user?.id?.substring(0, 8).toUpperCase() || "XXXX"}`,
-          referralLink: `${window.location.origin}/register?ref=${user?.id || "unknown"}&utm_source=referral`,
+          referralLink: `${window.location.origin}/subscription?ref=${user?.id || "unknown"}&utm_source=referral`,
         });
       } catch (error) {
         console.error("Ошибка загрузки реферальных данных:", error);
