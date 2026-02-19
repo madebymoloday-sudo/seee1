@@ -56,11 +56,22 @@ const HomePage = observer(() => {
                   </button>
                 </p>
                 <Button
-                  onClick={() => navigate("/register")}
+                  onClick={() => navigate("/subscription")}
                   className="w-full bg-white/14 hover:bg-white/18 text-white border border-white/22"
                 >
-                  Перейти к регистрации
+                  Оформить подписку и зарегистрироваться
                 </Button>
+                <p className="text-xs mt-3 text-center text-white/70">
+                  Поддержка:{" "}
+                  <a
+                    href="https://t.me/SeeeAppBot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-white/90"
+                  >
+                    Telegram
+                  </a>
+                </p>
               </div>
             ) : (
               <>
@@ -71,8 +82,19 @@ const HomePage = observer(() => {
                     onClick={() => setShowRegister(true)}
                     className="underline hover:opacity-80"
                   >
-                    Зарегистрироваться
+                    Оформить подписку и зарегистрироваться
                   </button>
+                </p>
+                <p className="text-xs mt-3 text-center text-white/70">
+                  Поддержка:{" "}
+                  <a
+                    href="https://t.me/SeeeAppBot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-white/90"
+                  >
+                    Telegram
+                  </a>
                 </p>
               </>
             )}

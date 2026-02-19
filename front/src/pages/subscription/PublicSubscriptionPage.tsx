@@ -40,7 +40,7 @@ export default function PublicSubscriptionPage() {
               <Link to="/login">Войти</Link>
             </Button>
             <Button asChild className="rounded-xl">
-              <Link to="/register">Начать</Link>
+              <Link to="/">На главную</Link>
             </Button>
           </div>
         </div>
@@ -54,8 +54,8 @@ export default function PublicSubscriptionPage() {
           </div>
 
           <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-            Нажмите кнопку ниже, чтобы оплатить подписку. Если вы уже оплатили — войдите в
-            аккаунт и продолжайте пользоваться Seee.
+            Нажмите кнопку ниже, чтобы оплатить подписку. После оплаты вы перейдёте к регистрации.
+            Если вы уже оплатили — нажмите «Перейти к регистрации» ниже. Уже есть аккаунт — войдите.
           </p>
 
           {ref ? (
@@ -76,7 +76,9 @@ export default function PublicSubscriptionPage() {
 
           <div className="mt-5 flex flex-col sm:flex-row gap-3 items-stretch">
             <Button asChild size="lg" className="rounded-2xl">
-              <Link to="/register">Создать аккаунт</Link>
+              <Link to={ref ? `/payment-success?ref=${encodeURIComponent(ref)}` : "/payment-success"}>
+                Уже оплатили? Перейти к регистрации
+              </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-2xl">
               <Link to="/login">Войти</Link>

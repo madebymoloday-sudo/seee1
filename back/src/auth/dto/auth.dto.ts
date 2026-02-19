@@ -54,6 +54,14 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty()
   name?: string;
+
+  @ApiPropertyOptional({
+    description: 'ID пользователя, который пригласил (реферальный источник)',
+    example: 'uuid-реферера',
+  })
+  @IsString()
+  @IsOptional()
+  referrerId?: string;
 }
 
 export class RefreshTokenDto {

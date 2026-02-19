@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { observer } from "mobx-react-lite";
 import {
   Brain,
@@ -26,6 +26,9 @@ type Feature = {
 
 const LandingPage = observer(() => {
   const { isAuthenticated } = useAuth();
+  const [searchParams] = useSearchParams();
+  const ref = searchParams.get("ref") || "";
+  const subscriptionPath = ref ? `/subscription?ref=${ref}&utm_source=referral` : "/subscription";
 
   // Если вдруг в publicRouter оказались авторизованы (редкий случай) — не показываем лендинг.
   if (isAuthenticated) {
@@ -127,7 +130,7 @@ const LandingPage = observer(() => {
               <Link to="/login">Войти</Link>
             </Button>
             <Button asChild className="rounded-xl">
-              <Link to="/register">Начать</Link>
+              <Link to={subscriptionPath}>Оформить подписку</Link>
             </Button>
           </div>
         </div>
@@ -154,7 +157,7 @@ const LandingPage = observer(() => {
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Button asChild size="lg" className="rounded-2xl">
-                <Link to="/register">Создать аккаунт</Link>
+                <Link to={subscriptionPath}>Оформить подписку и начать</Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="rounded-2xl">
                 <Link to="/login">Уже есть аккаунт</Link>
@@ -364,7 +367,7 @@ const LandingPage = observer(() => {
 
               <div className="mt-5 flex flex-col sm:flex-row gap-3">
                 <Button asChild size="lg" className="rounded-2xl">
-                  <Link to="/register">Создать аккаунт</Link>
+                  <Link to={subscriptionPath}>Оформить подписку</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="rounded-2xl">
                   <Link to="/login">Войти</Link>
@@ -645,7 +648,7 @@ const LandingPage = observer(() => {
               </p>
               <div className="mt-5 flex flex-col sm:flex-row gap-3">
                 <Button asChild size="lg" className="rounded-2xl">
-                  <Link to="/register">Начать бесплатно</Link>
+                  <Link to={subscriptionPath}>Оформить подписку</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="rounded-2xl">
                   <Link to="/login">Войти</Link>
@@ -691,7 +694,7 @@ const LandingPage = observer(() => {
             <Link to="/forgot-password" className="hover:underline">
               Забыли пароль?
             </Link>
-            <Link to="/register" className="hover:underline">
+            <Link to={subscriptionPath} className="hover:underline">
               Регистрация
             </Link>
             <Link to="/legal/offer" className="hover:underline">

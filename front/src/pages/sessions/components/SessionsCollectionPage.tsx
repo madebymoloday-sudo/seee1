@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SessionFolderCard from "./SessionFolderCard";
 import BottomNavigation from "./BottomNavigation";
+import { useAuth } from "@/hooks/useAuth";
 import NotesModal from "./NotesModal";
 import styles from "./SessionsCollectionPage.module.css";
 import { toast } from "sonner";
@@ -408,6 +409,25 @@ const SessionsCollectionPage = observer(() => {
   const [feedbackInfoSessionId, setFeedbackInfoSessionId] = useState<string | null>(null);
   const [ideasInfoSessionId, setIdeasInfoSessionId] = useState<string | null>(null);
 
+  const { user } = useAuth();
+  const [showTelegramPrompt, setShowTelegramPrompt] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    if (!user.subscriptionActive) return;
+    if (user.telegramId) return;
+    try {
+      const dismissed = localStorage.getItem(`seee_telegram_prompt_dismissed:${user.id}`);
+      if (dismissed === "1") {
+        setShowTelegramPrompt(false);
+      } else {
+        setShowTelegramPrompt(true);
+      }
+    } catch {
+      setShowTelegramPrompt(true);
+    }
+  }, [user]);
+
   type FeedbackItem = {
     id: string;
     sessionId?: string | null;
@@ -794,6 +814,52 @@ const SessionsCollectionPage = observer(() => {
           </div>
         </div>
       </div>
+
+      {showTelegramPrompt && user && !user.telegramId && (
+        <div className={styles.telegramPrompt}>
+          <div className={styles.telegramPromptText}>
+            <strong>Привяжите Telegram,</strong> чтобы мы могли быстро восстановить доступ к аккаунту,
+            если вы забудете пароль.
+          </div>
+          <div className={styles.telegramPromptActions}>
+            <button
+              type="button"
+              className={styles.telegramPromptButtonPrimary}
+              onClick={() => {
+                setShowTelegramPrompt(false);
+                try {
+                  localStorage.setItem(
+                    `seee_telegram_prompt_dismissed:${user.id}`,
+                    "1",
+                  );
+                } catch {
+                  // ignore
+                }
+                window.open("https://t.me/SeeeAppBot", "_blank", "noopener,noreferrer");
+              }}
+            >
+              Открыть Seee бота
+            </button>
+            <button
+              type="button"
+              className={styles.telegramPromptButtonSecondary}
+              onClick={() => {
+                setShowTelegramPrompt(false);
+                try {
+                  localStorage.setItem(
+                    `seee_telegram_prompt_dismissed:${user.id}`,
+                    "1",
+                  );
+                } catch {
+                  // ignore
+                }
+              }}
+            >
+              Уже сделал(а)
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Список папок */}
       <div className={styles.foldersContainer}>

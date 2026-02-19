@@ -345,5 +345,20 @@ export class AuthController {
     await this.authService.handleSubscriptionWebhook(apiKey, payload);
     return { ok: true };
   }
+
+  @Get('referral')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Реферальная информация и баланс пользователя' })
+  async getReferralInfo(
+    @Request() req: { user: { id: string } },
+  ): Promise<{
+    userId: string;
+    balance: number;
+    promoCode: string;
+    referralLink: string;
+  }> {
+    return this.authService.getReferralInfo(req.user.id);
+  }
 }
 

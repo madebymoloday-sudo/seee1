@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import styles from "./LoginPage.module.css";
+import { PAYMENT_DONE_KEY, TTL_MS } from "../subscription/PaymentSuccessPage";
 
 const RegisterPage = observer(() => {
   const { isAuthenticated, register: registerUser, isLoading } = useAuth();
@@ -18,9 +19,37 @@ const RegisterPage = observer(() => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) return;
+    try {
+      const raw = sessionStorage.getItem(PAYMENT_DONE_KEY);
+      const ts = raw ? parseInt(raw, 10) : 0;
+      const ref = searchParams.get("ref") || "";
+      const subscriptionPath = ref ? `/subscription?ref=${ref}` : "/subscription";
+      if (!raw || !Number.isFinite(ts) || Date.now() - ts > TTL_MS) {
+        navigate(subscriptionPath, { replace: true });
+        return;
+      }
+      setAllowed(true);
+    } catch {
+      navigate("/subscription", { replace: true });
+    }
+  }, [isAuthenticated, navigate, searchParams]);
 
   if (isAuthenticated) {
     return <Navigate to="/neuro" replace />;
+  }
+
+  if (allowed !== true) {
+    return (
+      <div className={styles.loginPageContainer}>
+        <div className={styles.loginFormContainer}>
+          <p className={`text-center ${styles.loginSubtitle}`}>Переход к оформлению подписки...</p>
+        </div>
+      </div>
+    );
   }
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -49,10 +78,15 @@ const RegisterPage = observer(() => {
         password: password,
         name: name.trim(),
         username: username,
+        referrerId: searchParams.get("ref") || undefined,
       });
 
+      try {
+        sessionStorage.removeItem(PAYMENT_DONE_KEY);
+      } catch {
+        // ignore
+      }
       toast.success("Регистрация успешна! Вы вошли в систему.");
-      // If user came from a referral link — send them to subscription page.
       const ref = searchParams.get("ref");
       if (ref) {
         try {
@@ -60,8 +94,6 @@ const RegisterPage = observer(() => {
         } catch {
           // ignore
         }
-        navigate("/subscription", { replace: true });
-        return;
       }
       navigate("/neuro", { replace: true });
     } catch (error: any) {
@@ -185,7 +217,7 @@ const RegisterPage = observer(() => {
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-2">
           <p className={`text-sm ${styles.loginSubtitle}`}>
             Уже есть аккаунт?{" "}
             <button
@@ -194,6 +226,17 @@ const RegisterPage = observer(() => {
             >
               Войти
             </button>
+          </p>
+          <p className="text-xs text-white/70">
+            Поддержка:{" "}
+            <a
+              href="https://t.me/SeeeAppBot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-white/90"
+            >
+              Telegram
+            </a>
           </p>
         </div>
       </div>

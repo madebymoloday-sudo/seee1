@@ -63,6 +63,8 @@ model User {
   userId        String?  @unique @map("user_id")
   avatarUrl     String?  @map("avatar_url")
   role          String   @default("user") // 'user' | 'admin'
+  /// Пользователь, который пригласил этого пользователя (многоуровневая реферальная система)
+  referrerId    String?  @map("referrer_id")
   subscriptionStatus      SubscriptionStatus @default(NONE) @map("subscription_status")
   subscriptionActive      Boolean  @default(false) @map("subscription_active")
   subscriptionEndsAt      DateTime? @map("subscription_ends_at")
@@ -79,6 +81,10 @@ model User {
   interestingThoughts InterestingThought[]
   balances           Balance[]
   transactions       Transaction[]
+  /// Реферал, который пригласил этого пользователя
+  referrer           User?    @relation("UserReferrals", fields: [referrerId], references: [id])
+  /// Пользователи, которых пригласил данный пользователь
+  referrals          User[]   @relation("UserReferrals")
   paymentDetails     PaymentDetails?
   refreshTokens        RefreshToken[]
   passwordResetTokens  PasswordResetToken[]

@@ -12,6 +12,7 @@ import OfferPage from "../pages/legal/OfferPage";
 import PrivacyPolicyPage from "../pages/legal/PrivacyPolicyPage";
 import RefundPolicyPage from "../pages/legal/RefundPolicyPage";
 import PublicSubscriptionPage from "../pages/subscription/PublicSubscriptionPage";
+import PaymentSuccessPage from "../pages/subscription/PaymentSuccessPage";
 
 /**
  * Роутер для неавторизованных пользователей
@@ -78,6 +79,14 @@ export const publicRouter = createBrowserRouter([
     element: (
       <PublicRoute>
         <PublicSubscriptionPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/payment-success",
+    element: (
+      <PublicRoute>
+        <PaymentSuccessPage />
       </PublicRoute>
     ),
   },

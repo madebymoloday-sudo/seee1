@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Copy, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+import apiAgent from "@/lib/api";
 import { toast } from "sonner";
 import styles from "./ReferralSystem.module.css";
 
@@ -14,7 +14,6 @@ interface ReferralData {
 }
 
 const ReferralSystem = () => {
-  const { user } = useAuth();
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,17 +21,8 @@ const ReferralSystem = () => {
   useEffect(() => {
     const fetchReferralData = async () => {
       try {
-        // TODO: Заменить на реальный API endpoint когда будет готов
-        // const response = await apiAgent.get<ReferralData>("/referral");
-        // setReferralData(response);
-
-        // Временные данные для демонстрации
-        setReferralData({
-          userId: user?.id || "unknown",
-          balance: 0,
-          promoCode: `PROMO${user?.id?.substring(0, 8).toUpperCase() || "XXXX"}`,
-          referralLink: `${window.location.origin}/subscription?ref=${user?.id || "unknown"}&utm_source=referral`,
-        });
+        const response = await apiAgent.get<ReferralData>("/auth/referral");
+        setReferralData(response);
       } catch (error) {
         console.error("Ошибка загрузки реферальных данных:", error);
         toast.error("Не удалось загрузить данные реферальной системы");
@@ -42,7 +32,7 @@ const ReferralSystem = () => {
     };
 
     fetchReferralData();
-  }, [user]);
+  }, []);
 
   const handleCopy = async (text: string, type: string) => {
     try {

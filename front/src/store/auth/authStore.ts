@@ -11,6 +11,7 @@ export default class AuthStore {
         email?: string;
         role?: string;
         userId?: string | null;
+        telegramId?: string | null;
         subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
         subscriptionActive?: boolean;
         subscriptionEndsAt?: string | null;
@@ -47,6 +48,7 @@ export default class AuthStore {
             email?: string;
             role?: string;
             userId?: string | null;
+            telegramId?: string | null;
             subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
             subscriptionActive?: boolean;
             subscriptionEndsAt?: string | null;
@@ -70,7 +72,7 @@ export default class AuthStore {
     }
   }
 
-  async register(data: { email: string; password: string; name: string; username: string }) {
+  async register(data: { email: string; password: string; name: string; username: string; referrerId?: string }) {
     this.isLoading = true;
     try {
       const response = await apiAgent.post<
@@ -84,6 +86,7 @@ export default class AuthStore {
             email?: string;
             role?: string;
             userId?: string | null;
+            telegramId?: string | null;
             subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
             subscriptionActive?: boolean;
             subscriptionEndsAt?: string | null;
@@ -130,6 +133,7 @@ export default class AuthStore {
         email?: string;
         role?: string;
         userId?: string | null;
+        telegramId?: string | null;
         subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
         subscriptionActive?: boolean;
         subscriptionEndsAt?: string | null;

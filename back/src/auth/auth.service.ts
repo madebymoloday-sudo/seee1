@@ -63,6 +63,46 @@ export class AuthService {
     return key === configured;
   }
 
+  async getReferralInfo(userId: string): Promise<{
+    userId: string;
+    balance: number;
+    promoCode: string;
+    referralLink: string;
+  }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        userId: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const balance = await this.prisma.balance.findUnique({
+      where: { userId: user.id },
+      select: { amount: true },
+    });
+
+    const amountNumber = balance ? Number(balance.amount) : 0;
+    const promoCodeBase = user.userId || user.id;
+    const promoCode = `PROMO${promoCodeBase.substring(0, 8).toUpperCase()}`;
+
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL')?.replace(/\/+$/, '') ||
+      'https://seee.app';
+    const referralLink = `${frontendUrl}/?ref=${user.id}&utm_source=referral`;
+
+    return {
+      userId: user.userId || user.id,
+      balance: amountNumber,
+      promoCode,
+      referralLink,
+    };
+  }
+
   assertSupportKey(keyRaw: string | undefined): void {
     if (!this.isSupportKeyValid(keyRaw)) {
       throw new UnauthorizedException('Invalid support key');
@@ -244,62 +284,75 @@ export class AuthService {
       // #endregion
       console.log('🔵 [DEBUG-HYP-F] BEFORE first DB query (findFirst)');
       const existingUser = await this.prisma.user.findFirst({
-      where: {
-        OR: [{ email: dto.email }, { username: dto.username }],
-      },
-    });
+        where: {
+          OR: [{ email: dto.email }, { username: dto.username }],
+        },
+      });
 
-    if (existingUser) {
-      if (existingUser.email === dto.email) {
-        throw new ConflictException({
-          message: 'Пользователь с таким email уже существует',
-          field: 'email',
-        });
+      if (existingUser) {
+        if (existingUser.email === dto.email) {
+          throw new ConflictException({
+            message: 'Пользователь с таким email уже существует',
+            field: 'email',
+          });
+        }
+        if (existingUser.username === dto.username) {
+          throw new ConflictException({
+            message: 'Пользователь с таким username уже существует',
+            field: 'username',
+          });
+        }
       }
-      if (existingUser.username === dto.username) {
-        throw new ConflictException({
-          message: 'Пользователь с таким username уже существует',
-          field: 'username',
+
+      // Хешируем пароль
+      const hashedPassword = await bcrypt.hash(dto.password, 12);
+
+      // Генерируем userId (первые 8 символов UUID в верхнем регистре)
+      const userId = randomBytes(4).toString('hex').toUpperCase();
+
+      // Определяем реферера (если передан корректный ID)
+      let referrerId: string | null = null;
+      if (dto.referrerId && dto.referrerId.trim().length > 0) {
+        const refUser = await this.prisma.user.findUnique({
+          where: { id: dto.referrerId.trim() },
+          select: { id: true },
         });
+        if (refUser) {
+          referrerId = refUser.id;
+        }
       }
-    }
 
-    // Хешируем пароль
-    const hashedPassword = await bcrypt.hash(dto.password, 12);
+      // Создаем пользователя
+      const user = await this.prisma.user.create({
+        data: {
+          username: dto.username,
+          email: dto.email,
+          passwordHash: hashedPassword,
+          fullName: dto.name || null,
+          userId,
+          referrerId,
+        },
+        select: this.authUserSelect,
+      });
 
-    // Генерируем userId (первые 8 символов UUID в верхнем регистре)
-    const userId = randomBytes(4).toString('hex').toUpperCase();
+      // Создаем начальный баланс
+      await this.prisma.balance.create({
+        data: {
+          userId: user.id,
+          amount: 0,
+        },
+      });
 
-    // Создаем пользователя
-    const user = await this.prisma.user.create({
-      data: {
-        username: dto.username,
-        email: dto.email,
-        passwordHash: hashedPassword,
-        fullName: dto.name || null,
-        userId,
-      },
-      select: this.authUserSelect,
-    });
+      const tokens = await this.tokenService.generateTokens(
+        user.id,
+        user.email,
+      );
 
-    // Создаем начальный баланс
-    await this.prisma.balance.create({
-      data: {
-        userId: user.id,
-        amount: 0,
-      },
-    });
-
-    const tokens = await this.tokenService.generateTokens(
-      user.id,
-      user.email,
-    );
-
-    return {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      user: this.toUserProfileDto(user),
-    };
+      return {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: this.toUserProfileDto(user),
+      };
     } catch (error: any) {
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/b70f77df-99ee-45b9-9bfa-1e0528e8a94f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.service.ts:123',message:'register ERROR',data:{errorMessage:error?.message,errorCode:error?.code,errorName:error?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
@@ -716,6 +769,102 @@ export class AuthService {
             '',
         ).trim() || null,
       },
+    });
+
+    // Начисляем реферальные вознаграждения (если есть)
+    const rawAmount =
+      Number(normalizedPayload?.amount ?? normalizedPayload?.sum ?? normalizedPayload?.price) || 0;
+    const fallbackAmount = Number(
+      this.configService.get<string>('SUBSCRIPTION_PRICE_RUB') || '0',
+    );
+    const amountForRewards = rawAmount > 0 ? rawAmount : fallbackAmount;
+
+    if (amountForRewards > 0) {
+      await this.allocateReferralRewards(user.id, amountForRewards);
+    }
+  }
+
+  /**
+   * Начисление реферальных вознаграждений:
+   * 1 уровень — 20%, 2 уровень — 7% от суммы подписки.
+   */
+  private async allocateReferralRewards(
+    subscribedUserId: string,
+    subscriptionAmount: number,
+  ): Promise<void> {
+    if (!subscriptionAmount || !Number.isFinite(subscriptionAmount) || subscriptionAmount <= 0) {
+      return;
+    }
+
+    const userWithReferrers = await this.prisma.user.findUnique({
+      where: { id: subscribedUserId },
+      select: {
+        id: true,
+        referrer: {
+          select: {
+            id: true,
+            referrer: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!userWithReferrers || !userWithReferrers.referrer) {
+      return;
+    }
+
+    const level1 = userWithReferrers.referrer;
+    const level2 = level1.referrer || null;
+
+    const level1Reward = +(subscriptionAmount * 0.2).toFixed(2);
+    const level2Reward = level2 ? +(subscriptionAmount * 0.07).toFixed(2) : 0;
+
+    await this.prisma.$transaction(async (tx) => {
+      // 1 уровень — 20%
+      await tx.balance.upsert({
+        where: { userId: level1.id },
+        update: {
+          amount: { increment: level1Reward },
+        },
+        create: {
+          userId: level1.id,
+          amount: level1Reward,
+        },
+      });
+      await tx.transaction.create({
+        data: {
+          userId: level1.id,
+          amount: level1Reward,
+          transactionType: 'PAYMENT',
+          description: `Реферальное вознаграждение 1 уровня за подписку пользователя ${subscribedUserId}`,
+        },
+      });
+
+      // 2 уровень — 7%
+      if (level2 && level2Reward > 0) {
+        await tx.balance.upsert({
+          where: { userId: level2.id },
+          update: {
+            amount: { increment: level2Reward },
+          },
+          create: {
+            userId: level2.id,
+            amount: level2Reward,
+          },
+        });
+        await tx.transaction.create({
+          data: {
+            userId: level2.id,
+            amount: level2Reward,
+            transactionType: 'PAYMENT',
+            description: `Реферальное вознаграждение 2 уровня за подписку пользователя ${subscribedUserId}`,
+          },
+        });
+      }
     });
   }
 

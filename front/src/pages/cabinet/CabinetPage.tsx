@@ -195,7 +195,14 @@ const CabinetPage = observer(() => {
               </span>
             </p>
           </div>
-          <div className="mt-3">
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/subscription")}
+              disabled={!!profile?.subscriptionActive}
+            >
+              {profile?.subscriptionActive ? "Подписка оформлена" : "Оформить подписку"}
+            </Button>
             <Button
               variant="destructive"
               onClick={handleCancelSubscription}
