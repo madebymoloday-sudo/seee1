@@ -64,7 +64,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
 
       <FormField>
         <FormItem>
-          <FormLabel htmlFor="email" className="text-zinc-800 dark:text-white">
+          <FormLabel htmlFor="email" className="text-white/90">
             Email
           </FormLabel>
           <Input
@@ -90,7 +90,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
 
       <FormField>
         <FormItem>
-          <FormLabel htmlFor="password" className="text-zinc-800 dark:text-white">
+          <FormLabel htmlFor="password" className="text-white/90">
             Пароль
           </FormLabel>
           <Input
@@ -115,7 +115,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             <button
               type="button"
               onClick={() => navigate("/forgot-password")}
-              className="text-sm text-zinc-600 hover:text-zinc-800 underline dark:text-white/80 dark:hover:text-white"
+              className="text-sm text-white/80 hover:text-white underline"
             >
               Забыли пароль?
             </button>
