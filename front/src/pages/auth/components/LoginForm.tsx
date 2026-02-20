@@ -105,21 +105,21 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
                 "border-red-400 focus-visible:ring-red-400"
             )}
           />
-          {errors.password?.message ? (
-            <FormMessage
+          {errors.password?.message && (
+            <FormMessage 
               message={errors.password?.message}
-              className="text-red-200"
+              className="text-red-600 dark:text-red-200"
             />
-          ) : null}
-          <p className="mt-1 text-right">
+          )}
+          <div className="mt-1 text-right">
             <button
               type="button"
               onClick={() => navigate("/forgot-password")}
-              className="text-sm text-white/90 hover:text-white underline bg-transparent border-0 p-0 cursor-pointer"
+              className="text-sm text-white/80 hover:text-white underline"
             >
               Забыли пароль?
             </button>
-          </p>
+          </div>
         </FormItem>
       </FormField>
 
@@ -145,10 +145,10 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
 
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-white/20" />
+          <span className="w-full border-t border-black/10 dark:border-white/30" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-transparent px-2 text-white/70">
+          <span className="bg-transparent px-2 text-zinc-500 dark:text-white/60">
             или
           </span>
         </div>

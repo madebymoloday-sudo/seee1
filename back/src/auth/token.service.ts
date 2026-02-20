@@ -13,16 +13,13 @@ export class TokenService {
   ) {}
 
   async generateTokens(userId: string, email: string | null) {
+    // Получаем роль пользователя
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true, email: true },
+      select: { role: true },
     });
 
-    const adminEmail = (this.configService.get<string>('ADMIN_EMAIL') || 'gulopavel@gmail.com').trim().toLowerCase();
-    const isAdminByEmail = adminEmail && user?.email && user.email.toLowerCase() === adminEmail;
-    const role = isAdminByEmail ? 'admin' : (user?.role || 'user');
-
-    const payload = { sub: userId, email, role };
+    const payload = { sub: userId, email, role: user?.role || 'user' };
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
