@@ -2,6 +2,8 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import FormData from 'form-data';
+import * as fs from 'fs';
+import * as path from 'path';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { PersonalityTestService } from './personality-test.service';
@@ -426,7 +428,13 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     this.launchedChats.add(chatId);
     this.supportModeChats.delete(chatId);
     this.cabinetModeChats.delete(chatId);
-    await this.sendMessage(chatId, out.intro, { remove_keyboard: true });
+    const welcomePath = path.join(__dirname, 'welcome.jpg');
+    if (fs.existsSync(welcomePath)) {
+      const buf = fs.readFileSync(welcomePath);
+      await this.sendPhoto(chatId, buf, out.intro);
+    } else {
+      await this.sendMessage(chatId, out.intro, { remove_keyboard: true });
+    }
   }
 
   private async handleTestAnswer(chatId: number, text: string) {
@@ -686,11 +694,16 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async sendPhoto(chatId: number, photoBuffer: Buffer) {
+  private async sendPhoto(chatId: number, photoBuffer: Buffer, caption?: string) {
     try {
       const form = new FormData();
       form.append('chat_id', String(chatId));
-      form.append('photo', photoBuffer, { filename: 'level.png', contentType: 'image/png' });
+      const isPng = photoBuffer[0] === 0x89 && photoBuffer[1] === 0x50;
+      form.append('photo', photoBuffer, {
+        filename: isPng ? 'image.png' : 'image.jpg',
+        contentType: isPng ? 'image/png' : 'image/jpeg',
+      });
+      if (caption) form.append('caption', caption);
       await axios.post(
         `https://api.telegram.org/bot${this.token}/sendPhoto`,
         form,
