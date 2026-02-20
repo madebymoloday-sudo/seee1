@@ -182,6 +182,17 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    // Кнопка «Пройти тест» — всегда показываем приветствие заново (не считаем как ответ на step 0)
+    if (
+      text === this.testButton ||
+      text === this.testButtonEn ||
+      text.trim().toLowerCase() === 'пройти тест' ||
+      text.trim().toLowerCase() === 'take the test'
+    ) {
+      await this.startPersonalityTest(chatId);
+      return;
+    }
+
     // Тест личности: кнопка «Вернуться в меню»
     const testState = this.personalityTest.getState(chatId);
     if (
@@ -212,16 +223,6 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     // Тест личности: в процессе (шаги 1–48)
     if (this.personalityTest.isInProgress(chatId)) {
       await this.handleTestAnswer(chatId, text);
-      return;
-    }
-
-    if (
-      text === this.testButton ||
-      text === this.testButtonEn ||
-      text.trim().toLowerCase() === 'пройти тест' ||
-      text.trim().toLowerCase() === 'take the test'
-    ) {
-      await this.startPersonalityTest(chatId);
       return;
     }
 
@@ -471,7 +472,16 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     } catch (e: any) {
       this.logger.warn(`Welcome photo failed for ${chatId}: ${e?.message}`);
     }
-    await this.sendMessage(chatId, out.intro, testKbd);
+    try {
+      await this.sendMessage(chatId, out.intro, testKbd);
+    } catch (e: any) {
+      this.logger.warn(`Welcome message failed for ${chatId}: ${e?.message}`);
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, { ru: 'Привет! Поехали — напиши что угодно для первого вопроса.', en: 'Hi! Go — type anything for the first question.' }),
+        testKbd,
+      );
+    }
   }
 
   private getTestKeyboard() {
