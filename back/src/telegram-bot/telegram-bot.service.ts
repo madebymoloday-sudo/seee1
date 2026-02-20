@@ -215,7 +215,12 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    if (text === this.testButton || text === this.testButtonEn) {
+    if (
+      text === this.testButton ||
+      text === this.testButtonEn ||
+      text.trim().toLowerCase() === 'пройти тест' ||
+      text.trim().toLowerCase() === 'take the test'
+    ) {
       await this.startPersonalityTest(chatId);
       return;
     }
@@ -443,18 +448,30 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return;
     }
     const out = this.personalityTest.startTest(chatId);
-    if (!out) return;
+    if (!out) {
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, { ru: 'Не удалось начать тест. Попробуй ещё раз.', en: 'Could not start test. Try again.' }),
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
     this.launchedChats.add(chatId);
     this.supportModeChats.delete(chatId);
     this.cabinetModeChats.delete(chatId);
-    const welcomePath = path.join(__dirname, 'welcome.jpg');
     const testKbd = this.getTestKeyboard();
-    if (fs.existsSync(welcomePath)) {
-      const buf = fs.readFileSync(welcomePath);
-      await this.sendPhoto(chatId, buf, out.intro, testKbd);
-    } else {
-      await this.sendMessage(chatId, out.intro, testKbd);
+    const caption = out.intro.length > 1024 ? out.intro.slice(0, 1021) + '...' : out.intro;
+    try {
+      const welcomePath = path.join(__dirname, 'welcome.jpg');
+      if (fs.existsSync(welcomePath)) {
+        const buf = fs.readFileSync(welcomePath);
+        await this.sendPhoto(chatId, buf, caption, testKbd);
+        return;
+      }
+    } catch (e: any) {
+      this.logger.warn(`Welcome photo failed for ${chatId}: ${e?.message}`);
     }
+    await this.sendMessage(chatId, out.intro, testKbd);
   }
 
   private getTestKeyboard() {
