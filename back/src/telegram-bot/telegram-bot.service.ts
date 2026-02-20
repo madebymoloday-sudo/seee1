@@ -520,6 +520,14 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return;
     }
     if (result.done && result.answers) {
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Секунду, формирую твои результаты…',
+          en: 'One moment, preparing your results…',
+        }),
+        { remove_keyboard: true },
+      );
       const level = this.personalityTest.computeLevel(result.answers);
       const twelvePoints = await this.personalityTest.generate12Points(result.answers);
       const levelMessage = this.personalityTest.getLevelMessage(level, twelvePoints);

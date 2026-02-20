@@ -119,9 +119,14 @@ export class PersonalityTestService {
 
   parseScaleAnswer(text: string): number | null {
     const t = text.trim().toLowerCase();
-    if (/^затрудняюсь|затрудняюсь ответить$/i.test(t)) return 3;
+    if (/затрудняюсь|затрудняюсь ответить/.test(t)) return 3;
     const n = parseInt(text.trim(), 10);
     if (Number.isFinite(n) && n >= 1 && n <= 10) return n;
+    const match = text.trim().match(/\b([1-9]|10)\b/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num >= 1 && num <= 10) return num;
+    }
     return null;
   }
 
@@ -180,14 +185,15 @@ export class PersonalityTestService {
     let sum = 0;
     for (const id of FIRST_SCALE_QUESTION_IDS) {
       const v = answers[id];
-      if (typeof v === 'number') sum += v;
+      if (typeof v === 'number') sum += Math.max(1, Math.min(10, v));
       else if (v === undefined || String(v).toLowerCase().includes('затрудняюсь')) sum += 3;
       else {
         const n = parseInt(String(v), 10);
         sum += Number.isFinite(n) && n >= 1 && n <= 10 ? n : 3;
       }
     }
-    return Math.round((sum / 12) * 10);
+    const level = Math.round((sum / 12) * 10);
+    return Math.max(1, Math.min(100, level));
   }
 
   async generate12Points(answers: Record<string, string | number>): Promise<string> {
@@ -202,9 +208,9 @@ export class PersonalityTestService {
       .map(([k, v]) => `${k}: ${v}`)
       .join('\n');
 
-    const systemPrompt = `Ты — психолог в стиле Seee. На основе ответов пользователя на тест из 12 сфер жизни сформируй 12 конкретных пунктов для работы. Для каждой сферы (в порядке: родители и детство, агрессия в реализации, агрессия для защиты, отношения, самооценка, страхи, принятие и забота о себе, ответственность и честность, проявленность, здоровье физическое, здоровье психологическое, внимание) дай: (1) тему для разбора, (2) ограничивающие убеждения в этой сфере, (3) короткий тезис под разбор. Пиши по-русски, кратко и по делу. Формат: нумерованный список 1–12, каждый пункт — 2–4 предложения.`;
+    const systemPrompt = `Ты — психолог в стиле Seee. На основе ответов пользователя на тест сформируй 12 пунктов для проработки. Строго по одному тезису на сферу. Формат каждой строки: "N. Название сферы — один короткий тезис на проработку (одно предложение)." Сферы по порядку: Родители и детство, Агрессия в реализации, Агрессия для защиты, Отношения, Самооценка и самоопределение, Страхи, Принятие и забота о себе, Ответственность и честность, Проявленность, Здоровье физическое, Здоровье психологическое, Внимание. Тон: поддерживающий, показывай что уже получается и с чем стоит поработать, чтобы человек хотел двигаться вперёд. Без звёздочек и лишнего форматирования. Только нумерованный список 1–12.`;
 
-    const userPrompt = `Уровень пользователя: ${level} из 100.\n\nОтветы на вопросы теста:\n${answersText}\n\nСформируй 12 пунктов по сферам (что разобрать, от каких убеждений освободиться, тезис под разбор).`;
+    const userPrompt = `Уровень пользователя по тесту: ${level} из 100 (посчитан по текущим оценкам по 12 сферам).\n\nОтветы пользователя:\n${answersText}\n\nСформируй 12 пунктов: для каждой сферы ровно одна строка вида "N. Сфера — тезис на проработку." Опирайся на его ответы: низкие оценки и текстовые ответы показывают, над чем работать.`;
 
     try {
       const res = await axios.post(
@@ -250,20 +256,13 @@ export class PersonalityTestService {
       'Внимание',
     ];
     return spheres
-      .map(
-        (s, i) =>
-          `${i + 1}. ${s}: разобрать ограничивающие убеждения в этой сфере и сформулировать тезис для работы в Seee.`,
-      )
-      .join('\n\n');
+      .map((s, i) => `${i + 1}. ${s} — проработать ограничивающие убеждения и закрепить новый тезис.`)
+      .join('\n');
   }
 
   getLevelMessage(level: number, twelvePoints: string): string {
-    if (!this.spec) return `Твой уровень: ${level} из 100.`;
-    const tpl = this.spec.message_level_and_12_points.structure;
-    return tpl
-      .replace(/\{level\}/g, String(level))
-      .replace(/\{level\+1\}/g, String(Math.min(100, level + 1)))
-      .replace('Вот 12 пунктов', 'Вот 12 пунктов:\n\n' + twelvePoints);
+    const nextLevel = Math.min(100, level + 1);
+    return `Твой уровень: ${level} из 100.\n\nЧтобы перейти на уровень ${nextLevel}, проработай эти 12 пунктов — каждый опирается на твои ответы в тесте:\n\n${twelvePoints}`;
   }
 
   getSalesMessage(): string {
