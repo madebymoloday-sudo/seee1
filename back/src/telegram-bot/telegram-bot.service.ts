@@ -1,9 +1,11 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import FormData from 'form-data';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { PersonalityTestService } from './personality-test.service';
+import { LevelImageService } from './level-image.service';
 
 type Lang = 'ru' | 'en';
 
@@ -65,6 +67,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly personalityTest: PersonalityTestService,
+    private readonly levelImage: LevelImageService,
   ) {
     this.token = this.configService.get<string>('TELEGRAM_LOGIN_BOT_TOKEN');
     this.supportChatId = this.configService.get<string>('TELEGRAM_SUPPORT_CHAT_ID');
@@ -170,6 +173,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         await this.tryLinkAccountFromStartPayload(message, token);
         return;
       }
+      this.personalityTest.resetTest(chatId);
       await this.sendWelcome(chatId);
       return;
     }
@@ -441,6 +445,12 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         this.personalityTest.getSalesMessage(),
         { remove_keyboard: true },
       );
+      try {
+        const imageBuffer = await this.levelImage.createLevelImageBuffer(level);
+        await this.sendPhoto(chatId, imageBuffer);
+      } catch (e: any) {
+        this.logger.warn(`Level image send failed: ${e?.message}`);
+      }
       const hasLinked = await this.prisma.user
         .findUnique({ where: { telegramId: String(chatId) }, select: { id: true } })
         .then((u) => !!u);
@@ -672,6 +682,28 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         `Failed to send telegram message to ${chatId}: ${
           error?.response?.data?.description || error?.message || error
         }`,
+      );
+    }
+  }
+
+  private async sendPhoto(chatId: number, photoBuffer: Buffer) {
+    try {
+      const form = new FormData();
+      form.append('chat_id', String(chatId));
+      form.append('photo', photoBuffer, { filename: 'level.png', contentType: 'image/png' });
+      await axios.post(
+        `https://api.telegram.org/bot${this.token}/sendPhoto`,
+        form,
+        {
+          headers: form.getHeaders(),
+          timeout: 15000,
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
+        },
+      );
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to send telegram photo to ${chatId}: ${error?.response?.data?.description || error?.message || error}`,
       );
     }
   }

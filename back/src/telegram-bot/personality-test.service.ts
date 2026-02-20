@@ -85,6 +85,11 @@ export class PersonalityTestService {
     return s != null && s.step >= 1 && s.step <= 48;
   }
 
+  /** Сбросить тест для чата (например при /start). */
+  resetTest(chatId: number): void {
+    this.stateByChat.delete(chatId);
+  }
+
   startTest(chatId: number): { intro: string; firstQuestion: string } | null {
     if (!this.spec) return null;
     this.stateByChat.set(chatId, { step: 0, answers: {} });
