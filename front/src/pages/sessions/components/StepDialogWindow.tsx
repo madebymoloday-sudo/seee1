@@ -893,18 +893,17 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
     const hadIdeasPickReturn = view.kind === "core" && view.step === 2 && view.subject === "thought" && !!state.ideasPickReturn;
 
-    setState((s) => {
-      const backUpdate = applyBackState(s);
-      const answers = answerToSave
-        ? { ...s.answers, [stepKey(view)]: answerToSave }
-        : s.answers;
-      return { ...s, ...backUpdate, answers };
-    });
+    const backUpdate = applyBackState(state);
+    const nextAnswers = answerToSave
+      ? { ...state.answers, [stepKey(view)]: answerToSave }
+      : state.answers;
+    const nextState: DialogState = { ...state, ...backUpdate, answers: nextAnswers };
 
-    if (answerToSave) {
-      setLastUserAnswer(answerToSave);
-      setInputText("");
-    }
+    setState(nextState);
+    saveState(session.id, nextState);
+
+    setLastUserAnswer(null);
+    setInputText("");
 
     if (hadIdeasPickReturn) {
       setIsIdeasModalOpen(true);
