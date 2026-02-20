@@ -64,6 +64,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
 
   private readonly testButton = 'Пройти тест';
   private readonly testButtonEn = 'Take the test';
+  private readonly returnToMenuButton = 'Вернуться в меню';
+  private readonly returnToMenuButtonEn = 'Return to menu';
 
   constructor(
     private readonly configService: ConfigService,
@@ -180,12 +182,29 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    // Тест личности: после интро (step 0) — отправить первый вопрос
+    // Тест личности: кнопка «Вернуться в меню»
     const testState = this.personalityTest.getState(chatId);
+    if (
+      (testState?.step === 0 || this.personalityTest.isInProgress(chatId)) &&
+      (text === this.returnToMenuButton || text === this.returnToMenuButtonEn)
+    ) {
+      this.personalityTest.resetTest(chatId);
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Тест прерван. Возвращаю в меню.',
+          en: 'Test cancelled. Returning to menu.',
+        }),
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+
+    // Тест личности: после интро (step 0) — отправить первый вопрос
     if (testState?.step === 0) {
       const firstQ = this.personalityTest.advanceToFirstQuestion(chatId);
       if (firstQ) {
-        await this.sendMessage(chatId, firstQ, { remove_keyboard: true });
+        await this.sendMessage(chatId, firstQ, this.getTestKeyboard());
       }
       return;
     }
@@ -429,18 +448,26 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     this.supportModeChats.delete(chatId);
     this.cabinetModeChats.delete(chatId);
     const welcomePath = path.join(__dirname, 'welcome.jpg');
+    const testKbd = this.getTestKeyboard();
     if (fs.existsSync(welcomePath)) {
       const buf = fs.readFileSync(welcomePath);
-      await this.sendPhoto(chatId, buf, out.intro);
+      await this.sendPhoto(chatId, buf, out.intro, testKbd);
     } else {
-      await this.sendMessage(chatId, out.intro, { remove_keyboard: true });
+      await this.sendMessage(chatId, out.intro, testKbd);
     }
+  }
+
+  private getTestKeyboard() {
+    return {
+      keyboard: [[{ text: this.returnToMenuButton }]],
+      resize_keyboard: true,
+    };
   }
 
   private async handleTestAnswer(chatId: number, text: string) {
     const result = this.personalityTest.handleAnswer(chatId, text);
     if (result.error) {
-      await this.sendMessage(chatId, result.error, { remove_keyboard: true });
+      await this.sendMessage(chatId, result.error, this.getTestKeyboard());
       return;
     }
     if (result.done && result.answers) {
@@ -470,7 +497,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return;
     }
     if (result.nextQuestion) {
-      await this.sendMessage(chatId, result.nextQuestion, { remove_keyboard: true });
+      await this.sendMessage(chatId, result.nextQuestion, this.getTestKeyboard());
     }
   }
 
@@ -694,7 +721,12 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async sendPhoto(chatId: number, photoBuffer: Buffer, caption?: string) {
+  private async sendPhoto(
+    chatId: number,
+    photoBuffer: Buffer,
+    caption?: string,
+    replyMarkup?: any,
+  ) {
     try {
       const form = new FormData();
       form.append('chat_id', String(chatId));
@@ -704,6 +736,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         contentType: isPng ? 'image/png' : 'image/jpeg',
       });
       if (caption) form.append('caption', caption);
+      if (replyMarkup) form.append('reply_markup', JSON.stringify(replyMarkup));
       await axios.post(
         `https://api.telegram.org/bot${this.token}/sendPhoto`,
         form,
