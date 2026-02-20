@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { PersonalityTestService } from './personality-test.service';
 
 type Lang = 'ru' | 'en';
 
@@ -57,9 +58,13 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private readonly langEnButton = 'English';
   private readonly bindSupportCommand = '/set_support_group';
 
+  private readonly testButton = 'Пройти тест';
+  private readonly testButtonEn = 'Take the test';
+
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly personalityTest: PersonalityTestService,
   ) {
     this.token = this.configService.get<string>('TELEGRAM_LOGIN_BOT_TOKEN');
     this.supportChatId = this.configService.get<string>('TELEGRAM_SUPPORT_CHAT_ID');
@@ -166,6 +171,27 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         return;
       }
       await this.sendWelcome(chatId);
+      return;
+    }
+
+    // Тест личности: после интро (step 0) — отправить первый вопрос
+    const testState = this.personalityTest.getState(chatId);
+    if (testState?.step === 0) {
+      const firstQ = this.personalityTest.advanceToFirstQuestion(chatId);
+      if (firstQ) {
+        await this.sendMessage(chatId, firstQ, { remove_keyboard: true });
+      }
+      return;
+    }
+
+    // Тест личности: в процессе (шаги 1–48)
+    if (this.personalityTest.isInProgress(chatId)) {
+      await this.handleTestAnswer(chatId, text);
+      return;
+    }
+
+    if (text === this.testButton || text === this.testButtonEn) {
+      await this.startPersonalityTest(chatId);
       return;
     }
 
@@ -372,11 +398,62 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     await this.sendMessage(
       chatId,
       this.t(chatId, {
-        ru: 'Привет! Я бот Seee. Нажмите "Запускаемся". Кнопки языка и смены пароля находятся в "Личном кабинете".',
-        en: "Hi! I am Seee bot. Tap 'Let's start'. Language and password change are in 'Personal cabinet'.",
+        ru: 'Привет! Я бот Seee. Нажмите "Запускаемся" или "Пройти тест" — в конце получите уровень и 12 пунктов для работы. Кнопки языка и смены пароля в "Личном кабинете".',
+        en: "Hi! I am Seee bot. Tap 'Let's start' or 'Take the test' — you'll get your level and 12 points to work on. Language and password are in 'Personal cabinet'.",
       }),
       this.getKeyboard(chatId),
     );
+  }
+
+  private async startPersonalityTest(chatId: number) {
+    if (!this.personalityTest.isTestAvailable()) {
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Тест временно недоступен.',
+          en: 'Test is temporarily unavailable.',
+        }),
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+    const out = this.personalityTest.startTest(chatId);
+    if (!out) return;
+    this.launchedChats.add(chatId);
+    this.supportModeChats.delete(chatId);
+    this.cabinetModeChats.delete(chatId);
+    await this.sendMessage(chatId, out.intro, { remove_keyboard: true });
+  }
+
+  private async handleTestAnswer(chatId: number, text: string) {
+    const result = this.personalityTest.handleAnswer(chatId, text);
+    if (result.error) {
+      await this.sendMessage(chatId, result.error, { remove_keyboard: true });
+      return;
+    }
+    if (result.done && result.answers) {
+      const level = this.personalityTest.computeLevel(result.answers);
+      const twelvePoints = await this.personalityTest.generate12Points(result.answers);
+      const levelMessage = this.personalityTest.getLevelMessage(level, twelvePoints);
+      await this.sendMessage(chatId, levelMessage, { remove_keyboard: true });
+      await this.sendMessage(
+        chatId,
+        this.personalityTest.getSalesMessage(),
+        { remove_keyboard: true },
+      );
+      const hasLinked = await this.prisma.user
+        .findUnique({ where: { telegramId: String(chatId) }, select: { id: true } })
+        .then((u) => !!u);
+      await this.sendMessage(
+        chatId,
+        this.personalityTest.getCardsMessage(hasLinked),
+        this.getKeyboard(chatId),
+      );
+      return;
+    }
+    if (result.nextQuestion) {
+      await this.sendMessage(chatId, result.nextQuestion, { remove_keyboard: true });
+    }
   }
 
   private async handleGroupMessage(message: TelegramMessage) {
@@ -542,6 +619,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return {
         keyboard: [
           [{ text: this.launchButton }],
+          [{ text: this.testButton }],
           [{ text: this.cabinetButton }],
         ],
         resize_keyboard: true,
@@ -563,6 +641,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     return {
       keyboard: [
         [{ text: this.supportButton }],
+        [{ text: this.testButton }],
         [{ text: this.cabinetButton }],
       ],
       resize_keyboard: true,

@@ -1,83 +1,46 @@
-# 🤖 SEEE - Архитектура мышления
+# Seee — тест уровня развития личности в Telegram
 
-Веб-приложение для диалога с AI-психологом, работающим по специальному алгоритму.
+Бот ведёт пользователя по тесту из 48 вопросов (12 сфер по 4 вопроса), считает уровень 1–100 и выдаёт 12 пунктов для разбора, продающее сообщение и картинку для сторис.
 
-## 🏗️ Архитектура
+## Требования
 
-Проект разделен на два независимых сервиса:
+- Python 3.10+
+- Токен бота от [@BotFather](https://t.me/BotFather)
 
-- **Backend** (`/back`) - NestJS API сервер с PostgreSQL
-- **Frontend** (`/front`) - React приложение с Vite
-
-## 🚀 Быстрый старт
-
-### Локальная разработка
+## Установка
 
 ```bash
-# Запуск всех сервисов через Docker Compose
-docker-compose -f docker-compose.dev.yml up -d
-
-# Frontend будет доступен на http://localhost:5171
-# Backend API будет доступен на http://localhost:3000
+cd "Seee 1-clean"
+python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-Подробнее: [README.DEV.md](./README.DEV.md)
+## Настройка
 
-## 🌐 Деплой на Railway
+1. Скопируй `.env.example` в `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. В `.env` укажи:
+   - `BOT_TOKEN` — токен от BotFather
+   - `SUBSCRIPTION_LINK` — ссылка на подписку/лендинг Seee
+   - при необходимости `LOGO_PATH` — путь к PNG-логотипу Seee (квадратный)
 
-### Автоматический деплой
+## Запуск
 
-1. Откройте [Railway Dashboard](https://railway.app)
-2. Создайте новый проект и подключите репозиторий `madebymoloday-sudo/seee1`
-3. Добавьте два сервиса:
-   - **Backend**: Root Directory = `back`
-   - **Frontend**: Root Directory = `front`
-4. Добавьте PostgreSQL базу данных
-5. Настройте переменные окружения (см. [RAILWAY_DEPLOY.md](./RAILWAY_DEPLOY.md))
+```bash
+python bot.py
+```
 
-Railway автоматически предоставит публичные URL для каждого сервиса:
-- **Frontend URL**: `https://your-frontend-service.railway.app`
-- **Backend URL**: `https://your-backend-service.railway.app`
+После запуска напиши боту в Telegram команду **/start**.
 
-Подробная инструкция: [RAILWAY_DEPLOY.md](./RAILWAY_DEPLOY.md)
+## Поведение
 
-## 📋 Основные функции
+- **Интро** — бот отправляет вступительный текст и ждёт любой ответ («Поехали» и т.п.).
+- **Вопросы** — по одному вопросу в сообщение, ответ сохраняется, обратная связь до конца теста не даётся.
+- **Шкала 1–10** — допускается ответ числом от 1 до 10 или «затрудняюсь ответить» (считается как 3).
+- **Уровень** — среднее по 12 сферам (первый вопрос каждой) × 10, округление до целого 1–100.
+- **После теста** — сообщение с уровнем и 12 пунктами, отдельное сообщение с ссылкой на подписку, картинка с уровнем, сообщение про карточки в приложении.
 
-- 💬 Диалог с AI-психологом
-- 🗺️ Карта "Карта не территория"
-- 📊 Личный кабинет с MLM системой
-- 📝 Журнал сессий
-- 💭 Интересные мысли
-- 🔒 Обнаружение суицидальных мыслей
-
-## 🔧 Технологии
-
-### Backend
-- NestJS
-- PostgreSQL + Prisma
-- OpenAI GPT API
-- Socket.IO
-- JWT Authentication
-
-### Frontend
-- React 18+ с TypeScript
-- Vite
-- MobX для state management
-- SWR для data fetching
-- Tailwind CSS
-- React Router
-
-## 📄 Документация
-
-- [README.DEV.md](./README.DEV.md) - Разработка локально
-- [RAILWAY_DEPLOY.md](./RAILWAY_DEPLOY.md) - Деплой на Railway
-- [migrate/](./migrate/) - Документация по миграции и архитектуре
-
-## 🔗 Ссылки
-
-- **GitHub**: https://github.com/madebymoloday-sudo/seee1
-- **Railway Dashboard**: https://railway.app
-
-## 📝 Лицензия
-
-UNLICENSED
+Спецификация теста: `telegram_test_prompt.json`.
