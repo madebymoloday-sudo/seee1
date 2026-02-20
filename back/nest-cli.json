@@ -5,7 +5,8 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "assets": [
-      { "include": "telegram_test_prompt.json", "outDir": "dist" }
+      { "include": "telegram_test_prompt.json", "outDir": "dist" },
+      { "include": "telegram-bot/telegram_test_prompt.json", "outDir": "dist" }
     ]
   }
 }

@@ -42,14 +42,15 @@ export class PersonalityTestService {
   }
 
   private loadSpec() {
-    // Файл копируется в dist/ при сборке (nest-cli.json assets). __dirname = dist/src/telegram-bot
-    const distRoot = path.resolve(__dirname, '..', '..', '..');
-    const backRoot = path.resolve(__dirname, '..', '..', '..', '..');
+    // Сборка Nest: .js лежит в dist/src/telegram-bot/; asset копирует JSON в dist/telegram-bot/
     const cwd = process.cwd();
     const candidates = [
-      path.join(distRoot, 'telegram_test_prompt.json'),
-      path.join(backRoot, 'telegram_test_prompt.json'),
+      path.join(__dirname, 'telegram_test_prompt.json'),
+      path.join(__dirname, '..', '..', 'telegram-bot', 'telegram_test_prompt.json'),
+      path.join(__dirname, '..', '..', '..', 'telegram_test_prompt.json'),
       path.join(cwd, 'telegram_test_prompt.json'),
+      path.join(cwd, 'dist', 'telegram_test_prompt.json'),
+      path.join(cwd, 'dist', 'telegram-bot', 'telegram_test_prompt.json'),
       path.join(cwd, 'back', 'telegram_test_prompt.json'),
       path.join(cwd, '..', 'telegram_test_prompt.json'),
     ];
