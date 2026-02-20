@@ -336,7 +336,8 @@
   right: 0;
   bottom: 0;
   z-index: 1000;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  padding-top: 0.5rem;
   background: linear-gradient(
     180deg,
     rgba(248, 250, 252, 0) 0%,
