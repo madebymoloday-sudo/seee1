@@ -153,6 +153,22 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  private normalizeButtonText(t: string): string {
+    return t
+      .replace(/\u00a0/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  private isTestButtonClick(text: string): boolean {
+    const n = this.normalizeButtonText(text);
+    if (n === 'пройти тест' || n === 'take the test') return true;
+    if (n.includes('пройти') && n.includes('тест')) return true;
+    if (n.includes('test') && (n.includes('take') || n.includes('pass'))) return true;
+    return false;
+  }
+
   private async handleMessage(message: TelegramMessage) {
     const chatId = message.chat.id;
     const text = (message.text || '').trim();
@@ -182,22 +198,22 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    // Кнопка «Пройти тест» — всегда показываем приветствие заново (не считаем как ответ на step 0)
-    if (
-      text === this.testButton ||
-      text === this.testButtonEn ||
-      text.trim().toLowerCase() === 'пройти тест' ||
-      text.trim().toLowerCase() === 'take the test'
-    ) {
+    // Кнопка «Пройти тест» — всегда показываем приветствие (любой вариант написания)
+    if (this.isTestButtonClick(text)) {
       await this.startPersonalityTest(chatId);
       return;
     }
 
     // Тест личности: кнопка «Вернуться в меню»
     const testState = this.personalityTest.getState(chatId);
+    const isReturnToMenu =
+      this.normalizeButtonText(text) === 'вернуться в меню' ||
+      this.normalizeButtonText(text) === 'return to menu' ||
+      (text.includes('вернуться') && text.includes('меню')) ||
+      (text.includes('return') && text.includes('menu'));
     if (
       (testState?.step === 0 || this.personalityTest.isInProgress(chatId)) &&
-      (text === this.returnToMenuButton || text === this.returnToMenuButtonEn)
+      isReturnToMenu
     ) {
       this.personalityTest.resetTest(chatId);
       await this.sendMessage(
@@ -461,26 +477,19 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     this.supportModeChats.delete(chatId);
     this.cabinetModeChats.delete(chatId);
     const testKbd = this.getTestKeyboard();
-    const caption = out.intro.length > 1024 ? out.intro.slice(0, 1021) + '...' : out.intro;
+
+    // Сначала всегда отправляем приветствие текстом — чтобы пользователь гарантированно его увидел
+    await this.sendMessage(chatId, out.intro, testKbd);
+
+    // Потом, если есть картинка — отправляем отдельным сообщением (без дублирования текста)
     try {
       const welcomePath = path.join(__dirname, 'welcome.jpg');
       if (fs.existsSync(welcomePath)) {
         const buf = fs.readFileSync(welcomePath);
-        await this.sendPhoto(chatId, buf, caption, testKbd);
-        return;
+        await this.sendPhoto(chatId, buf, 'Seee 💫', testKbd);
       }
     } catch (e: any) {
       this.logger.warn(`Welcome photo failed for ${chatId}: ${e?.message}`);
-    }
-    try {
-      await this.sendMessage(chatId, out.intro, testKbd);
-    } catch (e: any) {
-      this.logger.warn(`Welcome message failed for ${chatId}: ${e?.message}`);
-      await this.sendMessage(
-        chatId,
-        this.t(chatId, { ru: 'Привет! Поехали — напиши что угодно для первого вопроса.', en: 'Hi! Go — type anything for the first question.' }),
-        testKbd,
-      );
     }
   }
 
