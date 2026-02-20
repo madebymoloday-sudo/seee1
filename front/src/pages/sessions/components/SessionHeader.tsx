@@ -1,4 +1,5 @@
 import { observer } from "mobx-react-lite";
+import { createPortal } from "react-dom";
 import { MessageSquare, ChevronDown, Edit2, Pause, Save, List, Plus, Trash2, Moon } from "lucide-react";
 import apiAgent from "@/lib/api";
 import { useNavigate } from "react-router-dom";
@@ -388,39 +389,41 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
         </div>
       )}
 
-      {isDeferredModalOpen && (
-        <div className={styles.deferOverlay} onClick={() => setIsDeferredModalOpen(false)}>
-          <div className={styles.deferModal} onClick={(e) => e.stopPropagation()}>
-            <h3 className={styles.deferTitle}>
-              напишите мысль которую вы хотели бы разобрать в будущем
-            </h3>
-            <textarea
-              value={deferredThought}
-              onChange={(e) => setDeferredThought(e.target.value)}
-              className={styles.deferTextarea}
-              placeholder="Введите мысль..."
-              rows={4}
-              autoFocus
-            />
-            <div className={styles.deferActions}>
-              <button
-                type="button"
-                className={styles.deferCancelButton}
-                onClick={() => setIsDeferredModalOpen(false)}
-              >
-                Отмена
-              </button>
-              <button
-                type="button"
-                className={styles.deferSubmitButton}
-                onClick={handleSaveDeferredThought}
-              >
-                отправить в галерею
-              </button>
+      {isDeferredModalOpen &&
+        createPortal(
+          <div className={styles.deferOverlay} onClick={() => setIsDeferredModalOpen(false)}>
+            <div className={styles.deferModal} onClick={(e) => e.stopPropagation()}>
+              <h3 className={styles.deferTitle}>
+                напишите мысль которую вы хотели бы разобрать в будущем
+              </h3>
+              <textarea
+                value={deferredThought}
+                onChange={(e) => setDeferredThought(e.target.value)}
+                className={styles.deferTextarea}
+                placeholder="Введите мысль..."
+                rows={4}
+                autoFocus
+              />
+              <div className={styles.deferActions}>
+                <button
+                  type="button"
+                  className={styles.deferCancelButton}
+                  onClick={() => setIsDeferredModalOpen(false)}
+                >
+                  Отмена
+                </button>
+                <button
+                  type="button"
+                  className={styles.deferSubmitButton}
+                  onClick={handleSaveDeferredThought}
+                >
+                  отправить в галерею
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 });

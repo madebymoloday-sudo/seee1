@@ -59,7 +59,10 @@ const SessionPage = observer(() => {
     return (
       <div className="flex flex-col overflow-hidden h-[100dvh] min-h-[100dvh] max-h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <SessionHeader session={draftSession} isDraft />
-        <div className="flex-1 overflow-hidden">
+        <div
+          className="flex-1 overflow-hidden min-h-0"
+          style={{ paddingTop: "calc(120px + env(safe-area-inset-top, 0px))" }}
+        >
           <StepDialogWindow key={draftSession.id} session={draftSession} />
         </div>
       </div>
@@ -95,7 +98,10 @@ const SessionPage = observer(() => {
   return (
     <div className="flex flex-col overflow-hidden h-[100dvh] min-h-[100dvh] max-h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <SessionHeader session={session} />
-      <div className="flex-1 overflow-hidden">
+      <div
+        className="flex-1 overflow-hidden min-h-0"
+        style={{ paddingTop: "calc(120px + env(safe-area-inset-top, 0px))" }}
+      >
         <StepDialogWindow key={session.id} session={session} />
       </div>
     </div>

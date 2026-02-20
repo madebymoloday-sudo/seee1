@@ -90,10 +90,19 @@
 }
 
 /* Non-chat wizard layout (fixed screen, one prompt at a time) */
-.wizardWindow {
+.wizardLayout {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.wizardWindow {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   min-height: 0;
   overflow: hidden;
   overscroll-behavior: contain;
@@ -110,6 +119,11 @@
   padding: 16px 12px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Доп. отступ снизу, когда внизу зафиксирована панель ввода */
+.stageWithBottomBar {
+  padding-bottom: 160px;
 }
 
 .systemActionsRow {
@@ -315,6 +329,40 @@
   overflow-wrap: anywhere;
 }
 
+/* Фиксированная нижняя панель (ввод + кнопки) — всегда видна на экране */
+.fixedBottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: linear-gradient(
+    180deg,
+    rgba(248, 250, 252, 0) 0%,
+    rgba(248, 250, 252, 0.97) 12%,
+    rgba(248, 250, 252, 0.98) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+}
+
+:global(.dark) .fixedBottomBar {
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0) 0%,
+    rgba(15, 23, 42, 0.97) 12%,
+    rgba(15, 23, 42, 0.98) 100%
+  );
+  border-top-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
 /* Фон строки ввода — на всю ширину. Само окно ввода — по левому краю сообщения. */
 .inputAlignWrapper {
   width: 100%;
@@ -338,16 +386,13 @@
 @media (max-width: 768px) {
   .stage {
     padding: 12px 10px;
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
     justify-content: flex-start;
     gap: 12px;
     overscroll-behavior-y: contain;
   }
 
-  .inputAlignWrapper {
-    position: sticky;
-    bottom: 0;
-    z-index: 70;
+  .stageWithBottomBar {
+    padding-bottom: 180px;
   }
 
   .inputAlignWrapper > div {

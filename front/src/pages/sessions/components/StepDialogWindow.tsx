@@ -636,10 +636,15 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
     const key = stepKey(view);
     const trimmed = answer.trim();
+    const nextAnswers = { ...(state.answers || {}), [key]: trimmed };
+    // После выбора мысли в «глубже» используем её как текущую мысль на следующих этапах (вопросы про «мысль»)
+    if (view.kind === "deepPick") {
+      nextAnswers["core:thought:3"] = trimmed;
+    }
     const nextStateWithAnswer: DialogState = {
       ...(nextState as any),
       v: 2,
-      answers: { ...(state.answers || {}), [key]: trimmed },
+      answers: nextAnswers,
     };
 
     // Черновик: создаём сессию только после ответа на ПЕРВЫЙ вопрос (core step 1).
@@ -907,8 +912,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   return (
-    <div className={styles.wizardWindow}>
-      <div className={styles.stage}>
+    <div className={styles.wizardLayout}>
+      <div className={styles.wizardWindow}>
+        <div
+          className={`${styles.stage} ${showBottomEditorActions ? styles.stageWithBottomBar : ""}`}
+        >
         <div
           className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
             isFadingOut ? chatStyles.fadeOut : ""
@@ -1106,59 +1114,58 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             </Button>
           </div>
         )}
+        </div>
       </div>
 
-      {/* Кнопки управления (редактирование/дальше) и «Добавить мысль в Нейросписок» */}
+      {/* Фиксированная нижняя панель: кнопки и ввод — всегда видна на экране */}
       {showBottomEditorActions && (
-        <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-          {!isEditing && (
-            <>
+        <div className={styles.fixedBottomBar}>
+          <div className="flex justify-center gap-2 flex-wrap px-4 pt-3 pb-1">
+            {!isEditing && (
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setIsEditing(true);
+                    window.setTimeout(() => focusInputWithoutScroll(), 0);
+                  }}
+                  className={chatStyles.glassButton}
+                >
+                  Отредактировать
+                </Button>
+                <Button onClick={() => onAnswer(inputText)} disabled={!inputText.trim()} className={chatStyles.glassButton}>
+                  Дальше
+                </Button>
+              </>
+            )}
+            {canDeepNow && !isEditing && (
               <Button
-                variant="secondary"
-                onClick={() => {
-                  setIsEditing(true);
-                  window.setTimeout(() => focusInputWithoutScroll(), 0);
-                }}
+                type="button"
+                onClick={openAddToList}
+                disabled={isTransitioning || isListModalOpen}
                 className={chatStyles.glassButton}
+                aria-label="Добавить мысль в Нейросписок"
+                title="Добавить мысль в Нейросписок"
               >
-                Отредактировать
+                Добавить мысль в Нейросписок
               </Button>
-              <Button onClick={() => onAnswer(inputText)} disabled={!inputText.trim()} className={chatStyles.glassButton}>
-                Дальше
-              </Button>
-            </>
-          )}
-          {canDeepNow && !isEditing && (
-            <Button
-              type="button"
-              onClick={openAddToList}
-              disabled={isTransitioning || isListModalOpen}
-              className={chatStyles.glassButton}
-              aria-label="Добавить мысль в Нейросписок"
-              title="Добавить мысль в Нейросписок"
-            >
-              Добавить мысль в Нейросписок
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* Ввод ответа (только там, где нужен текст) */}
-      {showBottomEditorActions && (
-        <div className={styles.inputAlignWrapper}>
-          <MessageInput
-            ref={inputRef}
-            onSend={(v) => {
-              if (!isEditing) return;
-              onAnswer(v);
-            }}
-            disabled={isMutating}
-            readOnly={isMutating || isTransitioning || !isEditing}
-            placeholder={!isEditing ? "Ваш ответ сохранён" : "Введите ответ..."}
-            autoFocus
-            value={isEditing ? inputText : ""}
-            onValueChange={setInputText}
-          />
+            )}
+          </div>
+          <div className={styles.inputAlignWrapper}>
+            <MessageInput
+              ref={inputRef}
+              onSend={(v) => {
+                if (!isEditing) return;
+                onAnswer(v);
+              }}
+              disabled={isMutating}
+              readOnly={isMutating || isTransitioning || !isEditing}
+              placeholder={!isEditing ? "Ваш ответ сохранён" : "Введите ответ..."}
+              autoFocus
+              value={isEditing ? inputText : ""}
+              onValueChange={setInputText}
+            />
+          </div>
         </div>
       )}
 
