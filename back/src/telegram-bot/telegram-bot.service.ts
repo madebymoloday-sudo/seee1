@@ -66,6 +66,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private readonly testButtonEn = 'Take the test';
   private readonly returnToMenuButton = 'Вернуться в меню';
   private readonly returnToMenuButtonEn = 'Return to menu';
+  private readonly restartBotButton = 'Перезапустить бота';
+  private readonly restartBotButtonEn = 'Restart bot';
 
   constructor(
     private readonly configService: ConfigService,
@@ -194,6 +196,30 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         return;
       }
       this.personalityTest.resetTest(chatId);
+      await this.sendWelcome(chatId);
+      return;
+    }
+
+    // Кнопка «Перезапустить бота» — сброс состояния и приветствие заново (получить актуальную версию бота)
+    if (
+      text === this.restartBotButton ||
+      text === this.restartBotButtonEn ||
+      this.normalizeButtonText(text) === 'перезапустить бота' ||
+      this.normalizeButtonText(text) === 'restart bot'
+    ) {
+      this.launchedChats.delete(chatId);
+      this.supportModeChats.delete(chatId);
+      this.cabinetModeChats.delete(chatId);
+      this.passwordResetModeChats.delete(chatId);
+      this.personalityTest.resetTest(chatId);
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Бот перезапущен. Вот актуальное меню.',
+          en: 'Bot restarted. Here is the current menu.',
+        }),
+        this.getKeyboard(chatId),
+      );
       await this.sendWelcome(chatId);
       return;
     }
@@ -744,6 +770,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       keyboard: [
         [{ text: this.supportButton }],
         [{ text: this.testButton }],
+        [{ text: this.restartBotButton }],
         [{ text: this.cabinetButton }],
       ],
       resize_keyboard: true,
