@@ -481,12 +481,25 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     // Сначала всегда отправляем приветствие текстом — чтобы пользователь гарантированно его увидел
     await this.sendMessage(chatId, out.intro, testKbd);
 
-    // Потом, если есть картинка — отправляем отдельным сообщением (без дублирования текста)
+    // Картинка приветствия — ищем по разным путям (как на сервере, так локально)
     try {
-      const welcomePath = path.join(__dirname, 'welcome.jpg');
-      if (fs.existsSync(welcomePath)) {
-        const buf = fs.readFileSync(welcomePath);
-        await this.sendPhoto(chatId, buf, 'Seee 💫', testKbd);
+      const cwd = process.cwd();
+      const candidates = [
+        path.join(__dirname, 'welcome.jpg'),
+        path.join(__dirname, '..', '..', 'telegram-bot', 'welcome.jpg'),
+        path.join(cwd, 'dist', 'src', 'telegram-bot', 'welcome.jpg'),
+        path.join(cwd, 'dist', 'telegram-bot', 'welcome.jpg'),
+        path.join(cwd, 'src', 'telegram-bot', 'welcome.jpg'),
+        path.join(cwd, 'back', 'src', 'telegram-bot', 'welcome.jpg'),
+      ];
+      for (const welcomePath of candidates) {
+        if (fs.existsSync(welcomePath)) {
+          const buf = fs.readFileSync(welcomePath);
+          if (buf.length > 0) {
+            await this.sendPhoto(chatId, buf, 'Seee 💫', testKbd);
+            break;
+          }
+        }
       }
     } catch (e: any) {
       this.logger.warn(`Welcome photo failed for ${chatId}: ${e?.message}`);
