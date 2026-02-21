@@ -27,9 +27,13 @@
   margin: 0;
   text-align: center;
   max-width: 600px;
-  color: rgba(255, 255, 255, 0.75);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  color: #6b7280;
   font-size: 0.95rem;
+}
+
+:global(.dark) .helperText,
+:global(html.dark) .helperText {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .modalOverlay {
