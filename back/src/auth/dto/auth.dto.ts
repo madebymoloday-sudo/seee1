@@ -187,6 +187,16 @@ export class UpdateProfileDto {
     message: 'userId может содержать только латинские буквы, цифры и underscore',
   })
   userId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Новый пароль (минимум 6 символов)',
+    example: 'newpassword123',
+    minLength: 6,
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  password?: string;
 }
 
 export class ForgotPasswordDto {

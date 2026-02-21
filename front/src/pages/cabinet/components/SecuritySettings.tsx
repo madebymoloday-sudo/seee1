@@ -21,6 +21,8 @@ const SecuritySettings = () => {
   const [newLogin, setNewLogin] = useState(user?.email || "");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [isSavingLogin, setIsSavingLogin] = useState(false);
 
   const handleEditLogin = () => {
     setIsEditingLogin(true);
@@ -33,14 +35,16 @@ const SecuritySettings = () => {
       return;
     }
 
+    setIsSavingLogin(true);
     try {
-      await apiAgent.patch("/auth/profile", { email: newLogin });
+      await apiAgent.patch("/auth/me", { email: newLogin });
       toast.success("Email успешно обновлён");
       setIsEditingLogin(false);
-      // Обновляем данные пользователя
       window.location.reload();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Ошибка обновления email");
+    } finally {
+      setIsSavingLogin(false);
     }
   };
 
@@ -66,14 +70,17 @@ const SecuritySettings = () => {
       return;
     }
 
+    setIsSavingPassword(true);
     try {
-      await apiAgent.patch("/auth/profile", { password: newPassword });
+      await apiAgent.patch("/auth/me", { password: newPassword });
       toast.success("Пароль успешно обновлён");
       setIsEditingPassword(false);
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Ошибка обновления пароля");
+    } finally {
+      setIsSavingPassword(false);
     }
   };
 
@@ -140,8 +147,13 @@ const SecuritySettings = () => {
                   className={styles.editInput}
                   placeholder="Новый email"
                 />
-                <Button onClick={handleSaveLogin} size="sm" className={styles.saveButton}>
-                  Сохранить
+                <Button
+                  onClick={handleSaveLogin}
+                  size="sm"
+                  className={styles.saveButton}
+                  disabled={isSavingLogin}
+                >
+                  {isSavingLogin ? "Сохранение…" : "Сохранить"}
                 </Button>
                 <Button
                   onClick={handleCancelLogin}
@@ -231,8 +243,13 @@ const SecuritySettings = () => {
                     )}
                   </button>
                 </div>
-                <Button onClick={handleSavePassword} size="sm" className={styles.saveButton}>
-                  Сохранить
+                <Button
+                  onClick={handleSavePassword}
+                  size="sm"
+                  className={styles.saveButton}
+                  disabled={isSavingPassword}
+                >
+                  {isSavingPassword ? "Сохранение…" : "Сохранить"}
                 </Button>
                 <Button
                   onClick={handleCancelPassword}

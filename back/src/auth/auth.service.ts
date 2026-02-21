@@ -524,7 +524,11 @@ export class AuthService {
       throw new NotFoundException('Пользователь не найден');
     }
 
-    const dataToUpdate: { username?: string; userId?: string } = {};
+    const dataToUpdate: { username?: string; userId?: string; passwordHash?: string } = {};
+
+    if (typeof dto.password === 'string' && dto.password.length >= 6) {
+      dataToUpdate.passwordHash = await bcrypt.hash(dto.password, 12);
+    }
 
     if (typeof dto.username === 'string') {
       const nextUsername = dto.username.trim();
