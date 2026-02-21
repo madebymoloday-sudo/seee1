@@ -22,6 +22,15 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 768px) {
+  .sessionHeader {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+  }
+}
+
 .headerContent {
   display: flex;
   align-items: center;

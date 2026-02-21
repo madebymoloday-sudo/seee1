@@ -6,6 +6,7 @@ import SessionHeader from "./components/SessionHeader";
 import StepDialogWindow from "./components/StepDialogWindow";
 import { Loader2 } from "lucide-react";
 import type { SessionResponseDto } from "@/api/schemas";
+import styles from "./SessionPage.module.css";
 
 const sessionLayoutClass =
   "flex flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900";
@@ -82,10 +83,7 @@ const SessionPage = observer(() => {
     return (
       <div className={sessionLayoutClass} style={rootStyle}>
         <SessionHeader session={draftSession} isDraft />
-        <div
-          className="flex-1 overflow-hidden min-h-0"
-          style={{ paddingTop: "calc(120px + env(safe-area-inset-top, 0px))" }}
-        >
+        <div className={styles.sessionContent}>
           <StepDialogWindow key={draftSession.id} session={draftSession} />
         </div>
       </div>
@@ -121,10 +119,7 @@ const SessionPage = observer(() => {
   return (
     <div className={sessionLayoutClass} style={rootStyle}>
       <SessionHeader session={session} />
-      <div
-        className="flex-1 overflow-hidden min-h-0"
-        style={{ paddingTop: "calc(120px + env(safe-area-inset-top, 0px))" }}
-      >
+      <div className={styles.sessionContent}>
         <StepDialogWindow key={session.id} session={session} />
       </div>
     </div>

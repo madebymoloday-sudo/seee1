@@ -333,7 +333,7 @@
   overflow-wrap: anywhere;
 }
 
-/* Фиксированная нижняя панель (ввод + кнопки) — всегда видна на экране */
+/* Нижняя панель (ввод + кнопки). На десктопе — фиксирована снизу; на мобильных — в потоке, чтобы привязывалась к клавиатуре (ChatGPT-style). */
 .fixedBottomBar {
   position: fixed;
   left: 0;
@@ -355,6 +355,7 @@
   flex-direction: column;
   gap: 0.5rem;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
 }
 
 :global(.dark) .fixedBottomBar {
@@ -397,7 +398,18 @@
   }
 
   .stageWithBottomBar {
-    padding-bottom: 180px;
+    padding-bottom: 24px;
+  }
+
+  /* На мобильных панель ввода в потоке: не фиксирована, привязана к низу контейнера (и к клавиатуре при открытии). */
+  .fixedBottomBar {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    margin-top: auto;
+    border-radius: 0;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
   .inputAlignWrapper > div {

@@ -1114,59 +1114,59 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           </div>
         )}
         </div>
-      </div>
 
-      {/* Фиксированная нижняя панель: кнопки и ввод — всегда видна на экране */}
-      {showBottomEditorActions && (
-        <div className={styles.fixedBottomBar}>
-          <div className="flex justify-center gap-2 flex-wrap px-4 pt-3 pb-1">
-            {!isEditing && (
-              <>
+        {/* Нижняя панель: кнопки и ввод. На мобильных — в потоке (привязана к клавиатуре), на десктопе — фиксирована снизу. */}
+        {showBottomEditorActions && (
+          <div className={styles.fixedBottomBar}>
+            <div className="flex justify-center gap-2 flex-wrap px-4 pt-3 pb-1">
+              {!isEditing && (
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setIsEditing(true);
+                      window.setTimeout(() => focusInputWithoutScroll(), 0);
+                    }}
+                    className={chatStyles.glassButton}
+                  >
+                    Отредактировать
+                  </Button>
+                  <Button onClick={() => onAnswer(inputText)} disabled={!inputText.trim()} className={chatStyles.glassButton}>
+                    Дальше
+                  </Button>
+                </>
+              )}
+              {canDeepNow && !isEditing && (
                 <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setIsEditing(true);
-                    window.setTimeout(() => focusInputWithoutScroll(), 0);
-                  }}
+                  type="button"
+                  onClick={openAddToList}
+                  disabled={isTransitioning || isListModalOpen}
                   className={chatStyles.glassButton}
+                  aria-label="Добавить мысль в Нейросписок"
+                  title="Добавить мысль в Нейросписок"
                 >
-                  Отредактировать
+                  Добавить мысль в Нейросписок
                 </Button>
-                <Button onClick={() => onAnswer(inputText)} disabled={!inputText.trim()} className={chatStyles.glassButton}>
-                  Дальше
-                </Button>
-              </>
-            )}
-            {canDeepNow && !isEditing && (
-              <Button
-                type="button"
-                onClick={openAddToList}
-                disabled={isTransitioning || isListModalOpen}
-                className={chatStyles.glassButton}
-                aria-label="Добавить мысль в Нейросписок"
-                title="Добавить мысль в Нейросписок"
-              >
-                Добавить мысль в Нейросписок
-              </Button>
-            )}
+              )}
+            </div>
+            <div className={styles.inputAlignWrapper}>
+              <MessageInput
+                ref={inputRef}
+                onSend={(v) => {
+                  if (!isEditing) return;
+                  onAnswer(v);
+                }}
+                disabled={isMutating}
+                readOnly={isMutating || isTransitioning || !isEditing}
+                placeholder={!isEditing ? "Ваш ответ сохранён" : "Введите ответ..."}
+                autoFocus
+                value={isEditing ? inputText : ""}
+                onValueChange={setInputText}
+              />
+            </div>
           </div>
-          <div className={styles.inputAlignWrapper}>
-            <MessageInput
-              ref={inputRef}
-              onSend={(v) => {
-                if (!isEditing) return;
-                onAnswer(v);
-              }}
-              disabled={isMutating}
-              readOnly={isMutating || isTransitioning || !isEditing}
-              placeholder={!isEditing ? "Ваш ответ сохранён" : "Введите ответ..."}
-              autoFocus
-              value={isEditing ? inputText : ""}
-              onValueChange={setInputText}
-            />
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Модалка «Список идей» — кликабельные идеи, выбор запускает этапы по этой идее */}
       {isIdeasModalOpen && (
