@@ -68,6 +68,16 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private readonly returnToMenuButtonEn = 'Return to menu';
   private readonly restartBotButton = 'Перезапустить бота';
   private readonly restartBotButtonEn = 'Restart bot';
+  private readonly shareResultButton = 'Поделиться своим результатом';
+  private readonly shareResultYesButton = 'Да, мне нравится';
+  private readonly shareResultClassicButton = 'Давай классическое сообщение';
+
+  /** Уровень после прохождения теста (для флоу «поделиться»). */
+  private readonly lastResultLevelByChat = new Map<number, number>();
+  /** Ожидаем от пользователя текст про ожидания от теста. */
+  private readonly shareAwaitingExpectations = new Map<number, number>();
+  /** Ожидаем выбор: «Да, мне нравится» или «Давай классическое». */
+  private readonly shareAwaitingChoice = new Map<number, { generatedMessage: string }>();
 
   constructor(
     private readonly configService: ConfigService,
@@ -196,7 +206,109 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         return;
       }
       this.personalityTest.resetTest(chatId);
+      this.lastResultLevelByChat.delete(chatId);
+      this.shareAwaitingExpectations.delete(chatId);
+      this.shareAwaitingChoice.delete(chatId);
       await this.sendWelcome(chatId);
+      return;
+    }
+
+    // Флоу «Поделиться своим результатом»: ожидаем выбор «Да, мне нравится» или «Давай классическое»
+    const shareChoice = this.shareAwaitingChoice.get(chatId);
+    if (shareChoice) {
+      if (
+        text === this.shareResultYesButton ||
+        this.normalizeButtonText(text) === 'да мне нравится'
+      ) {
+        this.shareAwaitingChoice.delete(chatId);
+        this.lastResultLevelByChat.delete(chatId);
+        const subLink = this.getSubscriptionLink();
+        await this.sendMessage(
+          chatId,
+          this.t(chatId, {
+            ru: `Спасибо, что прошёл тест! 💫 В приложении Seee тебя ждут 12 карточек на проработку — заходи и начинай повышать свой уровень.\n\n${subLink}`,
+            en: `Thanks for taking the test! In the Seee app you have 12 cards to work on — go and start leveling up.\n\n${subLink}`,
+          }),
+          this.getKeyboard(chatId),
+        );
+        return;
+      }
+      if (
+        text === this.shareResultClassicButton ||
+        this.normalizeButtonText(text).includes('классическ')
+      ) {
+        this.shareAwaitingChoice.delete(chatId);
+        const level = this.lastResultLevelByChat.get(chatId);
+        this.lastResultLevelByChat.delete(chatId);
+        const botLink = this.getBotShareLink();
+        const classic =
+          level != null
+            ? `Тест по развитию уровня личности показал, что у меня ${level} баллов. Рекомендую пройти — тебе тоже будет интересно: ${botLink}\n\nЭто бот от Seee — инструмента для осознанного управления мышлением и эмоциями. Там тест по 12 сферам жизни, в конце дают твой уровень и персональные 12 пунктов на проработку. Всё бесплатно.`
+            : `Рекомендую пройти тест уровня личности в боте Seee: ${botLink}\n\nЭто инструмент для осознанного управления мышлением и эмоциями. Тест по 12 сферам жизни, в конце — твой уровень и 12 пунктов на проработку. Всё бесплатно.`;
+        await this.sendMessage(chatId, classic);
+        const subLink = this.getSubscriptionLink();
+        await this.sendMessage(
+          chatId,
+          this.t(chatId, {
+            ru: `Спасибо! Жду тебя в приложении 👇\n\n${subLink}`,
+            en: `Thanks! See you in the app 👇\n\n${subLink}`,
+          }),
+          this.getKeyboard(chatId),
+        );
+        return;
+      }
+    }
+
+    // Флоу «Поделиться»: пользователь прислал текст про ожидания от теста — генерируем сообщение для шаринга
+    const awaitingLevel = this.shareAwaitingExpectations.get(chatId);
+    if (awaitingLevel !== undefined && text.length > 0) {
+      this.shareAwaitingExpectations.delete(chatId);
+      const botLink = this.getBotShareLink();
+      const generatedMessage = `У меня по тесту уровня развития человека ${awaitingLevel} баллов!\n\n${text.trim()}\n\nПройди тоже, думаю тебе понравится: ${botLink}`;
+      this.shareAwaitingChoice.set(chatId, { generatedMessage });
+      await this.sendMessage(chatId, generatedMessage);
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, {
+          ru: 'Перешли это сообщение другу. Как тебе?',
+          en: 'Share this with a friend. What do you think?',
+        }),
+        {
+          keyboard: [
+            [{ text: this.shareResultYesButton }],
+            [{ text: this.shareResultClassicButton }],
+          ],
+          resize_keyboard: true,
+        },
+      );
+      return;
+    }
+
+    // Кнопка «Поделиться своим результатом» — запрашиваем ожидания от теста
+    if (
+      (text === this.shareResultButton || this.normalizeButtonText(text).includes('поделиться')) &&
+      this.lastResultLevelByChat.has(chatId)
+    ) {
+      const level = this.lastResultLevelByChat.get(chatId)!;
+      this.shareAwaitingExpectations.set(chatId, level);
+      await this.sendMessage(
+        chatId,
+        'Ок, рассскажи, какие у тебя были ожидания от теста и как всё прошло на самом деле?\n\nНа основе твоего ответа я сделаю клёвое сообщение, чтобы человек, которому ты это перешлёшь, тоже захотел пройти тест.',
+        { remove_keyboard: true },
+      );
+      return;
+    }
+
+    // Кнопка «В меню» после результатов теста
+    if (text === 'В меню' || this.normalizeButtonText(text) === 'в меню') {
+      this.lastResultLevelByChat.delete(chatId);
+      this.shareAwaitingExpectations.delete(chatId);
+      this.shareAwaitingChoice.delete(chatId);
+      await this.sendMessage(
+        chatId,
+        this.t(chatId, { ru: 'Возвращаю в меню.', en: 'Returning to menu.' }),
+        this.getKeyboard(chatId),
+      );
       return;
     }
 
@@ -539,6 +651,17 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
+  private getPostResultKeyboard(chatId: number, level: number) {
+    this.lastResultLevelByChat.set(chatId, level);
+    return {
+      keyboard: [
+        [{ text: this.shareResultButton }],
+        [{ text: 'В меню' }],
+      ],
+      resize_keyboard: true,
+    };
+  }
+
   private async handleTestAnswer(chatId: number, text: string) {
     const result = this.personalityTest.handleAnswer(chatId, text);
     if (result.error) {
@@ -557,25 +680,25 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       const level = this.personalityTest.computeLevel(result.answers);
       const twelvePoints = await this.personalityTest.generate12Points(result.answers);
       const levelMessage = this.personalityTest.getLevelMessage(level, twelvePoints);
-      await this.sendMessage(chatId, levelMessage, { remove_keyboard: true });
-      await this.sendMessage(
-        chatId,
-        this.personalityTest.getSalesMessage(),
-        { remove_keyboard: true },
-      );
+      await this.sendMessage(chatId, levelMessage, { remove_keyboard: true }, 'Markdown');
+      const hasLinked = await this.prisma.user
+        .findUnique({ where: { telegramId: String(chatId) }, select: { id: true } })
+        .then((u) => !!u);
+      const mergedSalesCards = this.personalityTest.getMergedSalesAndCardsMessage(hasLinked);
+      await this.sendMessage(chatId, mergedSalesCards, { remove_keyboard: true });
       try {
         const imageBuffer = await this.levelImage.createLevelImageBuffer(level);
         await this.sendPhoto(chatId, imageBuffer);
       } catch (e: any) {
         this.logger.warn(`Level image send failed: ${e?.message}`);
       }
-      const hasLinked = await this.prisma.user
-        .findUnique({ where: { telegramId: String(chatId) }, select: { id: true } })
-        .then((u) => !!u);
       await this.sendMessage(
         chatId,
-        this.personalityTest.getCardsMessage(hasLinked),
-        this.getKeyboard(chatId),
+        this.t(chatId, {
+          ru: 'Готово. Можешь поделиться результатом или вернуться в меню.',
+          en: 'Done. You can share your result or return to menu.',
+        }),
+        this.getPostResultKeyboard(chatId, level),
       );
       return;
     }
@@ -781,19 +904,30 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     return this.languageByChat.get(chatId) === 'ru' ? text.ru : text.en;
   }
 
-  private async sendMessage(chatId: number, text: string, replyMarkup?: any) {
-    await this.sendRawMessage(chatId, text, replyMarkup);
+  private getSubscriptionLink(): string {
+    const base = this.configService.get<string>('FRONTEND_URL') || 'https://front-production-4a7e.up.railway.app';
+    return base.replace(/\/+$/, '') + '/subscription';
   }
 
-  private async sendRawMessage(chatId: number, text: string, replyMarkup?: any) {
+  private getBotShareLink(): string {
+    return this.configService.get<string>('TELEGRAM_BOT_SHARE_LINK') || 'https://t.me/SeeeAppBot';
+  }
+
+  private async sendMessage(chatId: number, text: string, replyMarkup?: any, parseMode?: 'Markdown' | 'HTML') {
+    await this.sendRawMessage(chatId, text, replyMarkup, parseMode);
+  }
+
+  private async sendRawMessage(chatId: number, text: string, replyMarkup?: any, parseMode?: 'Markdown' | 'HTML') {
     try {
+      const body: Record<string, unknown> = {
+        chat_id: chatId,
+        text,
+        reply_markup: replyMarkup,
+      };
+      if (parseMode) body.parse_mode = parseMode;
       await axios.post(
         `https://api.telegram.org/bot${this.token}/sendMessage`,
-        {
-          chat_id: chatId,
-          text,
-          reply_markup: replyMarkup,
-        },
+        body,
         { timeout: 10000 },
       );
     } catch (error: any) {
