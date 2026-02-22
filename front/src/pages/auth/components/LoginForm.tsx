@@ -14,7 +14,7 @@ import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { observer } from "mobx-react-lite";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface LoginFormProps {
@@ -113,13 +113,12 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             </p>
           ) : null}
           <div className="pt-0.5 text-right">
-            <button
-              type="button"
-              onClick={() => navigate("/forgot-password")}
-              className="text-sm text-white/80 hover:text-white underline"
+            <Link
+              to="/forgot-password"
+              className="text-sm font-medium text-white/90 hover:text-white underline underline-offset-2 transition-colors"
             >
               Забыли пароль?
-            </button>
+            </Link>
           </div>
         </FormItem>
       </FormField>

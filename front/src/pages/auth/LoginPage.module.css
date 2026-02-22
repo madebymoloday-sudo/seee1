@@ -203,6 +203,23 @@
   color: rgba(255, 255, 255, 1) !important;
 }
 
+/* Ссылка "Забыли пароль?" — только текст, без фона и рамки, читаемая */
+.loginFormContainer a[href*="forgot-password"] {
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.92) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+.loginFormContainer a[href*="forgot-password"]:hover {
+  color: #fff !important;
+}
+
 .loginFormContainer button {
   color: rgba(255, 255, 255, 0.95) !important;
 }
