@@ -61,8 +61,11 @@ export class PersonalityTestService {
       path.join(__dirname, '..', '..', '..', 'telegram_test_prompt.json'),
       path.join(cwd, 'telegram_test_prompt.json'),
       path.join(cwd, 'dist', 'telegram_test_prompt.json'),
+      path.join(cwd, 'dist', 'src', 'telegram-bot', 'telegram_test_prompt.json'),
       path.join(cwd, 'dist', 'telegram-bot', 'telegram_test_prompt.json'),
       path.join(cwd, 'back', 'telegram_test_prompt.json'),
+      path.join(cwd, 'back', 'dist', 'src', 'telegram-bot', 'telegram_test_prompt.json'),
+      path.join(cwd, 'src', 'telegram-bot', 'telegram_test_prompt.json'),
       path.join(cwd, '..', 'telegram_test_prompt.json'),
     ];
     for (const p of candidates) {

@@ -374,7 +374,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    // Тест личности: в процессе (шаги 1–48)
+    // Тест личности: в процессе (шаги 1–15)
     if (this.personalityTest.isInProgress(chatId)) {
       await this.handleTestAnswer(chatId, text);
       return;
@@ -579,37 +579,54 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  /** Путь к welcome.jpg или null, если ни один не найден. Логируем при первом вызове. */
+  private resolveWelcomeLogoPath(): string | null {
+    const cwd = process.cwd();
+    const candidates = [
+      path.join(__dirname, 'welcome.jpg'),
+      path.join(__dirname, '..', '..', 'telegram-bot', 'welcome.jpg'),
+      path.join(cwd, 'dist', 'src', 'telegram-bot', 'welcome.jpg'),
+      path.join(cwd, 'dist', 'telegram-bot', 'welcome.jpg'),
+      path.join(cwd, 'src', 'telegram-bot', 'welcome.jpg'),
+      path.join(cwd, 'back', 'src', 'telegram-bot', 'welcome.jpg'),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        if (!this.welcomeLogoPathLogged) {
+          this.logger.log(`Welcome logo found: ${p}`);
+          this.welcomeLogoPathLogged = true;
+        }
+        return p;
+      }
+    }
+    if (!this.welcomeLogoPathLogged) {
+      this.logger.warn(`Welcome logo not found. Checked: cwd=${cwd}, __dirname=${__dirname}`);
+      this.welcomeLogoPathLogged = true;
+    }
+    return null;
+  }
+  private welcomeLogoPathLogged = false;
+
   private async sendWelcome(chatId: number) {
     const isRu = !this.languageByChat.get(chatId) || this.languageByChat.get(chatId) === 'ru';
     const welcomeFormatted = isRu
       ? '**Привет! Я бот Seee.** 💫\n\nНажмите **«Запускаемся»** или **«Пройти тест»** — в конце получите уровень по **4 сферам** и **два файла:** ответы и расшифровку.\n\nЯзык и пароль — в **«Личном кабинете»**.'
       : '**Hi! I am Seee bot.** 💫\n\nTap **"Let\'s start"** or **"Take the test"** — you\'ll get your level and **two files:** your answers and a personality decoding.\n\nLanguage and password are in **"Personal cabinet"**.';
     const kbd = this.getKeyboard(chatId);
-    let logoSent = false;
-    try {
-      const cwd = process.cwd();
-      const candidates = [
-        path.join(__dirname, 'welcome.jpg'),
-        path.join(__dirname, '..', '..', 'telegram-bot', 'welcome.jpg'),
-        path.join(cwd, 'dist', 'src', 'telegram-bot', 'welcome.jpg'),
-        path.join(cwd, 'dist', 'telegram-bot', 'welcome.jpg'),
-        path.join(cwd, 'src', 'telegram-bot', 'welcome.jpg'),
-        path.join(cwd, 'back', 'src', 'telegram-bot', 'welcome.jpg'),
-      ];
-      for (const p of candidates) {
-        if (fs.existsSync(p)) {
-          const buf = fs.readFileSync(p);
-          if (buf.length > 0) {
-            await this.sendPhoto(chatId, buf, welcomeFormatted, kbd, 'Markdown');
-            logoSent = true;
-            break;
-          }
+    const logoPath = this.resolveWelcomeLogoPath();
+    if (logoPath) {
+      try {
+        const buf = fs.readFileSync(logoPath);
+        if (buf.length > 0) {
+          await this.sendPhoto(chatId, buf, welcomeFormatted, kbd, 'Markdown');
+        } else {
+          await this.sendMessage(chatId, welcomeFormatted, kbd, 'Markdown');
         }
+      } catch (e: any) {
+        this.logger.warn(`Welcome logo send failed: ${e?.message}`);
+        await this.sendMessage(chatId, welcomeFormatted, kbd, 'Markdown');
       }
-    } catch (e: any) {
-      this.logger.warn(`Welcome logo for menu failed: ${e?.message}`);
-    }
-    if (!logoSent) {
+    } else {
       await this.sendMessage(chatId, welcomeFormatted, kbd, 'Markdown');
     }
   }
@@ -640,35 +657,29 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     this.cabinetModeChats.delete(chatId);
     const testKbd = this.getTestKeyboard();
 
-    // Приветствие: если есть логотип (welcome.jpg) — отправляем его с текстом в подписи (жирный шрифт).
-    // Если файла нет — отправляем только текст с оформлением Markdown.
+    // Приветствие теста: логотип welcome.jpg (файл в репо: back/src/telegram-bot/welcome.jpg, копируется в dist при build).
     const introText = out.introFormatted ?? out.intro;
-    let welcomeSent = false;
-    try {
-      const cwd = process.cwd();
-      const candidates = [
-        path.join(__dirname, 'welcome.jpg'),
-        path.join(__dirname, '..', '..', 'telegram-bot', 'welcome.jpg'),
-        path.join(cwd, 'dist', 'src', 'telegram-bot', 'welcome.jpg'),
-        path.join(cwd, 'dist', 'telegram-bot', 'welcome.jpg'),
-        path.join(cwd, 'src', 'telegram-bot', 'welcome.jpg'),
-        path.join(cwd, 'back', 'src', 'telegram-bot', 'welcome.jpg'),
-      ];
-      for (const welcomePath of candidates) {
-        if (fs.existsSync(welcomePath)) {
-          const buf = fs.readFileSync(welcomePath);
-          if (buf.length > 0) {
-            await this.sendPhoto(chatId, buf, introText, testKbd, 'Markdown');
-            welcomeSent = true;
-            break;
-          }
+    const welcomePath = this.resolveWelcomeLogoPath();
+    if (welcomePath) {
+      try {
+        const buf = fs.readFileSync(welcomePath);
+        if (buf.length > 0) {
+          await this.sendPhoto(chatId, buf, introText, testKbd, 'Markdown');
+        } else {
+          this.logger.warn(`Welcome logo empty: ${welcomePath}`);
+          await this.sendMessage(chatId, introText, testKbd, 'Markdown');
         }
+      } catch (e: any) {
+        this.logger.warn(`Welcome photo failed: ${e?.message}`);
+        await this.sendMessage(chatId, introText, testKbd, 'Markdown');
       }
-    } catch (e: any) {
-      this.logger.warn(`Welcome photo failed for ${chatId}: ${e?.message}`);
-    }
-    if (!welcomeSent) {
+    } else {
       await this.sendMessage(chatId, introText, testKbd, 'Markdown');
+    }
+    // Сразу отправляем первый вопрос, чтобы тест запускался без ожидания ответа «го»
+    const firstQ = this.personalityTest.advanceToFirstQuestion(chatId);
+    if (firstQ) {
+      await this.sendMessage(chatId, firstQ, testKbd, 'Markdown');
     }
   }
 
