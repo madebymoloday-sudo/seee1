@@ -657,26 +657,24 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     this.cabinetModeChats.delete(chatId);
     const testKbd = this.getTestKeyboard();
 
-    // Приветствие теста: логотип welcome.jpg (файл в репо: back/src/telegram-bot/welcome.jpg, копируется в dist при build).
+    // 1) Предисловие — всегда отдельным сообщением с жирным (не в подписи к фото), чтобы не терялось.
     const introText = out.introFormatted ?? out.intro;
+    await this.sendMessage(chatId, introText, testKbd, 'Markdown');
+
+    // 2) Фото логотипа — отдельным сообщением после предисловия (если файл есть).
     const welcomePath = this.resolveWelcomeLogoPath();
     if (welcomePath) {
       try {
         const buf = fs.readFileSync(welcomePath);
         if (buf.length > 0) {
-          await this.sendPhoto(chatId, buf, introText, testKbd, 'Markdown');
-        } else {
-          this.logger.warn(`Welcome logo empty: ${welcomePath}`);
-          await this.sendMessage(chatId, introText, testKbd, 'Markdown');
+          await this.sendPhoto(chatId, buf, 'Seee 💫', testKbd, 'Markdown');
         }
       } catch (e: any) {
         this.logger.warn(`Welcome photo failed: ${e?.message}`);
-        await this.sendMessage(chatId, introText, testKbd, 'Markdown');
       }
-    } else {
-      await this.sendMessage(chatId, introText, testKbd, 'Markdown');
     }
-    // Сразу отправляем первый вопрос, чтобы тест запускался без ожидания ответа «го»
+
+    // 3) Первый вопрос.
     const firstQ = this.personalityTest.advanceToFirstQuestion(chatId);
     if (firstQ) {
       await this.sendMessage(chatId, firstQ, testKbd, 'Markdown');
