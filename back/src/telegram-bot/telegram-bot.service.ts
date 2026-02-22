@@ -243,8 +243,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         const botLink = this.getBotShareLink();
         const classic =
           level != null
-            ? `Тест по развитию уровня личности показал, что у меня ${level} баллов. Рекомендую пройти — тебе тоже будет интересно: ${botLink}\n\nЭто бот от Seee — инструмента для осознанного управления мышлением и эмоциями. Там тест по 12 сферам жизни, в конце дают твой уровень и персональные 12 пунктов на проработку. Всё бесплатно.`
-            : `Рекомендую пройти тест уровня личности в боте Seee: ${botLink}\n\nЭто инструмент для осознанного управления мышлением и эмоциями. Тест по 12 сферам жизни, в конце — твой уровень и 12 пунктов на проработку. Всё бесплатно.`;
+            ? `Тест по развитию уровня личности показал, что у меня ${level} баллов. Рекомендую пройти — тебе тоже будет интересно: ${botLink}\n\nЭто бот от Seee. Тест по 4 сферам жизни, в конце — твой уровень и два файла: ответы и расшифровка. Всё бесплатно.`
+            : `Рекомендую пройти тест в боте Seee: ${botLink}\n\nТест по 4 сферам, в конце — уровень и два файла с ответами и расшифровкой. Всё бесплатно.`;
         await this.sendMessage(chatId, classic);
         const subLink = this.getSubscriptionLink();
         await this.sendMessage(
@@ -583,8 +583,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     await this.sendMessage(
       chatId,
       this.t(chatId, {
-        ru: 'Привет! Я бот Seee. Нажмите "Запускаемся" или "Пройти тест" — в конце получите уровень и 12 пунктов для работы. Кнопки языка и смены пароля в "Личном кабинете".',
-        en: "Hi! I am Seee bot. Tap 'Let's start' or 'Take the test' — you'll get your level and 12 points to work on. Language and password are in 'Personal cabinet'.",
+        ru: 'Привет! Я бот Seee. Нажмите "Запускаемся" или "Пройти тест" — в конце получите уровень по 4 сферам и два файла: ответы и расшифровку. Язык и пароль — в "Личном кабинете".',
+        en: "Hi! I am Seee bot. Tap 'Let's start' or 'Take the test' — you'll get your level and two files: your answers and a personality decoding. Language and password are in 'Personal cabinet'.",
       }),
       this.getKeyboard(chatId),
     );
@@ -619,7 +619,9 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     // Сначала всегда отправляем приветствие текстом — чтобы пользователь гарантированно его увидел
     await this.sendMessage(chatId, out.intro, testKbd);
 
-    // Картинка приветствия — ищем по разным путям (как на сервере, так локально)
+    // Картинка приветствия: ищем welcome.jpg по разным путям. Если картинка не приходит —
+    // проверьте, что файл welcome.jpg есть в сборке (dist/src/telegram-bot/ или в образе Docker)
+    // и что sendPhoto не логирует ошибку (Telegram: размер/формат, таймаут).
     try {
       const cwd = process.cwd();
       const candidates = [
@@ -678,8 +680,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         { remove_keyboard: true },
       );
       const level = this.personalityTest.computeLevel(result.answers);
-      const twelvePoints = await this.personalityTest.generate12Points(result.answers);
-      const levelMessage = this.personalityTest.getLevelMessage(level, twelvePoints);
+      const fourPoints = await this.personalityTest.generate4Points(result.answers);
+      const levelMessage = this.personalityTest.getLevelMessage(level, fourPoints);
       await this.sendMessage(chatId, levelMessage, { remove_keyboard: true }, 'Markdown');
       const hasLinked = await this.prisma.user
         .findUnique({ where: { telegramId: String(chatId) }, select: { id: true } })
@@ -691,6 +693,24 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         await this.sendPhoto(chatId, imageBuffer);
       } catch (e: any) {
         this.logger.warn(`Level image send failed: ${e?.message}`);
+      }
+      try {
+        const [qaBuffer, decodingBuffer] = await this.personalityTest.getDocxBuffers(
+          result.answers,
+          level,
+          fourPoints,
+        );
+        await this.sendDocument(chatId, qaBuffer, 'Seee_вопросы_и_ответы.docx');
+        await this.sendDocument(chatId, decodingBuffer, 'Seee_расшифровка_личности.docx');
+      } catch (e: any) {
+        this.logger.warn(`DOCX send failed: ${e?.message}`);
+        await this.sendMessage(
+          chatId,
+          this.t(chatId, {
+            ru: 'Файлы с ответами и расшифровкой не удалось отправить. Результаты выше сохранены.',
+            en: 'Could not send the answer and decoding files. Results above are saved.',
+          }),
+        );
       }
       await this.sendMessage(
         chatId,
@@ -969,6 +989,32 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       this.logger.error(
         `Failed to send telegram photo to ${chatId}: ${error?.response?.data?.description || error?.message || error}`,
       );
+    }
+  }
+
+  private async sendDocument(chatId: number, docBuffer: Buffer, filename: string) {
+    try {
+      const form = new FormData();
+      form.append('chat_id', String(chatId));
+      form.append('document', docBuffer, {
+        filename,
+        contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+      await axios.post(
+        `https://api.telegram.org/bot${this.token}/sendDocument`,
+        form,
+        {
+          headers: form.getHeaders(),
+          timeout: 30000,
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
+        },
+      );
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to send telegram document to ${chatId}: ${error?.response?.data?.description || error?.message || error}`,
+      );
+      throw error;
     }
   }
 }
