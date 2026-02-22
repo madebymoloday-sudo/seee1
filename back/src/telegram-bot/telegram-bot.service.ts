@@ -369,7 +369,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     if (testState?.step === 0) {
       const firstQ = this.personalityTest.advanceToFirstQuestion(chatId);
       if (firstQ) {
-        await this.sendMessage(chatId, firstQ, this.getTestKeyboard());
+        await this.sendMessage(chatId, firstQ, this.getTestKeyboard(), 'HTML');
       }
       return;
     }
@@ -657,9 +657,9 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     this.cabinetModeChats.delete(chatId);
     const testKbd = this.getTestKeyboard();
 
-    // 1) Предисловие — всегда отдельным сообщением с жирным (не в подписи к фото), чтобы не терялось.
-    const introText = out.introFormatted ?? out.intro;
-    await this.sendMessage(chatId, introText, testKbd, 'Markdown');
+    // 1) Предисловие — всегда отдельным сообщением с жирным (HTML), чтобы не терялось.
+    const introText = (out as any).introFormattedHtml ?? out.introFormatted ?? out.intro;
+    await this.sendMessage(chatId, introText, testKbd, 'HTML');
 
     // 2) Фото логотипа — отдельным сообщением после предисловия (если файл есть).
     const welcomePath = this.resolveWelcomeLogoPath();
@@ -674,10 +674,10 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // 3) Первый вопрос.
+    // 3) Первый вопрос (формат с жирным через HTML).
     const firstQ = this.personalityTest.advanceToFirstQuestion(chatId);
     if (firstQ) {
-      await this.sendMessage(chatId, firstQ, testKbd, 'Markdown');
+      await this.sendMessage(chatId, firstQ, testKbd, 'HTML');
     }
   }
 
@@ -758,7 +758,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return;
     }
     if (result.nextQuestion) {
-      await this.sendMessage(chatId, result.nextQuestion, this.getTestKeyboard());
+      await this.sendMessage(chatId, result.nextQuestion, this.getTestKeyboard(), 'HTML');
     }
   }
 

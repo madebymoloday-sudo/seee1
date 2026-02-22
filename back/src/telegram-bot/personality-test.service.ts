@@ -26,7 +26,7 @@ interface QuestionSpec {
 }
 
 interface TestSpec {
-  intro: { text: string; text_formatted?: string };
+  intro: { text: string; text_formatted?: string; text_formatted_html?: string };
   questions: QuestionSpec[];
   spheres: Array<{ id: string; name: string; order: number }>;
   message_level_and_12_points?: { structure: string; generation_note: string };
@@ -99,10 +99,19 @@ export class PersonalityTestService {
     return s != null && s.step >= 1 && s.step <= TOTAL_STEPS;
   }
 
+  private escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
   private getQuestionDisplayText(q: QuestionSpec): string {
     if (q.main != null && q.main.length > 0) {
       const elaboration = q.elaboration?.trim();
-      return `Вопрос ${q.step}: ${q.step}/${TOTAL_STEPS} — **${q.main}**${elaboration ? `\n\n${elaboration}` : ''}`;
+      const main = this.escapeHtml(q.main);
+      const elab = elaboration ? '\n\n' + this.escapeHtml(elaboration) : '';
+      return `Вопрос ${q.step}: ${q.step}/${TOTAL_STEPS} — <b>${main}</b>${elab}`;
     }
     return q.text ?? '';
   }
@@ -112,14 +121,17 @@ export class PersonalityTestService {
     this.stateByChat.delete(chatId);
   }
 
-  startTest(chatId: number): { intro: string; introFormatted: string; firstQuestion: string } | null {
+  startTest(chatId: number): { intro: string; introFormatted: string; introFormattedHtml: string; firstQuestion: string } | null {
     if (!this.spec) return null;
     this.stateByChat.set(chatId, { step: 0, answers: {} });
     const q = this.spec.questions.find((x) => x.step === 1);
     const introFormatted = this.spec.intro.text_formatted || this.spec.intro.text;
+    const introFormattedHtml =
+      (this.spec.intro as { text_formatted_html?: string }).text_formatted_html || introFormatted;
     return {
       intro: this.spec.intro.text,
       introFormatted,
+      introFormattedHtml,
       firstQuestion: q ? this.getQuestionDisplayText(q) : '',
     };
   }
