@@ -580,14 +580,38 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async sendWelcome(chatId: number) {
-    await this.sendMessage(
-      chatId,
-      this.t(chatId, {
-        ru: 'Привет! Я бот Seee. Нажмите "Запускаемся" или "Пройти тест" — в конце получите уровень по 4 сферам и два файла: ответы и расшифровку. Язык и пароль — в "Личном кабинете".',
-        en: "Hi! I am Seee bot. Tap 'Let's start' or 'Take the test' — you'll get your level and two files: your answers and a personality decoding. Language and password are in 'Personal cabinet'.",
-      }),
-      this.getKeyboard(chatId),
-    );
+    const isRu = !this.languageByChat.get(chatId) || this.languageByChat.get(chatId) === 'ru';
+    const welcomeFormatted = isRu
+      ? '**Привет! Я бот Seee.** 💫\n\nНажмите **«Запускаемся»** или **«Пройти тест»** — в конце получите уровень по **4 сферам** и **два файла:** ответы и расшифровку.\n\nЯзык и пароль — в **«Личном кабинете»**.'
+      : '**Hi! I am Seee bot.** 💫\n\nTap **"Let\'s start"** or **"Take the test"** — you\'ll get your level and **two files:** your answers and a personality decoding.\n\nLanguage and password are in **"Personal cabinet"**.';
+    const kbd = this.getKeyboard(chatId);
+    let logoSent = false;
+    try {
+      const cwd = process.cwd();
+      const candidates = [
+        path.join(__dirname, 'welcome.jpg'),
+        path.join(__dirname, '..', '..', 'telegram-bot', 'welcome.jpg'),
+        path.join(cwd, 'dist', 'src', 'telegram-bot', 'welcome.jpg'),
+        path.join(cwd, 'dist', 'telegram-bot', 'welcome.jpg'),
+        path.join(cwd, 'src', 'telegram-bot', 'welcome.jpg'),
+        path.join(cwd, 'back', 'src', 'telegram-bot', 'welcome.jpg'),
+      ];
+      for (const p of candidates) {
+        if (fs.existsSync(p)) {
+          const buf = fs.readFileSync(p);
+          if (buf.length > 0) {
+            await this.sendPhoto(chatId, buf, welcomeFormatted, kbd, 'Markdown');
+            logoSent = true;
+            break;
+          }
+        }
+      }
+    } catch (e: any) {
+      this.logger.warn(`Welcome logo for menu failed: ${e?.message}`);
+    }
+    if (!logoSent) {
+      await this.sendMessage(chatId, welcomeFormatted, kbd, 'Markdown');
+    }
   }
 
   private async startPersonalityTest(chatId: number) {
