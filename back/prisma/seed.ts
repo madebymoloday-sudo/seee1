@@ -131,6 +131,7 @@ async function main() {
         await prisma.user.update({
           where: { id: existing.id },
           data: {
+            passwordHash: hashedPassword,
             subscriptionStatus: "ACTIVE",
             subscriptionActive: true,
             subscriptionEndsAt: null,
@@ -139,7 +140,8 @@ async function main() {
             subscriptionExternalId: "free-access",
           },
         });
-        console.log(`✅ Доступ обновлён: ${data.email}`);
+        console.log(`✅ Доступ и пароль обновлены: ${data.email}`);
+        console.log(`   Вход: ${data.email} / ${data.password}\n`);
         continue;
       }
 
