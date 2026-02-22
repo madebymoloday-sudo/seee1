@@ -26,7 +26,7 @@ interface QuestionSpec {
 }
 
 interface TestSpec {
-  intro: { text: string };
+  intro: { text: string; text_formatted?: string };
   questions: QuestionSpec[];
   spheres: Array<{ id: string; name: string; order: number }>;
   message_level_and_12_points?: { structure: string; generation_note: string };
@@ -109,12 +109,14 @@ export class PersonalityTestService {
     this.stateByChat.delete(chatId);
   }
 
-  startTest(chatId: number): { intro: string; firstQuestion: string } | null {
+  startTest(chatId: number): { intro: string; introFormatted: string; firstQuestion: string } | null {
     if (!this.spec) return null;
     this.stateByChat.set(chatId, { step: 0, answers: {} });
     const q = this.spec.questions.find((x) => x.step === 1);
+    const introFormatted = this.spec.intro.text_formatted || this.spec.intro.text;
     return {
       intro: this.spec.intro.text,
+      introFormatted,
       firstQuestion: q ? this.getQuestionDisplayText(q) : '',
     };
   }

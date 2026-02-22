@@ -616,12 +616,10 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     this.cabinetModeChats.delete(chatId);
     const testKbd = this.getTestKeyboard();
 
-    // Сначала всегда отправляем приветствие текстом — чтобы пользователь гарантированно его увидел
-    await this.sendMessage(chatId, out.intro, testKbd);
-
-    // Картинка приветствия: ищем welcome.jpg по разным путям. Если картинка не приходит —
-    // проверьте, что файл welcome.jpg есть в сборке (dist/src/telegram-bot/ или в образе Docker)
-    // и что sendPhoto не логирует ошибку (Telegram: размер/формат, таймаут).
+    // Приветствие: если есть логотип (welcome.jpg) — отправляем его с текстом в подписи (жирный шрифт).
+    // Если файла нет — отправляем только текст с оформлением Markdown.
+    const introText = out.introFormatted ?? out.intro;
+    let welcomeSent = false;
     try {
       const cwd = process.cwd();
       const candidates = [
@@ -636,13 +634,17 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         if (fs.existsSync(welcomePath)) {
           const buf = fs.readFileSync(welcomePath);
           if (buf.length > 0) {
-            await this.sendPhoto(chatId, buf, 'Seee 💫', testKbd);
+            await this.sendPhoto(chatId, buf, introText, testKbd, 'Markdown');
+            welcomeSent = true;
             break;
           }
         }
       }
     } catch (e: any) {
       this.logger.warn(`Welcome photo failed for ${chatId}: ${e?.message}`);
+    }
+    if (!welcomeSent) {
+      await this.sendMessage(chatId, introText, testKbd, 'Markdown');
     }
   }
 
@@ -964,6 +966,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     photoBuffer: Buffer,
     caption?: string,
     replyMarkup?: any,
+    parseMode?: 'Markdown' | 'MarkdownV2' | 'HTML',
   ) {
     try {
       const form = new FormData();
@@ -974,6 +977,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         contentType: isPng ? 'image/png' : 'image/jpeg',
       });
       if (caption) form.append('caption', caption);
+      if (parseMode) form.append('parse_mode', parseMode);
       if (replyMarkup) form.append('reply_markup', JSON.stringify(replyMarkup));
       await axios.post(
         `https://api.telegram.org/bot${this.token}/sendPhoto`,
