@@ -243,8 +243,11 @@ export class AuthService {
   }
 
   async login(email: string, password: string): Promise<AuthResponseDto> {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: { equals: normalizedEmail, mode: 'insensitive' },
+      },
       select: {
         ...this.authUserSelect,
         passwordHash: true,

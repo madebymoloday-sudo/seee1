@@ -171,6 +171,17 @@
   outline: none !important;
 }
 
+/* Убираем чёрный прямоугольник от автозаполнения пароля (Chrome/Safari) */
+.loginFormContainer input:-webkit-autofill,
+.loginFormContainer input:-webkit-autofill:hover,
+.loginFormContainer input:-webkit-autofill:focus,
+.loginFormContainer input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 100px rgba(255, 255, 255, 0.12) inset !important;
+  box-shadow: 0 0 0 100px rgba(255, 255, 255, 0.12) inset !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 /* Кнопки - эффект стекла */
 .loginFormContainer button {
   backdrop-filter: blur(14px) saturate(165%);

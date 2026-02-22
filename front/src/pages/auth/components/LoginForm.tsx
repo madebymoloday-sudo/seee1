@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { observer } from "mobx-react-lite";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface LoginFormProps {
   onSwitchToRegister?: () => void;
@@ -39,18 +40,18 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data.email, data.password);
-      // Дальше решит EntryGate (онбординг или новая сессия)
+      await login(data.email.trim().toLowerCase(), data.password);
       navigate("/", { replace: true });
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || "Ошибка входа";
+      const errorMessage =
+        err.response?.data?.message ||
+        (err.response?.status === 401 ? "Неверный email или пароль" : "Ошибка входа");
 
-      // Устанавливаем ошибку на поле password при ошибке входа
-      // (бэкенд возвращает общее сообщение "Неверный email или пароль")
       setError("password", {
         type: "manual",
         message: errorMessage,
       });
+      toast.error(errorMessage);
     }
   };
 
@@ -89,7 +90,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
       </FormField>
 
       <FormField>
-        <FormItem>
+        <FormItem className="space-y-1.5">
           <FormLabel htmlFor="password" className="text-white/90">
             Пароль
           </FormLabel>
@@ -99,19 +100,19 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             {...register("password")}
             autoComplete="current-password"
             aria-invalid={errors.password ? "true" : "false"}
+            aria-describedby={errors.password?.message ? "password-error" : undefined}
             className={cn(
               "bg-transparent border-black/15 text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-zinc-900/20 dark:bg-transparent dark:border-white/30 dark:text-white dark:placeholder:text-white/60 dark:focus-visible:ring-white/50",
               errors.password &&
                 "border-red-400 focus-visible:ring-red-400"
             )}
           />
-          {errors.password?.message && (
-            <FormMessage 
-              message={errors.password?.message}
-              className="text-red-600 dark:text-red-200"
-            />
-          )}
-          <div className="mt-1 text-right">
+          {errors.password?.message ? (
+            <p id="password-error" className="text-sm font-medium text-red-400 dark:text-red-300">
+              {errors.password.message}
+            </p>
+          ) : null}
+          <div className="pt-0.5 text-right">
             <button
               type="button"
               onClick={() => navigate("/forgot-password")}
