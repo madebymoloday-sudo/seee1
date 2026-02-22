@@ -30,6 +30,25 @@ const admins = [
   // },
 ];
 
+/**
+ * Пользователи с бесплатным доступом (подписка ACTIVE без оплаты).
+ * При запуске seed создаются или обновляются до доступа.
+ */
+const freeAccessUsers = [
+  {
+    email: "gulo1973@yandex.ru",
+    password: "SeeeGulo73!",
+    username: "gulo1973",
+    fullName: "Gulo",
+  },
+  {
+    email: "svetochpro@gmail.com",
+    password: "SeeeSvetoch25!",
+    username: "svetochpro",
+    fullName: "Svetoch",
+  },
+];
+
 async function main() {
   console.log("🌱 Начинаем seed администраторов...\n");
 
@@ -95,7 +114,66 @@ async function main() {
     }
   }
 
-  console.log("✨ Seed администраторов завершен!");
+  console.log("\n🌱 Создаём аккаунты с бесплатным доступом (без подписки)...\n");
+
+  for (const data of freeAccessUsers) {
+    try {
+      const existing = await prisma.user.findFirst({
+        where: {
+          OR: [{ email: data.email }, { username: data.username }],
+        },
+      });
+
+      const hashedPassword = await bcrypt.hash(data.password, 12);
+      const userId = randomBytes(4).toString("hex").toUpperCase();
+
+      if (existing) {
+        await prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            subscriptionStatus: "ACTIVE",
+            subscriptionActive: true,
+            subscriptionEndsAt: null,
+            subscriptionCanceledAt: null,
+            subscriptionProvider: "seed-free",
+            subscriptionExternalId: "free-access",
+          },
+        });
+        console.log(`✅ Доступ обновлён: ${data.email}`);
+        continue;
+      }
+
+      const user = await prisma.user.create({
+        data: {
+          email: data.email,
+          username: data.username,
+          passwordHash: hashedPassword,
+          fullName: data.fullName ?? null,
+          userId,
+          role: "user",
+          subscriptionStatus: "ACTIVE",
+          subscriptionActive: true,
+          subscriptionEndsAt: null,
+          subscriptionCanceledAt: null,
+          subscriptionProvider: "seed-free",
+          subscriptionExternalId: "free-access",
+        },
+      });
+
+      await prisma.balance.create({
+        data: { userId: user.id, amount: 0 },
+      });
+
+      console.log(`✅ Аккаунт с бесплатным доступом создан: ${data.email}`);
+      console.log(`   Логин: ${data.email}`);
+      console.log(`   Временный пароль: ${data.password}`);
+      console.log(`   (рекомендуется сменить в личном кабинете)\n`);
+    } catch (e) {
+      console.error(`❌ Ошибка для ${data.email}:`, e);
+    }
+  }
+
+  console.log("✨ Seed завершен!");
 }
 
 main()
