@@ -54,6 +54,12 @@ const freeAccessUsers = [
     username: "lisa",
     fullName: "Лиза",
   },
+  {
+    email: "Skorpio_tanya@mail.ru",
+    password: "SeeeTanya25!",
+    username: "tanya",
+    fullName: "Таня",
+  },
 ];
 
 async function main() {
