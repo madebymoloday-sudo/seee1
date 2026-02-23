@@ -13,7 +13,7 @@ import {
 } from 'docx';
 
 const FIRST_SCALE_QUESTION_IDS = ['q1', 'q3', 'q5', 'q7'];
-const TOTAL_STEPS = 15;
+const TOTAL_STEPS = 17;
 
 interface QuestionSpec {
   id: string;
@@ -306,30 +306,36 @@ export class PersonalityTestService {
   }
 
   getSalesMessage(): string {
-    const link = this.configService.get<string>('FRONTEND_URL') || 'https://front-production-4a7e.up.railway.app';
-    const subLink = link.replace(/\/+$/, '') + '/subscription';
-    if (!this.spec) return `Начни прокачиваться: ${subLink}`;
-    return this.spec.sales_message.template.replace(/\{subscription_link\}/g, subLink);
+    const link = this.getLandingLink();
+    if (!this.spec) return `Узнай больше о Seee: ${link}`;
+    return this.spec.sales_message.template.replace(/\{subscription_link\}/g, link);
   }
 
   getCardsMessage(hasLinkedAccount: boolean): string {
-    if (!this.spec) return 'Зайди в приложение Seee — там можно начать работу над карточками.';
+    if (!this.spec) return 'Зайди на сайт Seee — там можно начать работу над карточками.';
     return hasLinkedAccount
       ? this.spec.cards_logic.if_app_linked.message
       : this.spec.cards_logic.if_no_subscription_or_not_linked.message;
   }
 
-  /** Объединённое сообщение: карточки (интро) + продажа подписки. */
+  /** Ссылка на лендинг (главная страница), не на оплату. */
+  getLandingLink(): string {
+    const base = this.configService.get<string>('FRONTEND_URL') || 'https://front-production-4a7e.up.railway.app';
+    return base.replace(/\/+$/, '');
+  }
+
+  /** Объединённое сообщение: карточки + как проходит разбор + польза + ссылка на лендинг. */
   getMergedSalesAndCardsMessage(hasLinkedAccount: boolean): string {
     const cardsIntro =
       'Я записал эти тезисы и добавил их в твой профиль Seee — ты сможешь разобрать каждую сферу в приложении.\n\n';
     const parts = [
       'Всё, что ты увидел — твои реальные зоны роста.',
       'В Seee ты можешь прорабатывать каждую из 4 сфер по шагам: осознать убеждение, увидеть, откуда оно взялось, и заменить на то, что тебе нужно.',
-      'Переходи по ссылке и начни 👇',
+      'Процесс такой: ты выбираешь ситуацию или мысль, которая тебя беспокоит, а ИИ ведёт тебя через вопросы к ясности — без советов и оценок. В итоге ты сам находишь опору и новое решение, а не получаешь готовый ответ. Так прорабатываются и убеждения из теста: по шагам, в своём темпе, с конкретной пользой — меньше тревоги, яснее цели, устойчивее отношения и состояние.',
+      'Переходи по ссылке и узнай больше 👇',
     ];
-    const subLink = (this.configService.get<string>('FRONTEND_URL') || 'https://front-production-4a7e.up.railway.app').replace(/\/+$/, '') + '/subscription';
-    return cardsIntro + parts.join('\n\n') + '\n\n' + subLink + ' ✨';
+    const landingLink = this.getLandingLink();
+    return cardsIntro + parts.join('\n\n') + '\n\n' + landingLink + ' ✨';
   }
 
   /** Генерирует текст расшифровки личности (для второго DOCX). */
@@ -343,9 +349,9 @@ export class PersonalityTestService {
       .map(([k, v]) => `${k}: ${v}`)
       .join('\n');
 
-    const systemPrompt = `Ты — заботливый психолог в стиле Seee. Напиши подробную, тёплую расшифровку личности на основе ответов пользователя. Тон: бережный, приветливый, позитивный, поддерживающий. Структура: краткое вступление; разделы по темам (сферы жизни, ценности, сильные стороны, барьеры, планы) — опирайся на ответы; в конце НЕ добавляй блок про Seee — его добавим отдельно. Пиши развёрнуто, но по делу. Без markdown-разметки (** и т.п.), обычный текст.`;
+    const systemPrompt = `Ты — опытный психолог, который пишет глубокий персональный анализ личности (как подробная расшифровка для клиента). На основе ответов пользователя напиши развёрнутый, тёплый, но содержательный текст. Обязательно: 1) Похвали конкретные сильные стороны и нестандартные качества, которые видишь в ответах. 2) Укажи 2–4 наиболее «болезненные» или уязвимые зоны для роста — темы, которые человеку реально стоит проработать в первую очередь, с бережной формулировкой. 3) Дай неочевидные инсайты: что в ответах может говорить о паттернах, ценностях, защитах — то, что человек мог не осознавать. 4) Структура: вступление; блоки по темам (сферы жизни, ценности, сильные стороны, барьеры, эмоциональное состояние, отношения, планы); в конце НЕ добавляй блок про Seee — его добавим отдельно. Пиши подробно, как в качественном персональном отчёте: объёмный, с конкретикой из ответов. Тон: бережный, поддерживающий, без клише. Без markdown (** и т.п.), обычный текст.`;
 
-    const userPrompt = `Уровень по тесту: ${level} из 100.\n\n4 пункта по сферам:\n${fourPoints}\n\nОтветы пользователя:\n${answersText}\n\nНапиши персональную расшифровку в описанном тоне.`;
+    const userPrompt = `Уровень по тесту: ${level} из 100.\n\n4 пункта по сферам:\n${fourPoints}\n\nОтветы пользователя:\n${answersText}\n\nНапиши глубокую персональную расшифровку: похвали, укажи болезненные зоны роста, дай нестандартные инсайты.`;
 
     try {
       if (apiKey) {
@@ -423,7 +429,7 @@ export class PersonalityTestService {
     const doc = new Document({
       sections: [{ children }],
     });
-    return Packer.toBuffer(doc);
+    return await Packer.toBuffer(doc);
   }
 
   /** Собирает DOCX «Расшифровка личности» (текст + блок Seee). */
@@ -453,7 +459,7 @@ export class PersonalityTestService {
     const doc = new Document({
       sections: [{ children }],
     });
-    return Packer.toBuffer(doc);
+    return await Packer.toBuffer(doc);
   }
 
   /** Возвращает два буфера DOCX: [вопросы-ответы, расшифровка]. */
@@ -462,11 +468,21 @@ export class PersonalityTestService {
     level: number,
     fourPoints: string,
   ): Promise<[Buffer, Buffer]> {
-    const [qaBuf, decodingText] = await Promise.all([
-      this.buildDocxQa(answers),
-      this.generateDecodingText(answers, level, fourPoints),
-    ]);
-    const decodingBuf = await this.buildDocxDecoding(decodingText);
+    const decodingText = await this.generateDecodingText(answers, level, fourPoints);
+    let qaBuf: Buffer;
+    let decodingBuf: Buffer;
+    try {
+      qaBuf = await this.buildDocxQa(answers);
+    } catch (e: any) {
+      this.logger.error(`buildDocxQa failed: ${e?.message} ${e?.stack || ''}`);
+      throw e;
+    }
+    try {
+      decodingBuf = await this.buildDocxDecoding(decodingText);
+    } catch (e: any) {
+      this.logger.error(`buildDocxDecoding failed: ${e?.message} ${e?.stack || ''}`);
+      throw e;
+    }
     return [qaBuf, decodingBuf];
   }
 }

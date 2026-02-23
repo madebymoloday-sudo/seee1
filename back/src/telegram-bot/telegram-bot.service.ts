@@ -198,13 +198,14 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       this.languageByChat.set(chatId, initialLang);
     }
 
-    if (text === '/start' || text.startsWith('/start ')) {
+    if (text === '/start' || text.startsWith('/start ') || this.normalizeButtonText(text) === 'start') {
       const payload = text.startsWith('/start ') ? text.slice('/start '.length).trim() : '';
       if (payload.startsWith('link_')) {
         const token = payload.slice('link_'.length).trim();
         await this.tryLinkAccountFromStartPayload(message, token);
         return;
       }
+      this.launchedChats.add(chatId);
       this.personalityTest.resetTest(chatId);
       this.lastResultLevelByChat.delete(chatId);
       this.shareAwaitingExpectations.delete(chatId);
@@ -738,7 +739,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         await this.sendDocument(chatId, qaBuffer, 'Seee_вопросы_и_ответы.docx');
         await this.sendDocument(chatId, decodingBuffer, 'Seee_расшифровка_личности.docx');
       } catch (e: any) {
-        this.logger.warn(`DOCX send failed: ${e?.message}`);
+        this.logger.warn(`DOCX send failed: ${e?.message} ${e?.stack || ''}`);
         await this.sendMessage(
           chatId,
           this.t(chatId, {
@@ -947,7 +948,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     return {
       keyboard: [
         [{ text: this.supportButton }],
-        [{ text: this.testButton }],
+        [{ text: this.launchButton }, { text: this.testButton }],
         [{ text: this.restartBotButton }],
         [{ text: this.cabinetButton }],
       ],
