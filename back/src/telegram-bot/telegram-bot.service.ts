@@ -723,8 +723,12 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         await this.sendMessage(chatId, extraFeedback, { remove_keyboard: true }, 'Markdown');
       }
       const fourPoints = await this.personalityTest.generate4Points(result.answers);
-      const levelMessage = this.personalityTest.getLevelMessage(level, fourPoints);
-      await this.sendMessage(chatId, levelMessage, { remove_keyboard: true }, 'Markdown');
+      const levelHeader = this.personalityTest.getLevelMessageHeader(level);
+      const nextLevel = Math.min(100, level + 1);
+      const levelFooter = `**Чтобы перейти на уровень ${nextLevel}**, проработай каждую сферу выше — особенно блок «Что рекомендую разобрать в Seee».`;
+      await this.sendMessage(chatId, levelHeader, { remove_keyboard: true }, 'Markdown');
+      await this.sendMessageWithMarkdownFallback(chatId, fourPoints, { remove_keyboard: true });
+      await this.sendMessage(chatId, levelFooter, { remove_keyboard: true }, 'Markdown');
       const hasLinked = await this.prisma.user
         .findUnique({ where: { telegramId: String(chatId) }, select: { id: true } })
         .then((u) => !!u);
@@ -980,6 +984,45 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
           error?.response?.data?.description || error?.message || error
         }`,
       );
+    }
+  }
+
+  /** Отправляет сообщение; при ошибке (лимит 4096, ошибка Markdown) повторяет без parse_mode. Делит текст на части по 4000 символов при необходимости. */
+  private async sendMessageWithMarkdownFallback(chatId: number, text: string, replyMarkup?: any) {
+    const maxLen = 4000;
+    const chunks: string[] = [];
+    for (let i = 0; i < text.length; i += maxLen) {
+      chunks.push(text.slice(i, i + maxLen));
+    }
+    for (let i = 0; i < chunks.length; i++) {
+      await this.sendOneChunkWithFallback(chatId, chunks[i], i === 0 ? replyMarkup : undefined);
+    }
+  }
+
+  private async sendOneChunkWithFallback(chatId: number, chunk: string, replyMarkup?: any) {
+    try {
+      const body: Record<string, unknown> = {
+        chat_id: chatId,
+        text: chunk,
+        reply_markup: replyMarkup,
+      };
+      body.parse_mode = 'Markdown';
+      await axios.post(
+        `https://api.telegram.org/bot${this.token}/sendMessage`,
+        body,
+        { timeout: 10000 },
+      );
+    } catch (err: any) {
+      this.logger.warn(`Send 4 spheres chunk failed (Markdown), retrying without: ${err?.response?.data?.description || err?.message}`);
+      try {
+        await axios.post(
+          `https://api.telegram.org/bot${this.token}/sendMessage`,
+          { chat_id: chatId, text: chunk, reply_markup: replyMarkup },
+          { timeout: 10000 },
+        );
+      } catch (e2: any) {
+        this.logger.error(`Failed to send 4 spheres chunk: ${e2?.response?.data?.description || e2?.message}`);
+      }
     }
   }
 

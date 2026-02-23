@@ -367,11 +367,17 @@ export class PersonalityTestService {
       .join('\n\n');
   }
 
+  /** Заголовок сообщения с уровнем (отправляется отдельно перед блоком по 4 сферам). */
+  getLevelMessageHeader(level: number): string {
+    return `**Твой уровень: ${level} из 100.**\n\n**Вот из чего складываются твои баллы по 4 сферам:**`;
+  }
+
+  /** Полное сообщение: заголовок + fourPoints + призыв. Для обратной совместимости. */
   getLevelMessage(level: number, fourPoints: string): string {
     const nextLevel = Math.min(100, level + 1);
     return (
-      `**Твой уровень: ${level} из 100.**\n\n` +
-      `**Вот из чего складываются твои баллы по 4 сферам:**\n\n` +
+      this.getLevelMessageHeader(level) +
+      `\n\n` +
       fourPoints +
       `\n\n**Чтобы перейти на уровень ${nextLevel}**, проработай каждую сферу выше — особенно блок «Что рекомендую разобрать в Seee».`
     );
