@@ -716,6 +716,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         { remove_keyboard: true },
       );
       const level = this.personalityTest.computeLevel(result.answers);
+      const levelDescriptionBold = this.personalityTest.getLevelDescriptionBold(level);
+      await this.sendMessage(chatId, levelDescriptionBold, { remove_keyboard: true }, 'Markdown');
       const extraFeedback = await this.personalityTest.generateExtraFeedback(result.answers);
       if (extraFeedback) {
         await this.sendMessage(chatId, extraFeedback, { remove_keyboard: true }, 'Markdown');
