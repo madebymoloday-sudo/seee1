@@ -244,8 +244,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         const botLink = this.getBotShareLink();
         const classic =
           level != null
-            ? `Тест по развитию уровня личности показал, что у меня ${level} баллов. Рекомендую пройти — тебе тоже будет интересно: ${botLink}\n\nЭто бот от Seee. Тест по 4 сферам жизни, в конце — твой уровень и два файла: ответы и расшифровка. Всё бесплатно.`
-            : `Рекомендую пройти тест в боте Seee: ${botLink}\n\nТест по 4 сферам, в конце — уровень и два файла с ответами и расшифровкой. Всё бесплатно.`;
+            ? `Тест по развитию уровня личности показал, что у меня ${level} баллов. Рекомендую пройти — тебе тоже будет интересно: ${botLink}\n\nЭто бот от Seee. Тест по 4 сферам жизни, в конце — персональная обратная связь и рекомендации. Всё бесплатно.`
+            : `Рекомендую пройти тест в боте Seee: ${botLink}\n\nТест по 4 сферам, в конце — персональная обратная связь и рекомендации. Всё бесплатно.`;
         await this.sendMessage(chatId, classic);
         const subLink = this.getSubscriptionLink();
         await this.sendMessage(
@@ -611,7 +611,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private async sendWelcome(chatId: number) {
     const isRu = !this.languageByChat.get(chatId) || this.languageByChat.get(chatId) === 'ru';
     const welcomeFormatted = isRu
-      ? '**Привет! Я бот Seee.** 💫\n\nНажмите **«Запускаемся»** или **«Пройти тест»** — в конце получите уровень по **4 сферам** и **два файла:** ответы и расшифровку.\n\nЯзык и пароль — в **«Личном кабинете»**.'
+      ? '**Привет! Я бот Seee.** 💫\n\nНажмите **«Запускаемся»** или **«Пройти тест»** — в конце получите персональную обратную связь и рекомендации по **4 сферам**.\n\nЯзык и пароль — в **«Личном кабинете»**.'
       : '**Hi! I am Seee bot.** 💫\n\nTap **"Let\'s start"** or **"Take the test"** — you\'ll get your level and **two files:** your answers and a personality decoding.\n\nLanguage and password are in **"Personal cabinet"**.';
     const kbd = this.getKeyboard(chatId);
     const logoPath = this.resolveWelcomeLogoPath();
@@ -716,6 +716,10 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         { remove_keyboard: true },
       );
       const level = this.personalityTest.computeLevel(result.answers);
+      const extraFeedback = await this.personalityTest.generateExtraFeedback(result.answers);
+      if (extraFeedback) {
+        await this.sendMessage(chatId, extraFeedback, { remove_keyboard: true }, 'Markdown');
+      }
       const fourPoints = await this.personalityTest.generate4Points(result.answers);
       const levelMessage = this.personalityTest.getLevelMessage(level, fourPoints);
       await this.sendMessage(chatId, levelMessage, { remove_keyboard: true }, 'Markdown');
@@ -729,24 +733,6 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         await this.sendPhoto(chatId, imageBuffer);
       } catch (e: any) {
         this.logger.warn(`Level image send failed: ${e?.message}`);
-      }
-      try {
-        const [qaBuffer, decodingBuffer] = await this.personalityTest.getDocxBuffers(
-          result.answers,
-          level,
-          fourPoints,
-        );
-        await this.sendDocument(chatId, qaBuffer, 'Seee_вопросы_и_ответы.docx');
-        await this.sendDocument(chatId, decodingBuffer, 'Seee_расшифровка_личности.docx');
-      } catch (e: any) {
-        this.logger.warn(`DOCX send failed: ${e?.message} ${e?.stack || ''}`);
-        await this.sendMessage(
-          chatId,
-          this.t(chatId, {
-            ru: 'Файлы с ответами и расшифровкой не удалось отправить. Результаты выше сохранены.',
-            en: 'Could not send the answer and decoding files. Results above are saved.',
-          }),
-        );
       }
       await this.sendMessage(
         chatId,
