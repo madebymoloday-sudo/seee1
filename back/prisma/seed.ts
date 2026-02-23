@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 import { randomBytes } from "crypto";
 
+console.log("⏳ Загрузка seed...");
 const prisma = new PrismaClient();
 
 /**
@@ -46,6 +47,12 @@ const freeAccessUsers = [
     password: "SeeeSvetoch25!",
     username: "svetochpro",
     fullName: "Svetoch",
+  },
+  {
+    email: "elisavetkurishev@mail.ru",
+    password: "SeeeLisa25!",
+    username: "lisa",
+    fullName: "Лиза",
   },
 ];
 
