@@ -1,0 +1,7 @@
+{
+  "provider": "node",
+  "packages": { "node": "20" },
+  "deploy": {
+    "startCommand": "npm run start:prod"
+  }
+}
