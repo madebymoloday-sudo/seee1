@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 const LAVA_WIDGET_URL =
   "https://widget.lava.top/4cec9675-8ace-4321-8544-84142c34d6d8";
 
+/** URL, на который нужно настроить редирект в Lava после успешной оплаты. Кнопка «Перейти к регистрации» показывается только на этой странице. */
+export const PAYMENT_SUCCESS_PATH = "/payment-success";
+
 export default function PublicSubscriptionPage() {
   const [params] = useSearchParams();
   const [copied, setCopied] = useState(false);
@@ -54,8 +57,8 @@ export default function PublicSubscriptionPage() {
           </div>
 
           <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-            Нажмите кнопку ниже, чтобы оплатить подписку. После оплаты откроется страница с переходом к регистрации.
-            Уже есть аккаунт — войдите.
+            Нажмите кнопку ниже, чтобы оплатить подписку. После оплаты вы попадёте на страницу, где можно перейти к регистрации.
+            Уже есть аккаунт — войдите в шапке.
           </p>
 
           {ref ? (
