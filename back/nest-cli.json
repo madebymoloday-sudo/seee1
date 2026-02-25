@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "assets": [
+      {
+        "include": "telegram_test_prompt.json",
+        "outDir": "dist"
+      },
+      {
+        "include": "telegram-bot/telegram_test_prompt.json",
+        "outDir": "dist"
+      },
+      {
+        "include": "telegram-bot/welcome.jpg",
+        "outDir": "dist"
+      }
+    ]
+  }
+}
