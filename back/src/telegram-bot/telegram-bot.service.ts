@@ -720,20 +720,21 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       await this.sendMessage(chatId, levelDescriptionBold, { remove_keyboard: true }, 'Markdown');
       const extraFeedback = await this.personalityTest.generateExtraFeedback(result.answers);
       if (extraFeedback) {
-        await this.sendMessage(chatId, extraFeedback, { remove_keyboard: true }, 'Markdown');
+        const part1Message = `**Часть 1: Общая сводка по вашей личности**\n\n${extraFeedback}`;
+        await this.sendMessage(chatId, part1Message, { remove_keyboard: true }, 'Markdown');
       }
       const fourPoints = await this.personalityTest.generate4Points(result.answers);
-      const levelHeader = this.personalityTest.getLevelMessageHeader(level);
+      const part2Header = '**Часть 2: Анализ и рекомендации по 4 сферам жизни**';
+      await this.sendMessage(chatId, part2Header, { remove_keyboard: true }, 'Markdown');
+      await this.sendMessageWithMarkdownFallback(chatId, fourPoints, { remove_keyboard: true });
       const nextLevel = Math.min(100, level + 1);
       const levelFooter = `**Чтобы перейти на уровень ${nextLevel}**, проработай каждую сферу выше — особенно блок «Что рекомендую разобрать в Seee».`;
-      await this.sendMessage(chatId, levelHeader, { remove_keyboard: true }, 'Markdown');
-      await this.sendMessageWithMarkdownFallback(chatId, fourPoints, { remove_keyboard: true });
-      await this.sendMessage(chatId, levelFooter, { remove_keyboard: true }, 'Markdown');
       const hasLinked = await this.prisma.user
         .findUnique({ where: { telegramId: String(chatId) }, select: { id: true } })
         .then((u) => !!u);
       const mergedSalesCards = this.personalityTest.getMergedSalesAndCardsMessage(hasLinked);
-      await this.sendMessage(chatId, mergedSalesCards, { remove_keyboard: true });
+      const combinedFinal = `${levelFooter}\n\n${mergedSalesCards}`;
+      await this.sendMessageWithMarkdownFallback(chatId, combinedFinal, { remove_keyboard: true });
       try {
         const imageBuffer = await this.levelImage.createLevelImageBuffer(level);
         await this.sendPhoto(chatId, imageBuffer);
