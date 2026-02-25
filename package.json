@@ -1,0 +1,15 @@
+{
+  "name": "seee-monorepo",
+  "private": true,
+  "description": "Seee — backend в back/, фронт в front/. Для Railway: задайте Root Directory = back для бэкенда.",
+  "scripts": {
+    "install:back": "cd back && npm ci",
+    "build": "cd back && npx prisma generate && npm run build",
+    "build:back": "cd back && npm run build",
+    "start": "cd back && npm run start:prod",
+    "start:back": "cd back && npm run start:prod"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

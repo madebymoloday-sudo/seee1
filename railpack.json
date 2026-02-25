@@ -1,0 +1,15 @@
+{
+  "provider": "node",
+  "packages": { "node": "20" },
+  "steps": {
+    "install": {
+      "cmd": "cd back && npm ci"
+    },
+    "build": {
+      "cmd": "cd back && npx prisma generate && npm run build"
+    }
+  },
+  "deploy": {
+    "startCommand": "cd back && npm run start:prod"
+  }
+}

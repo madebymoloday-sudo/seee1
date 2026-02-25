@@ -10,7 +10,8 @@
 
 ## Что сделать
 
-- В Railway для сервиса бэкенда: **Root Directory** = **`back`**.
-- Закоммитить и запушить в репозиторий **всю папку back/** (package.json, Dockerfile, railway.toml, src/, prisma/, scripts/, programs/, конфиги), чтобы при клонировании репо в `back/` был полный Node-проект.
+- В Railway для сервиса бэкенда: **Root Directory** = **`back`** (именно `back`, не `back/src` и не пусто).
+- Если Root Directory пустой, в корне репо есть `package.json` и `railpack.json` — сборка пойдёт из корня (скрипты заходят в `back/`).
+- В `back/` в репозитории уже есть полный проект (package.json, Dockerfile, src/, prisma/ и т.д.).
 
 В `back/` добавлены `railpack.json` и `start.sh` — после того как в репо будет полный `back/`, Railpack сможет собрать проект (или будет использоваться Dockerfile из `back/railway.toml`).
