@@ -1,22 +1,26 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { observer } from "mobx-react-lite";
-import { ChevronDown } from "lucide-react";
+import type { SessionResponseDto } from "@/api/schemas";
+import { useSessionsControllerCreateSession } from "@/api/seee.swr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useSessionsControllerCreateSession } from "@/api/seee.swr";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import type { SessionResponseDto } from "@/api/schemas";
 import { parseImportantOptions } from "@/lib/sessionUtils";
-import MessageInput from "./MessageInput";
+import { ChevronDown } from "lucide-react";
+import { observer } from "mobx-react-lite";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import chatStyles from "./ChatWindow.module.css";
+import MessageInput from "./MessageInput";
 import styles from "./StepDialogWindow.module.css";
 
 type Subject = "situation" | "thought";
 
 type View =
-  | { kind: "intro"; title: string; category: "Освобождение" | "Улучшение +1" | "отложено на разбор" }
+  | {
+      kind: "intro";
+      title: string;
+      category: "Освобождение" | "Улучшение +1" | "отложено на разбор";
+    }
   | { kind: "core"; step: number; subject: Subject }
   | { kind: "solve"; step: number }
   | { kind: "deepPick"; fromImportant: string }
@@ -55,7 +59,7 @@ const DRAFT_TO_EXPLORE_CATEGORY_PREFIX = "seee_draft_to_explore_category:";
 
 function buildToExploreIntroText(
   title: string,
-  category: "Освобождение" | "Улучшение +1" | "отложено на разбор"
+  category: "Освобождение" | "Улучшение +1" | "отложено на разбор",
 ): string {
   const topic = (title || "эту тему").trim();
   if (category === "Освобождение") {
@@ -89,17 +93,29 @@ function loadState(sessionId: string): DialogState | null {
 
     // v2 — восстанавливаем answers из importantText/situationText если они пустые или "—"
     if (parsed?.v === 2) {
-      if (typeof parsed.coreStep !== "number" || typeof parsed.solveStep !== "number") return null;
+      if (
+        typeof parsed.coreStep !== "number" ||
+        typeof parsed.solveStep !== "number"
+      )
+        return null;
       const state = parsed as DialogStateV2;
       const answers = { ...(state.answers || {}) };
       const subj = state.subject || "situation";
       const key1 = subj === "situation" ? "core:situation:1" : "core:thought:2";
       const key4 = subj === "situation" ? "core:situation:4" : "core:thought:4";
       const dash = "—";
-      if ((!answers[key1] || answers[key1].trim() === dash) && state.situationText?.trim() && state.situationText.trim() !== dash) {
+      if (
+        (!answers[key1] || answers[key1].trim() === dash) &&
+        state.situationText?.trim() &&
+        state.situationText.trim() !== dash
+      ) {
         answers[key1] = state.situationText.trim();
       }
-      if ((!answers[key4] || answers[key4].trim() === dash) && state.importantText?.trim() && state.importantText.trim() !== dash) {
+      if (
+        (!answers[key4] || answers[key4].trim() === dash) &&
+        state.importantText?.trim() &&
+        state.importantText.trim() !== dash
+      ) {
         answers[key4] = state.importantText.trim();
       }
       return { ...state, answers };
@@ -107,14 +123,22 @@ function loadState(sessionId: string): DialogState | null {
 
     // v1 -> v2 migration — сохраняем situationText и importantText в answers
     if (parsed?.v === 1) {
-      if (typeof parsed.coreStep !== "number" || typeof parsed.solveStep !== "number") return null;
+      if (
+        typeof parsed.coreStep !== "number" ||
+        typeof parsed.solveStep !== "number"
+      )
+        return null;
       const v1 = parsed as DialogStateV1;
       const answers: Record<string, string> = {};
       if (v1.situationText?.trim()) {
-        answers[v1.subject === "situation" ? "core:situation:1" : "core:thought:2"] = v1.situationText.trim();
+        answers[
+          v1.subject === "situation" ? "core:situation:1" : "core:thought:2"
+        ] = v1.situationText.trim();
       }
       if (v1.importantText?.trim()) {
-        answers[v1.subject === "situation" ? "core:situation:4" : "core:thought:4"] = v1.importantText.trim();
+        answers[
+          v1.subject === "situation" ? "core:situation:4" : "core:thought:4"
+        ] = v1.importantText.trim();
       }
       const migrated: DialogStateV2 = {
         ...v1,
@@ -132,7 +156,10 @@ function loadState(sessionId: string): DialogState | null {
 
 function saveState(sessionId: string, state: DialogState) {
   try {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}${sessionId}`, JSON.stringify(state));
+    localStorage.setItem(
+      `${STORAGE_KEY_PREFIX}${sessionId}`,
+      JSON.stringify(state),
+    );
   } catch {
     // ignore
   }
@@ -193,7 +220,7 @@ function decodeJwtPayload(token: string): any | null {
       atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        .join(""),
     );
     return JSON.parse(json);
   } catch {
@@ -229,7 +256,11 @@ function removeToExploreTemplate(userKey: string, templateId: string) {
   }
 }
 
-function coreQuestion(step: number, subject: Subject, thought3?: string): string {
+function coreQuestion(
+  step: number,
+  subject: Subject,
+  thought3?: string,
+): string {
   const thought = (thought3 || "").trim();
   const thoughtNominative = thought ? `мысль «${thought}»` : "эта мысль";
   const thoughtAccusative = thought ? `мысль «${thought}»` : "эту мысль";
@@ -306,7 +337,12 @@ function sanitizeThoughtValue(v?: string): string {
   return s;
 }
 
-function getPrompt(view: View, importantText: string, situationText: string, answers?: Record<string, string>): string {
+function getPrompt(
+  view: View,
+  importantText: string,
+  situationText: string,
+  answers?: Record<string, string>,
+): string {
   if (view.kind === "intro") {
     return buildToExploreIntroText(view.title, view.category);
   }
@@ -342,7 +378,8 @@ interface StepDialogWindowProps {
 
 const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const navigate = useNavigate();
-  const { trigger: createSession, isMutating } = useSessionsControllerCreateSession();
+  const { trigger: createSession, isMutating } =
+    useSessionsControllerCreateSession();
   const isDraftSession = session.id === "new";
   const userKey = useMemo(() => getUserKey(), []);
   const [introStarted, setIntroStarted] = useState(false);
@@ -355,7 +392,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         ?.trim();
       if (!templateId) return null;
 
-      const title = localStorage.getItem(`seee_draft_title:${userKey}`)?.trim() || "";
+      const title =
+        localStorage.getItem(`seee_draft_title:${userKey}`)?.trim() || "";
       const rawCategory = localStorage
         .getItem(`${DRAFT_TO_EXPLORE_CATEGORY_PREFIX}${userKey}`)
         ?.trim();
@@ -377,7 +415,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
     const kind = getSessionKind(session.id);
     const isThought = kind === "thought";
-    const situationText = isThought ? (session.title || "Новая сессия") : "";
+    const situationText = isThought ? session.title || "Новая сессия" : "";
     return {
       v: 2,
       subject: isThought ? "thought" : "situation",
@@ -401,7 +439,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   }, [session.id, state]);
 
   const view: View = useMemo(() => {
-    const firstSituationAnswer = (state.answers["core:situation:1"] || "").trim();
+    const firstSituationAnswer = (
+      state.answers["core:situation:1"] || ""
+    ).trim();
     const shouldShowIntro =
       !!draftToExploreIntro &&
       !introStarted &&
@@ -418,10 +458,16 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
     // Модальные режимы
     if (state.coreStep === 0) return { kind: "addToList" };
-    if (state.coreStep === 99) return { kind: "deepPick", fromImportant: state.importantText };
+    if (state.coreStep === 99)
+      return { kind: "deepPick", fromImportant: state.importantText };
 
     // Решение
-    if (state.subject === "situation" && state.solveStep >= 1 && state.solveStep <= 7 && state.coreStep === 100) {
+    if (
+      state.subject === "situation" &&
+      state.solveStep >= 1 &&
+      state.solveStep <= 7 &&
+      state.coreStep === 100
+    ) {
       return { kind: "solve", step: state.solveStep };
     }
 
@@ -430,8 +476,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   }, [state, draftToExploreIntro, introStarted]);
 
   const prompt = useMemo(
-    () => getPrompt(view, state.importantText, state.situationText, state.answers),
-    [view, state.importantText, state.situationText, state.answers]
+    () =>
+      getPrompt(view, state.importantText, state.situationText, state.answers),
+    [view, state.importantText, state.situationText, state.answers],
   );
 
   const importantOptions = useMemo(() => {
@@ -495,7 +542,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     const answer3 =
       sanitizeThoughtValue(state.answers[primaryKey]) ||
       sanitizeThoughtValue(state.answers[secondaryKey]);
-    const answer4 = state.answers["core:situation:4"] || state.answers["core:thought:4"] || "";
+    const answer4 =
+      state.answers["core:situation:4"] ||
+      state.answers["core:thought:4"] ||
+      "";
     const opts = parseImportantOptions(answer4);
     const list: string[] = [];
     if (answer3.trim()) list.push(answer3.trim());
@@ -510,7 +560,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return true;
   })();
 
-  const showBottomEditorActions = isTextAnswerView(view) && view.kind !== "deepPick";
+  const showBottomEditorActions =
+    isTextAnswerView(view) && view.kind !== "deepPick";
 
   const goSkip = () => {
     if (!canSkip) return;
@@ -655,10 +706,16 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
       try {
         const userKey = getUserKey();
-        const draftTitle = localStorage.getItem(`seee_draft_title:${userKey}`)?.trim();
-        const templateId = localStorage.getItem(`seee_draft_to_explore_template:${userKey}`)?.trim();
+        const draftTitle = localStorage
+          .getItem(`seee_draft_title:${userKey}`)
+          ?.trim();
+        const templateId = localStorage
+          .getItem(`seee_draft_to_explore_template:${userKey}`)
+          ?.trim();
 
-        const title = (draftTitle && draftTitle.length > 0 ? draftTitle : trimmed).slice(0, 80);
+        const title = (
+          draftTitle && draftTitle.length > 0 ? draftTitle : trimmed
+        ).slice(0, 80);
         const newSession = await createSession({ title });
         if (!newSession?.id) {
           toast.error("Не удалось создать сессию");
@@ -687,7 +744,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         try {
           localStorage.removeItem(`seee_draft_title:${userKey}`);
           localStorage.removeItem(`seee_draft_to_explore_template:${userKey}`);
-          localStorage.removeItem(`${DRAFT_TO_EXPLORE_CATEGORY_PREFIX}${userKey}`);
+          localStorage.removeItem(
+            `${DRAFT_TO_EXPLORE_CATEGORY_PREFIX}${userKey}`,
+          );
         } catch {
           // ignore
         }
@@ -717,7 +776,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         setIsFadingOut(false);
         setIsTransitioning(false);
         // for the next step we'll switch to edit/review depending on saved answer (effect)
-      }, 850)
+      }, 850),
     );
   };
 
@@ -730,13 +789,22 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         s.answers["core:thought:4"] ||
         s.importantText ||
         "",
-      deepPickReturn: { coreStep: s.coreStep, solveStep: s.solveStep, subject: s.subject },
+      deepPickReturn: {
+        coreStep: s.coreStep,
+        solveStep: s.solveStep,
+        subject: s.subject,
+      },
       coreStep: 99, // pseudo-step for deepPick
     }));
   };
 
   const goSolve = () => {
-    setState((s) => ({ ...s, coreStep: 100, solveStep: 1, subject: "situation" }));
+    setState((s) => ({
+      ...s,
+      coreStep: 100,
+      solveStep: 1,
+      subject: "situation",
+    }));
   };
 
   const openAddToList = () => {
@@ -795,7 +863,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const updateImportantIdeas = (ideas: string[]) => {
     const nextText = ideas.join("\n");
-    const answerKey = state.subject === "thought" ? "core:thought:4" : "core:situation:4";
+    const answerKey =
+      state.subject === "thought" ? "core:thought:4" : "core:situation:4";
     setState((s) => ({
       ...s,
       importantText: nextText,
@@ -843,7 +912,12 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       const min = view.subject === "thought" ? 2 : 1;
       if (view.step > min) return true;
       // из списка идей или deepPick — можно вернуться к списку
-      if (view.step === 2 && view.subject === "thought" && (state.deepPickReturn || state.ideasPickReturn)) return true;
+      if (
+        view.step === 2 &&
+        view.subject === "thought" &&
+        (state.deepPickReturn || state.ideasPickReturn)
+      )
+        return true;
       return false;
     }
     return false;
@@ -871,7 +945,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         return { coreStep: 10, solveStep: 1, subject: "situation" };
       }
       if (view.kind === "core") {
-        if (view.step === 2 && view.subject === "thought" && s.ideasPickReturn) {
+        if (
+          view.step === 2 &&
+          view.subject === "thought" &&
+          s.ideasPickReturn
+        ) {
           return {
             coreStep: s.ideasPickReturn.coreStep,
             solveStep: s.ideasPickReturn.solveStep,
@@ -891,13 +969,21 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       return {};
     };
 
-    const hadIdeasPickReturn = view.kind === "core" && view.step === 2 && view.subject === "thought" && !!state.ideasPickReturn;
+    const hadIdeasPickReturn =
+      view.kind === "core" &&
+      view.step === 2 &&
+      view.subject === "thought" &&
+      !!state.ideasPickReturn;
 
     const backUpdate = applyBackState(state);
     const nextAnswers = answerToSave
       ? { ...state.answers, [stepKey(view)]: answerToSave }
       : state.answers;
-    const nextState: DialogState = { ...state, ...backUpdate, answers: nextAnswers };
+    const nextState: DialogState = {
+      ...state,
+      ...backUpdate,
+      answers: nextAnswers,
+    };
 
     setState(nextState);
     saveState(session.id, nextState);
@@ -916,246 +1002,278 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         <div
           className={`${styles.stage} ${showBottomEditorActions ? styles.stageWithBottomBar : ""}`}
         >
-        <div
-          className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
-            isFadingOut ? chatStyles.fadeOut : ""
-          }`}
-        >
-          <div className={`${chatStyles.message} ${chatStyles.assistantMessage}`}>
-            <p className={chatStyles.messageContent}>{prompt}</p>
-            {(canGoBack || isIdeasStep || canSkip || canDeepNow) && (
-              <div className={styles.systemActionsRow}>
-                <div className={styles.actionsLeft}>
-                  {canGoBack && (
-                    <button
-                      type="button"
-                      onClick={goBack}
-                      disabled={!canGoBack || isTransitioning}
-                      className={styles.backButton}
-                      aria-label="Назад"
-                      title="Назад"
-                    >
-                      ← Назад
-                    </button>
-                  )}
-                </div>
-                <div className={styles.actionsCenter}>
-                  {isIdeasStep && !canDeepNow && (
-                    <button
-                      type="button"
-                      onClick={() => setIsIdeasModalOpen(true)}
-                      disabled={isTransitioning}
-                      className={styles.actionButton}
-                      aria-label="Список идей"
-                      title="Список идей"
-                    >
-                      ↓ Идеи
-                    </button>
-                  )}
-                  {canDeepNow && isEditing && (
-                    <button
-                      type="button"
-                      onClick={goDeepPick}
-                      disabled={isTransitioning || isListModalOpen}
-                      className={styles.actionButton}
-                      aria-label="Идеи"
-                      title='Показать идеи из ответа "Почему это важно"'
-                    >
-                      <ChevronDown className={styles.actionIcon} />
-                      Идеи
-                    </button>
-                  )}
-                </div>
-                <div className={styles.actionsRight}>
-                  {canSkip && (
-                    <button
-                      type="button"
-                      onClick={goSkip}
-                      disabled={!canSkip || isTransitioning}
-                      className={styles.skipButton}
-                      aria-label="Пропустить"
-                      title="Пропустить"
-                    >
-                      Пропустить →
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {lastUserAnswer && (
           <div
             className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
               isFadingOut ? chatStyles.fadeOut : ""
             }`}
           >
             <div
-              className={`${chatStyles.message} ${chatStyles.userMessage} ${styles.centeredUserBubble}`}
-              style={{ marginLeft: "auto", marginRight: "auto" }}
+              className={`${chatStyles.message} ${chatStyles.assistantMessage}`}
             >
-              <p className={chatStyles.messageContent} style={{ textAlign: "right" }}>
-                {lastUserAnswer}
-              </p>
+              <p className={chatStyles.messageContent}>{prompt}</p>
+              {(canGoBack || isIdeasStep || canSkip || canDeepNow) && (
+                <div className={styles.systemActionsRow}>
+                  <div className={styles.actionsLeft}>
+                    {canGoBack && (
+                      <button
+                        type="button"
+                        onClick={goBack}
+                        disabled={!canGoBack || isTransitioning}
+                        className={styles.backButton}
+                        aria-label="Назад"
+                        title="Назад"
+                      >
+                        ← Назад
+                      </button>
+                    )}
+                  </div>
+                  <div className={styles.actionsCenter}>
+                    {isIdeasStep && !canDeepNow && (
+                      <button
+                        type="button"
+                        onClick={() => setIsIdeasModalOpen(true)}
+                        disabled={isTransitioning}
+                        className={styles.actionButton}
+                        aria-label="Список идей"
+                        title="Список идей"
+                      >
+                        ↓ Идеи
+                      </button>
+                    )}
+                    {canDeepNow && isEditing && (
+                      <button
+                        type="button"
+                        onClick={goDeepPick}
+                        disabled={isTransitioning || isListModalOpen}
+                        className={styles.actionButton}
+                        aria-label="Идеи"
+                        title='Показать идеи из ответа "Почему это важно"'
+                      >
+                        <ChevronDown className={styles.actionIcon} />
+                        Идеи
+                      </button>
+                    )}
+                  </div>
+                  <div className={styles.actionsRight}>
+                    {canSkip && (
+                      <button
+                        type="button"
+                        onClick={goSkip}
+                        disabled={!canSkip || isTransitioning}
+                        className={styles.skipButton}
+                        aria-label="Пропустить"
+                        title="Пропустить"
+                      >
+                        Пропустить →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Сохранённый ответ при возврате в сессию — показываем как отправленное сообщение, не в поле ввода */}
-        {(() => {
-          if (!isTextAnswerView(view) || isEditing || lastUserAnswer) return null;
-          const key = stepKey(view);
-          const saved = state.answers[key];
-          if (!saved || !saved.trim()) return null;
-          return (
-            <div className={`${chatStyles.messageWrapper} ${chatStyles.visible}`}>
+          {lastUserAnswer && (
+            <div
+              className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
+                isFadingOut ? chatStyles.fadeOut : ""
+              }`}
+            >
               <div
                 className={`${chatStyles.message} ${chatStyles.userMessage} ${styles.centeredUserBubble}`}
                 style={{ marginLeft: "auto", marginRight: "auto" }}
               >
-                <p className={chatStyles.messageContent} style={{ textAlign: "right" }}>
-                  {saved}
+                <p
+                  className={chatStyles.messageContent}
+                  style={{ textAlign: "right" }}
+                >
+                  {lastUserAnswer}
                 </p>
               </div>
             </div>
-          );
-        })()}
+          )}
 
-        {(state.situationText || view.kind === "core") && view.kind === "core" && view.step === 1 && (
-          <p className={styles.helperText}>
-            Напишите ответ ниже. После каждого ответа вы увидите следующий вопрос.
-          </p>
-        )}
-
-        {view.kind === "deepPick" && importantOptions.length > 0 && (
-          <div className={styles.deepIdeasList}>
-            {importantOptions.map((opt) => (
-              <div key={opt} className={styles.deepIdeaItem}>
-                <button
-                  type="button"
-                  className={`${styles.choiceButton} ${chatStyles.glassButton} ${styles.deepIdeaButton}`}
-                  onClick={() => setActiveIdeaMenu((prev) => (prev === opt ? null : opt))}
-                  disabled={isTransitioning}
+          {/* Сохранённый ответ при возврате в сессию — показываем как отправленное сообщение, не в поле ввода */}
+          {(() => {
+            if (!isTextAnswerView(view) || isEditing || lastUserAnswer)
+              return null;
+            const key = stepKey(view);
+            const saved = state.answers[key];
+            if (!saved || !saved.trim()) return null;
+            return (
+              <div
+                className={`${chatStyles.messageWrapper} ${chatStyles.visible}`}
+              >
+                <div
+                  className={`${chatStyles.message} ${chatStyles.userMessage} ${styles.centeredUserBubble}`}
+                  style={{ marginLeft: "auto", marginRight: "auto" }}
                 >
-                  {opt}
-                </button>
-
-                {activeIdeaMenu === opt && (
-                  <div className={styles.deepIdeaMenu}>
-                    <button
-                      type="button"
-                      className={styles.deepIdeaMenuItem}
-                      onClick={() => {
-                        setActiveIdeaMenu(null);
-                        onAnswer(opt);
-                      }}
-                    >
-                      Выбрать эту мысль на разбор
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.deepIdeaMenuItem}
-                      onClick={() => handleEditIdea(opt)}
-                    >
-                      Редактировать
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.deepIdeaMenuItem}
-                      onClick={() => handleDeleteIdea(opt)}
-                    >
-                      Удалить
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.deepIdeaMenuItem}
-                      onClick={handleAppendIdea}
-                    >
-                      Добавить ещё одну мысль
-                    </button>
-                  </div>
-                )}
+                  <p
+                    className={chatStyles.messageContent}
+                    style={{ textAlign: "right" }}
+                  >
+                    {saved}
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
-        )}
+            );
+          })()}
 
-        {showCoreChoice && (
-          <div className={styles.choiceRow}>
-            <Button className={`${styles.choiceButton} ${chatStyles.glassButton}`} onClick={goSolve}>
-              Решить ситуацию
-            </Button>
-            <Button className={`${styles.choiceButton} ${chatStyles.glassButton}`} variant="outline" onClick={goDeepPick}>
-              Разобраться глубже
-            </Button>
-          </div>
-        )}
+          {(state.situationText || view.kind === "core") &&
+            view.kind === "core" &&
+            view.step === 1 && (
+              <p className={styles.helperText}>
+                Напишите ответ ниже. После каждого ответа вы увидите следующий
+                вопрос.
+              </p>
+            )}
 
-        {view.kind === "intro" && (
-          <div className={styles.choiceRow}>
-            <Button
-              className={`${styles.choiceButton} ${chatStyles.glassButton}`}
-              onClick={() => setIntroStarted(true)}
-            >
-              Начать разбор
-            </Button>
-          </div>
-        )}
+          {view.kind === "deepPick" && importantOptions.length > 0 && (
+            <div className={styles.deepIdeasList}>
+              {importantOptions.map((opt) => (
+                <div key={opt} className={styles.deepIdeaItem}>
+                  <button
+                    type="button"
+                    className={`${styles.choiceButton} ${chatStyles.glassButton} ${styles.deepIdeaButton}`}
+                    onClick={() =>
+                      setActiveIdeaMenu((prev) => (prev === opt ? null : opt))
+                    }
+                    disabled={isTransitioning}
+                  >
+                    {opt}
+                  </button>
 
-        {showSolveChoice && (
-          <div className={styles.choiceRow}>
-            <Button className={`${styles.choiceButton} ${chatStyles.glassButton}`} variant="outline" onClick={goDeepPick}>
-              Разобраться глубже
-            </Button>
-            <Button className={`${styles.choiceButton} ${chatStyles.glassButton}`} onClick={openAddToList}>
-              Добавить в список
-            </Button>
-          </div>
-        )}
+                  {activeIdeaMenu === opt && (
+                    <div className={styles.deepIdeaMenu}>
+                      <button
+                        type="button"
+                        className={styles.deepIdeaMenuItem}
+                        onClick={() => {
+                          setActiveIdeaMenu(null);
+                          onAnswer(opt);
+                        }}
+                      >
+                        Выбрать эту мысль на разбор
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.deepIdeaMenuItem}
+                        onClick={() => handleEditIdea(opt)}
+                      >
+                        Редактировать
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.deepIdeaMenuItem}
+                        onClick={() => handleDeleteIdea(opt)}
+                      >
+                        Удалить
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.deepIdeaMenuItem}
+                        onClick={handleAppendIdea}
+                      >
+                        Добавить ещё одну мысль
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {showCoreChoice && (
+            <div className={styles.choiceRow}>
+              <Button
+                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+                onClick={goSolve}
+              >
+                Решить ситуацию
+              </Button>
+              <Button
+                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+                variant="outline"
+                onClick={goDeepPick}
+              >
+                Разобраться глубже
+              </Button>
+            </div>
+          )}
+
+          {view.kind === "intro" && (
+            <div className={styles.choiceRow}>
+              <Button
+                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+                onClick={() => setIntroStarted(true)}
+              >
+                Начать разбор
+              </Button>
+            </div>
+          )}
+
+          {showSolveChoice && (
+            <div className={styles.choiceRow}>
+              <Button
+                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+                variant="outline"
+                onClick={goDeepPick}
+              >
+                Разобраться глубже
+              </Button>
+              <Button
+                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+                onClick={openAddToList}
+              >
+                Добавить в список
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Нижняя панель: кнопки и ввод. На мобильных — в потоке (привязана к клавиатуре), на десктопе — фиксирована снизу. */}
         {showBottomEditorActions && (
           <div className={styles.fixedBottomBar}>
-            <div className="flex justify-center gap-2 flex-wrap px-4 pt-3 pb-1">
-              {!isEditing && (
-                <>
+            {!isEditing && (
+              <div className="flex justify-center gap-2 flex-wrap px-4 pt-3 pb-1">
+                {!isEditing && (
+                  <>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setIsEditing(true);
+                        window.setTimeout(() => focusInputWithoutScroll(), 0);
+                      }}
+                      className={chatStyles.glassButton}
+                    >
+                      Отредактировать
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        onAnswer(inputText);
+                        window.setTimeout(() => focusInputWithoutScroll(), 150);
+                      }}
+                      disabled={!inputText.trim()}
+                      className={chatStyles.glassButton}
+                    >
+                      Дальше
+                    </Button>
+                  </>
+                )}
+                {canDeepNow && !isEditing && (
                   <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setIsEditing(true);
-                      window.setTimeout(() => focusInputWithoutScroll(), 0);
-                    }}
+                    type="button"
+                    onClick={openAddToList}
+                    disabled={isTransitioning || isListModalOpen}
                     className={chatStyles.glassButton}
+                    aria-label="Добавить мысль в Нейросписок"
+                    title="Добавить мысль в Нейросписок"
                   >
-                    Отредактировать
+                    Добавить мысль в Нейросписок
                   </Button>
-                  <Button
-                    onClick={() => {
-                      onAnswer(inputText);
-                      window.setTimeout(() => focusInputWithoutScroll(), 150);
-                    }}
-                    disabled={!inputText.trim()}
-                    className={chatStyles.glassButton}
-                  >
-                    Дальше
-                  </Button>
-                </>
-              )}
-              {canDeepNow && !isEditing && (
-                <Button
-                  type="button"
-                  onClick={openAddToList}
-                  disabled={isTransitioning || isListModalOpen}
-                  className={chatStyles.glassButton}
-                  aria-label="Добавить мысль в Нейросписок"
-                  title="Добавить мысль в Нейросписок"
-                >
-                  Добавить мысль в Нейросписок
-                </Button>
-              )}
-            </div>
+                )}
+              </div>
+            )}
             <div className={styles.inputAlignWrapper}>
               <MessageInput
                 ref={inputRef}
@@ -1166,7 +1284,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                 }}
                 disabled={isMutating}
                 readOnly={isMutating || isTransitioning || !isEditing}
-                placeholder={!isEditing ? "Ваш ответ сохранён" : "Введите ответ..."}
+                placeholder={
+                  !isEditing ? "Ваш ответ сохранён" : "Введите ответ..."
+                }
                 autoFocus
                 value={isEditing ? inputText : ""}
                 onValueChange={setInputText}
@@ -1205,7 +1325,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               )}
             </div>
             <div className={styles.modalFooter}>
-              <Button variant="outline" onClick={() => setIsIdeasModalOpen(false)} className={chatStyles.glassButton}>
+              <Button
+                variant="outline"
+                onClick={() => setIsIdeasModalOpen(false)}
+                className={chatStyles.glassButton}
+              >
                 Закрыть
               </Button>
             </div>
@@ -1240,10 +1364,18 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               </p>
             </div>
             <div className={styles.modalFooter}>
-              <Button variant="outline" onClick={() => setIsListModalOpen(false)} className={chatStyles.glassButton}>
+              <Button
+                variant="outline"
+                onClick={() => setIsListModalOpen(false)}
+                className={chatStyles.glassButton}
+              >
                 Отмена
               </Button>
-              <Button onClick={submitAddToList} disabled={isMutating} className={chatStyles.glassButton}>
+              <Button
+                onClick={submitAddToList}
+                disabled={isMutating}
+                className={chatStyles.glassButton}
+              >
                 Отправить
               </Button>
             </div>
@@ -1255,4 +1387,3 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 });
 
 export default StepDialogWindow;
-

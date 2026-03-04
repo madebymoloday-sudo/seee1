@@ -171,7 +171,9 @@
   font: inherit;
   font-weight: 650;
   cursor: pointer;
-  transition: color 0.15s ease, opacity 0.15s ease;
+  transition:
+    color 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .actionButton {
@@ -291,7 +293,9 @@
   color: rgba(15, 23, 42, 0.85);
   font-weight: 650;
   cursor: pointer;
-  transition: color 0.15s ease, opacity 0.15s ease;
+  transition:
+    color 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .backButton:hover:not(:disabled) {
@@ -340,8 +344,6 @@
   right: 0;
   bottom: 0;
   z-index: 1000;
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  padding-top: 0.5rem;
   background: linear-gradient(
     180deg,
     rgba(248, 250, 252, 0) 0%,
@@ -409,7 +411,6 @@
     bottom: auto;
     margin-top: auto;
     border-radius: 0;
-    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
   .inputAlignWrapper > div {
