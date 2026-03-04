@@ -84,6 +84,26 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message]);
 
+  // Блокировка скролла на мобильных при фокусе в поле ввода (touchmove + passive: false)
+  useEffect(() => {
+    const el = localRef.current;
+    if (!el) return;
+    const blockScroll = (e: TouchEvent) => e.preventDefault();
+    const onFocus = () => {
+      document.addEventListener("touchmove", blockScroll, { passive: false });
+    };
+    const onBlur = () => {
+      document.removeEventListener("touchmove", blockScroll);
+    };
+    el.addEventListener("focus", onFocus);
+    el.addEventListener("blur", onBlur);
+    return () => {
+      el.removeEventListener("focus", onFocus);
+      el.removeEventListener("blur", onBlur);
+      document.removeEventListener("touchmove", blockScroll);
+    };
+  }, []);
+
   const handleSend = () => {
     if (message.trim() && !disabled && !readOnly) {
       onSend(message.trim());
