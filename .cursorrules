@@ -1,0 +1,30 @@
+# Правила работы с проектом SEEE
+
+## Запуск в dev режиме с Docker Compose
+
+Для запуска всего проекта в dev режиме с hot reload используйте Docker Compose:
+
+```bash
+# Запуск всех сервисов (postgres, backend, frontend)
+docker-compose -f docker-compose.dev.yml up -d
+
+# Просмотр логов
+docker-compose -f docker-compose.dev.yml logs -f
+
+# Просмотр логов конкретного сервиса
+docker-compose -f docker-compose.dev.yml logs -f backend
+docker-compose -f docker-compose.dev.yml logs -f frontend
+
+# Остановка всех сервисов
+docker-compose -f docker-compose.dev.yml down
+
+# Пересборка после изменения зависимостей
+docker-compose -f docker-compose.dev.yml build
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+**Особенности dev режима:**
+- Hot reload для фронтенда и бэкенда (изменения применяются автоматически)
+- Исходники монтируются как volumes
+- Автоматическое применение миграций Prisma при первом запуске
+- Отдельная база данных для разработки (`postgres_data_dev` volume)

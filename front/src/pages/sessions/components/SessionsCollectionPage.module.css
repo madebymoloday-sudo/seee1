@@ -1,0 +1,542 @@
+/* Страница коллекции сессий в стиле архивариуса */
+
+.collectionPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 78% 14%, rgba(162, 221, 255, 0.20) 0%, rgba(162, 221, 255, 0.00) 42%),
+    radial-gradient(circle at 16% 88%, rgba(255, 185, 220, 0.20) 0%, rgba(255, 185, 220, 0.00) 44%),
+    linear-gradient(145deg, #f3f7ff 0%, #eef3fa 35%, #e9eef6 100%);
+  padding-bottom: 80px; /* Место для нижней панели */
+}
+
+/* Заголовок */
+.header {
+  position: relative;
+  z-index: 100;
+  padding: 2rem 1.5rem 1.5rem;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
+  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.telegramPrompt {
+  margin: 0 1.5rem 1.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 55%),
+    radial-gradient(120% 160% at 100% 0%, rgba(45, 212, 191, 0.12) 0%, transparent 55%),
+    rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 18px 45px rgba(15, 23, 42, 0.12),
+    0 2px 6px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.telegramPromptText {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: rgb(15, 23, 42);
+}
+
+.telegramPromptText strong {
+  font-weight: 600;
+}
+
+.telegramPromptActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.telegramPromptButtonPrimary,
+.telegramPromptButtonSecondary {
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.4rem 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.telegramPromptButtonPrimary {
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: white;
+}
+
+.telegramPromptButtonPrimary:hover {
+  transform: translateY(-0.5px);
+  background: linear-gradient(135deg, #0284c7, #4f46e5);
+}
+
+.telegramPromptButtonSecondary {
+  background: rgba(15, 23, 42, 0.06);
+  color: rgb(15, 23, 42);
+}
+
+.telegramPromptButtonSecondary:hover {
+  background: rgba(15, 23, 42, 0.12);
+}
+
+@media (max-width: 640px) {
+  .telegramPrompt {
+    margin: 0 1rem 1rem;
+  }
+}
+
+::global(.dark) .telegramPrompt {
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgba(96, 165, 250, 0.25) 0%, transparent 55%),
+    radial-gradient(120% 160% at 100% 0%, rgba(45, 212, 191, 0.25) 0%, transparent 55%),
+    rgba(15, 23, 42, 0.98);
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+::global(.dark) .telegramPromptText {
+  color: rgba(241, 245, 249, 0.96);
+}
+
+::global(.dark) .telegramPromptButtonSecondary {
+  background: rgba(15, 23, 42, 0.6);
+  color: rgba(241, 245, 249, 0.9);
+}
+
+::global(.dark) .telegramPromptButtonSecondary:hover {
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.9);
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.plusButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+}
+
+.plusButton:hover:not(:disabled) {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
+  transform: scale(1.1);
+}
+
+.plusIcon {
+  width: 24px;
+  height: 24px;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+/* Поиск и сортировка */
+.searchBar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.searchInputWrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 0.75rem;
+  color: rgba(0, 0, 0, 0.9);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.searchInput::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.searchInput:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.sortWrapper {
+  position: relative;
+}
+
+.sortButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+.sortButton:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+.sortIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.sortMenu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  min-width: 250px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  backdrop-filter: blur(30px) saturate(200%) brightness(1.1);
+  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.1);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  padding: 0.5rem;
+  z-index: 22000;
+  animation: fadeInDown 0.2s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sortMenuItem {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sortMenuItem:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sortMenuItemActive {
+  background: rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+}
+
+/* Контейнер папок */
+.foldersContainer {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 1.5rem;
+  padding-bottom: 180px;
+  overflow-y: auto;
+  overflow-x: visible;
+}
+
+.foldersList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Info modals (feedback/ideas per session) */
+.infoModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 12000;
+  padding: 16px;
+}
+
+.infoModal {
+  width: min(720px, calc(100% - 32px));
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.95) 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
+  padding: 16px;
+}
+
+.infoModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.infoModalTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.infoModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.infoEmpty {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.infoItem {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.infoItemTitle {
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+  margin-bottom: 8px;
+}
+
+.ideaGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ideaChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.85);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+.loadingState,
+.errorState,
+.emptyState {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.emptyHint {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 0.5rem;
+}
+
+/* Тёмный режим */
+:global(.dark) .collectionPage {
+  background:
+    radial-gradient(circle at 80% 10%, rgba(117, 195, 255, 0.20) 0%, rgba(117, 195, 255, 0.00) 36%),
+    radial-gradient(circle at 12% 88%, rgba(255, 120, 170, 0.14) 0%, rgba(255, 120, 170, 0.00) 40%),
+    linear-gradient(145deg, #05070d 0%, #0b1220 45%, #0a1324 100%);
+}
+
+:global(.dark) .header {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .title {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .searchInput {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+:global(.dark) .searchIcon {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:global(.dark) .sortButton {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .sortIcon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:global(.dark) .sortMenu {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .sortMenuItem {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .sortMenuItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .sortMenuItemActive {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+:global(.dark) .loadingState,
+:global(.dark) .errorState,
+:global(.dark) .emptyState {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:global(.dark) .emptyHint {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+:global(.dark) .infoModal {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.96) 0%,
+    rgba(30, 41, 59, 0.96) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+:global(.dark) .infoModalTitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .infoEmpty {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:global(.dark) .infoItem {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .infoItemTitle {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+:global(.dark) .ideaChip {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+}

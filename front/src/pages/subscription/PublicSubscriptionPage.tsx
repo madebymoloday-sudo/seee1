@@ -6,9 +6,6 @@ import { Button } from "@/components/ui/button";
 const LAVA_WIDGET_URL =
   "https://widget.lava.top/4cec9675-8ace-4321-8544-84142c34d6d8";
 
-/** URL, на который нужно настроить редирект в Lava после успешной оплаты. Кнопка «Перейти к регистрации» показывается только на этой странице. */
-export const PAYMENT_SUCCESS_PATH = "/payment-success";
-
 export default function PublicSubscriptionPage() {
   const [params] = useSearchParams();
   const [copied, setCopied] = useState(false);
@@ -57,8 +54,8 @@ export default function PublicSubscriptionPage() {
           </div>
 
           <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-            Нажмите кнопку ниже, чтобы оплатить подписку. После оплаты вы попадёте на страницу, где можно перейти к регистрации.
-            Уже есть аккаунт — войдите в шапке.
+            Нажмите кнопку ниже, чтобы оплатить подписку. После оплаты вы перейдёте к регистрации.
+            Если вы уже оплатили — нажмите «Перейти к регистрации» ниже. Уже есть аккаунт — войдите.
           </p>
 
           {ref ? (
@@ -75,6 +72,17 @@ export default function PublicSubscriptionPage() {
               height="60"
               src={LAVA_WIDGET_URL}
             />
+          </div>
+
+          <div className="mt-5 flex flex-col sm:flex-row gap-3 items-stretch">
+            <Button asChild size="lg" className="rounded-2xl">
+              <Link to={ref ? `/payment-success?ref=${encodeURIComponent(ref)}` : "/payment-success"}>
+                Уже оплатили? Перейти к регистрации
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="rounded-2xl">
+              <Link to="/login">Войти</Link>
+            </Button>
           </div>
 
           <div className="mt-6 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5 p-4">

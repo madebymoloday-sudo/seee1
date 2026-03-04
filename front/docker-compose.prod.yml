@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  frontend:
+    container_name: seee-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+      args:
+        API_URL: ${API_URL:-http://localhost:3000}
+    ports:
+      - "${PORT:-5171}:80"
+    restart: unless-stopped
+    environment:
+      - API_URL=${API_URL:-http://localhost:3000}
+    # Лимиты ресурсов для экономии памяти (nginx очень легковесный)
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:80/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

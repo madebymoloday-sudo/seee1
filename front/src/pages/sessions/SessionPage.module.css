@@ -7,7 +7,6 @@
 
 @media (max-width: 768px) {
   .sessionContent {
-    /* Отступ под фиксированную шапку, чтобы контент не заходил под неё */
-    padding-top: calc(100px + env(safe-area-inset-top, 0px));
+    padding-top: 0;
   }
 }

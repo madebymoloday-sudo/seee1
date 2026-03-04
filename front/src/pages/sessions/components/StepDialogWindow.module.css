@@ -398,16 +398,17 @@
   }
 
   .stageWithBottomBar {
-    /* Отступ снизу под фиксированную панель ввода */
-    padding-bottom: 140px;
+    padding-bottom: 24px;
   }
 
-  /* На мобильных панель ввода тоже фиксирована снизу — не «висит в воздухе» */
+  /* На мобильных панель ввода в потоке: не фиксирована, привязана к низу контейнера (и к клавиатуре при открытии). */
   .fixedBottomBar {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    margin-top: auto;
+    border-radius: 0;
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 

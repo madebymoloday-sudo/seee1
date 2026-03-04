@@ -1,0 +1,136 @@
+server {
+    listen 8080;
+    listen [::]:8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Debug marker: helps confirm which commit is deployed
+    # Update when investigating deployment issues
+    add_header X-SEEE-Front-Commit "d617494" always;
+    
+    # Логирование для диагностики
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # MIME types
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json application/javascript;
+
+    # Disable ETag for HTML to avoid edge caching stale routes
+    etag off;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # API proxy - основной API endpoint
+    # Backend URL: https://back-production-c25c.up.railway.app
+    location /api/v1 {
+        proxy_pass https://back-production-c25c.up.railway.app/api/v1;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host back-production-c25c.up.railway.app;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        # SSL настройки для правильного handshake
+        proxy_ssl_server_name on;
+        proxy_ssl_verify off;
+    }
+
+    # API JSON schema для Orval
+    location /api-json {
+        set $backend "back-production-c25c.up.railway.app";
+        proxy_pass https://$backend/api-json;
+        proxy_http_version 1.1;
+        proxy_set_header Host $backend;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        proxy_ssl_server_name on;
+        proxy_ssl_verify off;
+        proxy_ssl_name $backend;
+    }
+
+    # Swagger документация
+    location /api/docs {
+        proxy_pass https://back-production-c25c.up.railway.app/api/docs;
+        proxy_http_version 1.1;
+        proxy_set_header Host back-production-c25c.up.railway.app;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        proxy_ssl_server_name on;
+        proxy_ssl_verify off;
+    }
+
+    # WebSocket support для Socket.IO
+    location /socket.io {
+        proxy_pass https://back-production-c25c.up.railway.app/socket.io;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host back-production-c25c.up.railway.app;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        proxy_ssl_server_name on;
+        proxy_ssl_verify off;
+    }
+
+    # SPA routing - все остальные запросы на index.html
+    location / {
+        # Never cache HTML at edge (prevents stale client routes)
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+    
+    # Railway healthcheck endpoint (если используется)
+    location /.well-known/health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}

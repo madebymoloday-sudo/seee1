@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { createPortal } from "react-dom";
-import { MessageSquare, ChevronDown, Edit2, Pause, Save, List, Plus, Trash2, Moon, BookmarkPlus } from "lucide-react";
+import { MessageSquare, ChevronDown, Edit2, Pause, Save, List, Plus, Trash2, Moon } from "lucide-react";
 import apiAgent from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
@@ -316,16 +316,6 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
                 <Plus className={styles.menuIcon} />
                 Новая сессия
               </button>
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setIsDeferredModalOpen(true);
-                }}
-                className={styles.menuItem}
-              >
-                <BookmarkPlus className={styles.menuIcon} />
-                Записать мысль на разбор
-              </button>
               <button onClick={handleRename} className={styles.menuItem}>
                 <Edit2 className={styles.menuIcon} />
                 Переименовать
@@ -362,6 +352,13 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
             </div>
           )}
         </div>
+        <button
+          type="button"
+          className={styles.deferThoughtButton}
+          onClick={() => setIsDeferredModalOpen(true)}
+        >
+          записать мысль на разбор
+        </button>
       </div>
 
       <PauseSessionModal

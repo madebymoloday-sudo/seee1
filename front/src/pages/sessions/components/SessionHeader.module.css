@@ -22,6 +22,15 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 768px) {
+  .sessionHeader {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+  }
+}
+
 .headerContent {
   display: flex;
   align-items: center;
@@ -30,6 +39,23 @@
   gap: 0.6rem;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.deferThoughtButton {
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.8);
+  color: rgba(0, 0, 0, 0.85);
+  border-radius: 0.7rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deferThoughtButton:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(59, 130, 246, 0.35);
 }
 
 .sessionTitleWrapper {
@@ -432,6 +458,17 @@
 :global(.dark) .deleteConfirmModal {
   background: rgba(10, 10, 10, 0.98);
   border-color: rgba(255, 255, 255, 0.12);
+}
+
+:global(.dark) .deferThoughtButton {
+  background: rgba(24, 24, 24, 0.92);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .deferThoughtButton:hover {
+  background: rgba(34, 34, 34, 0.96);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 :global(.dark) .deferModal {
