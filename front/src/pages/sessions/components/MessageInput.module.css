@@ -102,7 +102,8 @@
   }
 
   .textarea {
-    height: 42px;
+    min-height: 42px !important;
+    max-height: 200px !important;
     padding: 0.6rem 0.875rem !important;
     font-size: 0.95rem;
   }
