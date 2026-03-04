@@ -998,297 +998,287 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   return (
     <div className={chatStyles.chatWindow}>
-      <div
-        className={chatStyles.messagesContainer}
-        onTouchStart={(e) => e.stopPropagation()}
-        onTouchEndCapture={(e) => e.stopPropagation()}
-        onTouchMove={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
-      >
+      <div className={chatStyles.messagesContainer}>
+        <div
+          className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
+            isFadingOut ? chatStyles.fadeOut : ""
+          }`}
+        >
+          <div
+            className={`${chatStyles.message} ${chatStyles.assistantMessage}`}
+          >
+            <p className={chatStyles.messageContent}>{prompt}</p>
+            {(canGoBack || isIdeasStep || canSkip || canDeepNow) && (
+              <div className={styles.systemActionsRow}>
+                <div className={styles.actionsLeft}>
+                  {canGoBack && (
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      disabled={!canGoBack || isTransitioning}
+                      className={styles.backButton}
+                      aria-label="Назад"
+                      title="Назад"
+                    >
+                      ← Назад
+                    </button>
+                  )}
+                </div>
+                <div className={styles.actionsCenter}>
+                  {isIdeasStep && !canDeepNow && (
+                    <button
+                      type="button"
+                      onClick={() => setIsIdeasModalOpen(true)}
+                      disabled={isTransitioning}
+                      className={styles.actionButton}
+                      aria-label="Список идей"
+                      title="Список идей"
+                    >
+                      ↓ Идеи
+                    </button>
+                  )}
+                  {canDeepNow && isEditing && (
+                    <button
+                      type="button"
+                      onClick={goDeepPick}
+                      disabled={isTransitioning || isListModalOpen}
+                      className={styles.actionButton}
+                      aria-label="Идеи"
+                      title='Показать идеи из ответа "Почему это важно"'
+                    >
+                      <ChevronDown className={styles.actionIcon} />
+                      Идеи
+                    </button>
+                  )}
+                </div>
+                <div className={styles.actionsRight}>
+                  {canSkip && (
+                    <button
+                      type="button"
+                      onClick={goSkip}
+                      disabled={!canSkip || isTransitioning}
+                      className={styles.skipButton}
+                      aria-label="Пропустить"
+                      title="Пропустить"
+                    >
+                      Пропустить →
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {lastUserAnswer && (
           <div
             className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
               isFadingOut ? chatStyles.fadeOut : ""
             }`}
           >
             <div
-              className={`${chatStyles.message} ${chatStyles.assistantMessage}`}
+              className={`${chatStyles.message} ${chatStyles.userMessage} ${styles.centeredUserBubble}`}
             >
-              <p className={chatStyles.messageContent}>{prompt}</p>
-              {(canGoBack || isIdeasStep || canSkip || canDeepNow) && (
-                <div className={styles.systemActionsRow}>
-                  <div className={styles.actionsLeft}>
-                    {canGoBack && (
-                      <button
-                        type="button"
-                        onClick={goBack}
-                        disabled={!canGoBack || isTransitioning}
-                        className={styles.backButton}
-                        aria-label="Назад"
-                        title="Назад"
-                      >
-                        ← Назад
-                      </button>
-                    )}
-                  </div>
-                  <div className={styles.actionsCenter}>
-                    {isIdeasStep && !canDeepNow && (
-                      <button
-                        type="button"
-                        onClick={() => setIsIdeasModalOpen(true)}
-                        disabled={isTransitioning}
-                        className={styles.actionButton}
-                        aria-label="Список идей"
-                        title="Список идей"
-                      >
-                        ↓ Идеи
-                      </button>
-                    )}
-                    {canDeepNow && isEditing && (
-                      <button
-                        type="button"
-                        onClick={goDeepPick}
-                        disabled={isTransitioning || isListModalOpen}
-                        className={styles.actionButton}
-                        aria-label="Идеи"
-                        title='Показать идеи из ответа "Почему это важно"'
-                      >
-                        <ChevronDown className={styles.actionIcon} />
-                        Идеи
-                      </button>
-                    )}
-                  </div>
-                  <div className={styles.actionsRight}>
-                    {canSkip && (
-                      <button
-                        type="button"
-                        onClick={goSkip}
-                        disabled={!canSkip || isTransitioning}
-                        className={styles.skipButton}
-                        aria-label="Пропустить"
-                        title="Пропустить"
-                      >
-                        Пропустить →
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
+              <p className={chatStyles.messageContent}>{lastUserAnswer}</p>
             </div>
           </div>
+        )}
 
-          {lastUserAnswer && (
+        {/* Сохранённый ответ при возврате в сессию — показываем как отправленное сообщение, не в поле ввода */}
+        {(() => {
+          if (!isTextAnswerView(view) || isEditing || lastUserAnswer)
+            return null;
+          const key = stepKey(view);
+          const saved = state.answers[key];
+          if (!saved || !saved.trim()) return null;
+          return (
             <div
-              className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
-                isFadingOut ? chatStyles.fadeOut : ""
-              }`}
+              className={`${chatStyles.messageWrapper} ${chatStyles.visible}`}
             >
               <div
                 className={`${chatStyles.message} ${chatStyles.userMessage} ${styles.centeredUserBubble}`}
               >
-                <p className={chatStyles.messageContent}>
-                  {lastUserAnswer}
-                </p>
+                <p className={chatStyles.messageContent}>{saved}</p>
               </div>
             </div>
+          );
+        })()}
+
+        {(state.situationText || view.kind === "core") &&
+          view.kind === "core" &&
+          view.step === 1 && (
+            <p className={styles.helperText}>
+              Напишите ответ ниже. После каждого ответа вы увидите следующий
+              вопрос.
+            </p>
           )}
 
-          {/* Сохранённый ответ при возврате в сессию — показываем как отправленное сообщение, не в поле ввода */}
-          {(() => {
-            if (!isTextAnswerView(view) || isEditing || lastUserAnswer)
-              return null;
-            const key = stepKey(view);
-            const saved = state.answers[key];
-            if (!saved || !saved.trim()) return null;
-            return (
-              <div
-                className={`${chatStyles.messageWrapper} ${chatStyles.visible}`}
-              >
-                <div
-                  className={`${chatStyles.message} ${chatStyles.userMessage} ${styles.centeredUserBubble}`}
+        {view.kind === "deepPick" && importantOptions.length > 0 && (
+          <div className={styles.deepIdeasList}>
+            {importantOptions.map((opt) => (
+              <div key={opt} className={styles.deepIdeaItem}>
+                <button
+                  type="button"
+                  className={`${styles.choiceButton} ${chatStyles.glassButton} ${styles.deepIdeaButton}`}
+                  onClick={() =>
+                    setActiveIdeaMenu((prev) => (prev === opt ? null : opt))
+                  }
+                  disabled={isTransitioning}
                 >
-                  <p className={chatStyles.messageContent}>
-                    {saved}
-                  </p>
-                </div>
+                  {opt}
+                </button>
+
+                {activeIdeaMenu === opt && (
+                  <div className={styles.deepIdeaMenu}>
+                    <button
+                      type="button"
+                      className={styles.deepIdeaMenuItem}
+                      onClick={() => {
+                        setActiveIdeaMenu(null);
+                        onAnswer(opt);
+                      }}
+                    >
+                      Выбрать эту мысль на разбор
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.deepIdeaMenuItem}
+                      onClick={() => handleEditIdea(opt)}
+                    >
+                      Редактировать
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.deepIdeaMenuItem}
+                      onClick={() => handleDeleteIdea(opt)}
+                    >
+                      Удалить
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.deepIdeaMenuItem}
+                      onClick={handleAppendIdea}
+                    >
+                      Добавить ещё одну мысль
+                    </button>
+                  </div>
+                )}
               </div>
-            );
-          })()}
+            ))}
+          </div>
+        )}
 
-          {(state.situationText || view.kind === "core") &&
-            view.kind === "core" &&
-            view.step === 1 && (
-              <p className={styles.helperText}>
-                Напишите ответ ниже. После каждого ответа вы увидите следующий
-                вопрос.
-              </p>
-            )}
+        {showCoreChoice && (
+          <div className={styles.choiceRow}>
+            <Button
+              className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+              onClick={goSolve}
+            >
+              Решить ситуацию
+            </Button>
+            <Button
+              className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+              variant="outline"
+              onClick={goDeepPick}
+            >
+              Разобраться глубже
+            </Button>
+          </div>
+        )}
 
-          {view.kind === "deepPick" && importantOptions.length > 0 && (
-            <div className={styles.deepIdeasList}>
-              {importantOptions.map((opt) => (
-                <div key={opt} className={styles.deepIdeaItem}>
-                  <button
-                    type="button"
-                    className={`${styles.choiceButton} ${chatStyles.glassButton} ${styles.deepIdeaButton}`}
-                    onClick={() =>
-                      setActiveIdeaMenu((prev) => (prev === opt ? null : opt))
-                    }
-                    disabled={isTransitioning}
-                  >
-                    {opt}
-                  </button>
+        {view.kind === "intro" && (
+          <div className={styles.choiceRow}>
+            <Button
+              className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+              onClick={() => setIntroStarted(true)}
+            >
+              Начать разбор
+            </Button>
+          </div>
+        )}
 
-                  {activeIdeaMenu === opt && (
-                    <div className={styles.deepIdeaMenu}>
-                      <button
-                        type="button"
-                        className={styles.deepIdeaMenuItem}
-                        onClick={() => {
-                          setActiveIdeaMenu(null);
-                          onAnswer(opt);
-                        }}
-                      >
-                        Выбрать эту мысль на разбор
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.deepIdeaMenuItem}
-                        onClick={() => handleEditIdea(opt)}
-                      >
-                        Редактировать
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.deepIdeaMenuItem}
-                        onClick={() => handleDeleteIdea(opt)}
-                      >
-                        Удалить
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.deepIdeaMenuItem}
-                        onClick={handleAppendIdea}
-                      >
-                        Добавить ещё одну мысль
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {showCoreChoice && (
-            <div className={styles.choiceRow}>
-              <Button
-                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
-                onClick={goSolve}
-              >
-                Решить ситуацию
-              </Button>
-              <Button
-                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
-                variant="outline"
-                onClick={goDeepPick}
-              >
-                Разобраться глубже
-              </Button>
-            </div>
-          )}
-
-          {view.kind === "intro" && (
-            <div className={styles.choiceRow}>
-              <Button
-                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
-                onClick={() => setIntroStarted(true)}
-              >
-                Начать разбор
-              </Button>
-            </div>
-          )}
-
-          {showSolveChoice && (
-            <div className={styles.choiceRow}>
-              <Button
-                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
-                variant="outline"
-                onClick={goDeepPick}
-              >
-                Разобраться глубже
-              </Button>
-              <Button
-                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
-                onClick={openAddToList}
-              >
-                Добавить в список
-              </Button>
-            </div>
-          )}
+        {showSolveChoice && (
+          <div className={styles.choiceRow}>
+            <Button
+              className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+              variant="outline"
+              onClick={goDeepPick}
+            >
+              Разобраться глубже
+            </Button>
+            <Button
+              className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+              onClick={openAddToList}
+            >
+              Добавить в список
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Нижняя панель: кнопки и ввод (как в ChatWindow — composerDock). */}
       {showBottomEditorActions && (
-          <div className={chatStyles.composerDock}>
-            {!isEditing && (
-              <div className="flex justify-center gap-2 flex-wrap px-4 pt-3 pb-1">
-                {!isEditing && (
-                  <>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setIsEditing(true);
-                        window.setTimeout(() => focusInputWithoutScroll(), 0);
-                      }}
-                      className={chatStyles.glassButton}
-                    >
-                      Отредактировать
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        onAnswer(inputText);
-                        window.setTimeout(() => focusInputWithoutScroll(), 150);
-                      }}
-                      disabled={!inputText.trim()}
-                      className={chatStyles.glassButton}
-                    >
-                      Дальше
-                    </Button>
-                  </>
-                )}
-                {canDeepNow && !isEditing && (
+        <div className={chatStyles.composerDock}>
+          {!isEditing && (
+            <div className="flex justify-center gap-2 flex-wrap px-4 pt-3 pb-1">
+              {!isEditing && (
+                <>
                   <Button
-                    type="button"
-                    onClick={openAddToList}
-                    disabled={isTransitioning || isListModalOpen}
+                    variant="secondary"
+                    onClick={() => {
+                      setIsEditing(true);
+                      window.setTimeout(() => focusInputWithoutScroll(), 0);
+                    }}
                     className={chatStyles.glassButton}
-                    aria-label="Добавить мысль в Нейросписок"
-                    title="Добавить мысль в Нейросписок"
                   >
-                    Добавить мысль в Нейросписок
+                    Отредактировать
                   </Button>
-                )}
-              </div>
-            )}
-            <div className={styles.inputAlignWrapper}>
-              <MessageInput
-                ref={inputRef}
-                onSend={(v) => {
-                  if (!isEditing) return;
-                  onAnswer(v);
-                  window.setTimeout(() => focusInputWithoutScroll(), 150);
-                }}
-                disabled={isMutating}
-                readOnly={isMutating || isTransitioning || !isEditing}
-                placeholder={
-                  !isEditing ? "Ваш ответ сохранён" : "Введите ответ..."
-                }
-                autoFocus
-                value={isEditing ? inputText : ""}
-                onValueChange={setInputText}
-              />
+                  <Button
+                    onClick={() => {
+                      onAnswer(inputText);
+                      window.setTimeout(() => focusInputWithoutScroll(), 150);
+                    }}
+                    disabled={!inputText.trim()}
+                    className={chatStyles.glassButton}
+                  >
+                    Дальше
+                  </Button>
+                </>
+              )}
+              {canDeepNow && !isEditing && (
+                <Button
+                  type="button"
+                  onClick={openAddToList}
+                  disabled={isTransitioning || isListModalOpen}
+                  className={chatStyles.glassButton}
+                  aria-label="Добавить мысль в Нейросписок"
+                  title="Добавить мысль в Нейросписок"
+                >
+                  Добавить мысль в Нейросписок
+                </Button>
+              )}
             </div>
+          )}
+          <div className={styles.inputAlignWrapper}>
+            <MessageInput
+              ref={inputRef}
+              onSend={(v) => {
+                if (!isEditing) return;
+                onAnswer(v);
+                window.setTimeout(() => focusInputWithoutScroll(), 150);
+              }}
+              disabled={isMutating}
+              readOnly={isMutating || isTransitioning || !isEditing}
+              placeholder={
+                !isEditing ? "Ваш ответ сохранён" : "Введите ответ..."
+              }
+              autoFocus
+              value={isEditing ? inputText : ""}
+              onValueChange={setInputText}
+            />
           </div>
-        )}
+        </div>
+      )}
 
       {/* Модалка «Список идей» — кликабельные идеи, выбор запускает этапы по этой идее */}
       {isIdeasModalOpen && (
