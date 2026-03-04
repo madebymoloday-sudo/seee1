@@ -997,11 +997,14 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   return (
-    <div className={styles.wizardLayout}>
-      <div className={styles.wizardWindow}>
-        <div
-          className={`${styles.stage} ${showBottomEditorActions ? styles.stageWithBottomBar : ""}`}
-        >
+    <div className={chatStyles.chatWindow}>
+      <div
+        className={chatStyles.messagesContainer}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEndCapture={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+      >
           <div
             className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
               isFadingOut ? chatStyles.fadeOut : ""
@@ -1081,12 +1084,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             >
               <div
                 className={`${chatStyles.message} ${chatStyles.userMessage} ${styles.centeredUserBubble}`}
-                style={{ marginLeft: "auto", marginRight: "auto" }}
               >
-                <p
-                  className={chatStyles.messageContent}
-                  style={{ textAlign: "right" }}
-                >
+                <p className={chatStyles.messageContent}>
                   {lastUserAnswer}
                 </p>
               </div>
@@ -1106,12 +1105,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               >
                 <div
                   className={`${chatStyles.message} ${chatStyles.userMessage} ${styles.centeredUserBubble}`}
-                  style={{ marginLeft: "auto", marginRight: "auto" }}
                 >
-                  <p
-                    className={chatStyles.messageContent}
-                    style={{ textAlign: "right" }}
-                  >
+                  <p className={chatStyles.messageContent}>
                     {saved}
                   </p>
                 </div>
@@ -1229,11 +1224,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               </Button>
             </div>
           )}
-        </div>
+      </div>
 
-        {/* Нижняя панель: кнопки и ввод. На мобильных — в потоке (привязана к клавиатуре), на десктопе — фиксирована снизу. */}
-        {showBottomEditorActions && (
-          <div className={styles.fixedBottomBar}>
+      {/* Нижняя панель: кнопки и ввод (как в ChatWindow — composerDock). */}
+      {showBottomEditorActions && (
+          <div className={chatStyles.composerDock}>
             {!isEditing && (
               <div className="flex justify-center gap-2 flex-wrap px-4 pt-3 pb-1">
                 {!isEditing && (
@@ -1294,7 +1289,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             </div>
           </div>
         )}
-      </div>
 
       {/* Модалка «Список идей» — кликабельные идеи, выбор запускает этапы по этой идее */}
       {isIdeasModalOpen && (

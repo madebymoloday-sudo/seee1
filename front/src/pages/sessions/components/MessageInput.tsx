@@ -80,12 +80,14 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       const el = localRef.current;
       if (!el) return;
       const blockScroll = (e: TouchEvent) => e.preventDefault();
+
       const onFocus = () => {
         document.addEventListener("touchmove", blockScroll, { passive: false });
       };
       const onBlur = () => {
         document.removeEventListener("touchmove", blockScroll);
       };
+
       el.addEventListener("focus", onFocus);
       el.addEventListener("blur", onBlur);
       return () => {
