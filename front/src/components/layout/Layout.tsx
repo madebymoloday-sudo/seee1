@@ -1,6 +1,6 @@
-import { observer } from "mobx-react-lite";
-import { Outlet, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { observer } from "mobx-react-lite";
+import { Link, Outlet } from "react-router-dom";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -10,7 +10,7 @@ export const Layout = observer(({ children }: LayoutProps) => {
   useAuth();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-svh bg-background ">
       <nav className="bg-card shadow-sm border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-16">
@@ -30,8 +30,7 @@ export const Layout = observer(({ children }: LayoutProps) => {
         </div>
       </nav>
 
-      <main>{children || <Outlet />}</main>
+      <main className="h-[calc(100svh - 60px)]">{children || <Outlet />}</main>
     </div>
   );
 });
-

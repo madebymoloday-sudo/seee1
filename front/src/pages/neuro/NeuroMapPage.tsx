@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { observer } from "mobx-react-lite";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import {
+  useEventMapControllerCreateEventMap,
+  useEventMapControllerGetEventMap,
+  useSessionsControllerCreateSession,
+} from "@/api/seee.swr";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,17 +13,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import apiAgent from "@/lib/api";
-import {
-  useEventMapControllerCreateEventMap,
-  useEventMapControllerGetEventMap,
-  useSessionsControllerCreateSession,
-} from "@/api/seee.swr";
-import MessageInput from "@/pages/sessions/components/MessageInput";
-import chatStyles from "@/pages/sessions/components/ChatWindow.module.css";
-import { mutate } from "swr";
 import { useAuth } from "@/hooks/useAuth";
+import apiAgent from "@/lib/api";
+import chatStyles from "@/pages/sessions/components/ChatWindow.module.css";
+import MessageInput from "@/pages/sessions/components/MessageInput";
+import { Loader2 } from "lucide-react";
+import { observer } from "mobx-react-lite";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+import { mutate } from "swr";
 
 type EmotionEntry = {
   id: string;
@@ -71,7 +71,6 @@ function setSessionKind(sessionId: string, kind: "thought") {
 }
 
 function uid(): string {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : `${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -113,7 +112,9 @@ function defaultDraft(): DraftV1 {
   };
 }
 
-function isTextStage(cursor: Cursor): cursor is Extract<
+function isTextStage(
+  cursor: Cursor,
+): cursor is Extract<
   Cursor,
   { kind: "situation" | "emotionInput" | "thought" }
 > {
@@ -128,7 +129,7 @@ function getPrompt(
   draft: DraftV1,
   hint: string | null,
   notice: string | null,
-  isRefill: boolean
+  isRefill: boolean,
 ): string {
   const s = draft.situations[draft.situationIndex];
   const cursor = draft.cursor;
@@ -137,7 +138,7 @@ function getPrompt(
     if (cursor.kind === "situation") {
       if (isRefill) {
         return (
-          "Расскажите, какие ситуации происходят у вас в жизни, от которые вас беспокоят и от которых хотелось бы \"Освободиться\", и так же будем рады если вы поделитесь ситуациями которые для вас важны, положительно на вас влияют или ситуации которые вы хотели бы чтобы с вами произошли\n\n" +
+          'Расскажите, какие ситуации происходят у вас в жизни, от которые вас беспокоят и от которых хотелось бы "Освободиться", и так же будем рады если вы поделитесь ситуациями которые для вас важны, положительно на вас влияют или ситуации которые вы хотели бы чтобы с вами произошли\n\n' +
           "Запишем каждую ситуацию по-отдельности, так что пока что опишите первую ситуацию, которая вас беспокоит больше всего. Писать можно буквально любую ситуацию, я помогу с каждой из них"
         );
       }
@@ -208,7 +209,9 @@ const NeuroMapPage = observer(() => {
   const [notice, setNotice] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
 
-  const [draft, setDraft] = useState<DraftV1>(() => loadDraft(storageKey) ?? defaultDraft());
+  const [draft, setDraft] = useState<DraftV1>(
+    () => loadDraft(storageKey) ?? defaultDraft(),
+  );
 
   const currentSituation = draft.situations[draft.situationIndex];
 
@@ -219,7 +222,7 @@ const NeuroMapPage = observer(() => {
 
   const prompt = useMemo(
     () => getPrompt(draft, hint, notice, isRefill),
-    [draft, hint, notice, isRefill]
+    [draft, hint, notice, isRefill],
   );
 
   // Persist draft
@@ -258,7 +261,9 @@ const NeuroMapPage = observer(() => {
     draft.cursor.kind,
     draft.situationIndex,
     draft.cursor.kind === "thought" ? draft.cursor.emotionIndex : null,
-    draft.cursor.kind === "emotionInput" ? draft.cursor.editingEmotionIndex : null,
+    draft.cursor.kind === "emotionInput"
+      ? draft.cursor.editingEmotionIndex
+      : null,
   ]);
 
   // Keep inputText in sync when entering edit/back stages
@@ -307,17 +312,14 @@ const NeuroMapPage = observer(() => {
     });
   }, []);
 
-  const ensureSituationExists = useCallback(
-    (index: number) => {
-      setDraft((prev) => {
-        if (prev.situations[index]) return prev;
-        const next = cloneDraft(prev);
-        next.situations[index] = { id: uid(), situation: "", emotions: [] };
-        return next;
-      });
-    },
-    []
-  );
+  const ensureSituationExists = useCallback((index: number) => {
+    setDraft((prev) => {
+      if (prev.situations[index]) return prev;
+      const next = cloneDraft(prev);
+      next.situations[index] = { id: uid(), situation: "", emotions: [] };
+      return next;
+    });
+  }, []);
 
   const onSend = useCallback(
     (text: string) => {
@@ -406,7 +408,9 @@ const NeuroMapPage = observer(() => {
               });
             } else {
               // If user edited the thought (via back), update the session title
-              await apiAgent.patch(`/sessions/${e.sessionId}`, { title: trimmed });
+              await apiAgent.patch(`/sessions/${e.sessionId}`, {
+                title: trimmed,
+              });
               await mutate(`/api/v1/sessions`);
             }
           } catch {
@@ -417,7 +421,7 @@ const NeuroMapPage = observer(() => {
         return;
       }
     },
-    [createSession, draft, ensureSituationExists, pushHistory]
+    [createSession, draft, ensureSituationExists, pushHistory],
   );
 
   const onAddEmotion = useCallback(() => {
@@ -437,7 +441,10 @@ const NeuroMapPage = observer(() => {
     pushHistory();
     setHint(null);
     setNotice(null);
-    setDraft((prev) => ({ ...prev, cursor: { kind: "thought", emotionIndex: 0 } }));
+    setDraft((prev) => ({
+      ...prev,
+      cursor: { kind: "thought", emotionIndex: 0 },
+    }));
   }, [draft.situationIndex, draft.situations, pushHistory]);
 
   const requestHint = useCallback(async () => {
@@ -468,12 +475,17 @@ const NeuroMapPage = observer(() => {
     if (draft.cursor.kind !== "thought") return;
     pushHistory();
     setHint(null);
-    setNotice("Всё в порядке, такое бывает, давайте разберём другие эмоции или ситуации.");
+    setNotice(
+      "Всё в порядке, такое бывает, давайте разберём другие эмоции или ситуации.",
+    );
 
     setDraft((prev) => {
       const next = cloneDraft(prev);
       const s = next.situations[next.situationIndex];
-      const e = s.emotions[prev.cursor.kind === "thought" ? prev.cursor.emotionIndex : 0];
+      const e =
+        s.emotions[
+          prev.cursor.kind === "thought" ? prev.cursor.emotionIndex : 0
+        ];
       if (e) e.thought = null;
 
       const currentIdx =
@@ -571,10 +583,18 @@ const NeuroMapPage = observer(() => {
       const s = draft.situations[draft.situationIndex];
       return (
         <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-          <Button variant="secondary" onClick={onAddEmotion} className={chatStyles.glassButton}>
+          <Button
+            variant="secondary"
+            onClick={onAddEmotion}
+            className={chatStyles.glassButton}
+          >
             Добавить эмоцию
           </Button>
-          <Button onClick={onGoToThoughts} disabled={s.emotions.length === 0} className={chatStyles.glassButton}>
+          <Button
+            onClick={onGoToThoughts}
+            disabled={s.emotions.length === 0}
+            className={chatStyles.glassButton}
+          >
             Идём дальше
           </Button>
         </div>
@@ -584,10 +604,18 @@ const NeuroMapPage = observer(() => {
     if (c.kind === "thought") {
       return (
         <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-          <Button variant="secondary" onClick={requestHint} className={chatStyles.glassButton}>
+          <Button
+            variant="secondary"
+            onClick={requestHint}
+            className={chatStyles.glassButton}
+          >
             Затрудняюсь ответить
           </Button>
-          <Button variant="ghost" onClick={onCantAnswer} className={chatStyles.glassButton}>
+          <Button
+            variant="ghost"
+            onClick={onCantAnswer}
+            className={chatStyles.glassButton}
+          >
             Не могу ответить
           </Button>
         </div>
@@ -597,10 +625,18 @@ const NeuroMapPage = observer(() => {
     // summary
     return (
       <div className="flex justify-center gap-2 flex-wrap px-4 pb-3">
-        <Button variant="secondary" onClick={onAddSituation} className={chatStyles.glassButton}>
+        <Button
+          variant="secondary"
+          onClick={onAddSituation}
+          className={chatStyles.glassButton}
+        >
           Добавить ещё одну ситуацию
         </Button>
-        <Button onClick={onSaveToNeuroMap} disabled={isSaving} className={chatStyles.glassButton}>
+        <Button
+          onClick={onSaveToNeuroMap}
+          disabled={isSaving}
+          className={chatStyles.glassButton}
+        >
           {isSaving ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -654,12 +690,17 @@ const NeuroMapPage = observer(() => {
 
   return (
     <Layout>
-      <div className="h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <div className="flex-1 overflow-hidden">
+      <div
+        style={{ height: "calc(100svh - 60px)" }}
+        className="flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
+      >
+        <div className="flex-1 overflow-hidden h-full">
           <div className={chatStyles.chatWindow}>
             <div className={chatStyles.messagesContainer}>
               <div className={chatStyles.messageWrapper}>
-                <div className={`${chatStyles.message} ${chatStyles.assistantMessage}`}>
+                <div
+                  className={`${chatStyles.message} ${chatStyles.assistantMessage}`}
+                >
                   <p className={chatStyles.messageContent}>{prompt}</p>
                 </div>
               </div>
@@ -699,7 +740,9 @@ const NeuroMapPage = observer(() => {
 
               {summaryTable && (
                 <div className={chatStyles.messageWrapper}>
-                  <div className={`${chatStyles.message} ${chatStyles.assistantMessage}`}>
+                  <div
+                    className={`${chatStyles.message} ${chatStyles.assistantMessage}`}
+                  >
                     {summaryTable}
                   </div>
                 </div>
@@ -730,4 +773,3 @@ const NeuroMapPage = observer(() => {
 });
 
 export default NeuroMapPage;
-

@@ -2,10 +2,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { socketService } from "@/lib/socket";
 import { Loader2, MessageSquare } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import MessageInput from "./MessageInput";
-import EmotionCarousel from "./EmotionCarousel";
-import SettingsDropdown from "./SettingsDropdown";
 import styles from "./ChatWindow.module.css";
+import EmotionCarousel from "./EmotionCarousel";
+import MessageInput from "./MessageInput";
+import SettingsDropdown from "./SettingsDropdown";
 
 interface Message {
   id: string;
@@ -45,7 +45,9 @@ const ChatWindow = ({
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const lastMessageCountRef = useRef(0);
-  const [visibleMessages, setVisibleMessages] = useState<{ message: Message; isVisible: boolean; fadeOut?: boolean }[]>([]);
+  const [visibleMessages, setVisibleMessages] = useState<
+    { message: Message; isVisible: boolean; fadeOut?: boolean }[]
+  >([]);
   const [showEmotionCarousel, setShowEmotionCarousel] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const fadeOutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -138,10 +140,12 @@ const ChatWindow = ({
         break;
       }
     }
-    
+
     if (lastAssistantIndex === -1) {
       // Если нет сообщений от assistant, показываем все сообщения пользователя
-      setVisibleMessages(messages.map(m => ({ message: m, isVisible: true })));
+      setVisibleMessages(
+        messages.map((m) => ({ message: m, isVisible: true })),
+      );
       return;
     }
 
@@ -149,13 +153,17 @@ const ChatWindow = ({
     const userResponseAfter = messages.slice(lastAssistantIndex + 1);
 
     // Показываем только последнее сообщение от assistant и ответы пользователя после него
-    const newVisible: { message: Message; isVisible: boolean; fadeOut?: boolean }[] = [];
-    
+    const newVisible: {
+      message: Message;
+      isVisible: boolean;
+      fadeOut?: boolean;
+    }[] = [];
+
     // Добавляем последнее сообщение от assistant
     newVisible.push({ message: lastAssistant, isVisible: true });
-    
+
     // Добавляем ответы пользователя после него
-    userResponseAfter.forEach(msg => {
+    userResponseAfter.forEach((msg) => {
       newVisible.push({ message: msg, isVisible: true });
     });
 
@@ -164,8 +172,10 @@ const ChatWindow = ({
     // Если есть ответ пользователя, запускаем таймер для плавного исчезновения
     if (userResponseAfter.length > 0) {
       fadeOutTimerRef.current = setTimeout(() => {
-        setVisibleMessages(prev => prev.map(msg => ({ ...msg, fadeOut: true })));
-        
+        setVisibleMessages((prev) =>
+          prev.map((msg) => ({ ...msg, fadeOut: true })),
+        );
+
         // Через время полностью скрываем
         setTimeout(() => {
           setVisibleMessages([]);
@@ -175,10 +185,12 @@ const ChatWindow = ({
 
     // Проверяем, нужно ли показать карусель эмоций
     const questionLower = lastAssistant.content.toLowerCase();
-    if (questionLower.includes("эмоцию") || 
-        questionLower.includes("эмоция") ||
-        questionLower.includes("какую эмоцию") ||
-        questionLower.includes("какие эмоции")) {
+    if (
+      questionLower.includes("эмоцию") ||
+      questionLower.includes("эмоция") ||
+      questionLower.includes("какую эмоцию") ||
+      questionLower.includes("какие эмоции")
+    ) {
       setShowEmotionCarousel(true);
     } else {
       setShowEmotionCarousel(false);
@@ -234,7 +246,7 @@ const ChatWindow = ({
         }, 100);
       }
     },
-    [hasMore, isLoadingMore, loadMore]
+    [hasMore, isLoadingMore, loadMore],
   );
 
   const handleSend = (content: string) => {
@@ -261,6 +273,10 @@ const ChatWindow = ({
       {/* Контейнер сообщений */}
       <div
         ref={messagesContainerRef}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEndCapture={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
         onScroll={handleScroll}
         className={styles.messagesContainer}
       >
@@ -273,7 +289,9 @@ const ChatWindow = ({
         {messages.length === 0 && !isLoading && (
           <div className={styles.emptyState}>
             <MessageSquare className={styles.emptyIcon} />
-            <p className={styles.emptyTitle}>Расскажите, какая ситуация вас беспокоит</p>
+            <p className={styles.emptyTitle}>
+              Расскажите, какая ситуация вас беспокоит
+            </p>
             <p className={styles.emptyText}>
               Напишите ответ ниже — после каждого ответа будет следующий вопрос.
             </p>
@@ -285,12 +303,18 @@ const ChatWindow = ({
           <div
             key={message.id}
             className={`${styles.messageWrapper} ${
-              fadeOut ? styles.fadeOut : isVisible ? styles.visible : styles.hidden
+              fadeOut
+                ? styles.fadeOut
+                : isVisible
+                  ? styles.visible
+                  : styles.hidden
             }`}
           >
             <div
               className={`${styles.message} ${
-                message.role === "user" ? styles.userMessage : styles.assistantMessage
+                message.role === "user"
+                  ? styles.userMessage
+                  : styles.assistantMessage
               }`}
             >
               <p className={styles.messageContent}>{message.content}</p>
@@ -325,8 +349,8 @@ const ChatWindow = ({
 
       {/* Поле ввода */}
       <div className={styles.composerDock}>
-        <MessageInput 
-          onSend={handleSend} 
+        <MessageInput
+          onSend={handleSend}
           onSettingsClick={handleSettingsClick}
           disabled={isLoading || isSending}
         />
