@@ -1131,7 +1131,14 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                   >
                     Отредактировать
                   </Button>
-                  <Button onClick={() => onAnswer(inputText)} disabled={!inputText.trim()} className={chatStyles.glassButton}>
+                  <Button
+                    onClick={() => {
+                      onAnswer(inputText);
+                      window.setTimeout(() => focusInputWithoutScroll(), 150);
+                    }}
+                    disabled={!inputText.trim()}
+                    className={chatStyles.glassButton}
+                  >
                     Дальше
                   </Button>
                 </>
@@ -1155,6 +1162,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                 onSend={(v) => {
                   if (!isEditing) return;
                   onAnswer(v);
+                  window.setTimeout(() => focusInputWithoutScroll(), 150);
                 }}
                 disabled={isMutating}
                 readOnly={isMutating || isTransitioning || !isEditing}

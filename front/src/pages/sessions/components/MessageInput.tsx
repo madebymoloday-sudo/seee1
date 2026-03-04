@@ -111,11 +111,10 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       if (message.trim() && !disabled && !readOnly) {
         onSend(message.trim());
         setMessage("");
-        // Не теряем фокус после отправки (особенно на мобильных)
-        window.setTimeout(
-          () => focusTextareaWithoutScroll(localRef.current),
-          0,
-        );
+        // Возвращаем фокус после отправки (после обновления родителя)
+        const focusAfterSend = () => focusTextareaWithoutScroll(localRef.current);
+        window.setTimeout(focusAfterSend, 0);
+        window.setTimeout(focusAfterSend, 100);
       }
     };
 
