@@ -75,6 +75,18 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       return () => window.clearTimeout(t);
     }, [autoFocus, disabled]);
 
+    const autoResize = () => {
+      const el = localRef.current;
+      if (!el) return;
+      // reset then fit content
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight}px`;
+    };
+
+    useEffect(() => {
+      autoResize();
+    }, [message]);
+
     // Блокировка скролла на мобильных при фокусе в поле ввода (touchmove + passive: false)
     useEffect(() => {
       const el = localRef.current;
@@ -100,8 +112,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
         onSend(message.trim());
         setMessage("");
         // Возвращаем фокус после отправки (после обновления родителя)
-        const focusAfterSend = () =>
-          focusTextareaWithoutScroll(localRef.current);
+        const focusAfterSend = () => focusTextareaWithoutScroll(localRef.current);
         window.setTimeout(focusAfterSend, 0);
         window.setTimeout(focusAfterSend, 100);
       }
@@ -146,6 +157,8 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
             value={message}
             onChange={(e) => {
               setMessage(e.target.value);
+              // Resize as user types
+              window.requestAnimationFrame(autoResize);
             }}
             onKeyDown={handleKeyDown}
             placeholder={placeholder ?? "Введите сообщение..."}
