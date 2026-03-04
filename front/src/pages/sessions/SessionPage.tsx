@@ -67,10 +67,7 @@ const SessionPage = observer(() => {
     } as unknown as SessionResponseDto;
 
     return (
-      <div
-        className={sessionLayoutClass}
-        style={{ height: "calc(100dvh - 60px)" }}
-      >
+      <div className={sessionLayoutClass} style={{ height: "100dvh" }}>
         <SessionHeader session={draftSession} isDraft />
         <div className={styles.sessionContent}>
           <StepDialogWindow key={draftSession.id} session={draftSession} />

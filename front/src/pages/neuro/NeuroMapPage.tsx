@@ -691,7 +691,7 @@ const NeuroMapPage = observer(() => {
   return (
     <Layout>
       <div
-        style={{ height: "calc(100dvh - 60px)" }}
+        style={{ height: "100dvh" }}
         className="flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
       >
         <div className="flex-1 overflow-hidden h-full">

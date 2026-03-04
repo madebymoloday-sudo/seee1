@@ -30,7 +30,7 @@ export const Layout = observer(({ children }: LayoutProps) => {
         </div>
       </nav>
 
-      <main className="h-[calc(100svh - 60px)]">{children || <Outlet />}</main>
+      <main className="h-dvh">{children || <Outlet />}</main>
     </div>
   );
 });
