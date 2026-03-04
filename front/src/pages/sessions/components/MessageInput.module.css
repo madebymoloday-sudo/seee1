@@ -32,8 +32,7 @@
   color: white !important;
   padding: 0.65rem 1rem !important;
   line-height: 1.35;
-  min-height: 44px !important;
-  max-height: 220px !important;
+  height: 44px;
   overflow-y: auto !important;
   resize: none !important;
   font-size: 1rem;
@@ -125,8 +124,7 @@
   }
 
   .textarea {
-    min-height: 40px !important;
-    max-height: 180px !important;
+    height: 40px;
     padding: 0.55rem 0.75rem !important;
     font-size: 0.9rem;
   }
