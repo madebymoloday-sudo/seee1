@@ -15,6 +15,13 @@ import styles from "./StepDialogWindow.module.css";
 
 type Subject = "situation" | "thought";
 
+type ReturnPoint = {
+  coreStep: number;
+  solveStep: number;
+  subject: Subject;
+  thoughtScopeId?: string;
+};
+
 type View =
   | {
       kind: "intro";
@@ -38,24 +45,158 @@ type DialogStateV1 = {
 type DialogStateV2 = Omit<DialogStateV1, "v"> & {
   v: 2;
   answers: Record<string, string>;
-  deepPickReturn?: {
-    coreStep: number;
-    solveStep: number;
-    subject: Subject;
-  };
-  ideasPickReturn?: {
-    coreStep: number;
-    solveStep: number;
-    subject: Subject;
-  };
+  deepPickReturn?: ReturnPoint;
+  ideasPickReturn?: ReturnPoint;
 };
 
-type DialogState = DialogStateV2;
+type DialogStateV3 = Omit<DialogStateV2, "v"> & {
+  v: 3;
+  thoughtScopes: Record<string, Record<string, string>>;
+  activeThoughtScopeId?: string;
+};
+
+type DialogState = DialogStateV3;
 
 const STORAGE_KEY_PREFIX = "seee_step_dialog_state:";
 const SESSION_KIND_PREFIX = "seee_session_kind:";
 const SESSION_NOTES_PREFIX = "seee_session_notes:";
 const DRAFT_TO_EXPLORE_CATEGORY_PREFIX = "seee_draft_to_explore_category:";
+
+function createThoughtScopeId(): string {
+  return `thought-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function migrateToV3(state: DialogStateV2): DialogStateV3 {
+  const answers = { ...(state.answers || {}) };
+  const thoughtEntries = Object.entries(answers).filter(([key]) =>
+    key.startsWith("core:thought:"),
+  );
+  const rootAnswers = Object.fromEntries(
+    Object.entries(answers).filter(
+      ([key]) => !key.startsWith("core:thought:"),
+    ),
+  );
+
+  let activeThoughtScopeId: string | undefined;
+  const thoughtScopes: Record<string, Record<string, string>> = {};
+
+  if (state.subject === "thought" || thoughtEntries.length > 0) {
+    activeThoughtScopeId = "legacy-thought";
+    thoughtScopes[activeThoughtScopeId] = Object.fromEntries(thoughtEntries);
+    if (
+      state.subject === "thought" &&
+      !thoughtScopes[activeThoughtScopeId]["core:thought:3"] &&
+      state.situationText?.trim()
+    ) {
+      thoughtScopes[activeThoughtScopeId]["core:thought:3"] =
+        state.situationText.trim();
+    }
+  }
+
+  return normalizeStateV3({
+    ...state,
+    v: 3,
+    answers: rootAnswers,
+    thoughtScopes,
+    activeThoughtScopeId,
+  });
+}
+
+function normalizeStateV3(state: DialogStateV3): DialogStateV3 {
+  const dash = "—";
+  const answers = { ...(state.answers || {}) };
+  const thoughtScopes = { ...(state.thoughtScopes || {}) };
+
+  if (
+    (!answers["core:situation:1"] ||
+      answers["core:situation:1"].trim() === dash) &&
+    state.subject !== "thought" &&
+    state.situationText?.trim() &&
+    state.situationText.trim() !== dash
+  ) {
+    answers["core:situation:1"] = state.situationText.trim();
+  }
+
+  if (
+    (!answers["core:situation:4"] ||
+      answers["core:situation:4"].trim() === dash) &&
+    state.subject !== "thought" &&
+    state.importantText?.trim() &&
+    state.importantText.trim() !== dash
+  ) {
+    answers["core:situation:4"] = state.importantText.trim();
+  }
+
+  if (state.activeThoughtScopeId) {
+    const activeScope = {
+      ...(thoughtScopes[state.activeThoughtScopeId] || {}),
+    };
+    if (
+      (!activeScope["core:thought:3"] ||
+        activeScope["core:thought:3"].trim() === dash) &&
+      state.subject === "thought" &&
+      state.situationText?.trim() &&
+      state.situationText.trim() !== dash
+    ) {
+      activeScope["core:thought:3"] = state.situationText.trim();
+    }
+    thoughtScopes[state.activeThoughtScopeId] = activeScope;
+  }
+
+  return {
+    ...state,
+    answers,
+    thoughtScopes,
+  };
+}
+
+function getActiveThoughtAnswers(state: DialogState): Record<string, string> {
+  if (!state.activeThoughtScopeId) return {};
+  return state.thoughtScopes[state.activeThoughtScopeId] || {};
+}
+
+function getCurrentAnswers(state: DialogState): Record<string, string> {
+  return {
+    ...(state.answers || {}),
+    ...getActiveThoughtAnswers(state),
+  };
+}
+
+function getAnswerValue(state: DialogState, key: string): string | undefined {
+  if (key.startsWith("core:thought:")) {
+    return getActiveThoughtAnswers(state)[key];
+  }
+  return state.answers[key];
+}
+
+function setAnswerValue(
+  state: DialogState,
+  key: string,
+  value: string,
+): Pick<DialogState, "answers" | "thoughtScopes"> {
+  if (key.startsWith("core:thought:")) {
+    const scopeId = state.activeThoughtScopeId || createThoughtScopeId();
+    const currentScope = {
+      ...(state.thoughtScopes[scopeId] || {}),
+      [key]: value,
+    };
+    return {
+      answers: state.answers,
+      thoughtScopes: {
+        ...state.thoughtScopes,
+        [scopeId]: currentScope,
+      },
+    };
+  }
+
+  return {
+    answers: {
+      ...(state.answers || {}),
+      [key]: value,
+    },
+    thoughtScopes: state.thoughtScopes,
+  };
+}
 
 function buildToExploreIntroText(
   title: string,
@@ -91,6 +232,20 @@ function loadState(sessionId: string): DialogState | null {
     if (!raw) return null;
     const parsed: any = JSON.parse(raw);
 
+    if (parsed?.v === 3) {
+      if (
+        typeof parsed.coreStep !== "number" ||
+        typeof parsed.solveStep !== "number"
+      ) {
+        return null;
+      }
+      return normalizeStateV3({
+        ...parsed,
+        thoughtScopes: parsed.thoughtScopes || {},
+        answers: parsed.answers || {},
+      } as DialogStateV3);
+    }
+
     // v2 — восстанавливаем answers из importantText/situationText если они пустые или "—"
     if (parsed?.v === 2) {
       if (
@@ -118,7 +273,7 @@ function loadState(sessionId: string): DialogState | null {
       ) {
         answers[key4] = state.importantText.trim();
       }
-      return { ...state, answers };
+      return migrateToV3({ ...state, answers });
     }
 
     // v1 -> v2 migration — сохраняем situationText и importantText в answers
@@ -145,7 +300,7 @@ function loadState(sessionId: string): DialogState | null {
         v: 2,
         answers,
       };
-      return migrated;
+      return migrateToV3(migrated);
     }
 
     return null;
@@ -417,13 +572,21 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     const isThought = kind === "thought";
     const situationText = isThought ? session.title || "Новая сессия" : "";
     return {
-      v: 2,
+      v: 3,
       subject: isThought ? "thought" : "situation",
       coreStep: isThought ? 2 : 1,
       solveStep: 1,
       importantText: "",
       situationText,
       answers: {},
+      thoughtScopes: isThought
+        ? {
+            initial: situationText.trim()
+              ? { "core:thought:3": situationText.trim() }
+              : {},
+          }
+        : {},
+      activeThoughtScopeId: isThought ? "initial" : undefined,
     };
   });
 
@@ -475,31 +638,35 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return { kind: "core", step: state.coreStep, subject: state.subject };
   }, [state, draftToExploreIntro, introStarted]);
 
+  const currentAnswers = useMemo(
+    () => getCurrentAnswers(state),
+    [state.answers, state.thoughtScopes, state.activeThoughtScopeId],
+  );
+
+  const currentImportantText = useMemo(() => {
+    if (state.subject === "thought") {
+      return getAnswerValue(state, "core:thought:4") || "";
+    }
+    return state.answers["core:situation:4"] || state.importantText || "";
+  }, [
+    state.subject,
+    state.answers,
+    state.importantText,
+    state.thoughtScopes,
+    state.activeThoughtScopeId,
+  ]);
+
   const prompt = useMemo(
     () =>
-      getPrompt(view, state.importantText, state.situationText, state.answers),
-    [view, state.importantText, state.situationText, state.answers],
+      getPrompt(view, currentImportantText, state.situationText, currentAnswers),
+    [view, currentImportantText, state.situationText, currentAnswers],
   );
 
   const importantOptions = useMemo(() => {
     if (view.kind !== "deepPick") return [];
-    const text =
-      view.fromImportant ||
-      state.answers["core:situation:4"] ||
-      state.answers["core:thought:4"] ||
-      state.importantText ||
-      "";
+    const text = view.fromImportant || currentImportantText;
     return parseImportantOptions(text);
-  }, [view, state.answers, state.importantText]);
-
-  const importantTextForDeep = useMemo(() => {
-    return (
-      state.answers["core:situation:4"] ||
-      state.answers["core:thought:4"] ||
-      state.importantText ||
-      ""
-    );
-  }, [state.answers, state.importantText]);
+  }, [view, currentImportantText]);
 
   const [lastUserAnswer, setLastUserAnswer] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -529,8 +696,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     // button should be available during the session after step 4 is answered at least once
     if (isTransitioning || isListModalOpen) return false;
     if (view.kind === "deepPick") return false;
-    return parseImportantOptions(importantTextForDeep).length > 0;
-  }, [importantTextForDeep, isListModalOpen, isTransitioning, view.kind]);
+    return parseImportantOptions(currentImportantText).length > 0;
+  }, [currentImportantText, isListModalOpen, isTransitioning, view.kind]);
 
   /** Этап «мысль/идея» — core step 3+, вопрос «Как вы думаете, какая мысль/идея вызывает эту эмоцию?» */
   const isIdeasStep = view.kind === "core" && view.step >= 3;
@@ -540,18 +707,14 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     const secondaryKey =
       state.subject === "thought" ? "core:situation:3" : "core:thought:3";
     const answer3 =
-      sanitizeThoughtValue(state.answers[primaryKey]) ||
-      sanitizeThoughtValue(state.answers[secondaryKey]);
-    const answer4 =
-      state.answers["core:situation:4"] ||
-      state.answers["core:thought:4"] ||
-      "";
-    const opts = parseImportantOptions(answer4);
+      sanitizeThoughtValue(currentAnswers[primaryKey]) ||
+      sanitizeThoughtValue(currentAnswers[secondaryKey]);
+    const opts = parseImportantOptions(currentImportantText);
     const list: string[] = [];
     if (answer3.trim()) list.push(answer3.trim());
     list.push(...opts);
     return list;
-  }, [state.answers]);
+  }, [currentAnswers, currentImportantText, state.subject]);
 
   const canSkip = (() => {
     if (isTransitioning || isListModalOpen || isIdeasModalOpen) return false;
@@ -566,7 +729,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const goSkip = () => {
     if (!canSkip) return;
     if (isTextAnswerView(view)) {
-      const existingAnswer = (state.answers[stepKey(view)] || "").trim();
+      const existingAnswer = (getAnswerValue(state, stepKey(view)) || "").trim();
       if (existingAnswer && existingAnswer !== "—") {
         onAnswer(existingAnswer);
         return;
@@ -631,7 +794,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       return;
     }
     const key = stepKey(view);
-    const saved = state.answers[key];
+    const saved = getAnswerValue(state, key);
     const forceEdit = forceEditOnStepSyncRef.current;
     forceEditOnStepSyncRef.current = false;
     if (saved !== undefined) {
@@ -641,7 +804,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       setInputText("");
       setIsEditing(true);
     }
-  }, [state.answers, view]);
+  }, [state.answers, state.thoughtScopes, state.activeThoughtScopeId, view]);
 
   const computeNextState = (answer: string): DialogState | null => {
     const trimmed = answer.trim();
@@ -649,11 +812,19 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
     // deepPick — сохраняем deepPickReturn для кнопки «Назад»
     if (view.kind === "deepPick") {
+      const thoughtScopeId = createThoughtScopeId();
       return {
         ...state,
         subject: "thought",
         situationText: trimmed,
         coreStep: 2,
+        activeThoughtScopeId: thoughtScopeId,
+        thoughtScopes: {
+          ...state.thoughtScopes,
+          [thoughtScopeId]: {
+            "core:thought:3": trimmed,
+          },
+        },
       };
     }
 
@@ -665,7 +836,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         return { ...state, situationText: trimmed, coreStep: next };
       }
       if (view.step === 4) {
-        return { ...state, importantText: trimmed, coreStep: next };
+        return view.subject === "situation"
+          ? { ...state, importantText: trimmed, coreStep: next }
+          : { ...state, coreStep: next };
       }
 
       return { ...state, coreStep: next };
@@ -687,15 +860,12 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
     const key = stepKey(view);
     const trimmed = answer.trim();
-    const nextAnswers = { ...(state.answers || {}), [key]: trimmed };
-    // После выбора мысли в «глубже» используем её как текущую мысль на следующих этапах (вопросы про «мысль»)
-    if (view.kind === "deepPick") {
-      nextAnswers["core:thought:3"] = trimmed;
-    }
+    const scopedAnswerUpdate = setAnswerValue(state, key, trimmed);
     const nextStateWithAnswer: DialogState = {
       ...(nextState as any),
-      v: 2,
-      answers: nextAnswers,
+      v: 3,
+      answers: scopedAnswerUpdate.answers,
+      thoughtScopes: scopedAnswerUpdate.thoughtScopes,
     };
 
     // Черновик: создаём сессию только после ответа на ПЕРВЫЙ вопрос (core step 1).
@@ -783,16 +953,15 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const goDeepPick = () => {
     setState((s) => ({
       ...s,
-      // make sure we use the latest stored answer
       importantText:
-        s.answers["core:situation:4"] ||
-        s.answers["core:thought:4"] ||
-        s.importantText ||
-        "",
+        s.subject === "thought"
+          ? getAnswerValue(s, "core:thought:4") || ""
+          : s.answers["core:situation:4"] || s.importantText || "",
       deepPickReturn: {
         coreStep: s.coreStep,
         solveStep: s.solveStep,
         subject: s.subject,
+        thoughtScopeId: s.activeThoughtScopeId,
       },
       coreStep: 99, // pseudo-step for deepPick
     }));
@@ -804,6 +973,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       coreStep: 100,
       solveStep: 1,
       subject: "situation",
+      activeThoughtScopeId: undefined,
     }));
   };
 
@@ -816,16 +986,25 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const selectIdeaFromModal = (idea: string) => {
     const trimmed = idea.trim();
     if (!trimmed) return;
+    const thoughtScopeId = createThoughtScopeId();
     setIsIdeasModalOpen(false);
     setState((s) => ({
       ...s,
       subject: "thought",
       situationText: trimmed,
       coreStep: 2,
+      activeThoughtScopeId: thoughtScopeId,
+      thoughtScopes: {
+        ...s.thoughtScopes,
+        [thoughtScopeId]: {
+          "core:thought:3": trimmed,
+        },
+      },
       ideasPickReturn: {
         coreStep: s.coreStep,
         solveStep: s.solveStep,
         subject: s.subject,
+        thoughtScopeId: s.activeThoughtScopeId,
       },
     }));
     setInputText("");
@@ -865,13 +1044,12 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     const nextText = ideas.join("\n");
     const answerKey =
       state.subject === "thought" ? "core:thought:4" : "core:situation:4";
+    const scopedAnswerUpdate = setAnswerValue(state, answerKey, nextText);
     setState((s) => ({
       ...s,
-      importantText: nextText,
-      answers: {
-        ...s.answers,
-        [answerKey]: nextText,
-      },
+      importantText: s.subject === "situation" ? nextText : s.importantText,
+      answers: scopedAnswerUpdate.answers,
+      thoughtScopes: scopedAnswerUpdate.thoughtScopes,
     }));
   };
 
@@ -879,14 +1057,14 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     const next = window.prompt("Редактировать мысль", idea)?.trim();
     setActiveIdeaMenu(null);
     if (!next) return;
-    const current = parseImportantOptions(importantTextForDeep);
+    const current = parseImportantOptions(currentImportantText);
     const updated = current.map((x) => (x === idea ? next : x));
     updateImportantIdeas(updated);
   };
 
   const handleDeleteIdea = (idea: string) => {
     setActiveIdeaMenu(null);
-    const current = parseImportantOptions(importantTextForDeep);
+    const current = parseImportantOptions(currentImportantText);
     const updated = current.filter((x) => x !== idea);
     updateImportantIdeas(updated);
   };
@@ -895,7 +1073,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     const next = window.prompt("Введите новую мысль")?.trim();
     setActiveIdeaMenu(null);
     if (!next) return;
-    const current = parseImportantOptions(importantTextForDeep);
+    const current = parseImportantOptions(currentImportantText);
     const updated = [...current, next];
     updateImportantIdeas(updated);
   };
@@ -935,14 +1113,24 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             coreStep: s.deepPickReturn.coreStep,
             solveStep: s.deepPickReturn.solveStep,
             subject: s.deepPickReturn.subject,
+            activeThoughtScopeId: s.deepPickReturn.thoughtScopeId,
             deepPickReturn: undefined,
           };
         }
-        return { coreStep: 10, deepPickReturn: undefined };
+        return {
+          coreStep: 10,
+          deepPickReturn: undefined,
+          activeThoughtScopeId: undefined,
+        };
       }
       if (view.kind === "solve") {
         if (s.solveStep > 1) return { solveStep: s.solveStep - 1 };
-        return { coreStep: 10, solveStep: 1, subject: "situation" };
+        return {
+          coreStep: 10,
+          solveStep: 1,
+          subject: "situation",
+          activeThoughtScopeId: undefined,
+        };
       }
       if (view.kind === "core") {
         if (
@@ -954,6 +1142,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             coreStep: s.ideasPickReturn.coreStep,
             solveStep: s.ideasPickReturn.solveStep,
             subject: s.ideasPickReturn.subject,
+            activeThoughtScopeId: s.ideasPickReturn.thoughtScopeId,
             ideasPickReturn: undefined,
           };
         }
@@ -961,6 +1150,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           return {
             coreStep: 99,
             deepPickReturn: s.deepPickReturn,
+            activeThoughtScopeId: s.deepPickReturn.thoughtScopeId,
           };
         }
         const min = view.subject === "thought" ? 2 : 1;
@@ -976,13 +1166,14 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       !!state.ideasPickReturn;
 
     const backUpdate = applyBackState(state);
-    const nextAnswers = answerToSave
-      ? { ...state.answers, [stepKey(view)]: answerToSave }
-      : state.answers;
+    const backAnswerUpdate = answerToSave
+      ? setAnswerValue(state, stepKey(view), answerToSave)
+      : { answers: state.answers, thoughtScopes: state.thoughtScopes };
     const nextState: DialogState = {
       ...state,
       ...backUpdate,
-      answers: nextAnswers,
+      answers: backAnswerUpdate.answers,
+      thoughtScopes: backAnswerUpdate.thoughtScopes,
     };
 
     setState(nextState);
@@ -1089,7 +1280,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           if (!isTextAnswerView(view) || isEditing || lastUserAnswer)
             return null;
           const key = stepKey(view);
-          const saved = state.answers[key];
+          const saved = getAnswerValue(state, key);
           if (!saved || !saved.trim()) return null;
           return (
             <div
