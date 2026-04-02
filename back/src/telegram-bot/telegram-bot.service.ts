@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import FormData from 'form-data';
+import * as FormData from 'form-data';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as bcrypt from 'bcrypt';
@@ -96,7 +96,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       'false';
   }
 
-  onModuleInit() {
+  async onModuleInit() {
     if (!this.token) {
       this.logger.warn(
         'TELEGRAM_LOGIN_BOT_TOKEN is missing. Telegram bot menu/support is disabled.',
@@ -108,6 +108,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       this.logger.log('Telegram bot polling disabled (TELEGRAM_BOT_POLLING_ENABLED=false).');
       return;
     }
+
+    await this.preparePollingMode();
 
     this.logger.log('Telegram bot polling started.');
     this.startPolling();
@@ -138,6 +140,25 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     };
 
     void tick();
+  }
+
+  private async preparePollingMode() {
+    try {
+      await axios.post(
+        `https://api.telegram.org/bot${this.token}/deleteWebhook`,
+        {
+          drop_pending_updates: false,
+        },
+        { timeout: 10000 },
+      );
+      this.logger.log('Telegram webhook cleared before polling start.');
+    } catch (error: any) {
+      this.logger.warn(
+        `Failed to clear telegram webhook before polling: ${
+          error?.response?.data?.description || error?.message || error
+        }`,
+      );
+    }
   }
 
   private async pollUpdates() {
@@ -1059,6 +1080,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       this.logger.error(
         `Failed to send telegram photo to ${chatId}: ${error?.response?.data?.description || error?.message || error}`,
       );
+      throw error;
     }
   }
 
@@ -1088,4 +1110,3 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 }
-
