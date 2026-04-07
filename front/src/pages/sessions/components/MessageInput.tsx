@@ -46,18 +46,14 @@ function keepCurrentQuestionVisible(el: HTMLTextAreaElement | null) {
 
   if (currentQuestion) {
     currentQuestion.scrollIntoView({
-      block: "nearest",
+      block: "start",
       inline: "nearest",
-      behavior: "smooth",
     });
     return;
   }
 
   if (scrollContainer) {
-    scrollContainer.scrollTo({
-      top: scrollContainer.scrollHeight,
-      behavior: "smooth",
-    });
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
   }
 }
 
@@ -77,7 +73,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
   ) => {
     const [internalMessage, setInternalMessage] = useState("");
     const localRef = useRef<HTMLTextAreaElement | null>(null);
-    const focusSyncTimersRef = useRef<number[]>([]);
+    const focusSyncRafsRef = useRef<number[]>([]);
 
     const isControlled =
       value !== undefined && typeof onValueChange === "function";
@@ -108,28 +104,34 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       const el = localRef.current;
       if (!el) return;
 
-      const clearFocusSyncTimers = () => {
-        focusSyncTimersRef.current.forEach((timerId) =>
-          window.clearTimeout(timerId),
+      const clearFocusSyncFrames = () => {
+        focusSyncRafsRef.current.forEach((frameId) =>
+          window.cancelAnimationFrame(frameId),
         );
-        focusSyncTimersRef.current = [];
+        focusSyncRafsRef.current = [];
       };
 
       const scheduleFocusSync = () => {
-        clearFocusSyncTimers();
-        [0, 120, 280].forEach((delay) => {
-          const timerId = window.setTimeout(() => {
-            keepCurrentQuestionVisible(localRef.current);
-          }, delay);
-          focusSyncTimersRef.current.push(timerId);
-        });
+        clearFocusSyncFrames();
+
+        const syncNow = () => {
+          keepCurrentQuestionVisible(localRef.current);
+        };
+
+        syncNow();
+        focusSyncRafsRef.current.push(window.requestAnimationFrame(syncNow));
+        focusSyncRafsRef.current.push(
+          window.requestAnimationFrame(() => {
+            focusSyncRafsRef.current.push(window.requestAnimationFrame(syncNow));
+          }),
+        );
       };
 
       const onFocus = () => {
         scheduleFocusSync();
       };
       const onBlur = () => {
-        clearFocusSyncTimers();
+        clearFocusSyncFrames();
       };
 
       const visualViewport = window.visualViewport;
@@ -149,7 +151,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
         el.removeEventListener("blur", onBlur);
         visualViewport?.removeEventListener("resize", syncOnViewportChange);
         visualViewport?.removeEventListener("scroll", syncOnViewportChange);
-        clearFocusSyncTimers();
+        clearFocusSyncFrames();
       };
     }, []);
 

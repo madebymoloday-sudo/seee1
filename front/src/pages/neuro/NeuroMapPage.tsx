@@ -690,7 +690,7 @@ const NeuroMapPage = observer(() => {
   }, [currentSituation, draft.cursor.kind]);
 
   return (
-    <Layout>
+    <Layout lockMainScroll>
       <div className={`${sceneStyles.scene} flex h-full min-h-0 flex-col`}>
         <div className={`${sceneStyles.content} flex-1 min-h-0 overflow-hidden`}>
           <div className={chatStyles.chatWindow} data-chat-root="true">

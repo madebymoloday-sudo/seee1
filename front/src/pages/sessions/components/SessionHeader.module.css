@@ -24,8 +24,8 @@
 
 @media (max-width: 768px) {
   .sessionHeader {
-    position: relative;
-    top: auto;
+    position: sticky;
+    top: 0;
     left: auto;
     right: auto;
   }
