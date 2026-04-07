@@ -39,7 +39,7 @@ const RegisterPage = observer(() => {
   }, [isAuthenticated, navigate, searchParams]);
 
   if (isAuthenticated) {
-    return <Navigate to="/neuro" replace />;
+    return <Navigate to="/sessions/list" replace />;
   }
 
   if (allowed !== true) {
@@ -95,7 +95,7 @@ const RegisterPage = observer(() => {
           // ignore
         }
       }
-      navigate("/neuro", { replace: true });
+      navigate("/sessions/list", { replace: true });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Ошибка регистрации";
       const message = Array.isArray(errorMessage) ? errorMessage[0] : errorMessage;

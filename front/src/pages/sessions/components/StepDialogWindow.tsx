@@ -1196,9 +1196,12 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   return (
-    <div className={chatStyles.chatWindow} data-chat-root="true">
+    <div
+      className={`${chatStyles.chatWindow} ${styles.dialogWindow}`}
+      data-chat-root="true"
+    >
       <div
-        className={chatStyles.messagesContainer}
+        className={`${chatStyles.messagesContainer} ${styles.messagesStage}`}
         data-chat-scroll-container="true"
       >
         <div
@@ -1421,7 +1424,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
       {/* Нижняя панель: кнопки и ввод (как в ChatWindow — composerDock). */}
       {showBottomEditorActions && (
-        <div className={chatStyles.composerDock}>
+        <div className={`${chatStyles.composerDock} ${styles.bottomDock}`}>
           {!isEditing && (
             <div className="flex justify-center gap-2 flex-wrap px-4 pt-3 pb-1">
               {!isEditing && (

@@ -1,17 +1,34 @@
-import { Controller, Get, Param, Post, Body, UseGuards } from '@nestjs/common';
 import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import {
+  ApiBody,
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiConsumes,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { PipelineService } from './pipeline/pipeline.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { NeuroHintService } from './neuro-hint.service';
+import { AudioTranscriptionService } from './audio-transcription.service';
 import {
   NeuroHintRequestDto,
   NeuroHintResponseDto,
 } from './dto/neuro-hint.dto';
+import {
+  AudioTranscriptionResponseDto,
+  AudioTranscriptionUploadDto,
+} from './dto/audio-transcription.dto';
 
 @ApiTags('Psychologist')
 @Controller('psychologist')
@@ -21,6 +38,7 @@ export class PsychologistController {
   constructor(
     private readonly pipelineService: PipelineService,
     private readonly neuroHintService: NeuroHintService,
+    private readonly audioTranscriptionService: AudioTranscriptionService,
   ) {}
 
   @Get('programs')
@@ -63,5 +81,32 @@ export class PsychologistController {
     const message = await this.neuroHintService.generateThoughtHint(dto);
     return { message };
   }
-}
 
+  @Post('transcribe')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 25 * 1024 * 1024 },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: AudioTranscriptionUploadDto })
+  @ApiOperation({
+    summary: 'Транскрибировать голосовой ввод пользователя через OpenAI',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Аудио успешно распознано',
+    type: AudioTranscriptionResponseDto,
+  })
+  async transcribeAudio(
+    @UploadedFile()
+    file?: {
+      buffer?: Buffer;
+      originalname?: string;
+      mimetype?: string;
+      size?: number;
+    },
+  ): Promise<AudioTranscriptionResponseDto> {
+    return this.audioTranscriptionService.transcribeAudio(file);
+  }
+}
