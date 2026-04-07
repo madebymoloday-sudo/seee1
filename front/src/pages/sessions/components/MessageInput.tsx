@@ -33,6 +33,34 @@ function focusTextareaWithoutScroll(el: HTMLTextAreaElement | null) {
   }
 }
 
+function keepCurrentQuestionVisible(el: HTMLTextAreaElement | null) {
+  if (!el) return;
+
+  const chatRoot = el.closest('[data-chat-root="true"]');
+  const currentQuestion = chatRoot?.querySelector<HTMLElement>(
+    '[data-chat-current-question="true"]',
+  );
+  const scrollContainer = chatRoot?.querySelector<HTMLElement>(
+    '[data-chat-scroll-container="true"]',
+  );
+
+  if (currentQuestion) {
+    currentQuestion.scrollIntoView({
+      block: "nearest",
+      inline: "nearest",
+      behavior: "smooth",
+    });
+    return;
+  }
+
+  if (scrollContainer) {
+    scrollContainer.scrollTo({
+      top: scrollContainer.scrollHeight,
+      behavior: "smooth",
+    });
+  }
+}
+
 const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
   (
     {
@@ -49,6 +77,7 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
   ) => {
     const [internalMessage, setInternalMessage] = useState("");
     const localRef = useRef<HTMLTextAreaElement | null>(null);
+    const focusSyncTimersRef = useRef<number[]>([]);
 
     const isControlled =
       value !== undefined && typeof onValueChange === "function";
@@ -75,25 +104,52 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       return () => window.clearTimeout(t);
     }, [autoFocus, disabled]);
 
-    // Блокировка скролла на мобильных при фокусе в поле ввода (touchmove + passive: false)
     useEffect(() => {
       const el = localRef.current;
       if (!el) return;
-      const blockScroll = (e: TouchEvent) => e.preventDefault();
+
+      const clearFocusSyncTimers = () => {
+        focusSyncTimersRef.current.forEach((timerId) =>
+          window.clearTimeout(timerId),
+        );
+        focusSyncTimersRef.current = [];
+      };
+
+      const scheduleFocusSync = () => {
+        clearFocusSyncTimers();
+        [0, 120, 280].forEach((delay) => {
+          const timerId = window.setTimeout(() => {
+            keepCurrentQuestionVisible(localRef.current);
+          }, delay);
+          focusSyncTimersRef.current.push(timerId);
+        });
+      };
 
       const onFocus = () => {
-        document.addEventListener("touchmove", blockScroll, { passive: false });
+        scheduleFocusSync();
       };
       const onBlur = () => {
-        document.removeEventListener("touchmove", blockScroll);
+        clearFocusSyncTimers();
+      };
+
+      const visualViewport = window.visualViewport;
+      const syncOnViewportChange = () => {
+        if (document.activeElement === el) {
+          scheduleFocusSync();
+        }
       };
 
       el.addEventListener("focus", onFocus);
       el.addEventListener("blur", onBlur);
+      visualViewport?.addEventListener("resize", syncOnViewportChange);
+      visualViewport?.addEventListener("scroll", syncOnViewportChange);
+
       return () => {
         el.removeEventListener("focus", onFocus);
         el.removeEventListener("blur", onBlur);
-        document.removeEventListener("touchmove", blockScroll);
+        visualViewport?.removeEventListener("resize", syncOnViewportChange);
+        visualViewport?.removeEventListener("scroll", syncOnViewportChange);
+        clearFocusSyncTimers();
       };
     }, []);
 

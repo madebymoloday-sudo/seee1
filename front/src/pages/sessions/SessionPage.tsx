@@ -8,7 +8,7 @@ import StepDialogWindow from "./components/StepDialogWindow";
 import styles from "./SessionPage.module.css";
 
 const sessionLayoutClass =
-  "h-[100dvh] flex flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900";
+  "flex min-h-0 flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900";
 
 const SessionPage = observer(() => {
   const { id } = useParams<{ id: string }>();
@@ -67,7 +67,10 @@ const SessionPage = observer(() => {
     } as unknown as SessionResponseDto;
 
     return (
-      <div className={sessionLayoutClass} style={{ height: "100dvh" }}>
+      <div
+        className={sessionLayoutClass}
+        style={{ height: "var(--app-viewport-height, 100dvh)" }}
+      >
         <SessionHeader session={draftSession} isDraft />
         <div className={styles.sessionContent}>
           <StepDialogWindow key={draftSession.id} session={draftSession} />
@@ -107,7 +110,10 @@ const SessionPage = observer(() => {
   }
 
   return (
-    <div className={sessionLayoutClass}>
+    <div
+      className={sessionLayoutClass}
+      style={{ height: "var(--app-viewport-height, 100dvh)" }}
+    >
       <SessionHeader session={session} />
       <div className={styles.sessionContent}>
         <StepDialogWindow key={session.id} session={session} />

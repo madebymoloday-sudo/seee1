@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { useAuth } from "./hooks/useAuth";
 import { useMobileUiScale } from "./hooks/useMobileUiScale";
 import { useTheme } from "./hooks/useTheme";
+import { useVisualViewportCssVars } from "./hooks/useVisualViewportCssVars";
 import apiAgent from "./lib/api";
 import {
   getTelegramAuthFromUrl,
@@ -20,6 +21,8 @@ const AppContent = observer(() => {
   useTheme();
   // Инициализируем мобильный масштаб интерфейса при загрузке
   useMobileUiScale();
+  // Синхронизируем высоту приложения с visible viewport на iOS/mobile keyboards
+  useVisualViewportCssVars();
 
   // Показываем загрузку пока проверяем авторизацию
   if (isLoading) {

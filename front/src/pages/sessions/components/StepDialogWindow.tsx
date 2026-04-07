@@ -1188,12 +1188,16 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   return (
-    <div className={chatStyles.chatWindow}>
-      <div className={chatStyles.messagesContainer}>
+    <div className={chatStyles.chatWindow} data-chat-root="true">
+      <div
+        className={chatStyles.messagesContainer}
+        data-chat-scroll-container="true"
+      >
         <div
           className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
             isFadingOut ? chatStyles.fadeOut : ""
           }`}
+          data-chat-current-question="true"
         >
           <div
             className={`${chatStyles.message} ${chatStyles.assistantMessage}`}

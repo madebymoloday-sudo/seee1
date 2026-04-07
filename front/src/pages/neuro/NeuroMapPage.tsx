@@ -690,14 +690,17 @@ const NeuroMapPage = observer(() => {
 
   return (
     <Layout>
-      <div
-        style={{ height: "100dvh" }}
-        className="flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
-      >
-        <div className="flex-1 overflow-hidden h-full">
-          <div className={chatStyles.chatWindow}>
-            <div className={chatStyles.messagesContainer}>
-              <div className={chatStyles.messageWrapper}>
+      <div className="flex h-full min-h-0 flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <div className={chatStyles.chatWindow} data-chat-root="true">
+            <div
+              className={chatStyles.messagesContainer}
+              data-chat-scroll-container="true"
+            >
+              <div
+                className={chatStyles.messageWrapper}
+                data-chat-current-question="true"
+              >
                 <div
                   className={`${chatStyles.message} ${chatStyles.assistantMessage}`}
                 >
@@ -752,7 +755,7 @@ const NeuroMapPage = observer(() => {
             {actionRow}
 
             {isTextStage(draft.cursor) && (
-              <div style={{ position: "relative" }}>
+              <div className={chatStyles.composerDock}>
                 <MessageInput
                   ref={inputRef}
                   onSend={onSend}

@@ -269,7 +269,7 @@ const ChatWindow = ({
   };
 
   return (
-    <div className={styles.chatWindow}>
+    <div className={styles.chatWindow} data-chat-root="true">
       {/* Контейнер сообщений */}
       <div
         ref={messagesContainerRef}
@@ -279,6 +279,7 @@ const ChatWindow = ({
         onTouchEnd={(e) => e.stopPropagation()}
         onScroll={handleScroll}
         className={styles.messagesContainer}
+        data-chat-scroll-container="true"
       >
         {isLoading && messages.length === 0 && (
           <div className={styles.loadingContainer}>
