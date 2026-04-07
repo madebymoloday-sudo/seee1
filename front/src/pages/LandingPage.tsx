@@ -394,182 +394,251 @@ const LandingPage = observer(() => {
                 </div>
 
                 {/* Mind map mock */}
-                <div className="mt-4 relative h-[320px] rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5 overflow-hidden">
-                  <svg
-                    className="absolute inset-0 h-full w-full"
-                    viewBox="0 0 640 320"
-                    aria-hidden="true"
-                  >
-                    <defs>
-                      <linearGradient id="mmLine" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0" stopColor="rgba(0,0,0,0.18)" />
-                        <stop offset="1" stopColor="rgba(0,0,0,0.06)" />
-                      </linearGradient>
-                      <linearGradient id="mmLineDark" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0" stopColor="rgba(255,255,255,0.20)" />
-                        <stop offset="1" stopColor="rgba(255,255,255,0.06)" />
-                      </linearGradient>
-                    </defs>
-
-                    {/* Situation to emotions */}
-                    <path
-                      d="M 170 160 C 245 160, 260 70, 330 70"
-                      stroke="url(#mmLine)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <path
-                      d="M 170 160 C 245 160, 260 160, 330 160"
-                      stroke="url(#mmLine)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <path
-                      d="M 170 160 C 245 160, 260 250, 330 250"
-                      stroke="url(#mmLine)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-
-                    {/* Emotions to thoughts */}
-                    <path
-                      d="M 450 70 C 510 70, 525 48, 590 48"
-                      stroke="url(#mmLine)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <path
-                      d="M 450 70 C 510 70, 525 92, 590 92"
-                      stroke="url(#mmLine)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <path
-                      d="M 450 160 C 510 160, 525 138, 590 138"
-                      stroke="url(#mmLine)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <path
-                      d="M 450 160 C 510 160, 525 182, 590 182"
-                      stroke="url(#mmLine)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <path
-                      d="M 450 250 C 510 250, 525 228, 590 228"
-                      stroke="url(#mmLine)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <path
-                      d="M 450 250 C 510 250, 525 272, 590 272"
-                      stroke="url(#mmLine)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                  </svg>
-
-                  {/* Nodes */}
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                    <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm">
+                <div className="mt-4 rounded-2xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5 overflow-hidden">
+                  <div className="block md:hidden p-4 space-y-4">
+                    <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-4 py-3 shadow-sm">
                       <div className="text-xs text-zinc-500 dark:text-zinc-400">
                         Ситуация
                       </div>
-                      <div className="text-sm font-semibold text-zinc-900 dark:text-white max-w-[150px]">
+                      <div className="mt-1 text-sm font-semibold text-zinc-900 dark:text-white">
                         “Я снова откладываю важное”
                       </div>
                     </div>
+
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-gradient-to-br from-fuchsia-100 to-rose-50 dark:from-fuchsia-500/15 dark:to-rose-500/10 px-4 py-3 shadow-sm">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Эмоция
+                        </div>
+                        <div className="mt-1 text-sm font-semibold text-zinc-900 dark:text-white">
+                          Тревога
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {["Я не справлюсь", "Надо идеально"].map((thought) => (
+                            <span
+                              key={thought}
+                              className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 text-sm font-semibold text-zinc-900 dark:text-white"
+                            >
+                              “{thought}”
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-gradient-to-br from-amber-100 to-orange-50 dark:from-amber-500/15 dark:to-orange-500/10 px-4 py-3 shadow-sm">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Эмоция
+                        </div>
+                        <div className="mt-1 text-sm font-semibold text-zinc-900 dark:text-white">
+                          Вина
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {["Меня осудят", "Это про меня"].map((thought) => (
+                            <span
+                              key={thought}
+                              className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 text-sm font-semibold text-zinc-900 dark:text-white"
+                            >
+                              “{thought}”
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-gradient-to-br from-cyan-100 to-blue-50 dark:from-cyan-500/15 dark:to-blue-500/10 px-4 py-3 shadow-sm">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Эмоция
+                        </div>
+                        <div className="mt-1 text-sm font-semibold text-zinc-900 dark:text-white">
+                          Усталость
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {["Сил нет", "Надо отдохнуть"].map((thought) => (
+                            <span
+                              key={thought}
+                              className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 text-sm font-semibold text-zinc-900 dark:text-white"
+                            >
+                              “{thought}”
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="absolute left-[52%] top-6 -translate-x-1/2">
-                    <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-gradient-to-br from-fuchsia-100 to-rose-50 dark:from-fuchsia-500/15 dark:to-rose-500/10 px-3 py-2 shadow-sm">
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Эмоция
-                      </div>
-                      <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        Тревога
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute left-[52%] top-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-gradient-to-br from-amber-100 to-orange-50 dark:from-amber-500/15 dark:to-orange-500/10 px-3 py-2 shadow-sm">
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Эмоция
-                      </div>
-                      <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        Вина
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute left-[52%] bottom-6 -translate-x-1/2">
-                    <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-gradient-to-br from-cyan-100 to-blue-50 dark:from-cyan-500/15 dark:to-blue-500/10 px-3 py-2 shadow-sm">
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Эмоция
-                      </div>
-                      <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        Усталость
-                      </div>
-                    </div>
-                  </div>
+                  <div className="relative hidden md:block h-[320px]">
+                    <svg
+                      className="absolute inset-0 h-full w-full"
+                      viewBox="0 0 640 320"
+                      aria-hidden="true"
+                    >
+                      <defs>
+                        <linearGradient id="mmLine" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0" stopColor="rgba(0,0,0,0.18)" />
+                          <stop offset="1" stopColor="rgba(0,0,0,0.06)" />
+                        </linearGradient>
+                        <linearGradient id="mmLineDark" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0" stopColor="rgba(255,255,255,0.20)" />
+                          <stop offset="1" stopColor="rgba(255,255,255,0.06)" />
+                        </linearGradient>
+                      </defs>
 
-                  <div className="absolute right-3 top-6">
-                    <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Мысли
-                      </div>
-                      <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        “Я не справлюсь”
+                      <path
+                        d="M 170 160 C 245 160, 260 70, 330 70"
+                        stroke="url(#mmLine)"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <path
+                        d="M 170 160 C 245 160, 260 160, 330 160"
+                        stroke="url(#mmLine)"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <path
+                        d="M 170 160 C 245 160, 260 250, 330 250"
+                        stroke="url(#mmLine)"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+
+                      <path
+                        d="M 450 70 C 510 70, 525 48, 590 48"
+                        stroke="url(#mmLine)"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <path
+                        d="M 450 70 C 510 70, 525 92, 590 92"
+                        stroke="url(#mmLine)"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <path
+                        d="M 450 160 C 510 160, 525 138, 590 138"
+                        stroke="url(#mmLine)"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <path
+                        d="M 450 160 C 510 160, 525 182, 590 182"
+                        stroke="url(#mmLine)"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <path
+                        d="M 450 250 C 510 250, 525 228, 590 228"
+                        stroke="url(#mmLine)"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <path
+                        d="M 450 250 C 510 250, 525 272, 590 272"
+                        stroke="url(#mmLine)"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                    </svg>
+
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Ситуация
+                        </div>
+                        <div className="text-sm font-semibold text-zinc-900 dark:text-white max-w-[150px]">
+                          “Я снова откладываю важное”
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="absolute right-3 top-[86px]">
-                    <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Мысли
-                      </div>
-                      <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        “Надо идеально”
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute right-3 top-[132px]">
-                    <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Мысли
-                      </div>
-                      <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        “Меня осудят”
+
+                    <div className="absolute left-[52%] top-6 -translate-x-1/2">
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-gradient-to-br from-fuchsia-100 to-rose-50 dark:from-fuchsia-500/15 dark:to-rose-500/10 px-3 py-2 shadow-sm">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Эмоция
+                        </div>
+                        <div className="text-sm font-semibold text-zinc-900 dark:text-white">
+                          Тревога
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="absolute right-3 top-[176px]">
-                    <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Мысли
-                      </div>
-                      <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        “Это про меня”
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute right-3 top-[222px]">
-                    <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Мысли
-                      </div>
-                      <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        “Сил нет”
+                    <div className="absolute left-[52%] top-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-gradient-to-br from-amber-100 to-orange-50 dark:from-amber-500/15 dark:to-orange-500/10 px-3 py-2 shadow-sm">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Эмоция
+                        </div>
+                        <div className="text-sm font-semibold text-zinc-900 dark:text-white">
+                          Вина
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="absolute right-3 top-[266px]">
-                    <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Мысли
+                    <div className="absolute left-[52%] bottom-6 -translate-x-1/2">
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-gradient-to-br from-cyan-100 to-blue-50 dark:from-cyan-500/15 dark:to-blue-500/10 px-3 py-2 shadow-sm">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Эмоция
+                        </div>
+                        <div className="text-sm font-semibold text-zinc-900 dark:text-white">
+                          Усталость
+                        </div>
                       </div>
-                      <div className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        “Надо отдохнуть”
+                    </div>
+
+                    <div className="absolute right-3 top-6">
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Мысли
+                        </div>
+                        <div className="text-sm font-semibold text-zinc-900 dark:text-white">
+                          “Я не справлюсь”
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute right-3 top-[86px]">
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Мысли
+                        </div>
+                        <div className="text-sm font-semibold text-zinc-900 dark:text-white">
+                          “Надо идеально”
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute right-3 top-[132px]">
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Мысли
+                        </div>
+                        <div className="text-sm font-semibold text-zinc-900 dark:text-white">
+                          “Меня осудят”
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute right-3 top-[176px]">
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Мысли
+                        </div>
+                        <div className="text-sm font-semibold text-zinc-900 dark:text-white">
+                          “Это про меня”
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute right-3 top-[222px]">
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Мысли
+                        </div>
+                        <div className="text-sm font-semibold text-zinc-900 dark:text-white">
+                          “Сил нет”
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute right-3 top-[266px]">
+                      <div className="rounded-2xl border border-black/10 dark:border-white/15 bg-white/90 dark:bg-black/30 px-3 py-2 shadow-sm max-w-[170px]">
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Мысли
+                        </div>
+                        <div className="text-sm font-semibold text-zinc-900 dark:text-white">
+                          “Надо отдохнуть”
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -714,4 +783,3 @@ const LandingPage = observer(() => {
 });
 
 export default LandingPage;
-
