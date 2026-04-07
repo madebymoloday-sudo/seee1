@@ -1,8 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowUp, Plus } from "lucide-react";
+import { ArrowUp, Mic, Plus, Square } from "lucide-react";
 import type { KeyboardEvent } from "react";
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { toast } from "sonner";
 import styles from "./MessageInput.module.css";
 
 interface MessageInputProps {
@@ -15,6 +23,45 @@ interface MessageInputProps {
   value?: string;
   onValueChange?: (value: string) => void;
 }
+
+interface SpeechRecognitionAlternativeLike {
+  transcript: string;
+}
+
+interface SpeechRecognitionResultLike {
+  0: SpeechRecognitionAlternativeLike;
+  isFinal?: boolean;
+}
+
+interface SpeechRecognitionResultListLike {
+  [index: number]: SpeechRecognitionResultLike;
+  length: number;
+}
+
+interface SpeechRecognitionEventLike extends Event {
+  resultIndex?: number;
+  results: SpeechRecognitionResultListLike;
+}
+
+interface SpeechRecognitionErrorEventLike extends Event {
+  error: string;
+}
+
+interface BrowserSpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  onstart: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+
+type SpeechRecognitionCtor = new () => BrowserSpeechRecognition;
 
 function setCombinedRefs<T>(value: T, refs: Array<React.Ref<T> | undefined>) {
   for (const ref of refs) {
@@ -57,6 +104,33 @@ function keepCurrentQuestionVisible(el: HTMLTextAreaElement | null) {
   }
 }
 
+function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
+  if (typeof window === "undefined") return null;
+  const speechWindow = window as Window & {
+    SpeechRecognition?: SpeechRecognitionCtor;
+    webkitSpeechRecognition?: SpeechRecognitionCtor;
+  };
+  return (
+    speechWindow.SpeechRecognition ??
+    speechWindow.webkitSpeechRecognition ??
+    null
+  );
+}
+
+function syncTextareaHeight(el: HTMLTextAreaElement | null) {
+  if (!el) return;
+  el.style.height = "0px";
+  const computed = window.getComputedStyle(el);
+  const minHeight = Number.parseFloat(computed.minHeight || "44") || 44;
+  const maxHeight = Number.parseFloat(computed.maxHeight || "220") || 220;
+  const nextHeight = Math.max(
+    minHeight,
+    Math.min(el.scrollHeight, maxHeight),
+  );
+  el.style.height = `${nextHeight}px`;
+  el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
+}
+
 const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
   (
     {
@@ -72,12 +146,19 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
     forwardedRef,
   ) => {
     const [internalMessage, setInternalMessage] = useState("");
+    const [isRecording, setIsRecording] = useState(false);
     const localRef = useRef<HTMLTextAreaElement | null>(null);
     const focusSyncRafsRef = useRef<number[]>([]);
+    const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+    const speechSupported = useMemo(
+      () => getSpeechRecognitionCtor() !== null,
+      [],
+    );
 
     const isControlled =
       value !== undefined && typeof onValueChange === "function";
     const message = isControlled ? value : internalMessage;
+    const showVoiceButton = message.length === 0;
     const setMessage = (next: string) => {
       if (isControlled) onValueChange(next);
       else setInternalMessage(next);
@@ -99,6 +180,10 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       );
       return () => window.clearTimeout(t);
     }, [autoFocus, disabled]);
+
+    useLayoutEffect(() => {
+      syncTextareaHeight(localRef.current);
+    }, [message]);
 
     useEffect(() => {
       const el = localRef.current;
@@ -155,8 +240,22 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       };
     }, []);
 
+    useEffect(() => {
+      if (showVoiceButton) return;
+      if (!isRecording) return;
+      recognitionRef.current?.stop();
+    }, [showVoiceButton, isRecording]);
+
+    useEffect(() => {
+      return () => {
+        recognitionRef.current?.abort();
+        recognitionRef.current = null;
+      };
+    }, []);
+
     const handleSend = () => {
       if (message.trim() && !disabled && !readOnly) {
+        recognitionRef.current?.stop();
         onSend(message.trim());
         setMessage("");
         // Возвращаем фокус после отправки (после обновления родителя)
@@ -164,6 +263,62 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           focusTextareaWithoutScroll(localRef.current);
         window.setTimeout(focusAfterSend, 0);
         window.setTimeout(focusAfterSend, 100);
+      }
+    };
+
+    const handleVoiceInputToggle = () => {
+      if (disabled || readOnly) return;
+
+      if (isRecording) {
+        recognitionRef.current?.stop();
+        return;
+      }
+
+      const RecognitionCtor = getSpeechRecognitionCtor();
+      if (!RecognitionCtor) {
+        toast.error("Голосовой ввод недоступен в этом браузере");
+        return;
+      }
+
+      const recognition = new RecognitionCtor();
+      recognitionRef.current = recognition;
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.lang =
+        document.documentElement.lang?.trim() || navigator.language || "ru-RU";
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+      };
+
+      recognition.onresult = (event) => {
+        const result = event.results?.[0]?.[0]?.transcript?.trim();
+        if (!result) return;
+        setMessage(result);
+        window.requestAnimationFrame(() => {
+          syncTextareaHeight(localRef.current);
+          focusTextareaWithoutScroll(localRef.current);
+        });
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error !== "no-speech" && event.error !== "aborted") {
+          toast.error("Не удалось распознать голос. Попробуйте ещё раз.");
+        }
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+        recognitionRef.current = null;
+      };
+
+      try {
+        recognition.start();
+      } catch {
+        setIsRecording(false);
+        recognitionRef.current = null;
+        toast.error("Не удалось запустить голосовой ввод");
       }
     };
 
@@ -214,6 +369,41 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
             className={styles.textarea}
             rows={1}
           />
+
+          {showVoiceButton && (
+            <Button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleVoiceInputToggle();
+              }}
+              disabled={disabled || readOnly || !speechSupported}
+              className={`${styles.voiceButton} ${
+                isRecording ? styles.voiceButtonActive : styles.voiceButtonGlow
+              }`}
+              size="icon"
+              title={
+                speechSupported
+                  ? isRecording
+                    ? "Остановить надиктовку"
+                    : "Надиктовать текст"
+                  : "Голосовой ввод недоступен"
+              }
+              aria-label={
+                isRecording ? "Остановить надиктовку" : "Надиктовать текст"
+              }
+            >
+              {isRecording ? (
+                <Square className="h-4 w-4" />
+              ) : (
+                <Mic className="h-5 w-5" />
+              )}
+            </Button>
+          )}
 
           {/* Кнопка отправки (стрелка вверх) */}
           <Button

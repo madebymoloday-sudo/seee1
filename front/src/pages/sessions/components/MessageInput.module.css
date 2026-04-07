@@ -52,6 +52,7 @@
 }
 
 .settingsButton,
+.voiceButton,
 .sendButton {
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
@@ -73,6 +74,7 @@
 }
 
 .settingsButton:hover,
+.voiceButton:hover:not(:disabled),
 .sendButton:hover:not(:disabled) {
   background: linear-gradient(
     135deg,
@@ -88,6 +90,39 @@
 .sendButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.voiceButtonGlow {
+  animation: voiceButtonGlow 1.8s ease-in-out infinite;
+}
+
+.voiceButtonActive {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 91, 91, 0.42) 0%,
+    rgba(255, 70, 70, 0.3) 100%
+  ) !important;
+  border-color: rgba(255, 120, 120, 0.6) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 107, 107, 0.25),
+    0 0 18px rgba(255, 86, 86, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+@keyframes voiceButtonGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.2),
+      0 0 0 rgba(59, 130, 246, 0),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.24),
+      0 0 18px rgba(59, 130, 246, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
 }
 
 /* Адаптивные стили для мобильных устройств */
@@ -109,6 +144,7 @@
   }
 
   .settingsButton,
+  .voiceButton,
   .sendButton {
     width: 40px;
     height: 40px;
@@ -133,6 +169,7 @@
   }
 
   .settingsButton,
+  .voiceButton,
   .sendButton {
     width: 36px;
     height: 36px;
@@ -167,6 +204,7 @@
 }
 
 :global(:not(.dark)) .settingsButton,
+:global(:not(.dark)) .voiceButton,
 :global(:not(.dark)) .sendButton {
   background: linear-gradient(
     135deg,
@@ -181,6 +219,7 @@
 }
 
 :global(:not(.dark)) .settingsButton:hover:not(:disabled),
+:global(:not(.dark)) .voiceButton:hover:not(:disabled),
 :global(:not(.dark)) .sendButton:hover:not(:disabled) {
   background: linear-gradient(
     135deg,
@@ -256,6 +295,26 @@
   background: rgba(24, 24, 24, 0.98) !important;
   border-color: rgba(255, 255, 255, 0.28) !important;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12) !important;
+}
+
+:global(.dark) .voiceButtonGlow {
+  animation: voiceButtonGlowDark 1.8s ease-in-out infinite;
+}
+
+@keyframes voiceButtonGlowDark {
+  0%,
+  100% {
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.28),
+      0 0 0 rgba(129, 140, 248, 0),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  }
+  50% {
+    box-shadow:
+      0 4px 14px rgba(0, 0, 0, 0.35),
+      0 0 18px rgba(129, 140, 248, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
 }
 
 :global(.dark) .settingsButton,
