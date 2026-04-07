@@ -56,6 +56,7 @@ type DialogStateV3 = Omit<DialogStateV2, "v"> & {
 };
 
 type DialogState = DialogStateV3;
+type TransitionPhase = "idle" | "exiting" | "entering";
 
 const STORAGE_KEY_PREFIX = "seee_step_dialog_state:";
 const SESSION_KIND_PREFIX = "seee_session_kind:";
@@ -670,7 +671,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const [lastUserAnswer, setLastUserAnswer] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [transitionPhase, setTransitionPhase] =
+    useState<TransitionPhase>("idle");
   const [inputText, setInputText] = useState("");
   const [isEditing, setIsEditing] = useState(true);
   const [listTitle, setListTitle] = useState("");
@@ -872,7 +874,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     if (isDraftSession && view.kind === "core" && view.step === 1) {
       setLastUserAnswer(trimmed);
       setIsTransitioning(true);
-      setIsFadingOut(false);
+      setTransitionPhase("idle");
 
       try {
         const userKey = getUserKey();
@@ -890,6 +892,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         if (!newSession?.id) {
           toast.error("Не удалось создать сессию");
           setIsTransitioning(false);
+          setTransitionPhase("idle");
           return;
         }
 
@@ -926,27 +929,32 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         console.error(e);
         toast.error("Не удалось создать сессию");
         setIsTransitioning(false);
+        setTransitionPhase("idle");
       }
       return;
     }
 
-    // Показать ответ и плавно убрать пару (вопрос+ответ), затем показать следующий вопрос
+    // Показать ответ, увести пару влево и ввести следующий вопрос справа.
     setLastUserAnswer(trimmed);
     setIsTransitioning(true);
-    setIsFadingOut(false);
+    setTransitionPhase("idle");
 
     for (const t of timersRef.current) window.clearTimeout(t);
     timersRef.current = [];
 
     timersRef.current.push(
-      window.setTimeout(() => setIsFadingOut(true), 250),
+      window.setTimeout(() => {
+        setTransitionPhase("exiting");
+      }, 90),
       window.setTimeout(() => {
         setState(nextStateWithAnswer);
         setLastUserAnswer(null);
-        setIsFadingOut(false);
+        setTransitionPhase("entering");
+      }, 450),
+      window.setTimeout(() => {
+        setTransitionPhase("idle");
         setIsTransitioning(false);
-        // for the next step we'll switch to edit/review depending on saved answer (effect)
-      }, 850),
+      }, 860),
     );
   };
 
@@ -1195,8 +1203,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       >
         <div
           className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
-            isFadingOut ? chatStyles.fadeOut : ""
-          }`}
+            transitionPhase === "exiting" ? styles.slideExitLeft : ""
+          } ${transitionPhase === "entering" ? styles.slideEnterFromRight : ""}`}
           data-chat-current-question="true"
         >
           <div
@@ -1268,7 +1276,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         {lastUserAnswer && (
           <div
             className={`${chatStyles.messageWrapper} ${chatStyles.visible} ${
-              isFadingOut ? chatStyles.fadeOut : ""
+              transitionPhase === "exiting" ? styles.slideExitLeft : ""
             }`}
           >
             <div

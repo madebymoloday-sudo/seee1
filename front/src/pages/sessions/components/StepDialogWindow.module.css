@@ -31,6 +31,41 @@
   font-size: 0.95rem;
 }
 
+.slideExitLeft,
+.slideEnterFromRight {
+  will-change: transform, opacity;
+}
+
+.slideExitLeft {
+  animation: slideExitLeft 0.34s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.slideEnterFromRight {
+  animation: slideEnterFromRight 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes slideExitLeft {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(-34vw, 0, 0) scale(0.98);
+  }
+}
+
+@keyframes slideEnterFromRight {
+  from {
+    opacity: 0;
+    transform: translate3d(30vw, 0, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
 :global(.dark) .helperText,
 :global(html.dark) .helperText {
   color: rgba(255, 255, 255, 0.7);
