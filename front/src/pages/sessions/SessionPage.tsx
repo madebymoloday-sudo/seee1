@@ -6,9 +6,10 @@ import { useParams } from "react-router-dom";
 import SessionHeader from "./components/SessionHeader";
 import StepDialogWindow from "./components/StepDialogWindow";
 import styles from "./SessionPage.module.css";
+import sceneStyles from "@/styles/immersiveScene.module.css";
 
 const sessionLayoutClass =
-  "flex min-h-0 flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900";
+  `flex min-h-0 flex-col overflow-hidden ${sceneStyles.scene}`;
 
 const SessionPage = observer(() => {
   const { id } = useParams<{ id: string }>();
@@ -72,7 +73,7 @@ const SessionPage = observer(() => {
         style={{ height: "var(--app-viewport-height, 100dvh)" }}
       >
         <SessionHeader session={draftSession} isDraft />
-        <div className={styles.sessionContent}>
+        <div className={`${styles.sessionContent} ${sceneStyles.content}`}>
           <StepDialogWindow key={draftSession.id} session={draftSession} />
         </div>
       </div>
@@ -82,11 +83,15 @@ const SessionPage = observer(() => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
-            Загрузка сессии...
-          </p>
+        <div
+          className={`${sceneStyles.scene} ${sceneStyles.content} flex h-full w-full items-center justify-center`}
+        >
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
+            <p className="text-gray-700 dark:text-gray-200 text-sm">
+              Загрузка сессии...
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -94,12 +99,12 @@ const SessionPage = observer(() => {
 
   if (error || !session) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <div className="text-center p-8 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 dark:border-slate-700/50">
-          <p className="text-gray-800 dark:text-gray-200 text-lg font-medium">
+      <div className={`${sceneStyles.scene} flex h-screen items-center justify-center`}>
+        <div className="text-center p-8 bg-white/78 dark:bg-slate-900/68 backdrop-blur-xl rounded-2xl shadow-xl border border-white/35 dark:border-white/10">
+          <p className="text-gray-800 dark:text-gray-100 text-lg font-medium">
             {error ? "Ошибка загрузки сессии" : "Сессия не найдена"}
           </p>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
+          <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
             {error
               ? "Попробуйте обновить страницу"
               : "Возможно, сессия была удалена"}
@@ -115,7 +120,7 @@ const SessionPage = observer(() => {
       style={{ height: "var(--app-viewport-height, 100dvh)" }}
     >
       <SessionHeader session={session} />
-      <div className={styles.sessionContent}>
+      <div className={`${styles.sessionContent} ${sceneStyles.content}`}>
         <StepDialogWindow key={session.id} session={session} />
       </div>
     </div>

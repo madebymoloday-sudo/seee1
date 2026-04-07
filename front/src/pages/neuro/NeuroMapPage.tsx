@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import apiAgent from "@/lib/api";
 import chatStyles from "@/pages/sessions/components/ChatWindow.module.css";
 import MessageInput from "@/pages/sessions/components/MessageInput";
+import sceneStyles from "@/styles/immersiveScene.module.css";
 import { Loader2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -690,8 +691,8 @@ const NeuroMapPage = observer(() => {
 
   return (
     <Layout>
-      <div className="flex h-full min-h-0 flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <div className="flex-1 min-h-0 overflow-hidden">
+      <div className={`${sceneStyles.scene} flex h-full min-h-0 flex-col`}>
+        <div className={`${sceneStyles.content} flex-1 min-h-0 overflow-hidden`}>
           <div className={chatStyles.chatWindow} data-chat-root="true">
             <div
               className={chatStyles.messagesContainer}

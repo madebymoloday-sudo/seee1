@@ -383,18 +383,7 @@
 }
 
 :global(.dark) .chatWindow {
-  background:
-    radial-gradient(
-      130% 95% at 12% 2%,
-      rgba(255, 214, 170, 0.06) 0%,
-      rgba(255, 214, 170, 0) 55%
-    ),
-    radial-gradient(
-      110% 75% at 88% 100%,
-      rgba(255, 255, 255, 0.04) 0%,
-      rgba(255, 255, 255, 0) 62%
-    ),
-    linear-gradient(180deg, #141414 0%, #0b0b0b 100%);
+  background: transparent;
 }
 
 /* Адаптивные стили для мобильных устройств */
