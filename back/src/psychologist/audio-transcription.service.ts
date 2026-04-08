@@ -73,10 +73,7 @@ export class AudioTranscriptionService {
         model,
       });
 
-      const text =
-        typeof transcription === 'string'
-          ? transcription.trim()
-          : String(transcription.text || '').trim();
+      const text = String(transcription.text || '').trim();
 
       if (!text) {
         throw new BadRequestException(
