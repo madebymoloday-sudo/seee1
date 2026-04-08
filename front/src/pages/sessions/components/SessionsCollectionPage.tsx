@@ -395,6 +395,7 @@ function getIdeasFromLocalState(sessionId: string): { coreThought?: string; impo
 const SessionsCollectionPage = observer(() => {
   const navigate = useNavigate();
   const { sessions, isLoading, error, refetch } = useSessions();
+  const [isArchivistWelcomeVisible, setIsArchivistWelcomeVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("my_sessions");
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
@@ -497,6 +498,10 @@ const SessionsCollectionPage = observer(() => {
       console.error("Ошибка создания сессии:", error);
       toast.error("Не удалось создать сессию");
     }
+  };
+
+  const handleOpenArchiveGallery = () => {
+    setIsArchivistWelcomeVisible(false);
   };
 
   const closeSortMenu = () => {
@@ -703,232 +708,267 @@ const SessionsCollectionPage = observer(() => {
 
   return (
     <div className={styles.collectionPage}>
-      {/* Заголовок */}
-      <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          <div className={styles.titleRow}>
-            <img src="/seee-logo-128.png" alt="Seee" className={styles.logo} />
-            <h1 className={styles.title}>Галерея сессий</h1>
+      {isArchivistWelcomeVisible ? (
+        <div className={styles.archivistWelcome}>
+          <div className={styles.archivistWelcomeLogoWrap}>
+            <img src="/archivist-source-seee-logo.png" alt="Seee" className={styles.archivistWelcomeLogo} />
           </div>
-          <Button
-            onClick={handleCreateSession}
-            className={styles.plusButton}
-            size="icon"
-            title="Новая сессия"
-          >
-            <Plus className={styles.plusIcon} />
-          </Button>
-        </div>
 
-        {/* Поиск и сортировка */}
-        <div className={styles.searchBar}>
-          <div className={styles.searchInputWrapper}>
-            <Search className={styles.searchIcon} />
-            <Input
-              type="text"
-              placeholder="Поиск сессии"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={styles.searchInput}
-            />
+          <div className={styles.archivistWelcomeCard}>
+            <h2 className={styles.archivistWelcomeTitle}>Привет!</h2>
+            <p className={styles.archivistWelcomeText}>
+              Давай я расскажу тебе как пользоваться приложением
+            </p>
           </div>
-          
-          <div className={styles.sortWrapper}>
-            <Button
-              ref={sortButtonRef}
-              onClick={toggleSortMenu}
-              className={styles.sortButton}
-              size="icon"
-              variant="outline"
+
+          <div className={styles.archivistWelcomeScene}>
+            <img src="/archivist-source-character.png" alt="Архивариус" className={styles.archivistCharacter} />
+
+            <button
+              type="button"
+              className={styles.archivistArchiveButton}
+              onClick={handleOpenArchiveGallery}
+              aria-label="Открыть архив сессий"
             >
-              <SlidersHorizontal className={styles.sortIcon} />
-            </Button>
+              <span className={styles.archivistArchiveArrow} aria-hidden="true" />
+              <img src="/archivist-source-drawer.png" alt="Архив сессий" className={styles.archivistDrawer} />
+            </button>
+          </div>
 
-            {isSortMenuOpen && sortMenuPosition &&
-              createPortal(
-              <div
-                ref={sortMenuRef}
-                className={styles.sortMenu}
-                style={{ top: sortMenuPosition.top, right: sortMenuPosition.right }}
+          <div className={styles.archivistWelcomeHint}>
+            Нажми на архивный ящик, чтобы перейти в Галерею Сессий.
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Заголовок */}
+          <div className={styles.header}>
+            <div className={styles.headerTitle}>
+              <div className={styles.titleRow}>
+                <img src="/seee-logo-128.png" alt="Seee" className={styles.logo} />
+                <h1 className={styles.title}>Галерея сессий</h1>
+              </div>
+              <Button
+                onClick={handleCreateSession}
+                className={styles.plusButton}
+                size="icon"
+                title="Новая сессия"
               >
-                <button
-                  onClick={() => {
-                    setSortOption("freedom");
-                    closeSortMenu();
-                  }}
-                  className={`${styles.sortMenuItem} ${sortOption === "freedom" ? styles.sortMenuItemActive : ""}`}
-                >
-                  Освобождение
-                </button>
-                <button
-                  onClick={() => {
-                    setSortOption("happiness");
-                    closeSortMenu();
-                  }}
-                  className={`${styles.sortMenuItem} ${sortOption === "happiness" ? styles.sortMenuItemActive : ""}`}
-                >
-                  Улучшение +1
-                </button>
-                <button
-                  onClick={() => {
-                    setSortOption("my_sessions");
-                    closeSortMenu();
-                  }}
-                  className={`${styles.sortMenuItem} ${sortOption === "my_sessions" ? styles.sortMenuItemActive : ""}`}
-                >
-                  Мои сессии
-                </button>
-                <button
-                  onClick={() => {
-                    setSortOption("to_explore");
-                    closeSortMenu();
-                  }}
-                  className={`${styles.sortMenuItem} ${sortOption === "to_explore" ? styles.sortMenuItemActive : ""}`}
-                >
-                  Предстоит изучить
-                </button>
-                <button
-                  onClick={() => {
-                    setSortOption("deferred");
-                    closeSortMenu();
-                  }}
-                  className={`${styles.sortMenuItem} ${sortOption === "deferred" ? styles.sortMenuItemActive : ""}`}
-                >
-                  Отложено на разбор
-                </button>
-                <button
-                  onClick={() => {
-                    setSortOption("recommended");
-                    closeSortMenu();
-                  }}
-                  className={`${styles.sortMenuItem} ${sortOption === "recommended" ? styles.sortMenuItemActive : ""}`}
-                >
-                  Рекомендовано мне
-                </button>
-              </div>,
-              document.body
-            )}
-          </div>
-        </div>
-      </div>
+                <Plus className={styles.plusIcon} />
+              </Button>
+            </div>
 
-      {showTelegramPrompt && user && !user.telegramId && (
-        <div className={styles.telegramPrompt}>
-          <div className={styles.telegramPromptText}>
-            <strong>Привяжите Telegram,</strong> чтобы мы могли быстро восстановить доступ к аккаунту,
-            если вы забудете пароль.
-          </div>
-          <div className={styles.telegramPromptActions}>
-            <button
-              type="button"
-              className={styles.telegramPromptButtonPrimary}
-              onClick={() => {
-                setShowTelegramPrompt(false);
-                try {
-                  localStorage.setItem(
-                    `seee_telegram_prompt_dismissed:${user.id}`,
-                    "1",
-                  );
-                } catch {
-                  // ignore
-                }
-                window.open("https://t.me/SeeeAppBot", "_blank", "noopener,noreferrer");
-              }}
-            >
-              Открыть Seee бота
-            </button>
-            <button
-              type="button"
-              className={styles.telegramPromptButtonSecondary}
-              onClick={() => {
-                setShowTelegramPrompt(false);
-                try {
-                  localStorage.setItem(
-                    `seee_telegram_prompt_dismissed:${user.id}`,
-                    "1",
-                  );
-                } catch {
-                  // ignore
-                }
-              }}
-            >
-              Уже сделал(а)
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Список папок */}
-      <div className={styles.foldersContainer}>
-        {isLoading && (
-          <div className={styles.loadingState}>
-            <p>Загрузка сессий...</p>
-          </div>
-        )}
-        
-        {error !== undefined && error !== null ? (
-          <div className={styles.errorState}>
-            <p>Ошибка загрузки сессий</p>
-          </div>
-        ) : null}
-        
-        {!isLoading && (error === undefined || error === null) && combinedCards.length === 0 && (
-          <div className={styles.emptyState}>
-            <p>Карточки не найдены</p>
-            {searchQuery && (
-              <p className={styles.emptyHint}>Попробуйте изменить поисковый запрос</p>
-            )}
-          </div>
-        )}
-        
-        {!isLoading && (error === undefined || error === null) && combinedCards.length > 0 && (
-          <div className={styles.foldersList}>
-            {combinedCards.map((item, index) => {
-              if (item.kind === "session") {
-                const session = item.session;
-                return (
-                  <SessionFolderCard
-                    key={session.id}
-                    session={session}
-                    colorIndex={index}
-                    onRename={() => handleRename(session.id)}
-                    onDelete={() => handleDelete(session.id)}
-                    onMoveToExplore={() => handleMoveToExplore(session)}
-                    onShowFeedback={() => setFeedbackInfoSessionId(session.id)}
-                    onShowIdeas={() => setIdeasInfoSessionId(session.id)}
-                    ideasCount={getIdeasCountForSession(session)}
-                  />
-                );
-              }
-
-              const t = item.template;
-              const fakeSession = {
-                id: t.id,
-                title: t.title,
-                createdAt: new Date().toISOString(),
-                messageCount: 0,
-              } as unknown as SessionResponseDto;
-
-              return (
-                <SessionFolderCard
-                  key={t.id}
-                  session={fakeSession}
-                  colorIndex={index}
-                  ideasCount={1}
-                  tagLabel="Предстоит изучить"
-                  categoryLabel={t.category}
-                  recommendationLabel={
-                    recommendedTemplateIds.has(t.id) ? "Рекомендация для вас" : undefined
-                  }
-                  palette="toExplore"
-                  showMenu={false}
-                  onOpen={() => openToExploreTemplate(t)}
+            {/* Поиск и сортировка */}
+            <div className={styles.searchBar}>
+              <div className={styles.searchInputWrapper}>
+                <Search className={styles.searchIcon} />
+                <Input
+                  type="text"
+                  placeholder="Поиск сессии"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={styles.searchInput}
                 />
-              );
-            })}
+              </div>
+
+              <div className={styles.sortWrapper}>
+                <Button
+                  ref={sortButtonRef}
+                  onClick={toggleSortMenu}
+                  className={styles.sortButton}
+                  size="icon"
+                  variant="outline"
+                >
+                  <SlidersHorizontal className={styles.sortIcon} />
+                </Button>
+
+                {isSortMenuOpen && sortMenuPosition &&
+                  createPortal(
+                    <div
+                      ref={sortMenuRef}
+                      className={styles.sortMenu}
+                      style={{ top: sortMenuPosition.top, right: sortMenuPosition.right }}
+                    >
+                      <button
+                        onClick={() => {
+                          setSortOption("freedom");
+                          closeSortMenu();
+                        }}
+                        className={`${styles.sortMenuItem} ${sortOption === "freedom" ? styles.sortMenuItemActive : ""}`}
+                      >
+                        Освобождение
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortOption("happiness");
+                          closeSortMenu();
+                        }}
+                        className={`${styles.sortMenuItem} ${sortOption === "happiness" ? styles.sortMenuItemActive : ""}`}
+                      >
+                        Улучшение +1
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortOption("my_sessions");
+                          closeSortMenu();
+                        }}
+                        className={`${styles.sortMenuItem} ${sortOption === "my_sessions" ? styles.sortMenuItemActive : ""}`}
+                      >
+                        Мои сессии
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortOption("to_explore");
+                          closeSortMenu();
+                        }}
+                        className={`${styles.sortMenuItem} ${sortOption === "to_explore" ? styles.sortMenuItemActive : ""}`}
+                      >
+                        Предстоит изучить
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortOption("deferred");
+                          closeSortMenu();
+                        }}
+                        className={`${styles.sortMenuItem} ${sortOption === "deferred" ? styles.sortMenuItemActive : ""}`}
+                      >
+                        Отложено на разбор
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortOption("recommended");
+                          closeSortMenu();
+                        }}
+                        className={`${styles.sortMenuItem} ${sortOption === "recommended" ? styles.sortMenuItemActive : ""}`}
+                      >
+                        Рекомендовано мне
+                      </button>
+                    </div>,
+                    document.body
+                  )}
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+
+          {showTelegramPrompt && user && !user.telegramId && (
+            <div className={styles.telegramPrompt}>
+              <div className={styles.telegramPromptText}>
+                <strong>Привяжите Telegram,</strong> чтобы мы могли быстро восстановить доступ к аккаунту,
+                если вы забудете пароль.
+              </div>
+              <div className={styles.telegramPromptActions}>
+                <button
+                  type="button"
+                  className={styles.telegramPromptButtonPrimary}
+                  onClick={() => {
+                    setShowTelegramPrompt(false);
+                    try {
+                      localStorage.setItem(
+                        `seee_telegram_prompt_dismissed:${user.id}`,
+                        "1",
+                      );
+                    } catch {
+                      // ignore
+                    }
+                    window.open("https://t.me/SeeeAppBot", "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  Открыть Seee бота
+                </button>
+                <button
+                  type="button"
+                  className={styles.telegramPromptButtonSecondary}
+                  onClick={() => {
+                    setShowTelegramPrompt(false);
+                    try {
+                      localStorage.setItem(
+                        `seee_telegram_prompt_dismissed:${user.id}`,
+                        "1",
+                      );
+                    } catch {
+                      // ignore
+                    }
+                  }}
+                >
+                  Уже сделал(а)
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Список папок */}
+          <div className={styles.foldersContainer}>
+            {isLoading && (
+              <div className={styles.loadingState}>
+                <p>Загрузка сессий...</p>
+              </div>
+            )}
+
+            {error !== undefined && error !== null ? (
+              <div className={styles.errorState}>
+                <p>Ошибка загрузки сессий</p>
+              </div>
+            ) : null}
+
+            {!isLoading && (error === undefined || error === null) && combinedCards.length === 0 && (
+              <div className={styles.emptyState}>
+                <p>Карточки не найдены</p>
+                {searchQuery && (
+                  <p className={styles.emptyHint}>Попробуйте изменить поисковый запрос</p>
+                )}
+              </div>
+            )}
+
+            {!isLoading && (error === undefined || error === null) && combinedCards.length > 0 && (
+              <div className={styles.foldersList}>
+                {combinedCards.map((item, index) => {
+                  if (item.kind === "session") {
+                    const session = item.session;
+                    return (
+                      <SessionFolderCard
+                        key={session.id}
+                        session={session}
+                        colorIndex={index}
+                        onRename={() => handleRename(session.id)}
+                        onDelete={() => handleDelete(session.id)}
+                        onMoveToExplore={() => handleMoveToExplore(session)}
+                        onShowFeedback={() => setFeedbackInfoSessionId(session.id)}
+                        onShowIdeas={() => setIdeasInfoSessionId(session.id)}
+                        ideasCount={getIdeasCountForSession(session)}
+                      />
+                    );
+                  }
+
+                  const t = item.template;
+                  const fakeSession = {
+                    id: t.id,
+                    title: t.title,
+                    createdAt: new Date().toISOString(),
+                    messageCount: 0,
+                  } as unknown as SessionResponseDto;
+
+                  return (
+                    <SessionFolderCard
+                      key={t.id}
+                      session={fakeSession}
+                      colorIndex={index}
+                      ideasCount={1}
+                      tagLabel="Предстоит изучить"
+                      categoryLabel={t.category}
+                      recommendationLabel={
+                        recommendedTemplateIds.has(t.id) ? "Рекомендация для вас" : undefined
+                      }
+                      palette="toExplore"
+                      showMenu={false}
+                      onOpen={() => openToExploreTemplate(t)}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Нижняя панель навигации */}
       <BottomNavigation
