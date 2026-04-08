@@ -239,7 +239,7 @@
 
   @media (max-width: 768px) {
     .messageInputContainer {
-      padding-bottom: max(0.35rem, min(env(safe-area-inset-bottom), 0.7rem));
+      padding-bottom: max(0.18rem, min(env(safe-area-inset-bottom), 0.42rem));
       padding-left: max(1rem, env(safe-area-inset-left));
       padding-right: max(1rem, env(safe-area-inset-right));
     }
@@ -247,7 +247,7 @@
 
   @media (max-width: 480px) {
     .messageInputContainer {
-      padding-bottom: max(0.28rem, min(env(safe-area-inset-bottom), 0.6rem));
+      padding-bottom: max(0.12rem, min(env(safe-area-inset-bottom), 0.34rem));
       padding-left: max(0.75rem, env(safe-area-inset-left));
       padding-right: max(0.75rem, env(safe-area-inset-right));
     }
