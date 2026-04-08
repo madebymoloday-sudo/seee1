@@ -13,6 +13,7 @@ import FeedbackModal from "../sessions/components/FeedbackModal";
 import { useAuth } from "@/hooks/useAuth";
 import apiAgent from "@/lib/api";
 import { toast } from "sonner";
+import BottomNavigation from "../sessions/components/BottomNavigation";
 
 const CabinetPage = observer(() => {
   const { data: profile } = useAuthControllerGetMe();
@@ -104,7 +105,7 @@ const CabinetPage = observer(() => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-28">
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
           <User className="h-8 w-8" />
           Личный кабинет
@@ -219,6 +220,13 @@ const CabinetPage = observer(() => {
           </Button>
         </div>
       </div>
+      <BottomNavigation
+        onRating={() => navigate("/rating")}
+        onPeople={() => navigate("/people")}
+        onArchivist={() => navigate("/sessions/list")}
+        onNewSession={() => navigate("/sessions/new")}
+        onCabinet={() => navigate("/cabinet")}
+      />
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
     </Layout>
   );

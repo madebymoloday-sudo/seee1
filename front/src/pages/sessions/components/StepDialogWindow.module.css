@@ -9,6 +9,10 @@
   width: 100%;
 }
 
+.messagesStage [data-chat-current-question="true"] {
+  scroll-margin-top: calc(5.75rem + env(safe-area-inset-top));
+}
+
 .bottomDock {
   margin-top: auto;
   align-self: stretch;
@@ -362,10 +366,10 @@
   /* messageInputContainer: полная ширина, фон не обрезан */
   max-width: none;
   width: 100%;
-  padding-top: 1.5rem;
-  padding-right: 12px;
-  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
-  padding-left: 12px;
+  padding-top: 0.45rem;
+  padding-right: 0;
+  padding-bottom: 0;
+  padding-left: 0;
 }
 
 .inputAlignWrapper > div > div {
@@ -377,9 +381,13 @@
 }
 
 @media (max-width: 768px) {
+  .messagesStage [data-chat-current-question="true"] {
+    scroll-margin-top: calc(6.25rem + env(safe-area-inset-top));
+  }
+
   .inputAlignWrapper > div {
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 

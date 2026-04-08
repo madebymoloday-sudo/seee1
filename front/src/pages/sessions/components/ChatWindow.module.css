@@ -26,7 +26,7 @@
   gap: 1.5rem;
   scroll-behavior: auto;
   overscroll-behavior-y: contain;
-  scroll-padding-top: 1rem;
+  scroll-padding-top: calc(5rem + env(safe-area-inset-top));
   scroll-padding-bottom: 1rem;
 }
 
@@ -393,6 +393,7 @@
     padding: 1rem 0.75rem;
     padding-bottom: calc(1rem + env(safe-area-inset-bottom));
     gap: 1rem;
+    scroll-padding-top: calc(5.75rem + env(safe-area-inset-top));
   }
 
   .message {
@@ -437,6 +438,7 @@
     padding: 0.75rem 0.5rem;
     padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
     gap: 0.75rem;
+    scroll-padding-top: calc(6rem + env(safe-area-inset-top));
   }
 
   .message {
