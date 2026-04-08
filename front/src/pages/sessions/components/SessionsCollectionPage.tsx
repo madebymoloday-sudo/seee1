@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import SessionFolderCard from "./SessionFolderCard";
 import BottomNavigation from "./BottomNavigation";
 import { useAuth } from "@/hooks/useAuth";
-import NotesModal from "./NotesModal";
 import styles from "./SessionsCollectionPage.module.css";
 import { toast } from "sonner";
 import apiAgent from "@/lib/api";
@@ -420,7 +419,6 @@ const SessionsCollectionPage = observer(() => {
   const [sortOption, setSortOption] = useState<SortOption>("my_sessions");
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [sortMenuPosition, setSortMenuPosition] = useState<{ top: number; right: number } | null>(null);
-  const [isNotesOpen, setIsNotesOpen] = useState(false);
   const sortButtonRef = useRef<HTMLButtonElement | null>(null);
   const sortMenuRef = useRef<HTMLDivElement | null>(null);
   const userKey = useMemo(() => getUserKey(), []);
@@ -1194,13 +1192,10 @@ const SessionsCollectionPage = observer(() => {
           setIsArchivistWelcomeVisible(true);
         }}
         onCabinet={() => navigate("/cabinet")}
-        onNotes={() => setIsNotesOpen(true)}
+        onRating={() => navigate("/rating")}
         onPeople={() => navigate("/people")}
         onNewSession={handleCreateSession}
       />
-
-      {/* Модальные окна */}
-      <NotesModal isOpen={isNotesOpen} onClose={() => setIsNotesOpen(false)} />
 
       {/* Инфо по обратной связи конкретной сессии */}
       {feedbackInfoSessionId && (

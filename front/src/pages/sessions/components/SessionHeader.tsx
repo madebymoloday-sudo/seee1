@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { createPortal } from "react-dom";
-import { MessageSquare, ChevronDown, Edit2, Pause, Save, List, Plus, Trash2, Moon } from "lucide-react";
+import { MessageSquare, ChevronDown, Edit2, Pause, Save, List, Plus, Trash2, Moon, Coins } from "lucide-react";
 import apiAgent from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
@@ -11,6 +11,7 @@ import { getAllPipelines } from "@/api/pipeline.api";
 import { toast } from "sonner";
 import PauseSessionModal from "./PauseSessionModal";
 import { clearDraftSession } from "@/lib/sessionUtils";
+import { getUserCoins } from "@/lib/gamification";
 import styles from "./SessionHeader.module.css";
 
 function getSessionUserKey(): string {
@@ -159,7 +160,19 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeferredModalOpen, setIsDeferredModalOpen] = useState(false);
   const [deferredThought, setDeferredThought] = useState("");
+  const [coinsBalance, setCoinsBalance] = useState(() => getUserCoins());
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const syncCoins = () => setCoinsBalance(getUserCoins());
+    const onCoinsUpdated = () => syncCoins();
+    window.addEventListener("storage", syncCoins);
+    window.addEventListener("seee:coins-updated", onCoinsUpdated as EventListener);
+    return () => {
+      window.removeEventListener("storage", syncCoins);
+      window.removeEventListener("seee:coins-updated", onCoinsUpdated as EventListener);
+    };
+  }, []);
 
   // Закрытие меню при клике вне его
   useEffect(() => {
@@ -352,6 +365,10 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
             </div>
           )}
         </div>
+        <div className={styles.coinsPill} title="Ваши монеты">
+          <Coins className={styles.coinsIcon} />
+          <span className={styles.coinsValue}>{coinsBalance}</span>
+        </div>
         <button
           type="button"
           className={styles.deferThoughtButton}
@@ -429,4 +446,3 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
 });
 
 export default SessionHeader;
-

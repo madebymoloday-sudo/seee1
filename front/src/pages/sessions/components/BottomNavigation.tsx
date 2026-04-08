@@ -1,9 +1,9 @@
-import { User, StickyNote, Plus, Archive } from "lucide-react";
+import { User, Plus, Archive, Trophy } from "lucide-react";
 import styles from "./BottomNavigation.module.css";
 
 interface BottomNavigationProps {
   onCabinet: () => void;
-  onNotes: () => void;
+  onRating: () => void;
   onPeople: () => void;
   onArchivist: () => void;
   onNewSession: () => void;
@@ -11,18 +11,18 @@ interface BottomNavigationProps {
 
 const BottomNavigation = ({ 
   onCabinet, 
-  onNotes, 
+  onRating, 
   onPeople,
   onArchivist,
   onNewSession 
 }: BottomNavigationProps) => {
   return (
     <div className={styles.bottomNav}>
-      <button onClick={onNotes} className={styles.navButton} title="Заметки">
+      <button onClick={onRating} className={styles.navButton} title="Рейтинг">
         <span className={styles.navIconBubble}>
-          <StickyNote className={styles.navIcon} />
+          <Trophy className={styles.navIcon} />
         </span>
-        <span className={styles.navLabel}>Заметки</span>
+        <span className={styles.navLabel}>Рейтинг</span>
       </button>
 
       <button onClick={onPeople} className={styles.navButton} title="Чаты">

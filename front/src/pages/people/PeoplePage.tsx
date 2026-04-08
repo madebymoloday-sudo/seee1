@@ -6,6 +6,8 @@ import { ChevronLeft, Plus, Search, StickyNote, Users } from "lucide-react";
 import { toast } from "sonner";
 import apiAgent from "@/lib/api";
 import styles from "./PeoplePage.module.css";
+import BottomNavigation from "@/pages/sessions/components/BottomNavigation";
+import { useNavigate } from "react-router-dom";
 
 type FriendDto = { id: string; username: string; userId?: string | null; avatarUrl?: string | null };
 type ChatListItem = {
@@ -61,6 +63,7 @@ const decodeSub = () => {
 };
 
 const PeoplePage = () => {
+  const navigate = useNavigate();
   const [friends, setFriends] = useState<FriendDto[]>([]);
   const [chats, setChats] = useState<ChatListItem[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -591,6 +594,13 @@ const PeoplePage = () => {
           </section>
         </div>
       </div>
+      <BottomNavigation
+        onRating={() => navigate("/rating")}
+        onPeople={() => navigate("/people")}
+        onArchivist={() => navigate("/sessions/list")}
+        onNewSession={() => navigate("/sessions/new")}
+        onCabinet={() => navigate("/cabinet")}
+      />
       {notesOpen ? (
         <div className={styles.notesOverlay} onClick={() => setNotesOpen(false)}>
           <div className={styles.notesModal} onClick={(e) => e.stopPropagation()}>
@@ -615,4 +625,3 @@ const PeoplePage = () => {
 };
 
 export default PeoplePage;
-

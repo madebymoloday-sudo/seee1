@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { parseImportantOptions } from "@/lib/sessionUtils";
+import { awardCoinsForAnswer } from "@/lib/gamification";
 import { ChevronDown } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -898,6 +899,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
         // переносим состояние диалога и метаданные с draft-id на реальный id
         saveState(newSession.id, nextStateWithAnswer);
+        const reward = awardCoinsForAnswer(newSession.id, key, 3);
+        if (reward.awarded) {
+          toast.success(`+${reward.delta} монеты`);
+        }
 
         const kind = getSessionKind(session.id);
         if (kind === "thought") {
@@ -936,6 +941,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
     // Показать ответ, увести пару влево и ввести следующий вопрос справа.
     setLastUserAnswer(trimmed);
+    const reward = awardCoinsForAnswer(session.id, key, 3);
+    if (reward.awarded) {
+      toast.success(`+${reward.delta} монеты`);
+    }
     setIsTransitioning(true);
     setTransitionPhase("idle");
 

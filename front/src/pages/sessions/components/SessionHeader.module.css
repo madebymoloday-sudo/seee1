@@ -35,14 +35,13 @@
 .headerContent {
   display: flex;
   align-items: center;
-  flex-direction: column;
   justify-content: center;
-  gap: 0;
+  gap: 0.85rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.headerContent > *:not(.sessionTitleWrapper) {
+.headerContent > *:not(.sessionTitleWrapper):not(.coinsPill) {
   display: none !important;
 }
 
@@ -65,6 +64,33 @@
 
 .sessionTitleWrapper {
   position: relative;
+}
+
+.coinsPill {
+  margin-left: auto;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.52rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 163, 66, 0.35);
+  background:
+    linear-gradient(135deg, rgba(255, 247, 212, 0.96) 0%, rgba(244, 215, 126, 0.94) 100%);
+  box-shadow:
+    0 10px 22px rgba(214, 163, 66, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+  color: #6f4a00;
+}
+
+.coinsIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.coinsValue {
+  font-size: 0.96rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .sessionTitleButton {
@@ -435,6 +461,16 @@
   border-color: rgba(255, 255, 255, 0.12);
 }
 
+:global(.dark) .coinsPill {
+  background:
+    linear-gradient(135deg, rgba(108, 76, 13, 0.96) 0%, rgba(201, 148, 40, 0.95) 100%);
+  border-color: rgba(245, 207, 120, 0.42);
+  color: #fff7da;
+  box-shadow:
+    0 12px 24px rgba(180, 128, 31, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
 :global(.dark) .menuItem {
   color: rgba(255, 255, 255, 0.9);
 }
@@ -521,6 +557,11 @@
 
   .headerContent {
     max-width: 100%;
+    gap: 0.65rem;
+  }
+
+  .coinsPill {
+    padding: 0.48rem 0.72rem;
   }
 
   .sessionTitle {
@@ -569,7 +610,7 @@
 
   .sessionTitle {
     font-size: 1rem;
-    max-width: 200px;
+    max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -612,5 +653,14 @@
   .deleteConfirmButton {
     padding: 0.5rem 1.25rem;
     font-size: 0.9rem;
+  }
+
+  .coinsPill {
+    gap: 0.35rem;
+    padding: 0.4rem 0.64rem;
+  }
+
+  .coinsValue {
+    font-size: 0.88rem;
   }
 }
