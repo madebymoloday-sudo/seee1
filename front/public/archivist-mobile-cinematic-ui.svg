@@ -1,0 +1,230 @@
+<svg width="1080" height="1920" viewBox="0 0 1080 1920" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="180" y1="40" x2="920" y2="1880" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#091319"/>
+      <stop offset="0.42" stop-color="#0E1B23"/>
+      <stop offset="1" stop-color="#05090D"/>
+    </linearGradient>
+    <radialGradient id="amberGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(822 276) rotate(90) scale(332 290)">
+      <stop stop-color="#D79A4D" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#D79A4D" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cyanGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(214 980) rotate(90) scale(520 340)">
+      <stop stop-color="#8DEBFF" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#8DEBFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="shell" x1="84" y1="74" x2="996" y2="1852" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0E171E" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#091119" stop-opacity="0.98"/>
+    </linearGradient>
+    <linearGradient id="shellStroke" x1="100" y1="94" x2="980" y2="1834" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#314B5E"/>
+      <stop offset="1" stop-color="#16232D"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="120" y1="130" x2="966" y2="1068" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#121F28" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#0B1218" stop-opacity="0.72"/>
+    </linearGradient>
+    <linearGradient id="glassStroke" x1="120" y1="130" x2="966" y2="1068" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2D4557"/>
+      <stop offset="1" stop-color="#182632"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="540" y1="1180" x2="540" y2="1920" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#091116"/>
+      <stop offset="1" stop-color="#05080C"/>
+    </linearGradient>
+    <linearGradient id="deskTop" x1="104" y1="1210" x2="564" y2="1286" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7B5A40"/>
+      <stop offset="1" stop-color="#3A271B"/>
+    </linearGradient>
+    <linearGradient id="deskFront" x1="110" y1="1236" x2="610" y2="1700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2A1C13"/>
+      <stop offset="1" stop-color="#130D09"/>
+    </linearGradient>
+    <linearGradient id="deskEdge" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#E3AA60"/>
+      <stop offset="1" stop-color="#8C5526"/>
+    </linearGradient>
+    <linearGradient id="metalSoft" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#EEF0F7"/>
+      <stop offset="1" stop-color="#AEB5C8"/>
+    </linearGradient>
+    <linearGradient id="metalDark" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#5A5F73"/>
+      <stop offset="1" stop-color="#252A37"/>
+    </linearGradient>
+    <linearGradient id="coat" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#191F2A"/>
+      <stop offset="1" stop-color="#0D1118"/>
+    </linearGradient>
+    <linearGradient id="tie" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#CF4C68"/>
+      <stop offset="1" stop-color="#7E2238"/>
+    </linearGradient>
+    <linearGradient id="eye" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFE65F"/>
+      <stop offset="1" stop-color="#F3BC26"/>
+    </linearGradient>
+    <linearGradient id="hat" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#3A4257"/>
+      <stop offset="1" stop-color="#171C28"/>
+    </linearGradient>
+    <linearGradient id="hatBand" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#7F68C8"/>
+      <stop offset="1" stop-color="#50368D"/>
+    </linearGradient>
+    <linearGradient id="drawerCase" x1="660" y1="1230" x2="986" y2="1600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D6DEE8"/>
+      <stop offset="1" stop-color="#9CAFC8"/>
+    </linearGradient>
+    <linearGradient id="drawerFace" x1="792" y1="1240" x2="1036" y2="1598" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BFD3EE"/>
+      <stop offset="1" stop-color="#83A7D5"/>
+    </linearGradient>
+    <linearGradient id="folder" x1="704" y1="1260" x2="920" y2="1328" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5C65A"/>
+      <stop offset="1" stop-color="#D18E1D"/>
+    </linearGradient>
+    <linearGradient id="folderTop" x1="704" y1="1238" x2="904" y2="1284" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF3C7"/>
+      <stop offset="1" stop-color="#EDB84B"/>
+    </linearGradient>
+    <filter id="shadow" x="-140" y="-140" width="1360" height="2240" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="34" stdDeviation="34" flood-color="#000000" flood-opacity="0.34"/>
+    </filter>
+    <filter id="softGlow" x="-140" y="-140" width="1360" height="2240" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="22" flood-color="#8DEBFF" flood-opacity="0.16"/>
+    </filter>
+    <style>
+      .eyebrow { font: 700 16px 'Helvetica Neue', Arial, sans-serif; letter-spacing: 3px; }
+      .title { font: 700 40px 'Georgia', 'Times New Roman', serif; letter-spacing: 0.3px; }
+      .body { font: 400 29px 'Georgia', 'Times New Roman', serif; letter-spacing: 0.2px; }
+      .small { font: 500 20px 'Helvetica Neue', Arial, sans-serif; letter-spacing: 0.3px; }
+      .label { font: 700 22px 'Helvetica Neue', Arial, sans-serif; letter-spacing: 1px; }
+    </style>
+  </defs>
+
+  <rect width="1080" height="1920" fill="url(#bg)"/>
+  <circle cx="822" cy="276" r="324" fill="url(#amberGlow)"/>
+  <circle cx="214" cy="980" r="360" fill="url(#cyanGlow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="54" y="50" width="972" height="1820" rx="58" fill="url(#shell)" stroke="url(#shellStroke)" stroke-width="4"/>
+    <rect x="384" y="82" width="312" height="28" rx="14" fill="#18242E"/>
+  </g>
+
+  <rect x="92" y="132" width="896" height="112" rx="30" fill="#0F181F" stroke="#243846" stroke-width="3"/>
+  <circle cx="142" cy="188" r="22" fill="#E3A95B"/>
+  <rect x="126" y="172" width="32" height="32" rx="8" fill="#10151B"/>
+  <text x="188" y="180" class="eyebrow" fill="#E7AE61">SEEE / ARCHIVE HALL</text>
+  <text x="188" y="212" class="small" fill="#D3DEE5">cinematic mobile UI for the sessions gallery</text>
+
+  <rect x="96" y="276" width="888" height="912" rx="38" fill="url(#glass)" stroke="url(#glassStroke)" stroke-width="3"/>
+
+  <path d="M54 1364L390 1524H1038V1870H54V1364Z" fill="url(#floor)"/>
+  <path d="M54 1364L390 1524" stroke="#213441" stroke-width="3"/>
+  <path d="M390 1524H1038" stroke="#273B48" stroke-width="3"/>
+  <path d="M738 1188V1870" stroke="#14232C" stroke-width="2"/>
+
+  <g opacity="0.8">
+    <path d="M846 424H1026V442H858L846 424Z" fill="#1A2932"/>
+    <path d="M872 550H1042V568H884L872 550Z" fill="#1A2932"/>
+    <path d="M900 680H1056V698H910L900 680Z" fill="#1A2932"/>
+    <path d="M928 814H1074V832H938L928 814Z" fill="#1A2932"/>
+    <path d="M950 956H1080V974H958L950 956Z" fill="#1A2932"/>
+  </g>
+
+  <g opacity="0.92">
+    <path d="M818 392H1038V1140" stroke="#6F4C32" stroke-width="16"/>
+    <path d="M864 434H1080V1160" stroke="#6F4C32" stroke-width="16"/>
+    <path d="M836 468H1056" stroke="#8A5E3D" stroke-width="12"/>
+    <path d="M858 598H1072" stroke="#8A5E3D" stroke-width="12"/>
+    <path d="M884 736H1080" stroke="#8A5E3D" stroke-width="12"/>
+    <path d="M906 878H1080" stroke="#8A5E3D" stroke-width="12"/>
+    <path d="M924 1020H1080" stroke="#8A5E3D" stroke-width="12"/>
+
+    <rect x="854" y="438" width="184" height="74" rx="12" fill="#DCAE4B"/>
+    <path d="M854 438H944L968 418H1016L1038 450H894L854 438Z" fill="#F0D182"/>
+    <rect x="882" y="570" width="176" height="74" rx="12" fill="#E7B44F"/>
+    <path d="M882 570H970L992 548H1040L1058 582H918L882 570Z" fill="#F4D57F"/>
+    <rect x="910" y="710" width="170" height="74" rx="12" fill="#D8A33E"/>
+    <path d="M910 710H998L1020 688H1062L1080 722H948L910 710Z" fill="#EDCA74"/>
+    <rect x="934" y="856" width="158" height="70" rx="12" fill="#F0C764"/>
+    <path d="M934 856H1016L1038 836H1074L1092 868H972L934 856Z" fill="#F8DE97"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="M144 316H738L826 378V644L730 662L664 752H252L184 686H144V316Z" fill="url(#glass)" stroke="#2C3F4D" stroke-width="3"/>
+    <path d="M566 652H648L612 752H542L566 652Z" fill="#111920" stroke="#2C3F4D" stroke-width="3"/>
+    <text x="186" y="396" class="eyebrow" fill="#88E9FF">ARCHIVIST</text>
+    <text x="186" y="456" class="title" fill="#F1F4F7">С возвращением.</text>
+    <text x="186" y="518" class="body" fill="#DBE4EB">Я подготовил твои сессии.</text>
+    <text x="186" y="568" class="body" fill="#DBE4EB">На стойке можно спросить меня,</text>
+    <text x="186" y="618" class="body" fill="#DBE4EB">а справа уже выдвинут архивный ящик.</text>
+    <rect x="186" y="678" width="184" height="48" rx="24" fill="#101920"/>
+    <text x="224" y="709" class="small" fill="#F3F6F8">поболтать</text>
+    <rect x="384" y="678" width="218" height="48" rx="24" fill="#D79A4D"/>
+    <text x="430" y="709" class="small" fill="#10141A">открыть архив</text>
+  </g>
+
+  <g filter="url(#softGlow)">
+    <ellipse cx="326" cy="1568" rx="264" ry="44" fill="#081017"/>
+
+    <path d="M104 1258H610L652 1284V1742H148L104 1712V1258Z" fill="url(#deskFront)" stroke="#161D24" stroke-width="14"/>
+    <path d="M104 1258H610L652 1284H148L104 1258Z" fill="url(#deskTop)" stroke="#161D24" stroke-width="14"/>
+    <path d="M148 1678H576" stroke="url(#deskEdge)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M168 1350H542" stroke="#4B3324" stroke-width="6"/>
+    <path d="M168 1446H542" stroke="#4B3324" stroke-width="6"/>
+    <path d="M168 1540H542" stroke="#4B3324" stroke-width="6"/>
+
+    <ellipse cx="324" cy="1188" rx="132" ry="22" fill="#1C2331"/>
+    <rect x="216" y="1126" width="220" height="54" rx="24" fill="url(#hat)"/>
+    <rect x="248" y="1086" width="156" height="46" rx="18" fill="url(#hat)"/>
+    <rect x="250" y="1112" width="152" height="14" rx="7" fill="url(#hatBand)"/>
+
+    <path d="M214 1186H436L478 1288V1420H174V1288L214 1186Z" fill="url(#metalSoft)" stroke="#171C24" stroke-width="14"/>
+    <path d="M194 1262H456L484 1328L456 1410H196L166 1328L194 1262Z" fill="#D7DBE7" stroke="#171C24" stroke-width="12"/>
+    <path d="M220 1240H432L404 1442H248L220 1240Z" fill="url(#metalDark)" stroke="#171C24" stroke-width="12"/>
+    <circle cx="326" cy="1326" r="58" fill="url(#eye)" stroke="#171C24" stroke-width="12"/>
+    <path d="M306 1308C306 1292 316 1282 332 1282C346 1282 354 1290 354 1304V1348" stroke="#171C24" stroke-width="12" stroke-linecap="round"/>
+    <path d="M342 1340V1370" stroke="#171C24" stroke-width="12" stroke-linecap="round"/>
+
+    <path d="M196 1380L140 1544H224L252 1408L196 1380Z" fill="#E0DDD6" stroke="#171C24" stroke-width="12"/>
+    <path d="M458 1380L408 1542H492L520 1408L458 1380Z" fill="#E0DDD6" stroke="#171C24" stroke-width="12"/>
+    <path d="M224 1464H430L458 1630H194L224 1464Z" fill="url(#coat)" stroke="#171C24" stroke-width="12"/>
+    <path d="M288 1468L326 1548L366 1468" stroke="#171C24" stroke-width="12" stroke-linecap="round"/>
+    <path d="M250 1424H404L388 1468H266L250 1424Z" fill="#0B1017"/>
+    <path d="M304 1434L326 1472L350 1434" stroke="url(#tie)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M214 1610H442L458 1770H196L214 1610Z" fill="#0D1218" stroke="#171C24" stroke-width="12"/>
+
+    <path d="M248 1458L226 1544H262L278 1478L248 1458Z" fill="#A7AFBF" stroke="#171C24" stroke-width="10"/>
+    <path d="M404 1456L430 1546H394L376 1478L404 1456Z" fill="#A7AFBF" stroke="#171C24" stroke-width="10"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <text x="666" y="1210" class="eyebrow" fill="#88E9FF">ARCHIVE DRAWER</text>
+    <text x="666" y="1264" class="title" fill="#F0F4F7">Папки на переднем плане</text>
+
+    <path d="M662 1286H900L1002 1360V1668H768L662 1594V1286Z" fill="url(#drawerCase)" stroke="#EEF2F8" stroke-width="10"/>
+    <path d="M900 1286L1002 1360V1668L900 1594V1286Z" fill="url(#drawerFace)" stroke="#EEF2F8" stroke-width="10"/>
+    <path d="M662 1286H900L1002 1360H768L662 1286Z" fill="#F4F7FB" stroke="#EEF2F8" stroke-width="10"/>
+
+    <path d="M750 1360H928V1712H750V1360Z" fill="#E6EDF5"/>
+    <rect x="704" y="1322" width="160" height="288" rx="14" fill="url(#folder)"/>
+    <path d="M704 1322H786L812 1298H852L864 1342H742L704 1322Z" fill="url(#folderTop)"/>
+    <rect x="734" y="1352" width="160" height="302" rx="14" fill="url(#folder)"/>
+    <path d="M734 1352H816L842 1328H882L894 1372H772L734 1352Z" fill="url(#folderTop)"/>
+    <rect x="764" y="1384" width="160" height="314" rx="14" fill="url(#folder)"/>
+    <path d="M764 1384H846L872 1360H912L924 1402H802L764 1384Z" fill="url(#folderTop)"/>
+    <rect x="808" y="1232" width="154" height="274" rx="14" fill="url(#folder)"/>
+    <path d="M808 1232H890L916 1206H952L962 1248H846L808 1232Z" fill="url(#folderTop)"/>
+    <rect x="862" y="1450" width="74" height="44" rx="9" fill="#F4F7F9" stroke="#A7B8CB" stroke-width="6"/>
+    <circle cx="910" cy="1534" r="16" fill="#A8B5C8"/>
+    <circle cx="956" cy="1534" r="8" fill="#F7FAFD"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="92" y="1780" width="896" height="90" rx="28" fill="#0D161D" stroke="#233845" stroke-width="4"/>
+    <text x="126" y="1836" class="small" fill="#D7E0E6">Не иллюстрация, а сцена продукта: хозяин архива, стойка, выдвинутый ящик и дальние стеллажи.</text>
+  </g>
+</svg>
