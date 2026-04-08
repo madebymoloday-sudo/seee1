@@ -12,6 +12,10 @@ import { toast } from "sonner";
 import PauseSessionModal from "./PauseSessionModal";
 import { clearDraftSession } from "@/lib/sessionUtils";
 import { getUserCoins } from "@/lib/gamification";
+import {
+  createPendingArchivistContext,
+  saveArchivistGalleryContext,
+} from "@/lib/archivist";
 import styles from "./SessionHeader.module.css";
 
 function getSessionUserKey(): string {
@@ -256,6 +260,15 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
   };
 
   const handleAllSessions = () => {
+    if (!isDraft) {
+      const pendingContext = createPendingArchivistContext(
+        session.id,
+        session.title || "Новая сессия",
+      );
+      if (pendingContext) {
+        saveArchivistGalleryContext(pendingContext, getSessionUserKey());
+      }
+    }
     navigate("/sessions");
     setIsMenuOpen(false);
   };

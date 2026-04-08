@@ -9,6 +9,7 @@ import { NeuroHintService } from './neuro-hint.service';
 import { AudioTranscriptionService } from './audio-transcription.service';
 import { StageAssistService } from './stage-assist.service';
 import { GptUsageService } from './gpt-usage.service';
+import { ArchivistInsightService } from './archivist-insight.service';
 
 @Module({
   imports: [PrismaModule, ConfigModule],
@@ -20,6 +21,7 @@ import { GptUsageService } from './gpt-usage.service';
     NeuroHintService,
     AudioTranscriptionService,
     StageAssistService,
+    ArchivistInsightService,
     GptUsageService,
   ],
   exports: [
@@ -29,6 +31,7 @@ import { GptUsageService } from './gpt-usage.service';
     NeuroHintService,
     AudioTranscriptionService,
     StageAssistService,
+    ArchivistInsightService,
     GptUsageService,
   ],
 })

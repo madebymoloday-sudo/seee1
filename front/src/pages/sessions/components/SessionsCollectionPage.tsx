@@ -16,6 +16,15 @@ import useSwr from "swr";
 import { Textarea } from "@/components/ui/textarea";
 import type { SessionResponseDto } from "@/api/schemas";
 import { parseImportantOptions, clearDraftSession } from "@/lib/sessionUtils";
+import {
+  buildArchivistSuggestedTemplateId,
+  buildFallbackResumeMessage,
+  buildFallbackWrapUpMessage,
+  loadArchivistGalleryContext,
+  saveArchivistGalleryContext,
+  type ArchivistGalleryContext,
+  type ArchivistSuggestedCard,
+} from "@/lib/archivist";
 
 type SortOption = "my_sessions" | "to_explore" | "freedom" | "happiness" | "deferred" | "recommended";
 
@@ -120,6 +129,7 @@ const SESSION_NOTES_PREFIX = "seee_session_notes:";
 type ArchivistOption = {
   id: string;
   label: string;
+  sessionId?: string;
   action:
     | "intro"
     | "telegram"
@@ -128,8 +138,27 @@ type ArchivistOption = {
     | "open_people"
     | "custom_input"
     | "open_bot"
-    | "telegram_done";
+    | "telegram_done"
+    | "continue_last_session"
+    | "open_suggested_cards";
 };
+
+type ArchivistInsightRequest = {
+  sessionId?: string;
+  sessionTitle: string;
+  coinsEarned: number;
+  answers?: Record<string, string>;
+  thoughtScopes?: Record<string, Record<string, string>>;
+  notes?: string;
+};
+
+type ArchivistInsightResponse = {
+  wrapUpMessage: string;
+  resumeMessage: string;
+  suggestedCards: ArchivistSuggestedCard[];
+};
+
+const ARCHIVIST_WRAP_UP_WINDOW_MS = 60 * 60 * 1000;
 
 function decodeJwtPayload(token: string): any | null {
   try {
@@ -270,11 +299,50 @@ function normalizeText(value: string): string {
     .trim();
 }
 
+function truncateLabel(value: string, maxLength = 34): string {
+  const safeValue = String(value || "").trim();
+  if (!safeValue) return "";
+  if (safeValue.length <= maxLength) return safeValue;
+  return `${safeValue.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
 function tokenize(value: string): string[] {
   return normalizeText(value)
     .split(" ")
     .map((x) => x.trim())
     .filter((x) => x.length >= 3 && !STOP_WORDS.has(x));
+}
+
+function mergeArchivistSuggestedTemplates(
+  existing: ToExploreTemplateWithSession[],
+  sessionId: string,
+  suggestedCards: ArchivistSuggestedCard[],
+): { items: ToExploreTemplateWithSession[]; changed: boolean } {
+  if (!sessionId || suggestedCards.length === 0) {
+    return { items: existing, changed: false };
+  }
+
+  const titleKeys = new Set(existing.map((item) => normalizeText(item.title)));
+  const items = [...existing];
+  let changed = false;
+
+  for (const card of suggestedCards) {
+    const title = String(card.title || "").trim();
+    if (!title) continue;
+
+    const titleKey = normalizeText(title);
+    if (!titleKey || titleKeys.has(titleKey)) continue;
+
+    titleKeys.add(titleKey);
+    items.unshift({
+      id: buildArchivistSuggestedTemplateId(sessionId, title),
+      title,
+      category: card.category,
+    });
+    changed = true;
+  }
+
+  return { items, changed };
 }
 
 function readSessionAnalysisText(session: SessionResponseDto): string {
@@ -424,12 +492,21 @@ const SessionsCollectionPage = observer(() => {
   const userKey = useMemo(() => getUserKey(), []);
   const [toExplore, setToExplore] = useState<ToExploreTemplateWithSession[]>(() => loadToExploreTemplates(userKey));
   const [movedSessionIds, setMovedSessionIds] = useState<string[]>(() => loadMovedSessionIds(userKey));
+  const [archivistContext, setArchivistContext] = useState<ArchivistGalleryContext | null>(
+    () => loadArchivistGalleryContext(userKey),
+  );
+  const [archivistMode, setArchivistMode] = useState<"auto" | "conversation">("auto");
+  const [isArchivistInsightLoading, setIsArchivistInsightLoading] = useState(false);
 
   const [feedbackInfoSessionId, setFeedbackInfoSessionId] = useState<string | null>(null);
   const [ideasInfoSessionId, setIdeasInfoSessionId] = useState<string | null>(null);
 
   const { user } = useAuth();
   const [showTelegramPrompt, setShowTelegramPrompt] = useState(false);
+
+  useEffect(() => {
+    setArchivistContext(loadArchivistGalleryContext(userKey));
+  }, [userKey]);
 
   useEffect(() => {
     if (!user) return;
@@ -756,20 +833,229 @@ const SessionsCollectionPage = observer(() => {
     return options;
   };
 
-  const resetArchivistConversation = () => {
-    setArchivistMessage(
-      "Привет, меня зовут Архивариус. Я помогу тебе разобраться с приложением, напомню о важных шагах и подскажу, что у тебя уже сохранено в архиве."
-    );
+  const buildArchivistContextOptions = (
+    context: ArchivistGalleryContext,
+  ): ArchivistOption[] => {
+    const options: ArchivistOption[] = [];
+
+    if (context.sessionId) {
+      options.push({
+        id: "continue_last_session",
+        label: `Продолжить «${truncateLabel(context.sessionTitle || "последнюю сессию", 30)}»`,
+        action: "continue_last_session",
+        sessionId: context.sessionId,
+      });
+    }
+
+    if (context.suggestedCards.length > 0) {
+      options.push({
+        id: "open_suggested_cards",
+        label: `Посмотреть новые карточки (${context.suggestedCards.length})`,
+        action: "open_suggested_cards",
+      });
+    } else {
+      options.push({
+        id: "archive_from_context",
+        label: "Открыть архив сессий",
+        action: "open_archive",
+      });
+    }
+
+    options.push({
+      id: "custom_from_context",
+      label: "Написать ответ самостоятельно",
+      action: "custom_input",
+    });
+
+    return options;
+  };
+
+  const buildAutoArchivistState = (
+    overrideContext?: ArchivistGalleryContext | null,
+  ): { message: string; options: ArchivistOption[]; consumeContext?: ArchivistGalleryContext } => {
+    const effectiveContext =
+      overrideContext ?? archivistContext ?? loadArchivistGalleryContext(userKey);
+
+    if (effectiveContext) {
+      const ageMs = Date.now() - new Date(effectiveContext.lastSessionAt).getTime();
+      const shouldShowWrapUp =
+        effectiveContext.pendingWrapUp && ageMs <= ARCHIVIST_WRAP_UP_WINDOW_MS;
+
+      if (effectiveContext.status === "pending" || isArchivistInsightLoading) {
+        return {
+          message:
+            "Секунду, я собираю для тебя короткий итог последней сессии и подбираю новые карточки, которые могут пригодиться дальше.",
+          options: buildArchivistContextOptions(effectiveContext),
+        };
+      }
+
+      return {
+        message: shouldShowWrapUp
+          ? effectiveContext.wrapUpMessage?.trim() ||
+            buildFallbackWrapUpMessage(effectiveContext)
+          : effectiveContext.resumeMessage?.trim() ||
+            buildFallbackResumeMessage(effectiveContext),
+        options: buildArchivistContextOptions(effectiveContext),
+        consumeContext: effectiveContext.pendingWrapUp
+          ? effectiveContext
+          : undefined,
+      };
+    }
+
+    const latestSession = sessions[0];
+    if (latestSession) {
+      const latestTitle = (latestSession.title || "последняя сессия").trim();
+      return {
+        message:
+          toExplore.length > 0
+            ? `Привет. Последнее, что ты разбирал(а), это «${latestTitle}». У тебя ещё есть ${toExplore.length} карточ${toExplore.length === 1 ? "ка" : toExplore.length > 1 && toExplore.length < 5 ? "ки" : "ек"} на продолжение, так что я бы рекомендовал либо вернуться к этой сессии, либо открыть архив и взять следующую тему.`
+            : `Привет. Последнее, что ты разбирал(а), это «${latestTitle}». Я бы рекомендовал вернуться к этой сессии и продолжить разбор, если хочешь.`,
+        options: [
+          {
+            id: "continue_latest_session",
+            label: `Продолжить «${truncateLabel(latestTitle, 30)}»`,
+            action: "continue_last_session",
+            sessionId: latestSession.id,
+          },
+          {
+            id: "open_archive_latest",
+            label: "Открыть архив сессий",
+            action: "open_archive",
+          },
+          {
+            id: "custom_latest",
+            label: "Написать ответ самостоятельно",
+            action: "custom_input",
+          },
+        ],
+      };
+    }
+
+    return {
+      message:
+        "Привет, меня зовут Архивариус. Я помогу тебе разобраться с приложением, напомню о важных шагах и подскажу, что у тебя уже сохранено в архиве.",
+      options: buildArchivistRootOptions(),
+    };
+  };
+
+  const applyAutoArchivistState = (overrideContext?: ArchivistGalleryContext | null) => {
+    const nextState = buildAutoArchivistState(overrideContext);
+    setArchivistMessage(nextState.message);
+    setArchivistOptions(nextState.options);
     setArchivistDraft("");
     setIsArchivistCustomInputVisible(false);
-    setArchivistOptions(buildArchivistRootOptions());
+
+    if (nextState.consumeContext) {
+      saveArchivistGalleryContext(
+        {
+          ...nextState.consumeContext,
+          pendingWrapUp: false,
+        },
+        userKey,
+      );
+    }
+  };
+
+  const resetArchivistConversation = () => {
+    setArchivistMode("auto");
+    const latestContext = loadArchivistGalleryContext(userKey);
+    if (latestContext) {
+      setArchivistContext(latestContext);
+      applyAutoArchivistState(latestContext);
+      return;
+    }
+    applyAutoArchivistState(null);
   };
 
   useEffect(() => {
-    resetArchivistConversation();
-  }, [user?.telegramId]);
+    if (archivistMode === "auto") {
+      applyAutoArchivistState();
+    }
+  }, [archivistContext, archivistMode, sessions, toExplore, user?.telegramId, isArchivistInsightLoading]);
+
+  useEffect(() => {
+    if (!archivistContext || archivistContext.status !== "pending" || !archivistContext.snapshot) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const hydrateArchivistInsight = async () => {
+      setIsArchivistInsightLoading(true);
+
+      try {
+        const payload: ArchivistInsightRequest = {
+          sessionId: archivistContext.sessionId,
+          sessionTitle: archivistContext.sessionTitle,
+          coinsEarned: archivistContext.coinsEarned,
+          answers: archivistContext.snapshot?.answers,
+          thoughtScopes: archivistContext.snapshot?.thoughtScopes,
+          notes: archivistContext.snapshot?.notes,
+        };
+
+        const response = await apiAgent.post<
+          ArchivistInsightRequest,
+          ArchivistInsightResponse
+        >("/psychologist/archivist-insight", payload);
+
+        if (cancelled) return;
+
+        const nextContext: ArchivistGalleryContext = {
+          ...archivistContext,
+          status: "ready",
+          wrapUpMessage: String(response.wrapUpMessage || "").trim(),
+          resumeMessage: String(response.resumeMessage || "").trim(),
+          suggestedCards: Array.isArray(response.suggestedCards)
+            ? response.suggestedCards
+            : [],
+        };
+
+        saveArchivistGalleryContext(nextContext, userKey);
+        setArchivistContext(nextContext);
+      } catch (error) {
+        if (cancelled) return;
+
+        const fallbackContext: ArchivistGalleryContext = {
+          ...archivistContext,
+          status: "ready",
+          wrapUpMessage: buildFallbackWrapUpMessage(archivistContext),
+          resumeMessage: buildFallbackResumeMessage(archivistContext),
+          suggestedCards: [],
+        };
+
+        saveArchivistGalleryContext(fallbackContext, userKey);
+        setArchivistContext(fallbackContext);
+      } finally {
+        if (!cancelled) {
+          setIsArchivistInsightLoading(false);
+        }
+      }
+    };
+
+    hydrateArchivistInsight();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [archivistContext, userKey]);
+
+  useEffect(() => {
+    if (!archivistContext || archivistContext.suggestedCards.length === 0) return;
+
+    const merged = mergeArchivistSuggestedTemplates(
+      toExplore,
+      archivistContext.sessionId,
+      archivistContext.suggestedCards,
+    );
+
+    if (!merged.changed) return;
+
+    setToExplore(merged.items);
+    saveToExploreTemplates(userKey, merged.items);
+  }, [archivistContext, toExplore, userKey]);
 
   const handleArchivistOption = (option: ArchivistOption) => {
+    setArchivistMode("conversation");
     setIsArchivistCustomInputVisible(false);
 
     if (option.action === "intro") {
@@ -822,6 +1108,18 @@ const SessionsCollectionPage = observer(() => {
       return;
     }
 
+    if (option.action === "continue_last_session" && option.sessionId) {
+      navigate(`/sessions/${option.sessionId}`);
+      return;
+    }
+
+    if (option.action === "open_suggested_cards") {
+      setSearchQuery("");
+      setSortOption("to_explore");
+      handleOpenArchiveGallery();
+      return;
+    }
+
     if (option.action === "open_archive") {
       handleOpenArchiveGallery();
       return;
@@ -851,6 +1149,7 @@ const SessionsCollectionPage = observer(() => {
     if (!text) return;
 
     const normalized = text.toLowerCase();
+    setArchivistMode("conversation");
     setArchivistDraft("");
     setIsArchivistCustomInputVisible(false);
 
@@ -1168,7 +1467,11 @@ const SessionsCollectionPage = observer(() => {
                       tagLabel="Предстоит изучить"
                       categoryLabel={t.category}
                       recommendationLabel={
-                        recommendedTemplateIds.has(t.id) ? "Рекомендация для вас" : undefined
+                        t.id.startsWith("to_explore:archivist:")
+                          ? "Рекомендация Архивариуса"
+                          : recommendedTemplateIds.has(t.id)
+                            ? "Рекомендация для вас"
+                            : undefined
                       }
                       palette="toExplore"
                       showMenu={false}

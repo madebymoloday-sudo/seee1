@@ -27,6 +27,10 @@ import {
   NeuroHintResponseDto,
 } from './dto/neuro-hint.dto';
 import {
+  ArchivistInsightRequestDto,
+  ArchivistInsightResponseDto,
+} from './dto/archivist-insight.dto';
+import {
   StageAssistRequestDto,
   StageAssistResponseDto,
 } from './dto/stage-assist.dto';
@@ -35,6 +39,7 @@ import {
   AudioTranscriptionUploadDto,
 } from './dto/audio-transcription.dto';
 import { StageAssistService } from './stage-assist.service';
+import { ArchivistInsightService } from './archivist-insight.service';
 
 @ApiTags('Psychologist')
 @Controller('psychologist')
@@ -46,6 +51,7 @@ export class PsychologistController {
     private readonly neuroHintService: NeuroHintService,
     private readonly audioTranscriptionService: AudioTranscriptionService,
     private readonly stageAssistService: StageAssistService,
+    private readonly archivistInsightService: ArchivistInsightService,
   ) {}
 
   @Get('programs')
@@ -108,6 +114,23 @@ export class PsychologistController {
     @Request() req: { user: { id: string } },
   ): Promise<StageAssistResponseDto> {
     return this.stageAssistService.analyzeStage(dto, req.user.id);
+  }
+
+  @Post('archivist-insight')
+  @ApiOperation({
+    summary:
+      'Собрать тёплый итог последней сессии и предложить новые карточки Архивариуса',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Итог сессии для галереи и новые карточки на разбор',
+    type: ArchivistInsightResponseDto,
+  })
+  async archivistInsight(
+    @Body() dto: ArchivistInsightRequestDto,
+    @Request() req: { user: { id: string } },
+  ): Promise<ArchivistInsightResponseDto> {
+    return this.archivistInsightService.generateInsight(dto, req.user.id);
   }
 
   @Post('transcribe')
