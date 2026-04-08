@@ -1,0 +1,185 @@
+<svg width="1600" height="1000" viewBox="0 0 1600 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg3d" x1="230" y1="60" x2="1370" y2="948" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#071019"/>
+      <stop offset="0.5" stop-color="#0E1A24"/>
+      <stop offset="1" stop-color="#05080C"/>
+    </linearGradient>
+    <linearGradient id="floor3d" x1="800" y1="560" x2="800" y2="1000" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#172431"/>
+      <stop offset="1" stop-color="#091018"/>
+    </linearGradient>
+    <linearGradient id="wallGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#81DFFF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#81DFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="cabFront" x1="1010" y1="242" x2="1398" y2="818" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D18434"/>
+      <stop offset="1" stop-color="#8F4E17"/>
+    </linearGradient>
+    <linearGradient id="cabSide" x1="1376" y1="276" x2="1490" y2="788" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B4816"/>
+      <stop offset="1" stop-color="#5C2E0D"/>
+    </linearGradient>
+    <linearGradient id="cabTop" x1="1032" y1="194" x2="1416" y2="258" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E9A04B"/>
+      <stop offset="1" stop-color="#A25C1F"/>
+    </linearGradient>
+    <linearGradient id="drawerFace" x1="1034" y1="308" x2="1350" y2="382" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BF7330"/>
+      <stop offset="1" stop-color="#8F4E17"/>
+    </linearGradient>
+    <linearGradient id="drawerTop" x1="1038" y1="278" x2="1350" y2="316" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EB9F49"/>
+      <stop offset="1" stop-color="#AF6524"/>
+    </linearGradient>
+    <linearGradient id="folderFront" x1="1058" y1="290" x2="1328" y2="334" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6D979"/>
+      <stop offset="1" stop-color="#E2A73F"/>
+    </linearGradient>
+    <linearGradient id="folderTop" x1="1076" y1="266" x2="1296" y2="292" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF2B6"/>
+      <stop offset="1" stop-color="#EEC059"/>
+    </linearGradient>
+    <linearGradient id="bubble3d" x1="216" y1="96" x2="740" y2="356" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9F3E7"/>
+      <stop offset="1" stop-color="#E1D7C3"/>
+    </linearGradient>
+    <linearGradient id="robotBody" x1="300" y1="446" x2="530" y2="676" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6F8FB"/>
+      <stop offset="1" stop-color="#CED8E2"/>
+    </linearGradient>
+    <linearGradient id="robotAccent" x1="288" y1="384" x2="510" y2="742" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFA63D"/>
+      <stop offset="1" stop-color="#C46E23"/>
+    </linearGradient>
+    <filter id="shadow3d" x="-120" y="-120" width="1900" height="1400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="26" stdDeviation="24" flood-color="#000000" flood-opacity="0.34"/>
+    </filter>
+    <filter id="softBlue" x="-120" y="-120" width="1900" height="1400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="28" flood-color="#8BEAFF" flood-opacity="0.16"/>
+    </filter>
+    <style>
+      .title { font: 700 34px 'Courier New', monospace; letter-spacing: 2px; }
+      .label { font: 700 22px 'Courier New', monospace; letter-spacing: 1.2px; }
+      .body { font: 500 24px 'Courier New', monospace; letter-spacing: 0.2px; }
+      .small { font: 500 18px 'Courier New', monospace; letter-spacing: 0.4px; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#bg3d)"/>
+  <circle cx="1260" cy="212" r="236" fill="#2F1707" fill-opacity="0.28"/>
+  <circle cx="290" cy="216" r="180" fill="#123243" fill-opacity="0.24"/>
+
+  <path d="M0 560L1600 560V1000H0V560Z" fill="url(#floor3d)"/>
+  <path d="M0 560L398 680H1186L1600 560" fill="#11202A" fill-opacity="0.6"/>
+  <path d="M0 560L398 680" stroke="#1F3441" stroke-width="2"/>
+  <path d="M1600 560L1186 680" stroke="#1F3441" stroke-width="2"/>
+  <path d="M398 680L1186 680" stroke="#284350" stroke-width="3"/>
+  <path d="M800 560L800 680" stroke="#213846" stroke-width="2"/>
+
+  <g opacity="0.12">
+    <path d="M64 108H162V174H236" stroke="#D48939" stroke-width="10"/>
+    <path d="M1410 132H1518V216H1592" stroke="#77D8F5" stroke-width="10"/>
+    <path d="M110 884H208V950H286" stroke="#D48939" stroke-width="10"/>
+  </g>
+
+  <g filter="url(#shadow3d)">
+    <path d="M224 130H616L708 214V346L596 366L540 424H302L244 374H174V224L224 130Z" fill="url(#bubble3d)" stroke="#1B2128" stroke-width="10"/>
+    <path d="M490 364H560L520 426H454L490 364Z" fill="#E1D7C3" stroke="#1B2128" stroke-width="10"/>
+    <text x="260" y="192" class="title" fill="#14181D">АРХИВАРИУС</text>
+    <text x="260" y="248" class="body" fill="#24272B">Я собрал твои разборы в объёмный</text>
+    <text x="260" y="288" class="body" fill="#24272B">архив. Справа лежат ящики памяти:</text>
+    <text x="260" y="328" class="body" fill="#24272B">последние сессии, отложенные темы</text>
+    <text x="260" y="368" class="body" fill="#24272B">и главные повторяющиеся мотивы.</text>
+    <g>
+      <rect x="260" y="392" width="152" height="46" rx="18" fill="#111821"/>
+      <text x="288" y="422" class="small" fill="#F8F1E3">ПОСЛЕДНИЕ</text>
+      <rect x="426" y="392" width="184" height="46" rx="18" fill="#D98A39"/>
+      <text x="464" y="422" class="small" fill="#091019">КЛЮЧЕВЫЕ ТЕМЫ</text>
+    </g>
+  </g>
+
+  <g filter="url(#softBlue)">
+    <ellipse cx="398" cy="736" rx="186" ry="34" fill="#091018"/>
+    <path d="M332 390H486L550 456L530 572H288L266 456L332 390Z" fill="url(#robotAccent)" stroke="#141B21" stroke-width="12"/>
+    <rect x="292" y="458" width="238" height="88" rx="34" fill="url(#robotBody)" stroke="#141B21" stroke-width="12"/>
+    <rect x="340" y="420" width="144" height="96" rx="34" fill="#0F1720" stroke="#141B21" stroke-width="12"/>
+    <circle cx="390" cy="462" r="10" fill="#87EAFF"/>
+    <circle cx="432" cy="462" r="10" fill="#87EAFF"/>
+    <path d="M360 630L354 738H304L308 610L360 630Z" fill="url(#robotAccent)" stroke="#141B21" stroke-width="10"/>
+    <path d="M474 620L472 736H418L422 600L474 620Z" fill="url(#robotAccent)" stroke="#141B21" stroke-width="10"/>
+    <rect x="284" y="726" width="88" height="40" rx="18" fill="#0F1720"/>
+    <rect x="418" y="726" width="88" height="40" rx="18" fill="#0F1720"/>
+    <path d="M262 780H540" stroke="#D98A39" stroke-width="14" stroke-linecap="round"/>
+    <path d="M548 530L618 560L644 608L570 584L548 530Z" fill="#D98A39" stroke="#141B21" stroke-width="10"/>
+    <path d="M614 560L664 498L688 552L644 608L614 560Z" fill="#F2C76B" stroke="#141B21" stroke-width="10"/>
+    <path d="M676 498L722 534" stroke="#141B21" stroke-width="10" stroke-linecap="round"/>
+    <text x="252" y="824" class="small" fill="#E2A34E">ХРАНИТЕЛЬ РАЗБОРОВ</text>
+  </g>
+
+  <g filter="url(#shadow3d)">
+    <path d="M1010 244H1384L1460 286V814H1010V244Z" fill="url(#cabFront)" stroke="#F1AA50" stroke-width="12"/>
+    <path d="M1384 244L1460 286V814L1384 770V244Z" fill="url(#cabSide)" stroke="#F1AA50" stroke-width="12"/>
+    <path d="M1010 244H1384L1460 286H1084L1010 244Z" fill="url(#cabTop)" stroke="#F1AA50" stroke-width="12"/>
+
+    <g>
+      <path d="M1036 304H1342L1392 334V412H1036V304Z" fill="url(#drawerFace)" stroke="#4A280D" stroke-width="8"/>
+      <path d="M1342 304L1392 334V412L1342 384V304Z" fill="#784014" stroke="#4A280D" stroke-width="8"/>
+      <path d="M1036 304H1342L1392 334H1088L1036 304Z" fill="url(#drawerTop)" stroke="#4A280D" stroke-width="8"/>
+      <rect x="1170" y="344" width="84" height="28" rx="10" fill="#42220C"/>
+    </g>
+
+    <g>
+      <path d="M1036 466H1342L1392 496V574H1036V466Z" fill="url(#drawerFace)" stroke="#4A280D" stroke-width="8"/>
+      <path d="M1342 466L1392 496V574L1342 546V466Z" fill="#784014" stroke="#4A280D" stroke-width="8"/>
+      <path d="M1036 466H1342L1392 496H1088L1036 466Z" fill="url(#drawerTop)" stroke="#4A280D" stroke-width="8"/>
+      <rect x="1170" y="506" width="84" height="28" rx="10" fill="#42220C"/>
+    </g>
+
+    <g>
+      <path d="M1036 628H1342L1392 658V736H1036V628Z" fill="url(#drawerFace)" stroke="#4A280D" stroke-width="8"/>
+      <path d="M1342 628L1392 658V736L1342 708V628Z" fill="#784014" stroke="#4A280D" stroke-width="8"/>
+      <path d="M1036 628H1342L1392 658H1088L1036 628Z" fill="url(#drawerTop)" stroke="#4A280D" stroke-width="8"/>
+      <rect x="1170" y="668" width="84" height="28" rx="10" fill="#42220C"/>
+    </g>
+
+    <g filter="url(#softBlue)">
+      <path d="M1026 286H1268L1328 322V380H1026V286Z" fill="url(#folderFront)" stroke="#282015" stroke-width="8"/>
+      <path d="M1268 286L1328 322V380L1268 348V286Z" fill="#C88728" stroke="#282015" stroke-width="8"/>
+      <path d="M1026 286H1122L1162 258H1286L1328 322H1084L1026 286Z" fill="url(#folderTop)" stroke="#282015" stroke-width="8"/>
+      <text x="1060" y="346" class="label" fill="#2A2014">ПОСЛЕДНИЕ СЕССИИ</text>
+    </g>
+
+    <g>
+      <path d="M1024 450H1240L1296 486V536H1024V450Z" fill="#F0C45A" stroke="#282015" stroke-width="8"/>
+      <path d="M1240 450L1296 486V536L1240 506V450Z" fill="#C1832C" stroke="#282015" stroke-width="8"/>
+      <path d="M1024 450H1108L1148 426H1248L1296 486H1080L1024 450Z" fill="#F8D97C" stroke="#282015" stroke-width="8"/>
+      <text x="1056" y="508" class="label" fill="#2A2014">ОТЛОЖЕНО</text>
+    </g>
+
+    <g>
+      <path d="M1024 612H1284L1346 650V704H1024V612Z" fill="#E8B24C" stroke="#282015" stroke-width="8"/>
+      <path d="M1284 612L1346 650V704L1284 670V612Z" fill="#B87224" stroke="#282015" stroke-width="8"/>
+      <path d="M1024 612H1114L1150 586H1294L1346 650H1080L1024 612Z" fill="#F7CE69" stroke="#282015" stroke-width="8"/>
+      <text x="1068" y="672" class="label" fill="#2A2014">КЛЮЧЕВЫЕ ТЕМЫ</text>
+    </g>
+  </g>
+
+  <g>
+    <rect x="786" y="102" width="432" height="90" rx="24" fill="#0E171F" stroke="#7FDBF8" stroke-width="4"/>
+    <text x="820" y="140" class="small" fill="#7FE8FF">SEEE / ARCHIVE HALL / 3D CONCEPT</text>
+    <text x="820" y="172" class="small" fill="#D8E5ED">Глубина кадра, перспективный архивный шкаф, ящики как физическое хранилище</text>
+  </g>
+
+  <g>
+    <rect x="728" y="786" width="310" height="112" rx="24" fill="#0F1820" stroke="#D88A39" stroke-width="4"/>
+    <text x="760" y="826" class="small" fill="#F2C86D">Архивариус может говорить:</text>
+    <text x="760" y="860" class="small" fill="#F6F1E6">“3 темы повторяются особенно часто.”</text>
+  </g>
+
+  <g>
+    <rect x="1110" y="844" width="280" height="76" rx="20" fill="#F8F1E4"/>
+    <text x="1142" y="890" class="small" fill="#16191E">нажми на 3D-ящик и открой архив</text>
+  </g>
+</svg>
