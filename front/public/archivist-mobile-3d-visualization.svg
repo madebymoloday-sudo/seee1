@@ -1,0 +1,231 @@
+<svg width="1080" height="1920" viewBox="0 0 1080 1920" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="130" y1="42" x2="982" y2="1860" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08131A"/>
+      <stop offset="0.45" stop-color="#101C26"/>
+      <stop offset="1" stop-color="#05080D"/>
+    </linearGradient>
+    <radialGradient id="amberGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(846 346) rotate(90) scale(410 296)">
+      <stop stop-color="#E6A04A" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#E6A04A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cyanGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(196 782) rotate(90) scale(500 330)">
+      <stop stop-color="#8CEAFF" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#8CEAFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="frame" x1="86" y1="80" x2="996" y2="1840" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F1B23"/>
+      <stop offset="1" stop-color="#091119"/>
+    </linearGradient>
+    <linearGradient id="frameStroke" x1="96" y1="90" x2="986" y2="1820" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#314C60"/>
+      <stop offset="1" stop-color="#182631"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="540" y1="1230" x2="540" y2="1920" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A1218"/>
+      <stop offset="1" stop-color="#06090E"/>
+    </linearGradient>
+    <linearGradient id="wallPanel" x1="132" y1="154" x2="960" y2="1112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101A22" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#0B1319" stop-opacity="0.92"/>
+    </linearGradient>
+    <linearGradient id="bubble" x1="144" y1="254" x2="864" y2="692" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7EEDC"/>
+      <stop offset="1" stop-color="#DDD0B7"/>
+    </linearGradient>
+    <linearGradient id="counterFront" x1="114" y1="1220" x2="612" y2="1710" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#362313"/>
+      <stop offset="1" stop-color="#140C08"/>
+    </linearGradient>
+    <linearGradient id="counterTop" x1="110" y1="1180" x2="616" y2="1310" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#785334"/>
+      <stop offset="1" stop-color="#3B2617"/>
+    </linearGradient>
+    <linearGradient id="counterEdge" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F0AB50"/>
+      <stop offset="1" stop-color="#A15C22"/>
+    </linearGradient>
+    <linearGradient id="hatBrim" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#7967C8"/>
+      <stop offset="1" stop-color="#44356E"/>
+    </linearGradient>
+    <linearGradient id="hatBand" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#D54ECE"/>
+      <stop offset="1" stop-color="#8A2E8C"/>
+    </linearGradient>
+    <linearGradient id="robotMetal" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ECEAF4"/>
+      <stop offset="1" stop-color="#B7BED0"/>
+    </linearGradient>
+    <linearGradient id="robotDark" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#5A4F72"/>
+      <stop offset="1" stop-color="#2D273B"/>
+    </linearGradient>
+    <linearGradient id="vest" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#E85B71"/>
+      <stop offset="1" stop-color="#A1304D"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F4EADF"/>
+      <stop offset="1" stop-color="#D8D0C5"/>
+    </linearGradient>
+    <linearGradient id="drawerBody" x1="642" y1="1170" x2="992" y2="1590" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D8E0EA"/>
+      <stop offset="1" stop-color="#AAB9D0"/>
+    </linearGradient>
+    <linearGradient id="drawerFace" x1="772" y1="1162" x2="1042" y2="1548" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BED2ED"/>
+      <stop offset="1" stop-color="#87A7D0"/>
+    </linearGradient>
+    <linearGradient id="folderFace" x1="664" y1="1174" x2="910" y2="1258" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8C75A"/>
+      <stop offset="1" stop-color="#D0911C"/>
+    </linearGradient>
+    <linearGradient id="folderTop" x1="672" y1="1148" x2="888" y2="1196" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF2C0"/>
+      <stop offset="1" stop-color="#EFB947"/>
+    </linearGradient>
+    <linearGradient id="shelfWood" x1="800" y1="602" x2="1030" y2="1110" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7A5030"/>
+      <stop offset="1" stop-color="#342013"/>
+    </linearGradient>
+    <filter id="shadow" x="-120" y="-120" width="1320" height="2200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="30" stdDeviation="30" flood-color="#000000" flood-opacity="0.34"/>
+    </filter>
+    <filter id="glow" x="-120" y="-120" width="1320" height="2200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="22" flood-color="#8DEAFF" flood-opacity="0.16"/>
+    </filter>
+    <style>
+      .eyebrow { font: 700 17px 'Courier New', monospace; letter-spacing: 2px; }
+      .title { font: 700 37px 'Courier New', monospace; letter-spacing: 0.8px; }
+      .body { font: 500 27px 'Courier New', monospace; letter-spacing: 0.2px; }
+      .small { font: 500 20px 'Courier New', monospace; letter-spacing: 0.2px; }
+      .label { font: 700 24px 'Courier New', monospace; letter-spacing: 0.8px; }
+    </style>
+  </defs>
+
+  <rect width="1080" height="1920" fill="url(#bg)"/>
+  <circle cx="848" cy="346" r="314" fill="url(#amberGlow)"/>
+  <circle cx="196" cy="782" r="340" fill="url(#cyanGlow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="54" y="50" width="972" height="1820" rx="58" fill="url(#frame)" stroke="url(#frameStroke)" stroke-width="4"/>
+    <rect x="384" y="80" width="312" height="28" rx="14" fill="#162530"/>
+  </g>
+
+  <rect x="90" y="130" width="900" height="118" rx="32" fill="#0E171E" stroke="#243846" stroke-width="3"/>
+  <circle cx="142" cy="189" r="22" fill="#F2B454"/>
+  <rect x="126" y="173" width="32" height="32" rx="8" fill="#11171D"/>
+  <text x="190" y="180" class="eyebrow" fill="#F3B558">SEEE / ЗАЛ АРХИВАРИУСА</text>
+  <text x="190" y="214" class="small" fill="#D0DCE4">3D-сцена: робот за стойкой, архивный ящик и стеллажи, уходящие вглубь</text>
+
+  <rect x="102" y="278" width="876" height="936" rx="40" fill="url(#wallPanel)" stroke="#213442" stroke-width="3"/>
+
+  <path d="M90 1236L382 1408H1042V1870H54V1374L90 1236Z" fill="url(#floor)"/>
+  <path d="M54 1374L382 1408" stroke="#223745" stroke-width="3"/>
+  <path d="M382 1408H1042" stroke="#263B48" stroke-width="3"/>
+  <path d="M688 1238V1870" stroke="#172934" stroke-width="2"/>
+
+  <g opacity="0.8">
+    <path d="M822 458H962V474H836L822 458Z" fill="#1A2933"/>
+    <path d="M854 570H990V588H866L854 570Z" fill="#1A2933"/>
+    <path d="M886 690H1018V710H898L886 690Z" fill="#1A2933"/>
+    <path d="M914 814H1042V836H924L914 814Z" fill="#1A2933"/>
+  </g>
+
+  <g opacity="0.9">
+    <path d="M790 426H1018V1098" stroke="url(#shelfWood)" stroke-width="16"/>
+    <path d="M842 464H1068V1112" stroke="url(#shelfWood)" stroke-width="16"/>
+    <path d="M808 510H1040" stroke="#845737" stroke-width="12"/>
+    <path d="M828 636H1056" stroke="#845737" stroke-width="12"/>
+    <path d="M848 770H1070" stroke="#845737" stroke-width="12"/>
+    <path d="M870 916H1080" stroke="#845737" stroke-width="12"/>
+    <path d="M888 1066H1080" stroke="#845737" stroke-width="12"/>
+
+    <path d="M840 482H948L970 498H1040V560H840V482Z" fill="#E9B34E" stroke="#2A2014" stroke-width="6"/>
+    <path d="M870 608H972L994 624H1058V688H870V608Z" fill="#F0BF5C" stroke="#2A2014" stroke-width="6"/>
+    <path d="M900 742H998L1018 758H1076V820H900V742Z" fill="#E7AA43" stroke="#2A2014" stroke-width="6"/>
+    <path d="M926 888H1018L1036 904H1080V960H926V888Z" fill="#F2C664" stroke="#2A2014" stroke-width="6"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="M138 300H760L852 362V592L752 610L690 704H234L170 642H138V300Z" fill="url(#bubble)" stroke="#15191F" stroke-width="10"/>
+    <path d="M580 604H664L628 704H558L580 604Z" fill="#DDD0B7" stroke="#15191F" stroke-width="10"/>
+    <text x="182" y="370" class="label" fill="#1C1F23">С возвращением.</text>
+    <text x="182" y="424" class="body" fill="#23272B">Я держу твои сессии под рукой.</text>
+    <text x="182" y="476" class="body" fill="#23272B">Справа уже выкатили ящик, а дальше</text>
+    <text x="182" y="528" class="body" fill="#23272B">в комнате стоят стеллажи с архивом.</text>
+    <text x="182" y="580" class="body" fill="#23272B">Могу открыть папки или рассказать,</text>
+    <text x="182" y="632" class="body" fill="#23272B">что в них чаще всего повторяется.</text>
+  </g>
+
+  <g filter="url(#glow)">
+    <ellipse cx="330" cy="1566" rx="260" ry="42" fill="#081016"/>
+
+    <path d="M110 1224H608L648 1250V1740H152L110 1708V1224Z" fill="url(#counterFront)" stroke="#151B22" stroke-width="14"/>
+    <path d="M110 1224H608L648 1250H154L110 1224Z" fill="url(#counterTop)" stroke="#151B22" stroke-width="14"/>
+    <rect x="142" y="1268" width="434" height="390" rx="28" fill="#1A100B" fill-opacity="0.26"/>
+    <path d="M142 1650H576" stroke="url(#counterEdge)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M170 1328H548" stroke="#5A3924" stroke-width="6"/>
+    <path d="M170 1420H548" stroke="#5A3924" stroke-width="6"/>
+    <path d="M170 1512H548" stroke="#5A3924" stroke-width="6"/>
+
+    <ellipse cx="326" cy="1184" rx="158" ry="30" fill="#4B3B72" stroke="#181C24" stroke-width="12"/>
+    <path d="M200 1180H452L488 1274V1378H166V1274L200 1180Z" fill="url(#robotMetal)" stroke="#181C24" stroke-width="14"/>
+    <path d="M186 1244H468L500 1320L472 1370H182L154 1320L186 1244Z" fill="#D2D6E5" stroke="#181C24" stroke-width="12"/>
+    <rect x="214" y="1088" width="218" height="86" rx="34" fill="url(#hatBrim)" stroke="#181C24" stroke-width="12"/>
+    <rect x="248" y="1042" width="152" height="66" rx="26" fill="url(#hatBrim)" stroke="#181C24" stroke-width="12"/>
+    <rect x="242" y="1094" width="164" height="28" rx="14" fill="url(#hatBand)"/>
+
+    <path d="M214 1246H438L406 1416H246L214 1246Z" fill="url(#robotDark)" stroke="#181C24" stroke-width="12"/>
+    <path d="M248 1288H404V1412H248V1288Z" fill="#4D435D" stroke="#181C24" stroke-width="10"/>
+    <circle cx="326" cy="1350" r="60" fill="#FFDD22" stroke="#181C24" stroke-width="12"/>
+    <path d="M308 1328C308 1310 318 1298 336 1298C350 1298 358 1308 358 1322V1362" stroke="#181C24" stroke-width="12" stroke-linecap="round"/>
+    <path d="M344 1356V1390" stroke="#181C24" stroke-width="12" stroke-linecap="round"/>
+
+    <path d="M192 1376L138 1522H220L244 1400L192 1376Z" fill="url(#shirt)" stroke="#181C24" stroke-width="12"/>
+    <path d="M460 1382L412 1536H492L518 1410L460 1382Z" fill="url(#shirt)" stroke="#181C24" stroke-width="12"/>
+    <path d="M220 1462H434L470 1624H190L220 1462Z" fill="url(#vest)" stroke="#181C24" stroke-width="12"/>
+    <path d="M286 1468L326 1530L370 1468" stroke="#181C24" stroke-width="12" stroke-linecap="round"/>
+    <path d="M246 1418H404L384 1468H266L246 1418Z" fill="#2E2637" stroke="#181C24" stroke-width="10"/>
+    <path d="M300 1434L328 1470L356 1434" stroke="#181C24" stroke-width="10"/>
+
+    <path d="M228 1542H426L448 1762H206L228 1542Z" fill="#2E2639" stroke="#181C24" stroke-width="12"/>
+    <path d="M230 1658H424" stroke="#4D425A" stroke-width="8"/>
+    <path d="M230 1718H424" stroke="#4D425A" stroke-width="8"/>
+
+    <text x="150" y="1810" class="eyebrow" fill="#F2B454">РОБОТ В КЛАССИЧЕСКОМ КОСТЮМЕ</text>
+  </g>
+
+  <g>
+    <text x="664" y="1186" class="eyebrow" fill="#8DEAFF">ВЫКАТИЛИ НА ПЕРЕДНИЙ ПЛАН</text>
+    <text x="664" y="1238" class="title" fill="#F6F8F9">Ящик с папками</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="M642 1256H884L988 1330V1670H748L642 1596V1256Z" fill="url(#drawerBody)" stroke="#EEF3F8" stroke-width="10"/>
+    <path d="M884 1256L988 1330V1670L884 1596V1256Z" fill="url(#drawerFace)" stroke="#EEF3F8" stroke-width="10"/>
+    <path d="M642 1256H884L988 1330H748L642 1256Z" fill="#F2F5F9" stroke="#EEF3F8" stroke-width="10"/>
+
+    <path d="M734 1328H918V1718H734V1328Z" fill="#E7EEF5"/>
+    <path d="M686 1296H774L796 1314H866V1576H686V1296Z" fill="url(#folderFace)" stroke="#D18D1E" stroke-width="8"/>
+    <path d="M686 1296H754L776 1268H836L866 1314H716L686 1296Z" fill="url(#folderTop)" stroke="#D18D1E" stroke-width="8"/>
+    <path d="M716 1322H804L826 1340H900V1608H716V1322Z" fill="url(#folderFace)" stroke="#D18D1E" stroke-width="8"/>
+    <path d="M716 1322H784L808 1294H870L900 1340H746L716 1322Z" fill="url(#folderTop)" stroke="#D18D1E" stroke-width="8"/>
+    <path d="M746 1352H834L854 1370H928V1640H746V1352Z" fill="url(#folderFace)" stroke="#D18D1E" stroke-width="8"/>
+    <path d="M746 1352H814L836 1324H896L928 1370H776L746 1352Z" fill="url(#folderTop)" stroke="#D18D1E" stroke-width="8"/>
+    <path d="M774 1380H860L880 1398H950V1668H774V1380Z" fill="url(#folderFace)" stroke="#D18D1E" stroke-width="8"/>
+    <path d="M774 1380H842L864 1352H922L950 1398H804L774 1380Z" fill="url(#folderTop)" stroke="#D18D1E" stroke-width="8"/>
+    <path d="M820 1208H964V1468H820V1208Z" fill="url(#folderFace)" stroke="#D18D1E" stroke-width="8"/>
+    <path d="M820 1208H882L906 1178H952L964 1224H852L820 1208Z" fill="url(#folderTop)" stroke="#D18D1E" stroke-width="8"/>
+
+    <rect x="852" y="1448" width="78" height="48" rx="8" fill="#F4F6F8" stroke="#A7B7C8" stroke-width="6"/>
+    <circle cx="900" cy="1540" r="18" fill="#A4B1C2"/>
+    <circle cx="950" cy="1540" r="8" fill="#F7F9FB"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="90" y="1778" width="900" height="92" rx="28" fill="#0E171E" stroke="#243947" stroke-width="4"/>
+    <text x="126" y="1834" class="small" fill="#D6E0E6">Слева спереди хозяин архива. Справа снизу живой ящик. За ним стеллажи уходят вдаль.</text>
+  </g>
+</svg>
