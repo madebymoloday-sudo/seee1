@@ -898,46 +898,48 @@ const SessionsCollectionPage = observer(() => {
             </p>
           </div>
 
-          <div className={styles.archivistChoiceBar}>
-            {archivistOptions.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className={styles.archivistChoiceButton}
-                onClick={() => handleArchivistOption(option)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-
-          {isArchivistCustomInputVisible && (
-            <div className={styles.archivistComposer}>
-              <textarea
-                value={archivistDraft}
-                onChange={(e) => setArchivistDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                    e.preventDefault();
-                    handleArchivistCustomSubmit();
-                  }
-                }}
-                className={styles.archivistComposerInput}
-                rows={3}
-                placeholder="Напиши Архивариусу, что ты хочешь сделать..."
-              />
-              <button
-                type="button"
-                className={styles.archivistComposerButton}
-                onClick={handleArchivistCustomSubmit}
-              >
-                Отправить
-              </button>
-            </div>
-          )}
-
           <div className={styles.archivistWelcomeScene}>
             <img src="/archivist-source-character.png" alt="Архивариус" className={styles.archivistCharacter} />
+
+            <div className={styles.archivistControls}>
+              <div className={styles.archivistChoiceBar}>
+                {archivistOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={styles.archivistChoiceButton}
+                    onClick={() => handleArchivistOption(option)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              {isArchivistCustomInputVisible && (
+                <div className={styles.archivistComposer}>
+                  <textarea
+                    value={archivistDraft}
+                    onChange={(e) => setArchivistDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                        e.preventDefault();
+                        handleArchivistCustomSubmit();
+                      }
+                    }}
+                    className={styles.archivistComposerInput}
+                    rows={3}
+                    placeholder="Напиши Архивариусу, что ты хочешь сделать..."
+                  />
+                  <button
+                    type="button"
+                    className={styles.archivistComposerButton}
+                    onClick={handleArchivistCustomSubmit}
+                  >
+                    Отправить
+                  </button>
+                </div>
+              )}
+            </div>
 
             <button
               type="button"
@@ -945,7 +947,6 @@ const SessionsCollectionPage = observer(() => {
               onClick={handleOpenArchiveGallery}
               aria-label="Открыть архив сессий"
             >
-              <span className={styles.archivistArchiveArrow} aria-hidden="true" />
               <img src="/archivist-source-drawer-only.png" alt="Архив сессий" className={styles.archivistDrawer} />
             </button>
           </div>
