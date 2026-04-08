@@ -1,0 +1,126 @@
+<svg width="1600" height="1000" viewBox="0 0 1600 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="80" x2="1440" y2="940" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08111A"/>
+      <stop offset="0.45" stop-color="#101C27"/>
+      <stop offset="1" stop-color="#05080D"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="800" y1="680" x2="800" y2="1000" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#16232C"/>
+      <stop offset="1" stop-color="#091017"/>
+    </linearGradient>
+    <linearGradient id="bubble" x1="250" y1="110" x2="720" y2="380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBF6E9"/>
+      <stop offset="1" stop-color="#E6DDCB"/>
+    </linearGradient>
+    <linearGradient id="drawer" x1="1010" y1="258" x2="1414" y2="834" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D18633"/>
+      <stop offset="1" stop-color="#985317"/>
+    </linearGradient>
+    <linearGradient id="folder" x1="1034" y1="294" x2="1338" y2="354" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6D87B"/>
+      <stop offset="1" stop-color="#E4A93D"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="2000" height="1400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="22" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+    <filter id="softGlow" x="0" y="0" width="2000" height="1400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="24" flood-color="#9FE7FF" flood-opacity="0.18"/>
+    </filter>
+    <style>
+      .pixel-title { font: 700 34px 'Courier New', monospace; letter-spacing: 2px; }
+      .pixel-label { font: 700 22px 'Courier New', monospace; letter-spacing: 1.2px; }
+      .body { font: 500 24px 'Courier New', monospace; letter-spacing: 0.2px; }
+      .small { font: 500 18px 'Courier New', monospace; letter-spacing: 0.4px; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <circle cx="275" cy="192" r="160" fill="#10202C" fill-opacity="0.55"/>
+  <circle cx="1358" cy="222" r="210" fill="#241303" fill-opacity="0.45"/>
+  <rect y="724" width="1600" height="276" fill="url(#floor)"/>
+
+  <g opacity="0.14">
+    <path d="M74 108L136 108V170H198" stroke="#D88A39" stroke-width="10"/>
+    <path d="M1412 146H1496V230H1560" stroke="#7CCEE7" stroke-width="10"/>
+    <path d="M132 888H224V944H316" stroke="#D88A39" stroke-width="10"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="M263 128H650L714 192V340L614 356L552 424H302L244 374H180V224L226 178L263 128Z" fill="url(#bubble)" stroke="#1A2026" stroke-width="10"/>
+    <path d="M506 356L566 356L530 418L472 418L506 356Z" fill="#E6DDCB" stroke="#1A2026" stroke-width="10"/>
+    <text x="244" y="190" class="pixel-title" fill="#17181A">АРХИВАРИУС</text>
+    <text x="244" y="244" class="body" fill="#242527">С возвращением. В архиве</text>
+    <text x="244" y="284" class="body" fill="#242527">сохранились твои разборы,</text>
+    <text x="244" y="324" class="body" fill="#242527">отложенные темы и повторяющиеся</text>
+    <text x="244" y="364" class="body" fill="#242527">мотивы. С чего открыть ящик?</text>
+    <g>
+      <rect x="248" y="392" width="148" height="46" rx="18" fill="#131A21"/>
+      <text x="281" y="423" class="small" fill="#F8F2E5">ПОСЛЕДНИЕ</text>
+      <rect x="414" y="392" width="160" height="46" rx="18" fill="#D88A39"/>
+      <text x="448" y="423" class="small" fill="#08111A">ОТЛОЖЕННЫЕ</text>
+    </g>
+  </g>
+
+  <g filter="url(#softGlow)">
+    <rect x="216" y="538" width="382" height="38" rx="18" fill="#0F1820"/>
+    <rect x="252" y="490" width="306" height="92" rx="36" fill="#F1F7F9" stroke="#121A22" stroke-width="10"/>
+    <rect x="332" y="400" width="140" height="120" rx="38" fill="#FFF7EA" stroke="#141B22" stroke-width="12"/>
+    <rect x="356" y="434" width="92" height="54" rx="22" fill="#10171F"/>
+    <circle cx="385" cy="462" r="10" fill="#80E7FF"/>
+    <circle cx="421" cy="462" r="10" fill="#80E7FF"/>
+    <path d="M342 366H480L530 432L516 510H308L294 430L342 366Z" fill="#F4A03A" stroke="#141B22" stroke-width="12"/>
+    <rect x="298" y="574" width="56" height="116" rx="20" fill="#F4A03A" stroke="#141B22" stroke-width="10"/>
+    <rect x="454" y="574" width="56" height="116" rx="20" fill="#F4A03A" stroke="#141B22" stroke-width="10"/>
+    <rect x="262" y="672" width="104" height="40" rx="18" fill="#0E151C"/>
+    <rect x="446" y="672" width="104" height="40" rx="18" fill="#0E151C"/>
+    <path d="M360 626H448" stroke="#141B22" stroke-width="12" stroke-linecap="round"/>
+    <path d="M248 716H572" stroke="#D88A39" stroke-width="14" stroke-linecap="round"/>
+    <text x="246" y="766" class="small" fill="#E3A34F">ХРАНИТЕЛЬ РАЗБОРОВ</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="980" y="244" width="450" height="572" rx="22" fill="#40200B" stroke="#F0A74C" stroke-width="12"/>
+    <rect x="1008" y="270" width="394" height="130" rx="16" fill="url(#drawer)" stroke="#4F2A0D" stroke-width="10"/>
+    <rect x="1008" y="430" width="394" height="130" rx="16" fill="url(#drawer)" stroke="#4F2A0D" stroke-width="10"/>
+    <rect x="1008" y="590" width="394" height="130" rx="16" fill="url(#drawer)" stroke="#4F2A0D" stroke-width="10"/>
+    <rect x="1172" y="304" width="70" height="28" rx="10" fill="#3C210C"/>
+    <rect x="1172" y="464" width="70" height="28" rx="10" fill="#3C210C"/>
+    <rect x="1172" y="624" width="70" height="28" rx="10" fill="#3C210C"/>
+
+    <g>
+      <path d="M1044 284H1126L1148 302H1360V356H1044V284Z" fill="url(#folder)" stroke="#2A2014" stroke-width="8"/>
+      <path d="M1038 300H1116L1138 318H1346V372H1038V300Z" fill="#F1C75C" stroke="#2A2014" stroke-width="8"/>
+      <text x="1070" y="345" class="pixel-label" fill="#2A2014">ПОСЛЕДНИЕ СЕССИИ</text>
+    </g>
+
+    <g>
+      <path d="M1044 444H1126L1148 462H1360V516H1044V444Z" fill="url(#folder)" stroke="#2A2014" stroke-width="8"/>
+      <path d="M1038 460H1116L1138 478H1346V532H1038V460Z" fill="#EFC35B" stroke="#2A2014" stroke-width="8"/>
+      <text x="1070" y="505" class="pixel-label" fill="#2A2014">ОТЛОЖЕНО НА РАЗБОР</text>
+    </g>
+
+    <g>
+      <path d="M1044 604H1126L1148 622H1360V676H1044V604Z" fill="url(#folder)" stroke="#2A2014" stroke-width="8"/>
+      <path d="M1038 620H1116L1138 638H1346V692H1038V620Z" fill="#E7B44E" stroke="#2A2014" stroke-width="8"/>
+      <text x="1088" y="665" class="pixel-label" fill="#2A2014">КЛЮЧЕВЫЕ ТЕМЫ</text>
+    </g>
+  </g>
+
+  <g>
+    <rect x="832" y="118" width="372" height="84" rx="22" fill="#0F1820" stroke="#81DCF8" stroke-width="4"/>
+    <text x="864" y="153" class="small" fill="#80E7FF">SEEE / ARCHIVE HALL / 8-BIT CONCEPT</text>
+    <text x="864" y="183" class="small" fill="#D9E6EE">Архивариус общается слева, архив сессий живёт справа</text>
+  </g>
+
+  <g opacity="0.9">
+    <rect x="782" y="784" width="274" height="108" rx="22" fill="#101820" stroke="#D88A39" stroke-width="4"/>
+    <text x="812" y="824" class="small" fill="#F2C86D">Повторяются темы:</text>
+    <text x="812" y="858" class="small" fill="#F8F4E8">контроль / тревога / оценка</text>
+  </g>
+
+  <g opacity="0.88">
+    <rect x="1090" y="844" width="252" height="72" rx="18" fill="#F8F1E4"/>
+    <text x="1124" y="888" class="small" fill="#16191E">нажми на ящик и открой архив</text>
+  </g>
+</svg>
