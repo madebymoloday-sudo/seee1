@@ -872,8 +872,8 @@ const SessionsCollectionPage = observer(() => {
     }
 
     if (normalized.includes("чат") || normalized.includes("люд") || normalized.includes("людьми")) {
-      setArchivistMessage("Если тебе нужны другие люди и диалоги, я могу сразу перевести тебя в раздел чатов.");
-      setArchivistOptions([{ id: "go_people_from_text", label: "Открыть чаты", action: "open_people" }]);
+      setArchivistMessage("Если тебе нужны другие люди и диалоги, я могу сразу перевести тебя в раздел мега-чатов.");
+      setArchivistOptions([{ id: "go_people_from_text", label: "Открыть мега-чаты", action: "open_people" }]);
       return;
     }
 

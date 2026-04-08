@@ -124,7 +124,7 @@ const CabinetPage = observer(() => {
               Журнал
             </Button>
             <Button variant="outline" onClick={() => navigate("/people")}>
-              Чаты
+              Мега-чаты
             </Button>
           </div>
         </div>
@@ -160,10 +160,10 @@ const CabinetPage = observer(() => {
         </div>
 
         <div className="mb-6 rounded-xl border bg-card p-4">
-          <h2 className="mb-3 text-lg font-semibold">Заметки из чатов</h2>
+          <h2 className="mb-3 text-lg font-semibold">Заметки из мега-чатов</h2>
           {chatNotes.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Пока нет заметок из раздела «Чаты».
+              Пока нет заметок из раздела «Мега-чаты».
             </p>
           ) : (
             <div className="space-y-3">

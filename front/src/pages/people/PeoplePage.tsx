@@ -142,7 +142,7 @@ const PeoplePage = () => {
   };
 
   useEffect(() => {
-    refreshChats().catch(() => toast.error("Не удалось загрузить чаты"));
+    refreshChats().catch(() => toast.error("Не удалось загрузить мега-чаты"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -324,7 +324,7 @@ const PeoplePage = () => {
   const saveNotes = () => {
     localStorage.setItem(notesKey, notesText);
     const indexKey = `${CHAT_NOTES_PREFIX}index:${myUserId}`;
-    const title = selectedChat?.title || "Чат";
+    const title = selectedChat?.title || "Мега-чат";
     const payload = {
       chatId: selectedChatId,
       chatTitle: title,
@@ -350,7 +350,7 @@ const PeoplePage = () => {
               <div className={styles.sidebarHeader}>
                 <div className={styles.sidebarTitleWrap}>
                   <Users className={styles.sidebarTitleIcon} />
-                  <h2 className={styles.sidebarTitle}>Чаты</h2>
+                  <h2 className={styles.sidebarTitle}>Мега-чаты</h2>
                 </div>
                 <div className={styles.quickActionsWrap} ref={quickActionsRef}>
                   <Button
@@ -372,7 +372,7 @@ const PeoplePage = () => {
                         Создать группу
                       </button>
                       <button type="button" className={styles.quickMenuItem} onClick={handleCreateSelfChat}>
-                        Чат с собой
+                        Мега-чат с собой
                       </button>
                     </div>
                   )}
@@ -455,7 +455,7 @@ const PeoplePage = () => {
                       type="button"
                       className={styles.backToListButton}
                       onClick={() => setMobilePane("list")}
-                      aria-label="Назад к чатам"
+                      aria-label="Назад к мега-чатам"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>

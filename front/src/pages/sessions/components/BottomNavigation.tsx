@@ -26,11 +26,11 @@ const BottomNavigation = ({
         <span className={styles.navLabel}>Рейтинг</span>
       </button>
 
-      <button onClick={onPeople} className={styles.navButton} title="Чаты">
+      <button onClick={onPeople} className={styles.navButton} title="Мега-чаты">
         <span className={styles.navIconBubble}>
-          <span className={styles.emojiIcon} role="img" aria-label="Чаты">🫂</span>
+          <span className={styles.emojiIcon} role="img" aria-label="Мега-чаты">🫂</span>
         </span>
-        <span className={styles.navLabel}>Чаты</span>
+        <span className={styles.navLabel}>Мега-чаты</span>
       </button>
 
       <button onClick={onArchivist} className={`${styles.navButton} ${styles.navButtonPrimary}`} title="Архивариус">
