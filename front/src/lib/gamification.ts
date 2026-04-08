@@ -302,8 +302,26 @@ function hash(value: string): number {
 }
 
 const MOCK_NAMES = [
-  "Mira", "Ivo", "Nika", "Arlen", "Lina", "Theo", "Sora", "Mika", "Rian", "Noel",
-  "Ayla", "Kian", "Luma", "Vera", "Milo", "Eden", "Rhea", "Tao", "Nero", "Mina",
+  "Ксения Зорина",
+  "Дмитрий Волков",
+  "Анна Белова",
+  "Павел Орлов",
+  "Мария Соколова",
+  "Илья Миронов",
+  "Екатерина Левина",
+  "Артем Громов",
+  "Алина Туманова",
+  "Никита Романов",
+  "Вера Лазарева",
+  "Тимур Жданов",
+  "Ольга Ермакова",
+  "Михаил Крылов",
+  "Полина Гущина",
+  "София Веденеева",
+  "Роман Яковлев",
+  "Егор Лапин",
+  "Дарья Осипова",
+  "Лев Трофимов",
 ];
 
 const AVATAR_EMOJIS = ["🧑🏻", "👩🏼", "🧑🏾", "👨🏻", "👩🏽", "🧑🏽", "👨🏿", "👩🏻", "🧔🏽", "👩🏿"];
@@ -350,11 +368,10 @@ export function buildLeaderboardEntries(): LeaderboardEntry[] {
     const rangeMax = currentLeague.max ?? currentLeague.min + 12000;
     const span = Math.max(1, rangeMax - currentLeague.min + 1);
     const points = currentLeague.min + (seed % span);
-    const username = `${baseName}_${String((seed % 89) + 11)}`;
     return {
       id: `peer-${index}`,
-      username,
-      avatarLabel: getAvatarLabel(username),
+      username: baseName,
+      avatarLabel: getAvatarLabel(baseName),
       avatarEmoji: AVATAR_EMOJIS[index % AVATAR_EMOJIS.length],
       avatarSurface: AVATAR_SURFACES[index % AVATAR_SURFACES.length],
       points,
