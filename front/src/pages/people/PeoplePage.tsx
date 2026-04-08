@@ -8,6 +8,7 @@ import apiAgent from "@/lib/api";
 import styles from "./PeoplePage.module.css";
 import BottomNavigation from "@/pages/sessions/components/BottomNavigation";
 import { useNavigate } from "react-router-dom";
+import MessageInput from "@/pages/sessions/components/MessageInput";
 
 type FriendDto = { id: string; username: string; userId?: string | null; avatarUrl?: string | null };
 type ChatListItem = {
@@ -211,8 +212,8 @@ const PeoplePage = () => {
     }
   };
 
-  const handleSend = async () => {
-    const text = messageInput.trim();
+  const handleSend = async (rawText?: string) => {
+    const text = (rawText ?? messageInput).trim();
     if (!selectedChatId || !text) return;
     try {
       if (modeState?.activeMode === "Объяснить" && modeState.explainSession?.initiatorId === myUserId) {
@@ -574,18 +575,16 @@ const PeoplePage = () => {
                       </div>
                     )}
                   </div>
-                  <Input
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    placeholder="Введите сообщение"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleSend();
-                      }
-                    }}
-                  />
-                  <Button onClick={handleSend}>Отправить</Button>
+                  <div className={styles.chatInputArea}>
+                    <MessageInput
+                      onSend={(value) => {
+                        void handleSend(value);
+                      }}
+                      value={messageInput}
+                      onValueChange={setMessageInput}
+                      placeholder="Введите сообщение"
+                    />
+                  </div>
                 </div>
               </>
             ) : (
