@@ -428,8 +428,12 @@
   }
 
   .composerDock {
-    bottom: 0;
+    bottom: max(0.2rem, min(env(safe-area-inset-bottom), 0.55rem));
     z-index: 70;
+  }
+
+  :global(html[data-keyboard-open="true"]) .composerDock {
+    bottom: 0;
   }
 }
 
@@ -450,6 +454,14 @@
   .messageContent {
     font-size: 0.9rem;
     line-height: 1.5;
+  }
+
+  .composerDock {
+    bottom: max(0.14rem, min(env(safe-area-inset-bottom), 0.45rem));
+  }
+
+  :global(html[data-keyboard-open="true"]) .composerDock {
+    bottom: 0;
   }
 
   .emptyTitle {
