@@ -23,7 +23,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 0.7rem;
   padding: 1.25rem 1.25rem 6.5rem;
   text-align: left;
   min-height: 0;
@@ -186,18 +187,18 @@
 .archivistWelcomeScene {
   width: min(100%, 920px);
   flex: 1;
-  min-height: 320px;
-  max-height: 520px;
-  margin-top: 0.75rem;
+  min-height: 350px;
+  max-height: 560px;
+  margin-top: 0.2rem;
   position: relative;
 }
 
 .archivistCharacter {
   position: absolute;
-  left: 11%;
-  bottom: 68px;
-  width: min(29vw, 260px);
-  max-width: 260px;
+  left: 8%;
+  bottom: 108px;
+  width: min(32vw, 292px);
+  max-width: 292px;
   filter: drop-shadow(0 28px 28px rgba(15, 23, 42, 0.12));
   pointer-events: none;
   z-index: 1;
@@ -205,9 +206,9 @@
 
 .archivistArchiveButton {
   position: absolute;
-  right: 0;
-  bottom: 16px;
-  width: min(38vw, 300px);
+  right: -0.3rem;
+  bottom: 18px;
+  width: min(44vw, 360px);
   border: none;
   background: transparent;
   padding: 0;
@@ -241,18 +242,6 @@
 
 .archivistArchiveButton:focus-visible {
   outline: none;
-}
-
-.archivistWelcomeHint {
-  margin-top: 0.5rem;
-  width: min(100%, 820px);
-  border-radius: 1.5rem;
-  padding: 0.9rem 1.05rem;
-  background: rgba(255, 255, 255, 0.68);
-  color: rgba(15, 23, 42, 0.68);
-  font-size: 0.95rem;
-  line-height: 1.45;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
 }
 
 /* Заголовок */
@@ -398,27 +387,21 @@
   }
 
   .archivistWelcomeScene {
-    min-height: 270px;
-    max-height: 340px;
-    margin-top: 0.5rem;
+    min-height: 320px;
+    max-height: 400px;
+    margin-top: 0.2rem;
   }
 
   .archivistCharacter {
-    width: min(34vw, 150px);
-    bottom: 66px;
-    left: 8%;
+    width: min(43vw, 176px);
+    bottom: 112px;
+    left: 2%;
   }
 
   .archivistArchiveButton {
-    width: min(42vw, 185px);
-    bottom: 8px;
-  }
-
-  .archivistWelcomeHint {
-    margin-top: 0.25rem;
-    padding: 0.8rem 0.9rem;
-    font-size: 0.88rem;
-    border-radius: 1.15rem;
+    width: min(56vw, 240px);
+    right: -0.4rem;
+    bottom: 12px;
   }
 
   .telegramPrompt {
@@ -634,32 +617,6 @@
   padding-bottom: 180px;
   overflow-y: auto;
   overflow-x: visible;
-}
-
-@media (max-width: 640px) {
-  .archivistWelcome {
-    padding: 1rem 1rem 6.25rem;
-  }
-
-  .archivistWelcomeScene {
-    min-height: 280px;
-    max-height: 420px;
-  }
-
-  .archivistCharacter {
-    width: 40vw;
-    bottom: 58px;
-    left: -10px;
-  }
-
-  .archivistArchiveButton {
-    width: 46vw;
-    bottom: 32px;
-  }
-
-  .archivistWelcomeHint {
-    font-size: 0.88rem;
-  }
 }
 
 .foldersList {

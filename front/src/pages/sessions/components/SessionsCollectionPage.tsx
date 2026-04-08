@@ -950,10 +950,6 @@ const SessionsCollectionPage = observer(() => {
               <img src="/archivist-source-drawer-only.png" alt="Архив сессий" className={styles.archivistDrawer} />
             </button>
           </div>
-
-          <div className={styles.archivistWelcomeHint}>
-            Нажми на архивный ящик, чтобы перейти в Галерею Сессий.
-          </div>
         </div>
       ) : (
         <>
