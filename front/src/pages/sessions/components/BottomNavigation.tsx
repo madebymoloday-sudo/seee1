@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { User, Plus, Archive, Trophy } from "lucide-react";
 import styles from "./BottomNavigation.module.css";
 
@@ -16,7 +17,7 @@ const BottomNavigation = ({
   onArchivist,
   onNewSession 
 }: BottomNavigationProps) => {
-  return (
+  const navigation = (
     <div className={styles.bottomNav}>
       <button onClick={onRating} className={styles.navButton} title="Рейтинг">
         <span className={styles.navIconBubble}>
@@ -54,6 +55,12 @@ const BottomNavigation = ({
       </button>
     </div>
   );
+
+  if (typeof document === "undefined") {
+    return navigation;
+  }
+
+  return createPortal(navigation, document.body);
 };
 
 export default BottomNavigation;
