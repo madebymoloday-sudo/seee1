@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { NeuroHintService } from './neuro-hint.service';
 import { AudioTranscriptionService } from './audio-transcription.service';
 import { StageAssistService } from './stage-assist.service';
+import { GptUsageService } from './gpt-usage.service';
 
 @Module({
   imports: [PrismaModule, ConfigModule],
@@ -19,6 +20,7 @@ import { StageAssistService } from './stage-assist.service';
     NeuroHintService,
     AudioTranscriptionService,
     StageAssistService,
+    GptUsageService,
   ],
   exports: [
     PsychologistService,
@@ -27,6 +29,7 @@ import { StageAssistService } from './stage-assist.service';
     NeuroHintService,
     AudioTranscriptionService,
     StageAssistService,
+    GptUsageService,
   ],
 })
 export class PsychologistModule {}

@@ -5,6 +5,7 @@ import {
   StageAssistRequestDto,
   StageAssistResponseDto,
 } from './dto/stage-assist.dto';
+import { GptUsageService } from './gpt-usage.service';
 
 type StageDecision = 'advance' | 'clarify';
 
@@ -96,7 +97,10 @@ export class StageAssistService {
   private readonly logger = new Logger(StageAssistService.name);
   private client: OpenAI | null = null;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly gptUsageService: GptUsageService,
+  ) {}
 
   private getClient(): OpenAI | null {
     if (this.client) return this.client;
@@ -112,6 +116,7 @@ export class StageAssistService {
 
   async analyzeStage(
     params: StageAssistRequestDto,
+    userId?: string,
   ): Promise<StageAssistResponseDto> {
     const prepared = this.normalizeRequest(params);
     const client = this.getClient();
@@ -139,6 +144,19 @@ export class StageAssistService {
           },
         ],
       });
+
+      if (userId) {
+        const usage =
+          this.gptUsageService.extractChatCompletionUsage(completion);
+        if (usage) {
+          await this.gptUsageService.recordUsage({
+            userId,
+            promptTokens: usage.promptTokens,
+            completionTokens: usage.completionTokens,
+            totalTokens: usage.totalTokens,
+          });
+        }
+      }
 
       const raw = completion.choices[0]?.message?.content || '';
       const parsed = this.parseModelJson(raw);

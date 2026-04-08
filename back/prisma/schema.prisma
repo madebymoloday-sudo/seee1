@@ -63,6 +63,11 @@ model User {
   userId        String?  @unique @map("user_id")
   avatarUrl     String?  @map("avatar_url")
   role          String   @default("user") // 'user' | 'admin'
+  openAiPromptTokens      Int      @default(0) @map("openai_prompt_tokens")
+  openAiCompletionTokens  Int      @default(0) @map("openai_completion_tokens")
+  openAiTotalTokens       Int      @default(0) @map("openai_total_tokens")
+  openAiRequestCount      Int      @default(0) @map("openai_request_count")
+  openAiLastUsedAt        DateTime? @map("openai_last_used_at")
   /// Пользователь, который пригласил этого пользователя (многоуровневая реферальная система)
   referrerId    String?  @map("referrer_id")
   subscriptionStatus      SubscriptionStatus @default(NONE) @map("subscription_status")
@@ -549,4 +554,3 @@ model PipelineProgram {
   @@index([userId, name])
   @@map("pipeline_programs")
 }
-

@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Request,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -83,8 +84,12 @@ export class PsychologistController {
   })
   async neuroHint(
     @Body() dto: NeuroHintRequestDto,
+    @Request() req: { user: { id: string } },
   ): Promise<NeuroHintResponseDto> {
-    const message = await this.neuroHintService.generateThoughtHint(dto);
+    const message = await this.neuroHintService.generateThoughtHint({
+      ...dto,
+      userId: req.user.id,
+    });
     return { message };
   }
 
@@ -100,8 +105,9 @@ export class PsychologistController {
   })
   async stageAssist(
     @Body() dto: StageAssistRequestDto,
+    @Request() req: { user: { id: string } },
   ): Promise<StageAssistResponseDto> {
-    return this.stageAssistService.analyzeStage(dto);
+    return this.stageAssistService.analyzeStage(dto, req.user.id);
   }
 
   @Post('transcribe')
@@ -121,6 +127,7 @@ export class PsychologistController {
     type: AudioTranscriptionResponseDto,
   })
   async transcribeAudio(
+    @Request() req: { user: { id: string } },
     @UploadedFile()
     file?: {
       buffer?: Buffer;
@@ -129,6 +136,6 @@ export class PsychologistController {
       size?: number;
     },
   ): Promise<AudioTranscriptionResponseDto> {
-    return this.audioTranscriptionService.transcribeAudio(file);
+    return this.audioTranscriptionService.transcribeAudio(file, req.user.id);
   }
 }

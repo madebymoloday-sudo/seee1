@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI, { toFile } from 'openai';
+import { GptUsageService } from './gpt-usage.service';
 
 const DEFAULT_TRANSCRIPTION_MODEL = 'gpt-4o-mini-transcribe';
 
@@ -27,7 +28,10 @@ export class AudioTranscriptionService {
   private readonly logger = new Logger(AudioTranscriptionService.name);
   private client: OpenAI | null = null;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly gptUsageService: GptUsageService,
+  ) {}
 
   private getClient(): OpenAI {
     if (this.client) return this.client;
@@ -50,7 +54,7 @@ export class AudioTranscriptionService {
     originalname?: string;
     mimetype?: string;
     size?: number;
-  }): Promise<{ text: string; model: string }> {
+  }, userId?: string): Promise<{ text: string; model: string }> {
     if (!file?.buffer?.length) {
       throw new BadRequestException('Аудиофайл не получен');
     }
@@ -72,6 +76,19 @@ export class AudioTranscriptionService {
         file: upload,
         model,
       });
+
+      if (userId) {
+        const usage =
+          this.gptUsageService.extractChatCompletionUsage(transcription);
+        if (usage) {
+          await this.gptUsageService.recordUsage({
+            userId,
+            promptTokens: usage.promptTokens,
+            completionTokens: usage.completionTokens,
+            totalTokens: usage.totalTokens,
+          });
+        }
+      }
 
       const text = String(transcription.text || '').trim();
 

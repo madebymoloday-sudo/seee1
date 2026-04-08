@@ -1,12 +1,16 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChatOpenAI } from '@langchain/openai';
+import { GptUsageService } from './gpt-usage.service';
 
 @Injectable()
 export class NeuroHintService {
   private llm: ChatOpenAI | null = null;
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private readonly gptUsageService: GptUsageService,
+  ) {}
 
   private getLLM(): ChatOpenAI {
     if (this.llm) return this.llm;
@@ -33,6 +37,7 @@ export class NeuroHintService {
   async generateThoughtHint(params: {
     situation: string;
     emotion: string;
+    userId?: string;
   }): Promise<string> {
     const situation = (params.situation || '').trim();
     const emotion = (params.emotion || '').trim();
@@ -62,6 +67,16 @@ export class NeuroHintService {
       { role: 'user', content: user },
     ]);
 
+    if (params.userId) {
+      const usage = this.gptUsageService.extractLangChainUsage(response);
+      if (usage) {
+        await this.gptUsageService.recordUsage({
+          userId: params.userId,
+          ...usage,
+        });
+      }
+    }
+
     const text = String(response.content || '').trim();
     return (
       text ||
@@ -69,4 +84,3 @@ export class NeuroHintService {
     );
   }
 }
-
