@@ -1,6 +1,6 @@
 .page {
   --layout-nav-height: 4rem;
-  --bottom-nav-height: 5.5rem;
+  --bottom-nav-height: 6rem;
   min-height: calc(100dvh - var(--layout-nav-height));
   height: calc(100dvh - var(--layout-nav-height));
   max-height: calc(100dvh - var(--layout-nav-height));
@@ -287,11 +287,11 @@
   min-height: 0;
   overflow-y: auto;
   padding: 0.8rem;
-  padding-bottom: calc(0.8rem + var(--bottom-nav-height));
+  padding-bottom: calc(0.8rem + var(--bottom-nav-height) + 4.9rem);
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  scroll-padding-bottom: calc(1rem + var(--bottom-nav-height));
+  scroll-padding-bottom: calc(1rem + var(--bottom-nav-height) + 4.9rem);
 }
 
 .questionCard {
@@ -348,7 +348,7 @@
 
 .composer {
   position: sticky;
-  bottom: calc(var(--bottom-nav-height) - 0.35rem);
+  bottom: calc(var(--bottom-nav-height) + 0.35rem);
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   padding: 0.64rem 0.72rem;
   display: flex;
@@ -483,13 +483,17 @@
 }
 
 @media (max-width: 560px) {
+  .page {
+    --bottom-nav-height: 6.35rem;
+  }
+
   .chatHeader {
     padding: 0.62rem;
   }
 
   .messages {
     padding: 0.62rem;
-    padding-bottom: calc(0.62rem + var(--bottom-nav-height));
+    padding-bottom: calc(0.62rem + var(--bottom-nav-height) + 4.7rem);
   }
 
   .bubble {
@@ -502,8 +506,8 @@
   }
 
   .composer {
-    bottom: calc(var(--bottom-nav-height) - 0.1rem);
-    padding: 0.5rem 0.55rem;
+    bottom: calc(var(--bottom-nav-height) + 0.35rem);
+    padding: 0.5rem 0.55rem max(0.5rem, env(safe-area-inset-bottom));
     gap: 0.4rem;
   }
 }
