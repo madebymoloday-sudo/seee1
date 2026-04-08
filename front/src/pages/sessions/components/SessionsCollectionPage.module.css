@@ -187,28 +187,28 @@
 .archivistWelcomeScene {
   width: min(100%, 920px);
   flex: 1;
-  min-height: 350px;
-  max-height: 560px;
-  margin-top: 0.2rem;
+  min-height: 372px;
+  max-height: 580px;
+  margin-top: -0.2rem;
   position: relative;
 }
 
 .archivistCharacter {
   position: absolute;
   left: 8%;
-  bottom: 108px;
-  width: min(32vw, 292px);
-  max-width: 292px;
+  bottom: 138px;
+  width: min(33vw, 304px);
+  max-width: 304px;
   filter: drop-shadow(0 28px 28px rgba(15, 23, 42, 0.12));
   pointer-events: none;
-  z-index: 1;
+  z-index: 3;
 }
 
 .archivistArchiveButton {
   position: absolute;
-  right: -0.3rem;
-  bottom: 18px;
-  width: min(44vw, 360px);
+  right: -1.15rem;
+  bottom: 6px;
+  width: min(49vw, 410px);
   border: none;
   background: transparent;
   padding: 0;
@@ -387,21 +387,21 @@
   }
 
   .archivistWelcomeScene {
-    min-height: 320px;
-    max-height: 400px;
-    margin-top: 0.2rem;
+    min-height: 344px;
+    max-height: 430px;
+    margin-top: -0.25rem;
   }
 
   .archivistCharacter {
-    width: min(43vw, 176px);
-    bottom: 112px;
-    left: 2%;
+    width: min(45vw, 186px);
+    bottom: 142px;
+    left: 1%;
   }
 
   .archivistArchiveButton {
-    width: min(56vw, 240px);
-    right: -0.4rem;
-    bottom: 12px;
+    width: min(64vw, 286px);
+    right: -1.4rem;
+    bottom: 4px;
   }
 
   .telegramPrompt {
