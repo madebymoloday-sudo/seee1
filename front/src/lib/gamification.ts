@@ -14,8 +14,11 @@ export type LeaderboardEntry = {
   id: string;
   username: string;
   avatarLabel: string;
+  avatarEmoji: string;
+  avatarSurface: string;
   points: number;
   league: League;
+  badgeCount?: number;
   isCurrentUser?: boolean;
 };
 
@@ -167,6 +170,26 @@ const MOCK_NAMES = [
   "Ayla", "Kian", "Luma", "Vera", "Milo", "Eden", "Rhea", "Tao", "Nero", "Mina",
 ];
 
+const AVATAR_EMOJIS = ["🧑🏻", "👩🏼", "🧑🏾", "👨🏻", "👩🏽", "🧑🏽", "👨🏿", "👩🏻", "🧔🏽", "👩🏿"];
+const AVATAR_SURFACES = [
+  "linear-gradient(135deg, #ffd8a8 0%, #ff9f68 100%)",
+  "linear-gradient(135deg, #d9ecff 0%, #7fb4ff 100%)",
+  "linear-gradient(135deg, #ffe0ec 0%, #ff8fc2 100%)",
+  "linear-gradient(135deg, #dff7e1 0%, #7ed392 100%)",
+  "linear-gradient(135deg, #efe2ff 0%, #ad87ff 100%)",
+  "linear-gradient(135deg, #fff4cf 0%, #f3c665 100%)",
+];
+
+export function formatPointsLabel(points: number): string {
+  const mod10 = points % 10;
+  const mod100 = points % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${points} очко`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+    return `${points} очка`;
+  }
+  return `${points} очков`;
+}
+
 export function buildLeaderboardEntries(): LeaderboardEntry[] {
   const userKey = getGamificationUserKey();
   const username = getGamificationUsername();
@@ -176,8 +199,11 @@ export function buildLeaderboardEntries(): LeaderboardEntry[] {
     id: userKey,
     username,
     avatarLabel: getAvatarLabel(username),
+    avatarEmoji: "🙂",
+    avatarSurface: "linear-gradient(135deg, #fff2c2 0%, #e0b358 100%)",
     points: currentPoints,
     league: getLeagueForPoints(currentPoints),
+    badgeCount: 55,
     isCurrentUser: true,
   };
 
@@ -194,8 +220,11 @@ export function buildLeaderboardEntries(): LeaderboardEntry[] {
       id: `peer-${index}`,
       username,
       avatarLabel: getAvatarLabel(username),
+      avatarEmoji: AVATAR_EMOJIS[index % AVATAR_EMOJIS.length],
+      avatarSurface: AVATAR_SURFACES[index % AVATAR_SURFACES.length],
       points,
       league: getLeagueForPoints(points),
+      badgeCount: (seed % 64) + 1,
     } satisfies LeaderboardEntry;
   });
 
