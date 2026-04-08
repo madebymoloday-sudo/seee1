@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { parseImportantOptions } from "@/lib/sessionUtils";
-import { awardCoinsForAnswer } from "@/lib/gamification";
+import {
+  awardCoinsForAnswer,
+  awardDailyStreakForProgress,
+  formatStreakLabel,
+} from "@/lib/gamification";
 import { ChevronDown } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -968,6 +972,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   const goDeepPick = () => {
+    const streakReward = awardDailyStreakForProgress(10);
+    if (streakReward.awarded) {
+      toast.success(`+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`);
+    }
     setState((s) => ({
       ...s,
       importantText:
@@ -985,6 +993,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   const goSolve = () => {
+    const streakReward = awardDailyStreakForProgress(10);
+    if (streakReward.awarded) {
+      toast.success(`+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`);
+    }
     setState((s) => ({
       ...s,
       coreStep: 100,

@@ -1,14 +1,24 @@
 import { Layout } from "@/components/layout/Layout";
 import BottomNavigation from "@/pages/sessions/components/BottomNavigation";
-import { buildLeaderboardEntries, formatPointsLabel, getLeagueForPoints, getUserCoins, LEAGUES } from "@/lib/gamification";
+import {
+  buildLeaderboardEntries,
+  formatPointsLabel,
+  formatStreakLabel,
+  getLeagueForPoints,
+  getUserCoins,
+  getUserStreak,
+  LEAGUES,
+} from "@/lib/gamification";
 import { useMemo, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./RatingPage.module.css";
 
 const RatingPage = () => {
   const navigate = useNavigate();
+  const currentCoins = getUserCoins();
+  const currentStreak = getUserStreak();
   const leaderboard = useMemo(() => buildLeaderboardEntries(), []);
-  const currentLeague = getLeagueForPoints(getUserCoins());
+  const currentLeague = getLeagueForPoints(currentCoins);
   const leagueLeaderboard = useMemo(
     () => leaderboard.filter((entry) => entry.league.id === currentLeague.id),
     [currentLeague.id, leaderboard],
@@ -24,7 +34,7 @@ const RatingPage = () => {
             <p className={styles.kicker}>Рейтинг Seee</p>
             <h1 className={styles.title}>Лиги и очки архива</h1>
             <p className={styles.subtitle}>
-              За каждый новый ответ в сессиях ты получаешь монеты. Они поднимают тебя по лигам и двигают вверх по рейтингу.
+              За каждый новый ответ в сессиях ты получаешь монеты. Ещё +10 монет приходит за каждый день подряд, в котором ты довёл хотя бы одну мысль до следующего этапа.
             </p>
           </div>
 
@@ -40,6 +50,7 @@ const RatingPage = () => {
               <div className={styles.currentLeague}>
                 Лига: {currentLeague.name} • место #{currentRank}
               </div>
+              <div className={styles.currentStreak}>Серия: {formatStreakLabel(currentStreak)}</div>
             </div>
             <div className={styles.currentPoints}>{formatPointsLabel(currentUser.points)}</div>
           </div>

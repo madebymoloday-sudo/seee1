@@ -1,5 +1,6 @@
 const COINS_STORAGE_PREFIX = "seee_user_coins:";
 const SESSION_REWARDS_STORAGE_PREFIX = "seee_session_rewards:";
+const USER_STREAK_STORAGE_PREFIX = "seee_user_streak:";
 
 export type League = {
   id: string;
@@ -20,6 +21,11 @@ export type LeaderboardEntry = {
   league: League;
   badgeCount?: number;
   isCurrentUser?: boolean;
+};
+
+type DailyStreakState = {
+  streak: number;
+  lastQualifiedDate: string | null;
 };
 
 export const LEAGUES: League[] = [
@@ -102,6 +108,70 @@ function setUserCoins(value: number, userKey = getGamificationUserKey()) {
   }
 }
 
+function getLocalDateKey(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseLocalDateKey(dateKey: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const parsed = new Date(year, month - 1, day);
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return null;
+  }
+  return parsed;
+}
+
+function getDayDiff(fromDateKey: string, toDateKey: string): number | null {
+  const from = parseLocalDateKey(fromDateKey);
+  const to = parseLocalDateKey(toDateKey);
+  if (!from || !to) return null;
+  return Math.round((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function getStoredStreakState(userKey = getGamificationUserKey()): DailyStreakState {
+  try {
+    const raw = localStorage.getItem(`${USER_STREAK_STORAGE_PREFIX}${userKey}`);
+    const parsed = raw ? (JSON.parse(raw) as Partial<DailyStreakState>) : null;
+    const streak = Number(parsed?.streak ?? 0);
+    return {
+      streak: Number.isFinite(streak) && streak > 0 ? Math.floor(streak) : 0,
+      lastQualifiedDate:
+        typeof parsed?.lastQualifiedDate === "string" ? parsed.lastQualifiedDate : null,
+    };
+  } catch {
+    return { streak: 0, lastQualifiedDate: null };
+  }
+}
+
+function setStoredStreakState(
+  state: DailyStreakState,
+  userKey = getGamificationUserKey(),
+) {
+  try {
+    localStorage.setItem(
+      `${USER_STREAK_STORAGE_PREFIX}${userKey}`,
+      JSON.stringify({
+        streak: Math.max(0, Math.floor(state.streak)),
+        lastQualifiedDate: state.lastQualifiedDate,
+      }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
 function getRewardedAnswerIds(sessionId: string): string[] {
   try {
     const raw = localStorage.getItem(`${SESSION_REWARDS_STORAGE_PREFIX}${sessionId}`);
@@ -128,6 +198,14 @@ function emitCoinsUpdated(balance: number) {
   );
 }
 
+function emitStreakUpdated(streak: number) {
+  window.dispatchEvent(
+    new CustomEvent("seee:streak-updated", {
+      detail: { streak },
+    }),
+  );
+}
+
 export function awardCoinsForAnswer(
   sessionId: string,
   answerId: string,
@@ -144,6 +222,64 @@ export function awardCoinsForAnswer(
   emitCoinsUpdated(nextBalance);
 
   return { awarded: true, balance: nextBalance, delta: amount };
+}
+
+export function getUserStreak(userKey = getGamificationUserKey()): number {
+  const state = getStoredStreakState(userKey);
+  if (!state.lastQualifiedDate || state.streak <= 0) return 0;
+  const todayKey = getLocalDateKey();
+  const diff = getDayDiff(state.lastQualifiedDate, todayKey);
+  if (diff === 0 || diff === 1) {
+    return state.streak;
+  }
+  return 0;
+}
+
+export function formatStreakLabel(days: number): string {
+  const safeDays = Math.max(0, Math.floor(days));
+  const mod10 = safeDays % 10;
+  const mod100 = safeDays % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${safeDays} день`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+    return `${safeDays} дня`;
+  }
+  return `${safeDays} дней`;
+}
+
+export function awardDailyStreakForProgress(
+  amount = 10,
+  userKey = getGamificationUserKey(),
+): { awarded: boolean; balance: number; delta: number; streak: number } {
+  const todayKey = getLocalDateKey();
+  const state = getStoredStreakState(userKey);
+  const diff = state.lastQualifiedDate
+    ? getDayDiff(state.lastQualifiedDate, todayKey)
+    : null;
+
+  if (diff === 0) {
+    return {
+      awarded: false,
+      balance: getUserCoins(userKey),
+      delta: 0,
+      streak: getUserStreak(userKey),
+    };
+  }
+
+  const nextStreak = diff === 1 ? Math.max(1, state.streak + 1) : 1;
+  const nextBalance = getUserCoins(userKey) + amount;
+
+  setStoredStreakState(
+    {
+      streak: nextStreak,
+      lastQualifiedDate: todayKey,
+    },
+    userKey,
+  );
+  setUserCoins(nextBalance, userKey);
+  emitCoinsUpdated(nextBalance);
+  emitStreakUpdated(nextStreak);
+
+  return { awarded: true, balance: nextBalance, delta: amount, streak: nextStreak };
 }
 
 export function getLeagueForPoints(points: number): League {

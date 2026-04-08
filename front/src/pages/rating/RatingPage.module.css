@@ -85,6 +85,13 @@
   color: rgba(29, 29, 31, 0.5);
 }
 
+.currentStreak {
+  margin-top: 0.18rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(29, 29, 31, 0.56);
+}
+
 .currentPoints,
 .rowPoints {
   margin-left: auto;
@@ -293,4 +300,62 @@
   .rowPoints {
     font-size: 0.9rem;
   }
+}
+
+:global(html.dark) .page {
+  background:
+    radial-gradient(circle at 84% 10%, rgba(96, 165, 250, 0.16) 0%, rgba(96, 165, 250, 0) 34%),
+    radial-gradient(circle at 14% 92%, rgba(244, 114, 182, 0.12) 0%, rgba(244, 114, 182, 0) 38%),
+    linear-gradient(160deg, #07101c 0%, #0b1324 46%, #0a1020 100%);
+  color: rgba(241, 245, 249, 0.96);
+}
+
+:global(html.dark) .kicker {
+  color: rgba(226, 232, 240, 0.46);
+}
+
+:global(html.dark) .title,
+:global(html.dark) .sectionTitle,
+:global(html.dark) .currentName,
+:global(html.dark) .rowName,
+:global(html.dark) .leagueName {
+  color: rgba(248, 250, 252, 0.96);
+}
+
+:global(html.dark) .subtitle,
+:global(html.dark) .sectionHint,
+:global(html.dark) .currentLeague,
+:global(html.dark) .rowLeague,
+:global(html.dark) .currentStreak,
+:global(html.dark) .rowRank,
+:global(html.dark) .rowBadge,
+:global(html.dark) .currentPoints,
+:global(html.dark) .rowPoints {
+  color: rgba(226, 232, 240, 0.66);
+}
+
+:global(html.dark) .currentCard {
+  background: rgba(15, 23, 42, 0.76);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow:
+    0 24px 60px rgba(2, 6, 23, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+:global(html.dark) .leagueBadgeLocked .leagueStatue {
+  background: linear-gradient(135deg, #263244 0%, #182232 100%) !important;
+  box-shadow:
+    0 8px 20px rgba(2, 6, 23, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+:global(html.dark) .leagueBadgeLocked .leagueName {
+  color: rgba(226, 232, 240, 0.28);
+}
+
+:global(html.dark) .rowCurrent {
+  background: rgba(214, 165, 78, 0.16);
+  box-shadow:
+    inset 0 0 0 1px rgba(240, 201, 111, 0.18),
+    0 10px 26px rgba(15, 23, 42, 0.18);
 }
