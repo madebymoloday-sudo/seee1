@@ -1,0 +1,64 @@
+<svg width="1080" height="1920" viewBox="0 0 1080 1920" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="540" y1="0" x2="540" y2="1920" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FAFAF7"/>
+      <stop offset="1" stop-color="#F4F4F0"/>
+    </linearGradient>
+    <radialGradient id="heroGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(546 978) rotate(90) scale(540 420)">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadowSoft" x="-120" y="-120" width="1320" height="2160" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#000000" flood-opacity="0.08"/>
+    </filter>
+    <filter id="shadowTiny" x="-60" y="-60" width="1200" height="2040" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000000" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .headline { font: 800 72px 'Inter', 'Helvetica Neue', Arial, sans-serif; letter-spacing: -1px; }
+      .body { font: 700 52px 'Inter', 'Helvetica Neue', Arial, sans-serif; letter-spacing: -0.6px; }
+      .small { font: 500 28px 'Inter', 'Helvetica Neue', Arial, sans-serif; letter-spacing: -0.1px; }
+    </style>
+  </defs>
+
+  <rect width="1080" height="1920" fill="url(#bg)"/>
+  <ellipse cx="540" cy="970" rx="340" ry="460" fill="url(#heroGlow)"/>
+
+  <g filter="url(#shadowTiny)">
+    <circle cx="540" cy="178" r="92" fill="#FFFFFF"/>
+    <image href="archivist-source-seee-logo.png" x="456" y="96" width="168" height="168" preserveAspectRatio="xMidYMid meet"/>
+  </g>
+
+  <g filter="url(#shadowTiny)">
+    <rect x="112" y="324" width="856" height="208" rx="48" fill="#FFFFFF" fill-opacity="0.78"/>
+  </g>
+
+  <text x="344" y="414" class="headline" fill="#111111">Привет!</text>
+  <text x="344" y="486" class="body" fill="#111111">Давай я расскажу тебе</text>
+  <text x="344" y="552" class="body" fill="#111111">как пользоваться</text>
+  <text x="344" y="618" class="body" fill="#111111">приложением</text>
+
+  <g filter="url(#shadowSoft)">
+    <image href="archivist-source-character.png" x="54" y="480" width="402" height="900" preserveAspectRatio="xMidYMid meet"/>
+  </g>
+
+  <g filter="url(#shadowSoft)">
+    <image href="archivist-source-drawer.png" x="472" y="920" width="540" height="540" preserveAspectRatio="xMidYMid meet"/>
+  </g>
+
+  <g opacity="0.8">
+    <path d="M678 838L732 874L678 910V838Z" fill="#D8A13E"/>
+  </g>
+
+  <g filter="url(#shadowTiny)">
+    <path d="M140 1360C188 1326 264 1330 300 1380C338 1432 318 1500 248 1520C184 1538 120 1494 114 1430C112 1402 122 1378 140 1360Z" fill="#FFFFFF"/>
+    <circle cx="104" cy="1506" r="20" fill="#FFFFFF"/>
+    <circle cx="86" cy="1552" r="12" fill="#FFFFFF"/>
+  </g>
+
+  <g filter="url(#shadowTiny)">
+    <rect x="120" y="1608" width="840" height="184" rx="42" fill="#FFFFFF" fill-opacity="0.72"/>
+    <text x="170" y="1680" class="small" fill="#444444">Архивариус знакомит с приложением,</text>
+    <text x="170" y="1726" class="small" fill="#444444">а справа лежат папки сессий в архивном ящике.</text>
+  </g>
+</svg>
