@@ -8,9 +8,13 @@ import styles from "./RatingPage.module.css";
 const RatingPage = () => {
   const navigate = useNavigate();
   const leaderboard = useMemo(() => buildLeaderboardEntries(), []);
-  const currentUser = leaderboard.find((entry) => entry.isCurrentUser) || leaderboard[0];
   const currentLeague = getLeagueForPoints(getUserCoins());
-  const currentRank = leaderboard.findIndex((entry) => entry.id === currentUser.id) + 1;
+  const leagueLeaderboard = useMemo(
+    () => leaderboard.filter((entry) => entry.league.id === currentLeague.id),
+    [currentLeague.id, leaderboard],
+  );
+  const currentUser = leagueLeaderboard.find((entry) => entry.isCurrentUser) || leaderboard.find((entry) => entry.isCurrentUser) || leaderboard[0];
+  const currentRank = leagueLeaderboard.findIndex((entry) => entry.id === currentUser.id) + 1;
 
   return (
     <Layout>
@@ -68,9 +72,8 @@ const RatingPage = () => {
         </section>
 
         <section className={styles.listSection}>
-          <div className={styles.sectionTitle}>Рейтинг недели</div>
           <div className={styles.fullList}>
-            {leaderboard.map((entry, index) => (
+            {leagueLeaderboard.map((entry, index) => (
               <div
                 key={entry.id}
                 className={`${styles.row} ${entry.isCurrentUser ? styles.rowCurrent : ""}`}

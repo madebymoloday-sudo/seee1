@@ -194,6 +194,7 @@ export function buildLeaderboardEntries(): LeaderboardEntry[] {
   const userKey = getGamificationUserKey();
   const username = getGamificationUsername();
   const currentPoints = getUserCoins(userKey);
+  const currentLeague = getLeagueForPoints(currentPoints);
 
   const currentUserEntry: LeaderboardEntry = {
     id: userKey,
@@ -202,19 +203,17 @@ export function buildLeaderboardEntries(): LeaderboardEntry[] {
     avatarEmoji: "🙂",
     avatarSurface: "linear-gradient(135deg, #fff2c2 0%, #e0b358 100%)",
     points: currentPoints,
-    league: getLeagueForPoints(currentPoints),
+    league: currentLeague,
     badgeCount: 55,
     isCurrentUser: true,
   };
 
-  const peers = Array.from({ length: 24 }, (_, index) => {
+  const peers = Array.from({ length: 18 }, (_, index) => {
     const baseName = MOCK_NAMES[index % MOCK_NAMES.length];
     const seed = hash(`${userKey}:${baseName}:${index}`);
-    const tier = index % LEAGUES.length;
-    const league = LEAGUES[tier];
-    const rangeMax = league.max ?? league.min + 8000;
-    const span = Math.max(1, rangeMax - league.min);
-    const points = league.min + (seed % span);
+    const rangeMax = currentLeague.max ?? currentLeague.min + 12000;
+    const span = Math.max(1, rangeMax - currentLeague.min + 1);
+    const points = currentLeague.min + (seed % span);
     const username = `${baseName}_${String((seed % 89) + 11)}`;
     return {
       id: `peer-${index}`,
@@ -223,7 +222,7 @@ export function buildLeaderboardEntries(): LeaderboardEntry[] {
       avatarEmoji: AVATAR_EMOJIS[index % AVATAR_EMOJIS.length],
       avatarSurface: AVATAR_SURFACES[index % AVATAR_SURFACES.length],
       points,
-      league: getLeagueForPoints(points),
+      league: currentLeague,
       badgeCount: (seed % 64) + 1,
     } satisfies LeaderboardEntry;
   });
