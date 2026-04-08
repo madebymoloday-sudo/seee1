@@ -707,11 +707,11 @@ const SessionsCollectionPage = observer(() => {
   }, [filteredAndSortedSessions, filteredToExplore, sortOption]);
 
   return (
-    <div className={styles.collectionPage}>
+    <div className={`${styles.collectionPage} ${isArchivistWelcomeVisible ? styles.collectionPageWelcomeMode : ""}`}>
       {isArchivistWelcomeVisible ? (
         <div className={styles.archivistWelcome}>
           <div className={styles.archivistWelcomeLogoWrap}>
-            <img src="/archivist-source-seee-logo.png" alt="Seee" className={styles.archivistWelcomeLogo} />
+            <img src="/seee-logo-128.png" alt="Seee" className={styles.archivistWelcomeLogo} />
           </div>
 
           <div className={styles.archivistWelcomeCard}>
@@ -731,7 +731,7 @@ const SessionsCollectionPage = observer(() => {
               aria-label="Открыть архив сессий"
             >
               <span className={styles.archivistArchiveArrow} aria-hidden="true" />
-              <img src="/archivist-source-drawer.png" alt="Архив сессий" className={styles.archivistDrawer} />
+              <img src="/archivist-source-drawer-only.png" alt="Архив сессий" className={styles.archivistDrawer} />
             </button>
           </div>
 
@@ -972,6 +972,7 @@ const SessionsCollectionPage = observer(() => {
 
       {/* Нижняя панель навигации */}
       <BottomNavigation
+        onArchivist={() => setIsArchivistWelcomeVisible(true)}
         onCabinet={() => navigate("/cabinet")}
         onNotes={() => setIsNotesOpen(true)}
         onPeople={() => navigate("/people")}

@@ -1,10 +1,11 @@
-import { User, StickyNote, Plus } from "lucide-react";
+import { User, StickyNote, Plus, Archive } from "lucide-react";
 import styles from "./BottomNavigation.module.css";
 
 interface BottomNavigationProps {
   onCabinet: () => void;
   onNotes: () => void;
   onPeople: () => void;
+  onArchivist: () => void;
   onNewSession: () => void;
 }
 
@@ -12,6 +13,7 @@ const BottomNavigation = ({
   onCabinet, 
   onNotes, 
   onPeople,
+  onArchivist,
   onNewSession 
 }: BottomNavigationProps) => {
   return (
@@ -28,6 +30,13 @@ const BottomNavigation = ({
           <span className={styles.emojiIcon} role="img" aria-label="Чаты">🫂</span>
         </span>
         <span className={styles.navLabel}>Чаты</span>
+      </button>
+
+      <button onClick={onArchivist} className={`${styles.navButton} ${styles.navButtonPrimary}`} title="Архивариус">
+        <span className={`${styles.navIconBubble} ${styles.navIconBubblePrimary}`}>
+          <Archive className={styles.navIcon} />
+        </span>
+        <span className={styles.navLabel}>Архивариус</span>
       </button>
       
       <button onClick={onNewSession} className={styles.navButton} title="Новая сессия">
