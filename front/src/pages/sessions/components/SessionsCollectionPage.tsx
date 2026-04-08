@@ -118,6 +118,20 @@ type ToExploreTemplate = { id: string; title: string; category: ToExploreCategor
 type ToExploreTemplateWithSession = ToExploreTemplate & { sourceSessionId?: string };
 const SESSION_NOTES_PREFIX = "seee_session_notes:";
 
+type ArchivistOption = {
+  id: string;
+  label: string;
+  action:
+    | "intro"
+    | "telegram"
+    | "open_archive"
+    | "new_session"
+    | "open_people"
+    | "custom_input"
+    | "open_bot"
+    | "telegram_done";
+};
+
 function decodeJwtPayload(token: string): any | null {
   try {
     const parts = token.split(".");
@@ -396,6 +410,12 @@ const SessionsCollectionPage = observer(() => {
   const navigate = useNavigate();
   const { sessions, isLoading, error, refetch } = useSessions();
   const [isArchivistWelcomeVisible, setIsArchivistWelcomeVisible] = useState(true);
+  const [archivistMessage, setArchivistMessage] = useState(
+    "Привет, меня зовут Архивариус. Я помогу тебе разобраться с приложением, напомню о важных шагах и подскажу, что у тебя уже сохранено в архиве."
+  );
+  const [archivistOptions, setArchivistOptions] = useState<ArchivistOption[]>([]);
+  const [isArchivistCustomInputVisible, setIsArchivistCustomInputVisible] = useState(false);
+  const [archivistDraft, setArchivistDraft] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("my_sessions");
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
@@ -706,6 +726,165 @@ const SessionsCollectionPage = observer(() => {
     return [...sessionItems, ...templateItems];
   }, [filteredAndSortedSessions, filteredToExplore, sortOption]);
 
+  const buildArchivistRootOptions = (): ArchivistOption[] => {
+    const options: ArchivistOption[] = [
+      {
+        id: "intro",
+        label: "Разобраться, как работает приложение",
+        action: "intro",
+      },
+    ];
+
+    if (user && !user.telegramId) {
+      options.push({
+        id: "telegram",
+        label: "Привязать Telegram",
+        action: "telegram",
+      });
+    } else {
+      options.push({
+        id: "archive",
+        label: "Открыть архив сессий",
+        action: "open_archive",
+      });
+    }
+
+    options.push({
+      id: "custom",
+      label: "Написать ответ самостоятельно",
+      action: "custom_input",
+    });
+
+    return options;
+  };
+
+  const resetArchivistConversation = () => {
+    setArchivistMessage(
+      "Привет, меня зовут Архивариус. Я помогу тебе разобраться с приложением, напомню о важных шагах и подскажу, что у тебя уже сохранено в архиве."
+    );
+    setArchivistDraft("");
+    setIsArchivistCustomInputVisible(false);
+    setArchivistOptions(buildArchivistRootOptions());
+  };
+
+  useEffect(() => {
+    resetArchivistConversation();
+  }, [user?.telegramId]);
+
+  const handleArchivistOption = (option: ArchivistOption) => {
+    setIsArchivistCustomInputVisible(false);
+
+    if (option.action === "intro") {
+      const sessionsCount = sessions.length;
+      const exploreCount = toExplore.length;
+      setArchivistMessage(
+        `Сейчас у тебя ${sessionsCount} ${
+          sessionsCount === 1 ? "сессия" : sessionsCount < 5 && sessionsCount > 1 ? "сессии" : "сессий"
+        } в архиве и ${exploreCount} карточ${
+          exploreCount === 1 ? "ка" : exploreCount < 5 && exploreCount > 1 ? "ки" : "ек"
+        } для разбора. Можем открыть архив, создать новую сессию или ты можешь спросить меня о приложении своим текстом.`
+      );
+      setArchivistOptions([
+        { id: "new_session", label: "Создать новую сессию", action: "new_session" },
+        { id: "open_archive_after_intro", label: "Открыть архив сессий", action: "open_archive" },
+        { id: "custom_after_intro", label: "Написать ответ самостоятельно", action: "custom_input" },
+      ]);
+      return;
+    }
+
+    if (option.action === "telegram") {
+      setArchivistMessage(
+        "Telegram нужен, чтобы быстрее восстановить доступ к аккаунту и получать важные напоминания. Я могу открыть Seee-бота прямо сейчас, а после привязки мы вернёмся сюда."
+      );
+      setArchivistOptions([
+        { id: "open_bot", label: "Открыть Seee бота", action: "open_bot" },
+        { id: "telegram_done", label: "Уже привязал Telegram", action: "telegram_done" },
+        { id: "custom_after_tg", label: "Написать ответ самостоятельно", action: "custom_input" },
+      ]);
+      return;
+    }
+
+    if (option.action === "open_bot") {
+      window.open("https://t.me/SeeeAppBot", "_blank", "noopener,noreferrer");
+      setArchivistMessage(
+        "Открыл Seee-бота. Когда закончишь с привязкой, нажми «Уже привязал Telegram», и я продолжу помогать тебе здесь."
+      );
+      return;
+    }
+
+    if (option.action === "telegram_done") {
+      setArchivistMessage(
+        "Отлично. Тогда давай двигаться дальше: можешь открыть архив сессий, создать новую сессию или написать мне вопрос своими словами."
+      );
+      setArchivistOptions([
+        { id: "archive_after_tg", label: "Открыть архив сессий", action: "open_archive" },
+        { id: "new_after_tg", label: "Создать новую сессию", action: "new_session" },
+        { id: "custom_after_tg_done", label: "Написать ответ самостоятельно", action: "custom_input" },
+      ]);
+      return;
+    }
+
+    if (option.action === "open_archive") {
+      handleOpenArchiveGallery();
+      return;
+    }
+
+    if (option.action === "new_session") {
+      handleCreateSession();
+      return;
+    }
+
+    if (option.action === "open_people") {
+      navigate("/people");
+      return;
+    }
+
+    if (option.action === "custom_input") {
+      setIsArchivistCustomInputVisible(true);
+      setArchivistMessage(
+        "Напиши мне, что именно ты хочешь сделать прямо сейчас. Например: открыть архив, создать новую сессию, привязать Telegram или разобраться, как всё устроено."
+      );
+      return;
+    }
+  };
+
+  const handleArchivistCustomSubmit = () => {
+    const text = archivistDraft.trim();
+    if (!text) return;
+
+    const normalized = text.toLowerCase();
+    setArchivistDraft("");
+    setIsArchivistCustomInputVisible(false);
+
+    if (normalized.includes("телеграм")) {
+      handleArchivistOption({ id: "from_text_telegram", label: "", action: "telegram" });
+      return;
+    }
+
+    if (normalized.includes("архив") || normalized.includes("сесс")) {
+      setArchivistMessage("Открываю архив сессий. Там ты увидишь все папки, отложенные карточки и рекомендованные разборы.");
+      setArchivistOptions([{ id: "go_archive_from_text", label: "Перейти в архив сессий", action: "open_archive" }]);
+      return;
+    }
+
+    if (normalized.includes("нов") || normalized.includes("созда")) {
+      setArchivistMessage("Могу сразу открыть создание новой сессии. Если хочешь, начнём с чистого листа.");
+      setArchivistOptions([{ id: "go_new_from_text", label: "Создать новую сессию", action: "new_session" }]);
+      return;
+    }
+
+    if (normalized.includes("чат") || normalized.includes("люд") || normalized.includes("людьми")) {
+      setArchivistMessage("Если тебе нужны другие люди и диалоги, я могу сразу перевести тебя в раздел чатов.");
+      setArchivistOptions([{ id: "go_people_from_text", label: "Открыть чаты", action: "open_people" }]);
+      return;
+    }
+
+    setArchivistMessage(
+      "Я понял запрос. Прямо сейчас лучше всего помочь тебе через архив сессий, новую сессию или Telegram-привязку. Выбери ближайший вариант, и я продолжу."
+    );
+    setArchivistOptions(buildArchivistRootOptions());
+  };
+
   return (
     <div className={`${styles.collectionPage} ${isArchivistWelcomeVisible ? styles.collectionPageWelcomeMode : ""}`}>
       {isArchivistWelcomeVisible ? (
@@ -717,9 +896,47 @@ const SessionsCollectionPage = observer(() => {
           <div className={styles.archivistWelcomeCard}>
             <h2 className={styles.archivistWelcomeTitle}>Привет!</h2>
             <p className={styles.archivistWelcomeText}>
-              Давай я расскажу тебе как пользоваться приложением
+              {archivistMessage}
             </p>
           </div>
+
+          <div className={styles.archivistChoiceBar}>
+            {archivistOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={styles.archivistChoiceButton}
+                onClick={() => handleArchivistOption(option)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {isArchivistCustomInputVisible && (
+            <div className={styles.archivistComposer}>
+              <textarea
+                value={archivistDraft}
+                onChange={(e) => setArchivistDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                    e.preventDefault();
+                    handleArchivistCustomSubmit();
+                  }
+                }}
+                className={styles.archivistComposerInput}
+                rows={3}
+                placeholder="Напиши Архивариусу, что ты хочешь сделать..."
+              />
+              <button
+                type="button"
+                className={styles.archivistComposerButton}
+                onClick={handleArchivistCustomSubmit}
+              >
+                Отправить
+              </button>
+            </div>
+          )}
 
           <div className={styles.archivistWelcomeScene}>
             <img src="/archivist-source-character.png" alt="Архивариус" className={styles.archivistCharacter} />
@@ -972,7 +1189,10 @@ const SessionsCollectionPage = observer(() => {
 
       {/* Нижняя панель навигации */}
       <BottomNavigation
-        onArchivist={() => setIsArchivistWelcomeVisible(true)}
+        onArchivist={() => {
+          resetArchivistConversation();
+          setIsArchivistWelcomeVisible(true);
+        }}
         onCabinet={() => navigate("/cabinet")}
         onNotes={() => setIsNotesOpen(true)}
         onPeople={() => navigate("/people")}

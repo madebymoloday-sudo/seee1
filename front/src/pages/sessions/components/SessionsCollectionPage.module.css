@@ -70,13 +70,108 @@
 
 .archivistWelcomeText {
   margin: 0 auto;
-  max-width: 15ch;
+  max-width: 18ch;
   text-align: center;
-  font-size: clamp(1.7rem, 4.2vw, 2.8rem);
-  line-height: 0.98;
-  font-weight: 800;
-  letter-spacing: -0.04em;
+  font-size: clamp(1.15rem, 2.5vw, 2rem);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   color: #111111;
+}
+
+.archivistChoiceBar {
+  width: min(100%, 860px);
+  margin-top: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.7rem;
+}
+
+.archivistChoiceButton {
+  min-height: 52px;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid rgba(214, 163, 66, 0.24);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(251, 246, 236, 0.96) 100%);
+  color: #1a1a1a;
+  font-size: 0.96rem;
+  line-height: 1.2;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow:
+    0 12px 26px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.archivistChoiceButton:hover,
+.archivistChoiceButton:focus-visible {
+  outline: none;
+  transform: translateY(-2px);
+  border-color: rgba(214, 163, 66, 0.56);
+  box-shadow:
+    0 18px 34px rgba(15, 23, 42, 0.12),
+    0 0 0 3px rgba(233, 193, 108, 0.18);
+}
+
+.archivistComposer {
+  width: min(100%, 820px);
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0.95rem 1rem;
+  border-radius: 1.6rem;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.archivistComposerInput {
+  width: 100%;
+  min-height: 96px;
+  resize: none;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 0.95rem 1rem;
+  font: inherit;
+  color: #111827;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.archivistComposerInput:focus {
+  outline: none;
+  border-color: rgba(214, 163, 66, 0.58);
+  box-shadow:
+    inset 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 0 0 3px rgba(233, 193, 108, 0.2);
+}
+
+.archivistComposerButton {
+  align-self: flex-end;
+  min-height: 44px;
+  padding: 0.7rem 1.15rem;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #d4a54e 0%, #f0c96f 100%);
+  color: #2f2206;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(212, 165, 78, 0.28);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.archivistComposerButton:hover,
+.archivistComposerButton:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(212, 165, 78, 0.35);
 }
 
 .archivistWelcomeScene {
@@ -255,6 +350,84 @@
 }
 
 @media (max-width: 640px) {
+  .archivistWelcome {
+    padding: 1rem 1rem 6.25rem;
+  }
+
+  .archivistWelcomeLogoWrap,
+  .archivistWelcomeLogo {
+    width: 88px;
+    height: 88px;
+  }
+
+  .archivistWelcomeCard {
+    padding: 1rem 1rem 1.1rem;
+    border-radius: 1.6rem;
+  }
+
+  .archivistWelcomeTitle {
+    font-size: clamp(1.8rem, 9vw, 2.4rem);
+  }
+
+  .archivistWelcomeText {
+    max-width: 17ch;
+    font-size: 1rem;
+    line-height: 1.15;
+  }
+
+  .archivistChoiceBar {
+    gap: 0.55rem;
+    margin-top: 0.7rem;
+  }
+
+  .archivistChoiceButton {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-size: 0.92rem;
+  }
+
+  .archivistComposer {
+    padding: 0.8rem;
+    border-radius: 1.2rem;
+  }
+
+  .archivistComposerInput {
+    min-height: 84px;
+    font-size: 0.95rem;
+  }
+
+  .archivistWelcomeScene {
+    min-height: 230px;
+    max-height: 320px;
+    margin-top: 0.4rem;
+  }
+
+  .archivistCharacter {
+    width: min(38vw, 180px);
+    bottom: 22px;
+    left: 4px;
+  }
+
+  .archivistArchiveButton {
+    width: min(54vw, 250px);
+    bottom: 8px;
+  }
+
+  .archivistArchiveArrow {
+    top: -30px;
+    left: 38%;
+    border-top-width: 15px;
+    border-bottom-width: 15px;
+    border-right-width: 22px;
+  }
+
+  .archivistWelcomeHint {
+    margin-top: 0.25rem;
+    padding: 0.8rem 0.9rem;
+    font-size: 0.88rem;
+    border-radius: 1.15rem;
+  }
+
   .telegramPrompt {
     margin: 0 1rem 1rem;
   }
