@@ -1,104 +1,25 @@
 .page {
   min-height: calc(100dvh - 4rem);
-  padding: 1rem 0 6.55rem;
+  padding: 0 0 6.55rem;
   background: #ffffff;
   color: #1d1d1f;
 }
 
-.hero,
+.stickyTop {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  padding: 0.95rem 0 0.72rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
 .leaguesSection,
 .listSection {
   max-width: 760px;
   margin: 0 auto;
   padding: 0 1rem;
-}
-
-.hero {
-  margin-bottom: 1rem;
-}
-
-.kicker {
-  margin: 0 0 0.25rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(29, 29, 31, 0.42);
-}
-
-.title {
-  margin: 0;
-  font-size: clamp(1.8rem, 5vw, 2.6rem);
-  line-height: 0.98;
-  letter-spacing: -0.05em;
-  color: #1d1d1f;
-}
-
-.subtitle {
-  margin: 0.45rem 0 0;
-  font-size: 0.98rem;
-  line-height: 1.45;
-  color: rgba(29, 29, 31, 0.62);
-}
-
-.currentCard {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-top: 0.95rem;
-  padding: 0.85rem 0.95rem;
-  border-radius: 1.2rem;
-  background: #faf8f3;
-}
-
-.currentAvatar,
-.rowAvatar {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 999px;
-  background: var(--avatar-surface);
-  display: grid;
-  place-items: center;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
-  flex-shrink: 0;
-}
-
-.avatarEmoji {
-  font-size: 1.5rem;
-  line-height: 1;
-}
-
-.currentName,
-.rowName {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #1d1d1f;
-}
-
-.currentLeague,
-.rowLeague {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-top: 0.15rem;
-  font-size: 0.82rem;
-  color: rgba(29, 29, 31, 0.5);
-}
-
-.currentStreak {
-  margin-top: 0.18rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: rgba(29, 29, 31, 0.56);
-}
-
-.currentPoints,
-.rowPoints {
-  margin-left: auto;
-  font-size: 0.96rem;
-  font-weight: 700;
-  color: rgba(29, 29, 31, 0.64);
-  white-space: nowrap;
 }
 
 .sectionTitle {
@@ -114,6 +35,13 @@
   margin: 0 0 0.85rem;
   font-size: 0.88rem;
   color: rgba(29, 29, 31, 0.48);
+}
+
+.subtitle {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: rgba(29, 29, 31, 0.62);
 }
 
 .leagueCarousel {
@@ -156,6 +84,7 @@
 .leagueBadgeActive .leagueStatue {
   width: 4.6rem;
   height: 4.8rem;
+  transform: translateY(-2px);
 }
 
 .leagueStatueWrap {
@@ -188,10 +117,6 @@
   background: color-mix(in srgb, var(--league-accent) 68%, white);
 }
 
-.leagueBadgeActive .leagueStatue {
-  transform: translateY(-2px);
-}
-
 .leagueLock {
   position: absolute;
   right: -0.15rem;
@@ -207,7 +132,7 @@
 }
 
 .listSection {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .fullList {
@@ -216,6 +141,7 @@
 }
 
 .row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.8rem;
@@ -227,10 +153,21 @@
 }
 
 .rowCurrent {
-  margin-inline: -0.35rem;
-  padding-inline: 0.45rem;
+  margin-inline: -0.12rem;
+  padding-inline: 0.22rem;
   border-radius: 0.9rem;
-  background: #f7ead8;
+  background: rgba(236, 210, 155, 0.24);
+}
+
+.rowCurrent::before {
+  content: "";
+  position: absolute;
+  left: 0.02rem;
+  top: 0.45rem;
+  bottom: 0.45rem;
+  width: 0.28rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f6d372 0%, #d8a73f 100%);
 }
 
 .rowRank {
@@ -246,21 +183,80 @@
   font-size: 1.05rem;
 }
 
+.rowAvatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: var(--avatar-surface);
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  flex-shrink: 0;
+}
+
+.avatarEmoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
 .rowMeta {
   min-width: 0;
   flex: 1;
 }
 
-.rowBadge {
-  color: rgba(29, 29, 31, 0.42);
+.rowName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.rowLeague {
+  margin-top: 0.15rem;
+  font-size: 0.82rem;
+  color: rgba(29, 29, 31, 0.5);
+}
+
+.rowPoints {
+  margin-left: auto;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: rgba(29, 29, 31, 0.64);
+  white-space: nowrap;
+}
+
+.zoneMarker {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.95rem 0 0.55rem;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.zoneMarkerUp {
+  color: #2f9d47;
+}
+
+.zoneMarkerDown {
+  color: #d24b4b;
+}
+
+.zoneArrow {
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
 @media (max-width: 640px) {
   .page {
-    padding: 0.9rem 0 6.35rem;
+    padding: 0 0 6.35rem;
   }
 
-  .hero,
+  .stickyTop {
+    padding-top: 0.9rem;
+  }
+
   .leaguesSection,
   .listSection {
     padding: 0 0.9rem;
@@ -270,11 +266,6 @@
     font-size: 1.38rem;
   }
 
-  .currentCard {
-    padding: 0.82rem 0.9rem;
-  }
-
-  .currentAvatar,
   .rowAvatar {
     width: 2.7rem;
     height: 2.7rem;
@@ -310,13 +301,11 @@
   color: rgba(241, 245, 249, 0.96);
 }
 
-:global(html.dark) .kicker {
-  color: rgba(226, 232, 240, 0.46);
+:global(html.dark) .stickyTop {
+  background: rgba(7, 16, 28, 0.82);
 }
 
-:global(html.dark) .title,
 :global(html.dark) .sectionTitle,
-:global(html.dark) .currentName,
 :global(html.dark) .rowName,
 :global(html.dark) .leagueName {
   color: rgba(248, 250, 252, 0.96);
@@ -324,22 +313,10 @@
 
 :global(html.dark) .subtitle,
 :global(html.dark) .sectionHint,
-:global(html.dark) .currentLeague,
 :global(html.dark) .rowLeague,
-:global(html.dark) .currentStreak,
 :global(html.dark) .rowRank,
-:global(html.dark) .rowBadge,
-:global(html.dark) .currentPoints,
 :global(html.dark) .rowPoints {
   color: rgba(226, 232, 240, 0.66);
-}
-
-:global(html.dark) .currentCard {
-  background: rgba(15, 23, 42, 0.76);
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  box-shadow:
-    0 24px 60px rgba(2, 6, 23, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 :global(html.dark) .leagueBadgeLocked .leagueStatue {
@@ -354,8 +331,17 @@
 }
 
 :global(html.dark) .rowCurrent {
-  background: rgba(214, 165, 78, 0.16);
-  box-shadow:
-    inset 0 0 0 1px rgba(240, 201, 111, 0.18),
-    0 10px 26px rgba(15, 23, 42, 0.18);
+  background: rgba(214, 165, 78, 0.12);
+}
+
+:global(html.dark) .rowCurrent::before {
+  background: linear-gradient(180deg, #f7da7e 0%, #d8a73f 100%);
+}
+
+:global(html.dark) .zoneMarkerUp {
+  color: #6fda7f;
+}
+
+:global(html.dark) .zoneMarkerDown {
+  color: #ff8080;
 }
