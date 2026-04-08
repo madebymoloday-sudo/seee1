@@ -7,6 +7,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { NeuroHintService } from './neuro-hint.service';
 import { AudioTranscriptionService } from './audio-transcription.service';
+import { StageAssistService } from './stage-assist.service';
 
 @Module({
   imports: [PrismaModule, ConfigModule],
@@ -17,6 +18,7 @@ import { AudioTranscriptionService } from './audio-transcription.service';
     ProgramLoaderService,
     NeuroHintService,
     AudioTranscriptionService,
+    StageAssistService,
   ],
   exports: [
     PsychologistService,
@@ -24,6 +26,7 @@ import { AudioTranscriptionService } from './audio-transcription.service';
     ProgramLoaderService,
     NeuroHintService,
     AudioTranscriptionService,
+    StageAssistService,
   ],
 })
 export class PsychologistModule {}

@@ -3,6 +3,7 @@ import { useSessionsControllerCreateSession } from "@/api/seee.swr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import apiAgent from "@/lib/api";
 import { parseImportantOptions } from "@/lib/sessionUtils";
 import {
   awardCoinsForAnswer,
@@ -58,10 +59,42 @@ type DialogStateV3 = Omit<DialogStateV2, "v"> & {
   v: 3;
   thoughtScopes: Record<string, Record<string, string>>;
   activeThoughtScopeId?: string;
+  stageGuidance: Record<string, StageGuidanceState>;
 };
 
 type DialogState = DialogStateV3;
 type TransitionPhase = "idle" | "exiting" | "entering";
+
+type StageGuidanceState = {
+  preface?: string;
+  clarificationLead?: string;
+  clarificationPrompt?: string;
+  clarificationCount: number;
+  initialAttempt?: string;
+  clarificationAnswers: string[];
+};
+
+type StageAssistDecision = "advance" | "clarify";
+
+type StageAssistRequest = {
+  subject: Subject;
+  step: number;
+  answer: string;
+  stageAnswer?: string;
+  clarificationAnswers?: string[];
+  clarificationCount?: number;
+  answers?: Record<string, string>;
+  situationText?: string;
+  importantText?: string;
+  skipRequested?: boolean;
+};
+
+type StageAssistResponse = {
+  decision: StageAssistDecision;
+  normalizedAnswer: string;
+  reaction: string;
+  followUpQuestion?: string;
+};
 
 const STORAGE_KEY_PREFIX = "seee_step_dialog_state:";
 const SESSION_KIND_PREFIX = "seee_session_kind:";
@@ -105,6 +138,7 @@ function migrateToV3(state: DialogStateV2): DialogStateV3 {
     answers: rootAnswers,
     thoughtScopes,
     activeThoughtScopeId,
+    stageGuidance: {},
   });
 }
 
@@ -112,6 +146,7 @@ function normalizeStateV3(state: DialogStateV3): DialogStateV3 {
   const dash = "—";
   const answers = { ...(state.answers || {}) };
   const thoughtScopes = { ...(state.thoughtScopes || {}) };
+  const stageGuidance = { ...(state.stageGuidance || {}) };
 
   if (
     (!answers["core:situation:1"] ||
@@ -153,6 +188,54 @@ function normalizeStateV3(state: DialogStateV3): DialogStateV3 {
     ...state,
     answers,
     thoughtScopes,
+    stageGuidance,
+  };
+}
+
+function getStageGuidance(
+  state: DialogState,
+  key: string,
+): StageGuidanceState {
+  const guidance = state.stageGuidance[key];
+  if (!guidance) {
+    return {
+      clarificationCount: 0,
+      clarificationAnswers: [],
+    };
+  }
+
+  return {
+    clarificationCount: guidance.clarificationCount || 0,
+    clarificationAnswers: guidance.clarificationAnswers || [],
+    preface: guidance.preface,
+    clarificationLead: guidance.clarificationLead,
+    clarificationPrompt: guidance.clarificationPrompt,
+    initialAttempt: guidance.initialAttempt,
+  };
+}
+
+function setStageGuidance(
+  state: DialogState,
+  key: string,
+  patch: Partial<StageGuidanceState>,
+): Record<string, StageGuidanceState> {
+  return {
+    ...(state.stageGuidance || {}),
+    [key]: {
+      ...getStageGuidance(state, key),
+      ...patch,
+    },
+  };
+}
+
+function clearStageClarification(guidance: StageGuidanceState): StageGuidanceState {
+  return {
+    ...guidance,
+    clarificationLead: undefined,
+    clarificationPrompt: undefined,
+    clarificationCount: 0,
+    initialAttempt: undefined,
+    clarificationAnswers: [],
   };
 }
 
@@ -249,6 +332,7 @@ function loadState(sessionId: string): DialogState | null {
         ...parsed,
         thoughtScopes: parsed.thoughtScopes || {},
         answers: parsed.answers || {},
+        stageGuidance: parsed.stageGuidance || {},
       } as DialogStateV3);
     }
 
@@ -420,9 +504,14 @@ function removeToExploreTemplate(userKey: string, templateId: string) {
 function coreQuestion(
   step: number,
   subject: Subject,
-  thought3?: string,
+  answers?: Record<string, string>,
 ): string {
-  const thought = (thought3 || "").trim();
+  const primaryThoughtKey = `core:${subject}:3`;
+  const secondaryThoughtKey =
+    subject === "thought" ? "core:situation:3" : "core:thought:3";
+  const thought = sanitizeThoughtValue(
+    answers?.[primaryThoughtKey] || answers?.[secondaryThoughtKey],
+  );
   const thoughtNominative = thought ? `мысль «${thought}»` : "эта мысль";
   const thoughtAccusative = thought ? `мысль «${thought}»` : "эту мысль";
   const thoughtGenitive = thought ? `мысли «${thought}»` : "этой мысли";
@@ -436,12 +525,14 @@ function coreQuestion(
       return `Как вы думаете, какая мысль/идея вызывает эту эмоцию?`;
     case 4:
       return `Почему вы так думаете? Перечислите несколько причин.`;
-    case 5: {
-      const suffix = thought ? `: «${thought}»?` : "?";
-      return `Как вы думаете, кто заразил вас этой мыслью${suffix} Это может быть человек, сообщество, вы сами, родители и прочее. Если не знаете, то так и напишите "не знаю".`;
-    }
+    case 5:
+      return thought
+        ? `Как вам кажется, от кого или откуда к вам пришла мысль «${thought}»?\n\nЭто может быть конкретный человек, семья, сообщество, культура, вы сами или какой-то прошлый опыт.`
+        : `Как вам кажется, от кого или откуда к вам пришла эта мысль?\n\nЭто может быть конкретный человек, семья, сообщество, культура, вы сами или какой-то прошлый опыт.`;
     case 6:
-      return `Как думаете, с какой эгоистичной целью ${thoughtNominative} была вам сказана?`;
+      return thought
+        ? `Как думаете, с какой выгодой для себя другой человек или система могли передавать вам мысль «${thought}»?`
+        : `Как думаете, с какой выгодой для себя другой человек или система могли передавать вам эту мысль?`;
     case 7: {
       if (thought) {
         return `Какие эмоциональные последствия принесла вам мысль «${thought}»?`;
@@ -503,18 +594,25 @@ function getPrompt(
   importantText: string,
   situationText: string,
   answers?: Record<string, string>,
+  currentGuidance?: StageGuidanceState,
 ): string {
   if (view.kind === "intro") {
     return buildToExploreIntroText(view.title, view.category);
   }
   if (view.kind === "core") {
-    const primaryKey = `core:${view.subject}:3`;
-    const secondaryKey =
-      view.subject === "thought" ? "core:situation:3" : "core:thought:3";
-    const thought3 =
-      sanitizeThoughtValue(answers?.[primaryKey]) ||
-      sanitizeThoughtValue(answers?.[secondaryKey]);
-    return coreQuestion(view.step, view.subject, thought3);
+    const baseQuestion = coreQuestion(view.step, view.subject, answers);
+    if (currentGuidance?.clarificationPrompt) {
+      return [
+        currentGuidance.clarificationLead || currentGuidance.preface || "",
+        currentGuidance.clarificationPrompt,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+    }
+    if (currentGuidance?.preface) {
+      return `${currentGuidance.preface}\n\n${baseQuestion}`;
+    }
+    return baseQuestion;
   }
   if (view.kind === "solve") return solveQuestion(view.step, importantText);
   if (view.kind === "deepPick") {
@@ -593,6 +691,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           }
         : {},
       activeThoughtScopeId: isThought ? "initial" : undefined,
+      stageGuidance: {},
     };
   });
 
@@ -662,10 +761,35 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     state.activeThoughtScopeId,
   ]);
 
+  const currentStepKey = useMemo(() => {
+    if (view.kind === "core") return `core:${view.subject}:${view.step}`;
+    if (view.kind === "solve") return `solve:${view.step}`;
+    if (view.kind === "deepPick") return "deepPick";
+    return null;
+  }, [view]);
+
+  const currentStageGuidance = useMemo(
+    () =>
+      currentStepKey ? getStageGuidance(state, currentStepKey) : undefined,
+    [currentStepKey, state.stageGuidance],
+  );
+
   const prompt = useMemo(
     () =>
-      getPrompt(view, currentImportantText, state.situationText, currentAnswers),
-    [view, currentImportantText, state.situationText, currentAnswers],
+      getPrompt(
+        view,
+        currentImportantText,
+        state.situationText,
+        currentAnswers,
+        currentStageGuidance,
+      ),
+    [
+      view,
+      currentImportantText,
+      state.situationText,
+      currentAnswers,
+      currentStageGuidance,
+    ],
   );
 
   const importantOptions = useMemo(() => {
@@ -676,6 +800,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const [lastUserAnswer, setLastUserAnswer] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isAnalyzingAnswer, setIsAnalyzingAnswer] = useState(false);
   const [transitionPhase, setTransitionPhase] =
     useState<TransitionPhase>("idle");
   const [inputText, setInputText] = useState("");
@@ -701,10 +826,16 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const canDeepNow = useMemo(() => {
     // button should be available during the session after step 4 is answered at least once
-    if (isTransitioning || isListModalOpen) return false;
+    if (isTransitioning || isAnalyzingAnswer || isListModalOpen) return false;
     if (view.kind === "deepPick") return false;
     return parseImportantOptions(currentImportantText).length > 0;
-  }, [currentImportantText, isListModalOpen, isTransitioning, view.kind]);
+  }, [
+    currentImportantText,
+    isAnalyzingAnswer,
+    isListModalOpen,
+    isTransitioning,
+    view.kind,
+  ]);
 
   /** Этап «мысль/идея» — core step 3+, вопрос «Как вы думаете, какая мысль/идея вызывает эту эмоцию?» */
   const isIdeasStep = view.kind === "core" && view.step >= 3;
@@ -723,18 +854,45 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return list;
   }, [currentAnswers, currentImportantText, state.subject]);
 
+  const hasClarificationPrompt = !!currentStageGuidance?.clarificationPrompt;
+
   const canSkip = (() => {
-    if (isTransitioning || isListModalOpen || isIdeasModalOpen) return false;
+    if (
+      isTransitioning ||
+      isAnalyzingAnswer ||
+      isListModalOpen ||
+      isIdeasModalOpen
+    ) {
+      return false;
+    }
     if (!isTextAnswerView(view)) return false;
-    if (isDraftSession && view.kind === "core" && view.step === 1) return false;
+    if (
+      !hasClarificationPrompt &&
+      isDraftSession &&
+      view.kind === "core" &&
+      view.step === 1
+    ) {
+      return false;
+    }
     return true;
   })();
+
+  const skipButtonLabel = hasClarificationPrompt
+    ? "Не знаю, как описать"
+    : "Пропустить →";
 
   const showBottomEditorActions =
     isTextAnswerView(view) && view.kind !== "deepPick";
 
   const goSkip = () => {
     if (!canSkip) return;
+    if (hasClarificationPrompt) {
+      const baseAnswer =
+        currentStageGuidance?.initialAttempt ||
+        (currentStepKey ? getAnswerValue(state, currentStepKey) || "" : "");
+      onAnswer(baseAnswer || "Не знаю", { skipRequested: true });
+      return;
+    }
     if (isTextAnswerView(view)) {
       const existingAnswer = (getAnswerValue(state, stepKey(view)) || "").trim();
       if (existingAnswer && existingAnswer !== "—") {
@@ -777,7 +935,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   // Автофокус на поле ввода после смены шага/ветки
   useEffect(() => {
     if (isListModalOpen) return;
-    if (isTransitioning) return;
+    if (isTransitioning || isAnalyzingAnswer) return;
     if (!isTextAnswerView(view)) return;
 
     const t = window.setTimeout(() => focusInputWithoutScroll(), 0);
@@ -785,6 +943,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isListModalOpen,
+    isAnalyzingAnswer,
     isTransitioning,
     view.kind,
     view.kind === "core" ? view.step : null,
@@ -804,14 +963,26 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     const saved = getAnswerValue(state, key);
     const forceEdit = forceEditOnStepSyncRef.current;
     forceEditOnStepSyncRef.current = false;
+    const clarificationPrompt = getStageGuidance(state, key).clarificationPrompt;
     if (saved !== undefined) {
-      setInputText(saved);
-      setIsEditing(forceEdit ? true : false);
+      if (clarificationPrompt) {
+        setInputText("");
+        setIsEditing(true);
+      } else {
+        setInputText(saved);
+        setIsEditing(forceEdit ? true : false);
+      }
     } else {
       setInputText("");
       setIsEditing(true);
     }
-  }, [state.answers, state.thoughtScopes, state.activeThoughtScopeId, view]);
+  }, [
+    state.answers,
+    state.thoughtScopes,
+    state.activeThoughtScopeId,
+    state.stageGuidance,
+    view,
+  ]);
 
   const computeNextState = (answer: string): DialogState | null => {
     const trimmed = answer.trim();
@@ -860,94 +1031,17 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return null;
   };
 
-  const onAnswer = async (answer: string) => {
-    if (isTransitioning) return;
-    const nextState = computeNextState(answer);
-    if (!nextState) return;
-
-    const key = stepKey(view);
-    const trimmed = answer.trim();
-    const scopedAnswerUpdate = setAnswerValue(state, key, trimmed);
-    const nextStateWithAnswer: DialogState = {
-      ...(nextState as any),
-      v: 3,
-      answers: scopedAnswerUpdate.answers,
-      thoughtScopes: scopedAnswerUpdate.thoughtScopes,
-    };
-
-    // Черновик: создаём сессию только после ответа на ПЕРВЫЙ вопрос (core step 1).
-    if (isDraftSession && view.kind === "core" && view.step === 1) {
-      setLastUserAnswer(trimmed);
-      setIsTransitioning(true);
-      setTransitionPhase("idle");
-
-      try {
-        const userKey = getUserKey();
-        const draftTitle = localStorage
-          .getItem(`seee_draft_title:${userKey}`)
-          ?.trim();
-        const templateId = localStorage
-          .getItem(`seee_draft_to_explore_template:${userKey}`)
-          ?.trim();
-
-        const title = (
-          draftTitle && draftTitle.length > 0 ? draftTitle : trimmed
-        ).slice(0, 80);
-        const newSession = await createSession({ title });
-        if (!newSession?.id) {
-          toast.error("Не удалось создать сессию");
-          setIsTransitioning(false);
-          setTransitionPhase("idle");
-          return;
-        }
-
-        // переносим состояние диалога и метаданные с draft-id на реальный id
-        saveState(newSession.id, nextStateWithAnswer);
-        const reward = awardCoinsForAnswer(newSession.id, key, 3);
-        if (reward.awarded) {
-          toast.success(`+${reward.delta} монеты`);
-        }
-
-        const kind = getSessionKind(session.id);
-        if (kind === "thought") {
-          setSessionKind(newSession.id, "thought");
-        }
-        const notes = getSessionNotes(session.id);
-        if (notes && notes.trim()) {
-          setSessionNotes(newSession.id, notes.trim());
-        }
-
-        removeState(session.id);
-        removeSessionMeta(session.id);
-
-        if (templateId) {
-          removeToExploreTemplate(userKey, templateId);
-        }
-        try {
-          localStorage.removeItem(`seee_draft_title:${userKey}`);
-          localStorage.removeItem(`seee_draft_to_explore_template:${userKey}`);
-          localStorage.removeItem(
-            `${DRAFT_TO_EXPLORE_CATEGORY_PREFIX}${userKey}`,
-          );
-        } catch {
-          // ignore
-        }
-
-        navigate(`/sessions/${newSession.id}`, { replace: true });
-      } catch (e) {
-        console.error(e);
-        toast.error("Не удалось создать сессию");
-        setIsTransitioning(false);
-        setTransitionPhase("idle");
+  const animateStateTransition = (displayAnswer: string, nextState: DialogState) => {
+    const key = currentStepKey;
+    setLastUserAnswer(displayAnswer);
+    if (
+      key &&
+      !(isDraftSession && view.kind === "core" && view.step === 1)
+    ) {
+      const reward = awardCoinsForAnswer(session.id, key, 3);
+      if (reward.awarded) {
+        toast.success(`+${reward.delta} монеты`);
       }
-      return;
-    }
-
-    // Показать ответ, увести пару влево и ввести следующий вопрос справа.
-    setLastUserAnswer(trimmed);
-    const reward = awardCoinsForAnswer(session.id, key, 3);
-    if (reward.awarded) {
-      toast.success(`+${reward.delta} монеты`);
     }
     setIsTransitioning(true);
     setTransitionPhase("idle");
@@ -960,7 +1054,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         setTransitionPhase("exiting");
       }, 90),
       window.setTimeout(() => {
-        setState(nextStateWithAnswer);
+        setState(nextState);
         setLastUserAnswer(null);
         setTransitionPhase("entering");
       }, 450),
@@ -969,6 +1063,222 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         setIsTransitioning(false);
       }, 860),
     );
+  };
+
+  const finalizeDraftSession = async (
+    displayAnswer: string,
+    nextState: DialogState,
+    answerKey: string,
+  ) => {
+    setLastUserAnswer(displayAnswer);
+    setIsTransitioning(true);
+    setTransitionPhase("idle");
+
+    try {
+      const draftTitle = localStorage.getItem(`seee_draft_title:${userKey}`)?.trim();
+      const templateId = localStorage
+        .getItem(`seee_draft_to_explore_template:${userKey}`)
+        ?.trim();
+
+      const title = (
+        draftTitle && draftTitle.length > 0 ? draftTitle : displayAnswer
+      ).slice(0, 80);
+      const newSession = await createSession({ title });
+      if (!newSession?.id) {
+        toast.error("Не удалось создать сессию");
+        setIsTransitioning(false);
+        setTransitionPhase("idle");
+        return;
+      }
+
+      saveState(newSession.id, nextState);
+      const reward = awardCoinsForAnswer(newSession.id, answerKey, 3);
+      if (reward.awarded) {
+        toast.success(`+${reward.delta} монеты`);
+      }
+
+      const kind = getSessionKind(session.id);
+      if (kind === "thought") {
+        setSessionKind(newSession.id, "thought");
+      }
+      const notes = getSessionNotes(session.id);
+      if (notes && notes.trim()) {
+        setSessionNotes(newSession.id, notes.trim());
+      }
+
+      removeState(session.id);
+      removeSessionMeta(session.id);
+
+      if (templateId) {
+        removeToExploreTemplate(userKey, templateId);
+      }
+      try {
+        localStorage.removeItem(`seee_draft_title:${userKey}`);
+        localStorage.removeItem(`seee_draft_to_explore_template:${userKey}`);
+        localStorage.removeItem(`${DRAFT_TO_EXPLORE_CATEGORY_PREFIX}${userKey}`);
+      } catch {
+        // ignore
+      }
+
+      navigate(`/sessions/${newSession.id}`, { replace: true });
+    } catch (e) {
+      console.error(e);
+      toast.error("Не удалось создать сессию");
+      setIsTransitioning(false);
+      setTransitionPhase("idle");
+    }
+  };
+
+  const requestStageAssist = async (
+    answer: string,
+    options?: { skipRequested?: boolean },
+  ): Promise<StageAssistResponse | null> => {
+    if (view.kind !== "core" || view.step < 1 || view.step > 9) {
+      return null;
+    }
+
+    const key = stepKey(view);
+    const guidance = getStageGuidance(state, key);
+    const currentSavedAnswer = (getAnswerValue(state, key) || "").trim();
+    const payload: StageAssistRequest = {
+      subject: view.subject,
+      step: view.step,
+      answer,
+      stageAnswer:
+        guidance.clarificationCount > 0
+          ? guidance.initialAttempt || currentSavedAnswer || undefined
+          : undefined,
+      clarificationAnswers: guidance.clarificationAnswers,
+      clarificationCount: guidance.clarificationCount,
+      answers: currentAnswers,
+      situationText: state.situationText,
+      importantText: currentImportantText,
+      skipRequested: options?.skipRequested,
+    };
+
+    return apiAgent.post<StageAssistRequest, StageAssistResponse>(
+      "/psychologist/stage-assist",
+      payload,
+    );
+  };
+
+  const onAnswer = async (
+    answer: string,
+    options?: { skipRequested?: boolean },
+  ) => {
+    if (isTransitioning || isAnalyzingAnswer) return;
+    const trimmed = answer.trim();
+    if (!trimmed) return;
+
+    const key = stepKey(view);
+    const shouldAnalyzeStage =
+      view.kind === "core" &&
+      view.step >= 1 &&
+      view.step <= 9 &&
+      trimmed !== "—";
+
+    try {
+      setIsAnalyzingAnswer(true);
+
+      let nextState = computeNextState(trimmed);
+      let nextStateWithAnswer: DialogState | null = nextState
+        ? normalizeStateV3({
+            ...(nextState as DialogState),
+            v: 3,
+            ...setAnswerValue(state, key, trimmed),
+            stageGuidance: state.stageGuidance,
+          })
+        : null;
+
+      if (shouldAnalyzeStage) {
+        const assist = await requestStageAssist(trimmed, options);
+        if (assist) {
+          const normalized = (assist.normalizedAnswer || trimmed).trim() || trimmed;
+          const currentGuidance = getStageGuidance(state, key);
+
+          if (
+            assist.decision === "clarify" &&
+            assist.followUpQuestion &&
+            !options?.skipRequested &&
+            currentGuidance.clarificationCount < 2
+          ) {
+            const shouldStoreAsClarification =
+              currentGuidance.clarificationCount > 0;
+            const clarificationAnswers = shouldStoreAsClarification
+              ? [...currentGuidance.clarificationAnswers, trimmed]
+              : currentGuidance.clarificationAnswers;
+            const guidancePatch: Partial<StageGuidanceState> = {
+              clarificationLead: assist.reaction,
+              clarificationPrompt: assist.followUpQuestion,
+              clarificationCount: Math.min(
+                2,
+                currentGuidance.clarificationCount + 1,
+              ),
+              clarificationAnswers,
+              initialAttempt: currentGuidance.initialAttempt || trimmed,
+            };
+            const clarifyAnswerUpdate = setAnswerValue(state, key, trimmed);
+            const clarifyState = normalizeStateV3({
+              ...state,
+              answers: clarifyAnswerUpdate.answers,
+              thoughtScopes: clarifyAnswerUpdate.thoughtScopes,
+              stageGuidance: setStageGuidance(state, key, guidancePatch),
+            });
+
+            animateStateTransition(trimmed, clarifyState);
+            return;
+          }
+
+          nextState = computeNextState(normalized);
+          if (!nextState) return;
+
+          const nextKey =
+            view.kind === "core" ? `core:${view.subject}:${view.step + 1}` : null;
+          const answeredState = setAnswerValue(state, key, normalized);
+          const clearedGuidance = clearStageClarification(
+            getStageGuidance(state, key),
+          );
+          let stageGuidance = setStageGuidance(state, key, clearedGuidance);
+
+          if (nextKey) {
+            stageGuidance = {
+              ...stageGuidance,
+              [nextKey]: {
+                ...getStageGuidance(
+                  { ...state, stageGuidance } as DialogState,
+                  nextKey,
+                ),
+                preface: assist.reaction,
+                clarificationLead: undefined,
+                clarificationPrompt: undefined,
+                clarificationCount: 0,
+                initialAttempt: undefined,
+                clarificationAnswers: [],
+              },
+            };
+          }
+
+          nextStateWithAnswer = normalizeStateV3({
+            ...(nextState as DialogState),
+            v: 3,
+            answers: answeredState.answers,
+            thoughtScopes: answeredState.thoughtScopes,
+            stageGuidance,
+          });
+        }
+      }
+
+      if (!nextStateWithAnswer) return;
+
+      if (isDraftSession && view.kind === "core" && view.step === 1) {
+        await finalizeDraftSession(trimmed, nextStateWithAnswer, key);
+        return;
+      }
+
+      animateStateTransition(trimmed, nextStateWithAnswer);
+    } finally {
+      setIsAnalyzingAnswer(false);
+    }
   };
 
   const goDeepPick = () => {
@@ -1112,7 +1422,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const canGoBack = (() => {
     if (isDraftSession) return false;
-    if (isTransitioning || isListModalOpen) return false;
+    if (isTransitioning || isAnalyzingAnswer || isListModalOpen) return false;
     if (view.kind === "deepPick") return true;
     if (view.kind === "solve") return true;
     if (view.kind === "core") {
@@ -1242,7 +1552,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                     <button
                       type="button"
                       onClick={goBack}
-                      disabled={!canGoBack || isTransitioning}
+                      disabled={!canGoBack || isTransitioning || isAnalyzingAnswer}
                       className={styles.backButton}
                       aria-label="Назад"
                       title="Назад"
@@ -1268,7 +1578,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                     <button
                       type="button"
                       onClick={goDeepPick}
-                      disabled={isTransitioning || isListModalOpen}
+                      disabled={
+                        isTransitioning || isAnalyzingAnswer || isListModalOpen
+                      }
                       className={styles.actionButton}
                       aria-label="Идеи"
                       title='Показать идеи из ответа "Почему это важно"'
@@ -1288,7 +1600,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                       aria-label="Пропустить"
                       title="Пропустить"
                     >
-                      Пропустить →
+                      {skipButtonLabel}
                     </button>
                   )}
                 </div>
@@ -1313,8 +1625,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
         {/* Сохранённый ответ при возврате в сессию — показываем как отправленное сообщение, не в поле ввода */}
         {(() => {
-          if (!isTextAnswerView(view) || isEditing || lastUserAnswer)
+          if (!isTextAnswerView(view) || lastUserAnswer)
             return null;
+          const shouldShowSavedBubble =
+            !isEditing || !!currentStageGuidance?.clarificationPrompt;
+          if (!shouldShowSavedBubble) return null;
           const key = stepKey(view);
           const saved = getAnswerValue(state, key);
           if (!saved || !saved.trim()) return null;
@@ -1465,7 +1780,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                       onAnswer(inputText);
                       window.setTimeout(() => focusInputWithoutScroll(), 150);
                     }}
-                    disabled={!inputText.trim()}
+                    disabled={!inputText.trim() || isAnalyzingAnswer}
                     className={chatStyles.glassButton}
                   >
                     Дальше
@@ -1476,7 +1791,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                 <Button
                   type="button"
                   onClick={openAddToList}
-                  disabled={isTransitioning || isListModalOpen}
+                  disabled={
+                    isTransitioning || isAnalyzingAnswer || isListModalOpen
+                  }
                   className={chatStyles.glassButton}
                   aria-label="Добавить мысль в Нейросписок"
                   title="Добавить мысль в Нейросписок"
@@ -1494,8 +1811,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                 onAnswer(v);
                 window.setTimeout(() => focusInputWithoutScroll(), 150);
               }}
-              disabled={isMutating}
-              readOnly={isMutating || isTransitioning || !isEditing}
+              disabled={isMutating || isAnalyzingAnswer}
+              readOnly={
+                isMutating ||
+                isAnalyzingAnswer ||
+                isTransitioning ||
+                !isEditing
+              }
               placeholder={
                 !isEditing ? "Ваш ответ сохранён" : "Введите ответ..."
               }

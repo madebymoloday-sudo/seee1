@@ -26,9 +26,14 @@ import {
   NeuroHintResponseDto,
 } from './dto/neuro-hint.dto';
 import {
+  StageAssistRequestDto,
+  StageAssistResponseDto,
+} from './dto/stage-assist.dto';
+import {
   AudioTranscriptionResponseDto,
   AudioTranscriptionUploadDto,
 } from './dto/audio-transcription.dto';
+import { StageAssistService } from './stage-assist.service';
 
 @ApiTags('Psychologist')
 @Controller('psychologist')
@@ -39,6 +44,7 @@ export class PsychologistController {
     private readonly pipelineService: PipelineService,
     private readonly neuroHintService: NeuroHintService,
     private readonly audioTranscriptionService: AudioTranscriptionService,
+    private readonly stageAssistService: StageAssistService,
   ) {}
 
   @Get('programs')
@@ -80,6 +86,22 @@ export class PsychologistController {
   ): Promise<NeuroHintResponseDto> {
     const message = await this.neuroHintService.generateThoughtHint(dto);
     return { message };
+  }
+
+  @Post('stage-assist')
+  @ApiOperation({
+    summary:
+      'Проверить ответ на этапе разбора и при необходимости вернуть уточняющий подвопрос',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Решение по этапу: идти дальше или уточнять',
+    type: StageAssistResponseDto,
+  })
+  async stageAssist(
+    @Body() dto: StageAssistRequestDto,
+  ): Promise<StageAssistResponseDto> {
+    return this.stageAssistService.analyzeStage(dto);
   }
 
   @Post('transcribe')
