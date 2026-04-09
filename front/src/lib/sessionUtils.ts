@@ -14,6 +14,7 @@ export function clearDraftSession(userKey: string): void {
     localStorage.removeItem(`${SESSION_NOTES_PREFIX}${DRAFT_SESSION_ID}`);
     localStorage.removeItem(`seee_draft_title:${userKey}`);
     localStorage.removeItem(`seee_draft_to_explore_template:${userKey}`);
+    localStorage.removeItem(`seee_draft_template_reward:${userKey}`);
   } catch {
     // ignore
   }

@@ -4,7 +4,7 @@
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
-  padding-top: calc(120px + env(safe-area-inset-top, 0px));
+  padding-top: calc(112px + env(safe-area-inset-top, 0px));
 }
 
 @media (max-width: 768px) {

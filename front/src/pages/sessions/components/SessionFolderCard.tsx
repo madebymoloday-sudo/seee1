@@ -13,6 +13,7 @@ interface SessionFolderCardProps {
   tagLabel?: string;
   categoryLabel?: string;
   recommendationLabel?: string;
+  coinsLabel?: string;
   palette?: "default" | "toExplore";
   onOpen?: () => void;
   showMenu?: boolean;
@@ -21,7 +22,6 @@ interface SessionFolderCardProps {
   onMoveToExplore?: () => void;
   onShowFeedback?: () => void;
   onShowIdeas?: () => void;
-  ideasCount?: number;
 }
 
 const FOLDER_COLORS = [
@@ -79,21 +79,13 @@ function relativeLuma({ r, g, b }: { r: number; g: number; b: number }) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-function getRussianIdeaWord(count: number) {
-  const n = Math.abs(count) % 100;
-  const n1 = n % 10;
-  if (n > 10 && n < 20) return "идей";
-  if (n1 > 1 && n1 < 5) return "идеи";
-  if (n1 === 1) return "идея";
-  return "идей";
-}
-
 const SessionFolderCard = observer(({ 
   session, 
   colorIndex, 
   tagLabel,
   categoryLabel,
   recommendationLabel,
+  coinsLabel,
   palette = "default",
   onOpen,
   showMenu = true,
@@ -102,7 +94,6 @@ const SessionFolderCard = observer(({
   onMoveToExplore,
   onShowFeedback,
   onShowIdeas,
-  ideasCount = 0 
 }: SessionFolderCardProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -271,9 +262,9 @@ const SessionFolderCard = observer(({
         <div className={styles.folderBody}>
           <div className={styles.folderInfo}>
             <div className={styles.badgesRow}>
-              <span className={styles.ideasBadge}>
-                {ideasCount} {getRussianIdeaWord(ideasCount)}
-              </span>
+              {coinsLabel ? (
+                <span className={styles.coinsBadge}>{coinsLabel}</span>
+              ) : null}
               {tagLabel ? (
                 <span className={styles.tagBadge}>{tagLabel}</span>
               ) : null}

@@ -6,9 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import apiAgent from "@/lib/api";
 import { parseImportantOptions } from "@/lib/sessionUtils";
 import {
+  assignPendingSessionReward,
   awardCoinsForAnswer,
   awardDailyStreakForProgress,
+  claimPendingSessionReward,
+  clearDraftSessionReward,
   formatStreakLabel,
+  loadDraftSessionReward,
 } from "@/lib/gamification";
 import { ChevronDown } from "lucide-react";
 import { observer } from "mobx-react-lite";
@@ -69,6 +73,8 @@ type StageGuidanceState = {
   preface?: string;
   clarificationLead?: string;
   clarificationPrompt?: string;
+  reviewLead?: string;
+  reviewPrompt?: string;
   clarificationCount: number;
   initialAttempt?: string;
   clarificationAnswers: string[];
@@ -210,6 +216,8 @@ function getStageGuidance(
     preface: guidance.preface,
     clarificationLead: guidance.clarificationLead,
     clarificationPrompt: guidance.clarificationPrompt,
+    reviewLead: guidance.reviewLead,
+    reviewPrompt: guidance.reviewPrompt,
     initialAttempt: guidance.initialAttempt,
   };
 }
@@ -506,6 +514,7 @@ function coreQuestion(
   subject: Subject,
   answers?: Record<string, string>,
 ): string {
+  const situation = sanitizeThoughtValue(answers?.["core:situation:1"]);
   const primaryThoughtKey = `core:${subject}:3`;
   const secondaryThoughtKey =
     subject === "thought" ? "core:situation:3" : "core:thought:3";
@@ -520,6 +529,9 @@ function coreQuestion(
     case 1:
       return "Расскажите, какая ситуация вас беспокоит";
     case 2:
+      if (subject === "situation" && situation) {
+        return `Какую эмоцию у вас вызывает ситуация, в которой ${situation}?`;
+      }
       return `Какую эмоцию у вас вызывает ${thing}?`;
     case 3:
       return `Как вы думаете, какая мысль/идея вызывает эту эмоцию?`;
@@ -609,6 +621,14 @@ function getPrompt(
         .filter(Boolean)
         .join("\n\n");
     }
+    if (currentGuidance?.reviewPrompt) {
+      return [
+        currentGuidance.reviewLead || currentGuidance.preface || "",
+        currentGuidance.reviewPrompt,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+    }
     if (currentGuidance?.preface) {
       return `${currentGuidance.preface}\n\n${baseQuestion}`;
     }
@@ -629,6 +649,14 @@ function stepKey(view: View): string {
   if (view.kind === "solve") return `solve:${view.step}`;
   if (view.kind === "deepPick") return `deepPick`;
   return "other";
+}
+
+function waitForAnswerPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve());
+    });
+  });
 }
 
 interface StepDialogWindowProps {
@@ -799,6 +827,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   }, [view, currentImportantText]);
 
   const [lastUserAnswer, setLastUserAnswer] = useState<string | null>(null);
+  const [pendingUserAnswer, setPendingUserAnswer] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isAnalyzingAnswer, setIsAnalyzingAnswer] = useState(false);
   const [transitionPhase, setTransitionPhase] =
@@ -855,6 +884,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   }, [currentAnswers, currentImportantText, state.subject]);
 
   const hasClarificationPrompt = !!currentStageGuidance?.clarificationPrompt;
+  const savedCurrentAnswer =
+    currentStepKey ? (getAnswerValue(state, currentStepKey) || "").trim() : "";
 
   const canSkip = (() => {
     if (
@@ -884,6 +915,14 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const showBottomEditorActions =
     isTextAnswerView(view) && view.kind !== "deepPick";
 
+  const canGoForward =
+    !!savedCurrentAnswer &&
+    !isEditing &&
+    !hasClarificationPrompt &&
+    !isTransitioning &&
+    !isAnalyzingAnswer &&
+    isTextAnswerView(view);
+
   const goSkip = () => {
     if (!canSkip) return;
     if (hasClarificationPrompt) {
@@ -901,6 +940,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       }
     }
     onAnswer("—");
+  };
+
+  const goForward = () => {
+    if (!canGoForward) return;
+    onAnswer(savedCurrentAnswer);
   };
 
   useEffect(() => {
@@ -1033,6 +1077,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const animateStateTransition = (displayAnswer: string, nextState: DialogState) => {
     const key = currentStepKey;
+    setPendingUserAnswer(null);
     setLastUserAnswer(displayAnswer);
     if (
       key &&
@@ -1041,6 +1086,17 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       const reward = awardCoinsForAnswer(session.id, key, 3);
       if (reward.awarded) {
         toast.success(`+${reward.delta} монеты`);
+      }
+    }
+    if (
+      !isDraftSession &&
+      view.kind === "core" &&
+      view.step === 9 &&
+      nextState.coreStep === 10
+    ) {
+      const recommendedReward = claimPendingSessionReward(session.id);
+      if (recommendedReward.awarded) {
+        toast.success(`+${recommendedReward.delta} монет за рекомендованную карточку`);
       }
     }
     setIsTransitioning(true);
@@ -1070,6 +1126,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     nextState: DialogState,
     answerKey: string,
   ) => {
+    setPendingUserAnswer(null);
     setLastUserAnswer(displayAnswer);
     setIsTransitioning(true);
     setTransitionPhase("idle");
@@ -1079,6 +1136,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       const templateId = localStorage
         .getItem(`seee_draft_to_explore_template:${userKey}`)
         ?.trim();
+      const draftTemplateReward = loadDraftSessionReward(userKey);
 
       const title = (
         draftTitle && draftTitle.length > 0 ? draftTitle : displayAnswer
@@ -1095,6 +1153,14 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       const reward = awardCoinsForAnswer(newSession.id, answerKey, 3);
       if (reward.awarded) {
         toast.success(`+${reward.delta} монеты`);
+      }
+      if (
+        draftTemplateReward &&
+        (!draftTemplateReward.templateId ||
+          !templateId ||
+          draftTemplateReward.templateId === templateId)
+      ) {
+        assignPendingSessionReward(newSession.id, draftTemplateReward);
       }
 
       const kind = getSessionKind(session.id);
@@ -1116,6 +1182,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         localStorage.removeItem(`seee_draft_title:${userKey}`);
         localStorage.removeItem(`seee_draft_to_explore_template:${userKey}`);
         localStorage.removeItem(`${DRAFT_TO_EXPLORE_CATEGORY_PREFIX}${userKey}`);
+        clearDraftSessionReward(userKey);
       } catch {
         // ignore
       }
@@ -1176,8 +1243,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       view.step >= 1 &&
       view.step <= 9 &&
       trimmed !== "—";
+    setPendingUserAnswer(trimmed);
 
     try {
+      await waitForAnswerPaint();
       setIsAnalyzingAnswer(true);
 
       let nextState = computeNextState(trimmed);
@@ -1235,10 +1304,20 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           const nextKey =
             view.kind === "core" ? `core:${view.subject}:${view.step + 1}` : null;
           const answeredState = setAnswerValue(state, key, normalized);
-          const clearedGuidance = clearStageClarification(
-            getStageGuidance(state, key),
-          );
-          let stageGuidance = setStageGuidance(state, key, clearedGuidance);
+          const settledGuidance = getStageGuidance(state, key);
+          const hadClarificationReview =
+            settledGuidance.clarificationCount > 0 &&
+            !!settledGuidance.clarificationPrompt;
+          const clearedGuidance = clearStageClarification(settledGuidance);
+          let stageGuidance = setStageGuidance(state, key, {
+            ...clearedGuidance,
+            reviewLead: hadClarificationReview
+              ? settledGuidance.clarificationLead || settledGuidance.preface
+              : undefined,
+            reviewPrompt: hadClarificationReview
+              ? settledGuidance.clarificationPrompt
+              : undefined,
+          });
 
           if (nextKey) {
             stageGuidance = {
@@ -1268,7 +1347,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         }
       }
 
-      if (!nextStateWithAnswer) return;
+      if (!nextStateWithAnswer) {
+        setPendingUserAnswer(null);
+        return;
+      }
 
       if (isDraftSession && view.kind === "core" && view.step === 1) {
         await finalizeDraftSession(trimmed, nextStateWithAnswer, key);
@@ -1276,6 +1358,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       }
 
       animateStateTransition(trimmed, nextStateWithAnswer);
+    } catch (error) {
+      setPendingUserAnswer(null);
+      console.error(error);
+      toast.error("Не удалось обработать ответ");
     } finally {
       setIsAnalyzingAnswer(false);
     }
@@ -1421,7 +1507,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const showSolveChoice = view.kind === "solve" && view.step === 7;
 
   const canGoBack = (() => {
-    if (isDraftSession) return false;
     if (isTransitioning || isAnalyzingAnswer || isListModalOpen) return false;
     if (view.kind === "deepPick") return true;
     if (view.kind === "solve") return true;
@@ -1442,7 +1527,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const goBack = () => {
     if (!canGoBack) return;
-    const answerToSave = inputText.trim();
+    const answerToSave = inputText.trim() || savedCurrentAnswer;
     forceEditOnStepSyncRef.current = true;
 
     const applyBackState = (s: DialogState): Partial<DialogState> => {
@@ -1591,7 +1676,18 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                   )}
                 </div>
                 <div className={styles.actionsRight}>
-                  {canSkip && (
+                  {canGoForward ? (
+                    <button
+                      type="button"
+                      onClick={goForward}
+                      disabled={!canGoForward}
+                      className={styles.skipButton}
+                      aria-label="Дальше"
+                      title="Дальше"
+                    >
+                      Дальше →
+                    </button>
+                  ) : canSkip ? (
                     <button
                       type="button"
                       onClick={goSkip}
@@ -1602,12 +1698,24 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                     >
                       {skipButtonLabel}
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             )}
           </div>
         </div>
+
+        {pendingUserAnswer && !lastUserAnswer && (
+          <div
+            className={`${chatStyles.messageWrapper} ${chatStyles.visible}`}
+          >
+            <div
+              className={`${chatStyles.message} ${chatStyles.userMessage} ${styles.centeredUserBubble}`}
+            >
+              <p className={chatStyles.messageContent}>{pendingUserAnswer}</p>
+            </div>
+          </div>
+        )}
 
         {lastUserAnswer && (
           <div

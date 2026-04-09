@@ -209,7 +209,8 @@
 }
 
 .ideasBadge,
-.tagBadge {
+.tagBadge,
+.coinsBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -221,6 +222,15 @@
   background: rgba(255, 255, 255, 0.62);
   border: 1px solid rgba(0, 0, 0, 0.10);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.10);
+}
+
+.coinsBadge {
+  color: rgba(111, 74, 0, 0.96);
+  background: linear-gradient(135deg, rgba(255, 247, 212, 0.94) 0%, rgba(244, 215, 126, 0.92) 100%);
+  border-color: rgba(214, 163, 66, 0.34);
+  box-shadow:
+    0 6px 16px rgba(214, 163, 66, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
 .recommendationBadge {
@@ -314,4 +324,3 @@
     font-size: 1.02rem;
   }
 }
-

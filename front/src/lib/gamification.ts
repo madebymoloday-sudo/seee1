@@ -1,6 +1,9 @@
 const COINS_STORAGE_PREFIX = "seee_user_coins:";
 const SESSION_REWARDS_STORAGE_PREFIX = "seee_session_rewards:";
+const SESSION_BONUS_REWARDS_STORAGE_PREFIX = "seee_session_bonus_rewards:";
 const USER_STREAK_STORAGE_PREFIX = "seee_user_streak:";
+const DRAFT_TEMPLATE_REWARD_PREFIX = "seee_draft_template_reward:";
+const SESSION_PENDING_REWARD_PREFIX = "seee_session_pending_reward:";
 
 export type League = {
   id: string;
@@ -26,6 +29,18 @@ export type LeaderboardEntry = {
 type DailyStreakState = {
   streak: number;
   lastQualifiedDate: string | null;
+};
+
+type SessionBonusReward = {
+  id: string;
+  amount: number;
+};
+
+export type PendingSessionReward = {
+  id: string;
+  amount: number;
+  templateId?: string;
+  reason?: string;
 };
 
 export const LEAGUES: League[] = [
@@ -94,7 +109,26 @@ export function getUserCoins(userKey = getGamificationUserKey()): number {
   try {
     const raw = localStorage.getItem(`${COINS_STORAGE_PREFIX}${userKey}`);
     const value = Number(raw ?? "0");
-    return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+    if (Number.isFinite(value) && value > 0) {
+      return Math.floor(value);
+    }
+
+    const recoveredCoins = recoverCoinsFromSessionStorage();
+    if (recoveredCoins > 0) {
+      setUserCoins(recoveredCoins, userKey);
+      return recoveredCoins;
+    }
+
+    if (userKey !== "anon") {
+      const anonRaw = localStorage.getItem(`${COINS_STORAGE_PREFIX}anon`);
+      const anonValue = Number(anonRaw ?? "0");
+      if (Number.isFinite(anonValue) && anonValue > 0) {
+        setUserCoins(Math.floor(anonValue), userKey);
+        return Math.floor(anonValue);
+      }
+    }
+
+    return 0;
   } catch {
     return 0;
   }
@@ -105,6 +139,46 @@ function setUserCoins(value: number, userKey = getGamificationUserKey()) {
     localStorage.setItem(`${COINS_STORAGE_PREFIX}${userKey}`, String(Math.max(0, Math.floor(value))));
   } catch {
     // ignore
+  }
+}
+
+function recoverCoinsFromSessionStorage(): number {
+  try {
+    let total = 0;
+
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const storageKey = localStorage.key(i);
+      if (!storageKey) continue;
+
+      if (storageKey.startsWith(SESSION_REWARDS_STORAGE_PREFIX)) {
+        const raw = localStorage.getItem(storageKey);
+        const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+        if (Array.isArray(parsed)) {
+          total +=
+            parsed
+              .map((item) => String(item ?? "").trim())
+              .filter(Boolean).length * 3;
+        }
+        continue;
+      }
+
+      if (storageKey.startsWith(SESSION_BONUS_REWARDS_STORAGE_PREFIX)) {
+        const raw = localStorage.getItem(storageKey);
+        const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+        if (Array.isArray(parsed)) {
+          total += parsed.reduce((sum, entry) => {
+            const amount = Math.floor(
+              Number((entry as { amount?: unknown })?.amount ?? 0),
+            );
+            return sum + (Number.isFinite(amount) && amount > 0 ? amount : 0);
+          }, 0);
+        }
+      }
+    }
+
+    return Math.max(0, Math.floor(total));
+  } catch {
+    return 0;
   }
 }
 
@@ -190,6 +264,36 @@ function setRewardedAnswerIds(sessionId: string, rewardIds: string[]) {
   }
 }
 
+function getSessionBonusRewards(sessionId: string): SessionBonusReward[] {
+  try {
+    const raw = localStorage.getItem(`${SESSION_BONUS_REWARDS_STORAGE_PREFIX}${sessionId}`);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((entry) => ({
+        id: String((entry as { id?: unknown })?.id ?? "").trim(),
+        amount: Math.max(
+          0,
+          Math.floor(Number((entry as { amount?: unknown })?.amount ?? 0)),
+        ),
+      }))
+      .filter((entry) => entry.id && entry.amount > 0);
+  } catch {
+    return [];
+  }
+}
+
+function setSessionBonusRewards(sessionId: string, rewards: SessionBonusReward[]) {
+  try {
+    localStorage.setItem(
+      `${SESSION_BONUS_REWARDS_STORAGE_PREFIX}${sessionId}`,
+      JSON.stringify(rewards),
+    );
+  } catch {
+    // ignore
+  }
+}
+
 function emitCoinsUpdated(balance: number) {
   window.dispatchEvent(
     new CustomEvent("seee:coins-updated", {
@@ -222,6 +326,175 @@ export function awardCoinsForAnswer(
   emitCoinsUpdated(nextBalance);
 
   return { awarded: true, balance: nextBalance, delta: amount };
+}
+
+export function getSessionCoinsEarned(sessionId: string): number {
+  const answerCoins = getRewardedAnswerIds(sessionId).length * 3;
+  const bonusCoins = getSessionBonusRewards(sessionId).reduce(
+    (sum, reward) => sum + Math.max(0, Math.floor(reward.amount)),
+    0,
+  );
+  return answerCoins + bonusCoins;
+}
+
+export function awardSessionBonus(
+  sessionId: string,
+  bonusId: string,
+  amount: number,
+): { awarded: boolean; balance: number; delta: number; sessionCoins: number } {
+  const safeBonusId = String(bonusId || "").trim();
+  const safeAmount = Math.max(0, Math.floor(amount));
+  if (!safeBonusId || safeAmount <= 0) {
+    return {
+      awarded: false,
+      balance: getUserCoins(),
+      delta: 0,
+      sessionCoins: getSessionCoinsEarned(sessionId),
+    };
+  }
+
+  const existingRewards = getSessionBonusRewards(sessionId);
+  if (existingRewards.some((reward) => reward.id === safeBonusId)) {
+    return {
+      awarded: false,
+      balance: getUserCoins(),
+      delta: 0,
+      sessionCoins: getSessionCoinsEarned(sessionId),
+    };
+  }
+
+  setSessionBonusRewards(sessionId, [
+    ...existingRewards,
+    { id: safeBonusId, amount: safeAmount },
+  ]);
+
+  const nextBalance = getUserCoins() + safeAmount;
+  setUserCoins(nextBalance);
+  emitCoinsUpdated(nextBalance);
+
+  return {
+    awarded: true,
+    balance: nextBalance,
+    delta: safeAmount,
+    sessionCoins: getSessionCoinsEarned(sessionId),
+  };
+}
+
+export function loadDraftSessionReward(
+  userKey = getGamificationUserKey(),
+): PendingSessionReward | null {
+  try {
+    const raw = localStorage.getItem(`${DRAFT_TEMPLATE_REWARD_PREFIX}${userKey}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<PendingSessionReward>;
+    const id = String(parsed?.id ?? "").trim();
+    const amount = Math.max(0, Math.floor(Number(parsed?.amount ?? 0)));
+    if (!id || amount <= 0) return null;
+    return {
+      id,
+      amount,
+      templateId: parsed?.templateId ? String(parsed.templateId).trim() : undefined,
+      reason: parsed?.reason ? String(parsed.reason).trim() : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveDraftSessionReward(
+  reward: PendingSessionReward | null,
+  userKey = getGamificationUserKey(),
+): void {
+  try {
+    if (!reward || !reward.id || reward.amount <= 0) {
+      localStorage.removeItem(`${DRAFT_TEMPLATE_REWARD_PREFIX}${userKey}`);
+      return;
+    }
+
+    localStorage.setItem(
+      `${DRAFT_TEMPLATE_REWARD_PREFIX}${userKey}`,
+      JSON.stringify({
+        id: String(reward.id),
+        amount: Math.max(0, Math.floor(reward.amount)),
+        templateId: reward.templateId,
+        reason: reward.reason,
+      }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+export function clearDraftSessionReward(userKey = getGamificationUserKey()): void {
+  try {
+    localStorage.removeItem(`${DRAFT_TEMPLATE_REWARD_PREFIX}${userKey}`);
+  } catch {
+    // ignore
+  }
+}
+
+export function assignPendingSessionReward(
+  sessionId: string,
+  reward: PendingSessionReward | null,
+): void {
+  try {
+    if (!reward || !reward.id || reward.amount <= 0) {
+      localStorage.removeItem(`${SESSION_PENDING_REWARD_PREFIX}${sessionId}`);
+      return;
+    }
+
+    localStorage.setItem(
+      `${SESSION_PENDING_REWARD_PREFIX}${sessionId}`,
+      JSON.stringify({
+        id: String(reward.id),
+        amount: Math.max(0, Math.floor(reward.amount)),
+        templateId: reward.templateId,
+        reason: reward.reason,
+      }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+export function claimPendingSessionReward(
+  sessionId: string,
+): { awarded: boolean; balance: number; delta: number; sessionCoins: number } {
+  try {
+    const raw = localStorage.getItem(`${SESSION_PENDING_REWARD_PREFIX}${sessionId}`);
+    if (!raw) {
+      return {
+        awarded: false,
+        balance: getUserCoins(),
+        delta: 0,
+        sessionCoins: getSessionCoinsEarned(sessionId),
+      };
+    }
+
+    const parsed = JSON.parse(raw) as Partial<PendingSessionReward>;
+    const rewardId = String(parsed?.id ?? "").trim();
+    const amount = Math.max(0, Math.floor(Number(parsed?.amount ?? 0)));
+    if (!rewardId || amount <= 0) {
+      localStorage.removeItem(`${SESSION_PENDING_REWARD_PREFIX}${sessionId}`);
+      return {
+        awarded: false,
+        balance: getUserCoins(),
+        delta: 0,
+        sessionCoins: getSessionCoinsEarned(sessionId),
+      };
+    }
+
+    const result = awardSessionBonus(sessionId, rewardId, amount);
+    localStorage.removeItem(`${SESSION_PENDING_REWARD_PREFIX}${sessionId}`);
+    return result;
+  } catch {
+    return {
+      awarded: false,
+      balance: getUserCoins(),
+      delta: 0,
+      sessionCoins: getSessionCoinsEarned(sessionId),
+    };
+  }
 }
 
 export function getUserStreak(userKey = getGamificationUserKey()): number {

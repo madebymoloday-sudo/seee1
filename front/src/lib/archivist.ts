@@ -1,8 +1,8 @@
+import { getSessionCoinsEarned as getStoredSessionCoinsEarned } from "./gamification";
 import { parseImportantOptions } from "./sessionUtils";
 
 const SESSION_STATE_STORAGE_PREFIX = "seee_step_dialog_state:";
 const SESSION_NOTES_STORAGE_PREFIX = "seee_session_notes:";
-const SESSION_REWARDS_STORAGE_PREFIX = "seee_session_rewards:";
 const ARCHIVIST_CONTEXT_STORAGE_PREFIX = "seee_archivist_gallery_context:";
 
 export type ArchivistSuggestedCard = {
@@ -147,11 +147,7 @@ export function getArchivistUserKey(): string {
 }
 
 export function getSessionCoinsEarned(sessionId: string): number {
-  const rewardedIds = safeJsonParse<unknown[]>(
-    localStorage.getItem(`${SESSION_REWARDS_STORAGE_PREFIX}${sessionId}`),
-  );
-  if (!Array.isArray(rewardedIds)) return 0;
-  return rewardedIds.map((item) => String(item ?? "").trim()).filter(Boolean).length * 3;
+  return getStoredSessionCoinsEarned(sessionId);
 }
 
 export function buildSessionSnapshot(

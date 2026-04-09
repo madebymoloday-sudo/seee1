@@ -6,8 +6,8 @@
   left: 0;
   right: 0;
   z-index: 10010;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: 1.25rem;
+  padding-top: calc(env(safe-area-inset-top) + 1rem);
+  padding-bottom: 1rem;
   padding-left: 1.5rem;
   padding-right: 1.5rem;
   background: linear-gradient(
@@ -28,6 +28,7 @@
     top: 0;
     left: auto;
     right: auto;
+    padding-top: env(safe-area-inset-top);
   }
 }
 
@@ -38,6 +39,7 @@
   justify-content: center;
   gap: 0.85rem;
   max-width: 1200px;
+  min-height: 56px;
   margin: 0 auto;
 }
 
@@ -64,6 +66,7 @@
 
 .sessionTitleWrapper {
   position: relative;
+  min-width: 0;
 }
 
 .coinsArea {
@@ -195,9 +198,11 @@
   background: rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(0, 0, 0, 0.08);
   cursor: pointer;
-  padding: 0.5rem 1rem;
+  padding: 0.65rem 1rem;
   border-radius: 0.75rem;
   transition: all 0.2s ease;
+  min-height: 52px;
+  min-width: 0;
 }
 
 .sessionTitleButton:hover {
@@ -217,6 +222,25 @@
   color: rgba(0, 0, 0, 0.85);
   margin: 0;
   letter-spacing: -0.01em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .headerContent {
+    min-height: 48px;
+  }
+
+  .sessionTitleButton {
+    min-height: 46px;
+    padding: 0.5rem 0.85rem;
+  }
+
+  .sessionTitle {
+    font-size: 1.08rem;
+  }
 }
 
 .chevron {

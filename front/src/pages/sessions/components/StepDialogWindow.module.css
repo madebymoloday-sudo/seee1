@@ -358,6 +358,10 @@
   overflow-wrap: anywhere;
 }
 
+.centeredUserBubble p {
+  color: rgba(17, 24, 39, 0.94) !important;
+}
+
 /* Обёртка поля ввода: выравнивание по ширине сообщений (как в ChatWindow). */
 .inputAlignWrapper {
   width: 100%;
@@ -405,5 +409,6 @@
 @media (min-width: 769px) {
   .messagesStage {
     justify-content: center;
+    padding-top: 4.35rem;
   }
 }

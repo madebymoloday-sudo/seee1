@@ -13,6 +13,12 @@
   bottom: 0;
   flex-shrink: 0;
   z-index: 20;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.16) 18%,
+    rgba(255, 255, 255, 0.92) 100%
+  );
 }
 
 .messagesContainer {
@@ -27,7 +33,7 @@
   scroll-behavior: auto;
   overscroll-behavior-y: contain;
   scroll-padding-top: calc(5rem + env(safe-area-inset-top));
-  scroll-padding-bottom: 1rem;
+  scroll-padding-bottom: 2rem;
 }
 
 /* Кастомный скроллбар */
@@ -146,6 +152,17 @@
   }
 }
 
+@media (max-width: 768px) {
+  .composerDock {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.1) 14%,
+      rgba(255, 255, 255, 0.88) 100%
+    );
+  }
+}
+
 .message {
   max-width: 680px;
   width: calc(100% - 2rem);
@@ -219,7 +236,7 @@
 }
 
 .userMessage .messageContent {
-  color: rgba(30, 58, 138, 0.9);
+  color: rgba(17, 24, 39, 0.92);
   text-align: right;
 }
 

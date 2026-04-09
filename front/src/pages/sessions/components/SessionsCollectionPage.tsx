@@ -25,6 +25,7 @@ import {
   type ArchivistGalleryContext,
   type ArchivistSuggestedCard,
 } from "@/lib/archivist";
+import { getSessionCoinsEarned, saveDraftSessionReward } from "@/lib/gamification";
 
 type SortOption = "my_sessions" | "to_explore" | "freedom" | "happiness" | "deferred" | "recommended";
 
@@ -306,6 +307,11 @@ function truncateLabel(value: string, maxLength = 34): string {
   return `${safeValue.slice(0, maxLength - 1).trimEnd()}…`;
 }
 
+function formatCoinsBadgeLabel(amount: number): string {
+  const safeAmount = Math.max(0, Math.floor(amount));
+  return `+${safeAmount} 🪙`;
+}
+
 function tokenize(value: string): string[] {
   return normalizeText(value)
     .split(" ")
@@ -432,27 +438,6 @@ function buildRecommendedTemplateIds(
     .slice(0, 8);
 
   return new Set(filtered.map((x) => x.id));
-}
-
-function getIdeasCountFromLocalState(sessionId: string): number {
-  try {
-    const raw = localStorage.getItem(`seee_step_dialog_state:${sessionId}`);
-    if (!raw) return 0;
-    const parsed = JSON.parse(raw) as { v?: number; answers?: Record<string, string> };
-    const answers = parsed?.v === 2 ? parsed.answers || {} : {};
-
-    const answer3 =
-      answers["core:situation:3"] || answers["core:thought:3"] || "";
-    const answer4 =
-      answers["core:situation:4"] || answers["core:thought:4"] || "";
-
-    let count = 0;
-    if (answer3.trim()) count += 1;
-    count += parseImportantOptions(answer4).length;
-    return count;
-  } catch {
-    return 0;
-  }
 }
 
 function getIdeasFromLocalState(sessionId: string): { coreThought?: string; importantIdeas: string[] } {
@@ -705,12 +690,6 @@ const SessionsCollectionPage = observer(() => {
     toast.success("Карточка перенесена в «Предстоит изучить»");
   };
 
-  const getIdeasCountForSession = (session: SessionResponseDto) => {
-    const fromLocal = getIdeasCountFromLocalState(session.id);
-    const base = typeof session.messageCount === "number" ? session.messageCount : 0;
-    return Math.max(fromLocal, base);
-  };
-
   const recommendedTemplateIds = useMemo(
     () => buildRecommendedTemplateIds(toExplore, sessions),
     [toExplore, sessions]
@@ -758,7 +737,10 @@ const SessionsCollectionPage = observer(() => {
     return list;
   }, [shuffledToExplore, searchQuery, sortOption, recommendedTemplateIds]);
 
-  const openToExploreTemplate = (template: ToExploreTemplateWithSession) => {
+  const openToExploreTemplate = (
+    template: ToExploreTemplateWithSession,
+    options?: { rewardCoins?: number },
+  ) => {
     if (template.sourceSessionId) {
       navigate(`/sessions/${template.sourceSessionId}`);
       return;
@@ -767,6 +749,17 @@ const SessionsCollectionPage = observer(() => {
       localStorage.setItem(`seee_draft_title:${userKey}`, template.title);
       localStorage.setItem(`seee_draft_to_explore_template:${userKey}`, template.id);
       localStorage.setItem(`seee_draft_to_explore_category:${userKey}`, template.category);
+      saveDraftSessionReward(
+        options?.rewardCoins && options.rewardCoins > 0
+          ? {
+              id: `recommended:first-pass:${template.id}`,
+              amount: options.rewardCoins,
+              templateId: template.id,
+              reason: "recommended_first_pass",
+            }
+          : null,
+        userKey,
+      );
     } catch {
       // ignore
     }
@@ -1198,7 +1191,7 @@ const SessionsCollectionPage = observer(() => {
           </div>
 
           <div className={styles.archivistWelcomeScene}>
-            <img src="/archivist-source-character.png" alt="Архивариус" className={styles.archivistCharacter} />
+            <img src="/archivist-wave.png" alt="Архивариус" className={styles.archivistCharacter} />
 
             <div className={styles.archivistControls}>
               <div className={styles.archivistChoiceBar}>
@@ -1445,12 +1438,17 @@ const SessionsCollectionPage = observer(() => {
                         onMoveToExplore={() => handleMoveToExplore(session)}
                         onShowFeedback={() => setFeedbackInfoSessionId(session.id)}
                         onShowIdeas={() => setIdeasInfoSessionId(session.id)}
-                        ideasCount={getIdeasCountForSession(session)}
+                        coinsLabel={formatCoinsBadgeLabel(getSessionCoinsEarned(session.id))}
                       />
                     );
                   }
 
                   const t = item.template;
+                  const isRecommendedTemplate =
+                    t.id.startsWith("to_explore:archivist:") ||
+                    recommendedTemplateIds.has(t.id);
+                  const hasRecommendedStartReward =
+                    isRecommendedTemplate && !t.sourceSessionId;
                   const fakeSession = {
                     id: t.id,
                     title: t.title,
@@ -1463,9 +1461,13 @@ const SessionsCollectionPage = observer(() => {
                       key={t.id}
                       session={fakeSession}
                       colorIndex={index}
-                      ideasCount={1}
                       tagLabel="Предстоит изучить"
                       categoryLabel={t.category}
+                      coinsLabel={
+                        hasRecommendedStartReward
+                          ? formatCoinsBadgeLabel(25)
+                          : undefined
+                      }
                       recommendationLabel={
                         t.id.startsWith("to_explore:archivist:")
                           ? "Рекомендация Архивариуса"
@@ -1475,7 +1477,11 @@ const SessionsCollectionPage = observer(() => {
                       }
                       palette="toExplore"
                       showMenu={false}
-                      onOpen={() => openToExploreTemplate(t)}
+                      onOpen={() =>
+                        openToExploreTemplate(t, {
+                          rewardCoins: hasRecommendedStartReward ? 25 : 0,
+                        })
+                      }
                     />
                   );
                 })}

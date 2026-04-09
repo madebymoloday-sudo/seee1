@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Eye, EyeOff, Edit2, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
-import { useMobileUiScale } from "@/hooks/useMobileUiScale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +12,6 @@ import styles from "./SecuritySettings.module.css";
 const SecuritySettings = () => {
   const { user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
-  const { mobileUiScale, setMobileUiScale, resetMobileUiScale } = useMobileUiScale();
   const [showLogin, setShowLogin] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isEditingLogin, setIsEditingLogin] = useState(false);
@@ -287,37 +285,6 @@ const SecuritySettings = () => {
           </div>
         </div>
 
-        {/* Мобильный масштаб */}
-        <div className={styles.field}>
-          <label className={styles.label}>Масштаб интерфейса (мобильная версия)</label>
-          <div className={styles.scaleWrap}>
-            <input
-              type="range"
-              min={0.82}
-              max={1}
-              step={0.01}
-              value={mobileUiScale}
-              onChange={(e) => setMobileUiScale(Number(e.target.value))}
-              className={styles.scaleSlider}
-              aria-label="Масштаб интерфейса на мобильных устройствах"
-            />
-            <div className={styles.scaleMeta}>
-              <span className={styles.scaleValue}>{Math.round(mobileUiScale * 100)}%</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={resetMobileUiScale}
-                className={styles.scaleReset}
-              >
-                Сброс
-              </Button>
-            </div>
-            <p className={styles.scaleHint}>
-              Применяется только на экранах до 768px.
-            </p>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );

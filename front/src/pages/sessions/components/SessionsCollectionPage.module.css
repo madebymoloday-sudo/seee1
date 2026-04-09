@@ -51,8 +51,9 @@
 }
 
 .archivistWelcomeCard {
-  width: min(100%, 860px);
-  padding: 1.2rem 1.35rem;
+  width: min(100%, 980px);
+  min-height: 208px;
+  padding: 1.25rem 1.6rem 1.35rem 18.5rem;
   border-radius: 2rem;
   background: rgba(255, 255, 255, 0.78);
   box-shadow:
@@ -62,7 +63,7 @@
 
 .archivistWelcomeTitle {
   margin: 0 0 0.25rem;
-  text-align: center;
+  text-align: left;
   font-size: clamp(2.2rem, 5.5vw, 3.6rem);
   line-height: 0.95;
   font-weight: 800;
@@ -70,9 +71,9 @@
 }
 
 .archivistWelcomeText {
-  margin: 0 auto;
-  max-width: 26ch;
-  text-align: center;
+  margin: 0;
+  max-width: 24ch;
+  text-align: left;
   font-size: clamp(1.12rem, 2.25vw, 1.65rem);
   line-height: 1.14;
   font-weight: 700;
@@ -82,9 +83,9 @@
 
 .archivistControls {
   position: absolute;
-  right: 0;
-  top: 8%;
-  width: min(48%, 410px);
+  right: 1.15rem;
+  top: 19%;
+  width: min(43%, 360px);
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -185,9 +186,9 @@
 }
 
 .archivistWelcomeScene {
-  width: min(100%, 920px);
+  width: min(100%, 1080px);
   flex: 1;
-  min-height: 372px;
+  min-height: 390px;
   max-height: 580px;
   margin-top: -0.2rem;
   position: relative;
@@ -195,20 +196,31 @@
 
 .archivistCharacter {
   position: absolute;
-  left: 8%;
-  bottom: 138px;
-  width: min(33vw, 304px);
-  max-width: 304px;
-  filter: drop-shadow(0 28px 28px rgba(15, 23, 42, 0.12));
+  left: clamp(-84px, -4vw, -20px);
+  bottom: 54px;
+  width: min(24vw, 280px);
+  max-width: 280px;
+  filter: drop-shadow(0 34px 34px rgba(15, 23, 42, 0.16));
   pointer-events: none;
   z-index: 3;
 }
 
+@media (min-width: 1024px) {
+  .archivistWelcomeCard {
+    padding-left: 20rem;
+  }
+
+  .archivistControls {
+    top: 17%;
+    width: min(40%, 352px);
+  }
+}
+
 .archivistArchiveButton {
   position: absolute;
-  right: -1.15rem;
+  right: -2.3rem;
   bottom: 6px;
-  width: min(49vw, 410px);
+  width: min(44vw, 430px);
   border: none;
   background: transparent;
   padding: 0;
@@ -348,16 +360,20 @@
   }
 
   .archivistWelcomeCard {
+    min-height: auto;
     padding: 1rem 1rem 1.1rem;
     border-radius: 1.6rem;
   }
 
   .archivistWelcomeTitle {
+    text-align: center;
     font-size: clamp(1.8rem, 9vw, 2.4rem);
   }
 
   .archivistWelcomeText {
+    margin: 0 auto;
     max-width: 100%;
+    text-align: center;
     font-size: 1rem;
     line-height: 1.14;
   }
@@ -393,9 +409,9 @@
   }
 
   .archivistCharacter {
-    width: min(45vw, 186px);
-    bottom: 142px;
-    left: 1%;
+    width: min(44vw, 190px);
+    bottom: 112px;
+    left: -2%;
   }
 
   .archivistArchiveButton {

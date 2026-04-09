@@ -10,16 +10,19 @@ import {
   getUserStreak,
   LEAGUES,
 } from "@/lib/gamification";
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./RatingPage.module.css";
 
 const RatingPage = () => {
   const navigate = useNavigate();
-  const currentCoins = getUserCoins();
-  const currentStreak = getUserStreak();
+  const [currentCoins, setCurrentCoins] = useState(() => getUserCoins());
+  const [currentStreak, setCurrentStreak] = useState(() => getUserStreak());
   const currentUsername = getGamificationUsername();
-  const leaderboard = useMemo(() => buildLeaderboardEntries(), []);
+  const leaderboard = useMemo(
+    () => buildLeaderboardEntries(),
+    [currentCoins, currentStreak, currentUsername],
+  );
   const currentLeague = getLeagueForPoints(currentCoins);
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const activeLeagueRef = useRef<HTMLDivElement | null>(null);
@@ -38,6 +41,23 @@ const RatingPage = () => {
   const relegationEntries = leagueLeaderboard.slice(
     currentRank > 5 ? focusEnd : 5,
   );
+
+  useEffect(() => {
+    const syncGamification = () => {
+      setCurrentCoins(getUserCoins());
+      setCurrentStreak(getUserStreak());
+    };
+
+    window.addEventListener("storage", syncGamification);
+    window.addEventListener("seee:coins-updated", syncGamification as EventListener);
+    window.addEventListener("seee:streak-updated", syncGamification as EventListener);
+
+    return () => {
+      window.removeEventListener("storage", syncGamification);
+      window.removeEventListener("seee:coins-updated", syncGamification as EventListener);
+      window.removeEventListener("seee:streak-updated", syncGamification as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     const carousel = carouselRef.current;
