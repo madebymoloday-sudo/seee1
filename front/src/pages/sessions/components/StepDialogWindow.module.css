@@ -7,11 +7,11 @@
   flex: 1;
   min-height: 0;
   width: 100%;
-  padding-top: 2.65rem;
+  padding-top: 3.45rem;
 }
 
 .messagesStage [data-chat-current-question="true"] {
-  scroll-margin-top: calc(5.75rem + env(safe-area-inset-top));
+  scroll-margin-top: calc(6.6rem + env(safe-area-inset-top));
 }
 
 .bottomDock {
@@ -383,11 +383,11 @@
 
 @media (max-width: 768px) {
   .messagesStage {
-    padding-top: 1.9rem;
+    padding-top: 4.15rem;
   }
 
   .messagesStage [data-chat-current-question="true"] {
-    scroll-margin-top: calc(6.25rem + env(safe-area-inset-top));
+    scroll-margin-top: calc(8.35rem + env(safe-area-inset-top));
   }
 
   .inputAlignWrapper > div {
@@ -398,7 +398,7 @@
 
 @media (max-width: 480px) {
   .messagesStage {
-    padding-top: 1.75rem;
+    padding-top: 4.35rem;
   }
 }
 
