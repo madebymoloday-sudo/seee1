@@ -41,7 +41,7 @@
   margin: 0 auto;
 }
 
-.headerContent > *:not(.sessionTitleWrapper):not(.coinsPill) {
+.headerContent > *:not(.sessionTitleWrapper):not(.coinsArea):not(.coinsPill) {
   display: none !important;
 }
 
@@ -66,8 +66,14 @@
   position: relative;
 }
 
-.coinsPill {
+.coinsArea {
   margin-left: auto;
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+}
+
+.coinsPill {
   display: inline-flex !important;
   align-items: center;
   gap: 0.45rem;
@@ -80,6 +86,24 @@
     0 10px 22px rgba(214, 163, 66, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.94);
   color: #6f4a00;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.coinsPill:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 28px rgba(214, 163, 66, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  filter: saturate(1.05);
+}
+
+.coinsPill:focus-visible {
+  outline: 2px solid rgba(214, 163, 66, 0.55);
+  outline-offset: 3px;
 }
 
 .coinsIcon {
@@ -91,6 +115,77 @@
   font-size: 0.96rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+}
+
+.coinsPopover {
+  position: absolute;
+  top: calc(100% + 0.7rem);
+  right: 0;
+  min-width: 232px;
+  padding: 0.9rem 0.95rem 0.85rem;
+  border-radius: 1rem;
+  background: rgba(24, 19, 7, 0.96);
+  border: 1px solid rgba(255, 214, 123, 0.24);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.3),
+    0 6px 18px rgba(214, 163, 66, 0.16);
+  color: rgba(255, 248, 226, 0.98);
+  z-index: 22000;
+  animation: fadeIn 0.18s ease;
+}
+
+.coinsPopoverArrow {
+  position: absolute;
+  top: -0.36rem;
+  right: 1.25rem;
+  width: 0.72rem;
+  height: 0.72rem;
+  background: rgba(24, 19, 7, 0.96);
+  border-left: 1px solid rgba(255, 214, 123, 0.24);
+  border-top: 1px solid rgba(255, 214, 123, 0.24);
+  transform: rotate(45deg);
+}
+
+.coinsPopoverTitle {
+  margin: 0 0 0.7rem;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #ffd56a;
+}
+
+.coinsPopoverRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.coinsPopoverRow + .coinsPopoverRow {
+  margin-top: 0.55rem;
+}
+
+.coinsPopoverLabel {
+  font-size: 0.82rem;
+  line-height: 1.25;
+  color: rgba(255, 244, 215, 0.74);
+}
+
+.coinsPopoverValue {
+  font-size: 0.83rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: rgba(255, 251, 239, 0.98);
+  text-align: right;
+}
+
+.coinsPopoverMeta {
+  max-width: 8.5rem;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  font-weight: 600;
+  color: rgba(255, 232, 170, 0.94);
+  text-align: right;
 }
 
 .sessionTitleButton {

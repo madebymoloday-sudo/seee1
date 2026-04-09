@@ -11,9 +11,10 @@ import { getAllPipelines } from "@/api/pipeline.api";
 import { toast } from "sonner";
 import PauseSessionModal from "./PauseSessionModal";
 import { clearDraftSession } from "@/lib/sessionUtils";
-import { getUserCoins } from "@/lib/gamification";
+import { buildLeaderboardEntries, getUserCoins } from "@/lib/gamification";
 import {
   createPendingArchivistContext,
+  getSessionCoinsEarned,
   saveArchivistGalleryContext,
 } from "@/lib/archivist";
 import styles from "./SessionHeader.module.css";
@@ -64,6 +65,17 @@ function saveDeferredTemplate(userKey: string, item: DeferredTemplate) {
 interface SessionHeaderProps {
   session: SessionResponseDto;
   isDraft?: boolean;
+}
+
+function formatCoinsLabel(amount: number): string {
+  const safeAmount = Math.max(0, Math.floor(amount));
+  const mod10 = safeAmount % 10;
+  const mod100 = safeAmount % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${safeAmount} монета`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+    return `${safeAmount} монеты`;
+  }
+  return `${safeAmount} монет`;
 }
 
 const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps) => {
@@ -165,7 +177,18 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
   const [isDeferredModalOpen, setIsDeferredModalOpen] = useState(false);
   const [deferredThought, setDeferredThought] = useState("");
   const [coinsBalance, setCoinsBalance] = useState(() => getUserCoins());
+  const [isCoinsPopoverOpen, setIsCoinsPopoverOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const coinsAreaRef = useRef<HTMLDivElement>(null);
+
+  const sessionCoinsEarned = getSessionCoinsEarned(session.id);
+  const leaderboardEntries = buildLeaderboardEntries();
+  const currentUserEntry = leaderboardEntries.find((entry) => entry.isCurrentUser);
+  const currentRank = leaderboardEntries.findIndex((entry) => entry.isCurrentUser) + 1;
+  const ratingSummary =
+    currentUserEntry && currentRank > 0
+      ? `${currentRank} место в ${currentUserEntry.league.name.toLowerCase()} лиге`
+      : "рейтинг появится после первых монет";
 
   useEffect(() => {
     const syncCoins = () => setCoinsBalance(getUserCoins());
@@ -194,6 +217,30 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMenuOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (coinsAreaRef.current && !coinsAreaRef.current.contains(event.target as Node)) {
+        setIsCoinsPopoverOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsCoinsPopoverOpen(false);
+      }
+    };
+
+    if (isCoinsPopoverOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isCoinsPopoverOpen]);
 
   const handleRename = () => {
     const newTitle = prompt("Введите новое название сессии:", session.title || "Новая сессия");
@@ -378,9 +425,36 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
             </div>
           )}
         </div>
-        <div className={styles.coinsPill} title="Ваши монеты">
-          <Coins className={styles.coinsIcon} />
-          <span className={styles.coinsValue}>{coinsBalance}</span>
+        <div className={styles.coinsArea} ref={coinsAreaRef}>
+          <button
+            type="button"
+            className={styles.coinsPill}
+            title="Ваши монеты"
+            onClick={() => setIsCoinsPopoverOpen((open) => !open)}
+            aria-expanded={isCoinsPopoverOpen}
+            aria-haspopup="dialog"
+          >
+            <Coins className={styles.coinsIcon} />
+            <span className={styles.coinsValue}>{coinsBalance}</span>
+          </button>
+          {isCoinsPopoverOpen && (
+            <div className={styles.coinsPopover} role="dialog" aria-label="Информация о монетах">
+              <div className={styles.coinsPopoverArrow} aria-hidden="true" />
+              <p className={styles.coinsPopoverTitle}>Монет заработано</p>
+              <div className={styles.coinsPopoverRow}>
+                <span className={styles.coinsPopoverLabel}>За эту сессию</span>
+                <span className={styles.coinsPopoverValue}>{formatCoinsLabel(sessionCoinsEarned)}</span>
+              </div>
+              <div className={styles.coinsPopoverRow}>
+                <span className={styles.coinsPopoverLabel}>Ваш баланс</span>
+                <span className={styles.coinsPopoverValue}>{formatCoinsLabel(coinsBalance)}</span>
+              </div>
+              <div className={styles.coinsPopoverRow}>
+                <span className={styles.coinsPopoverLabel}>Ваш рейтинг</span>
+                <span className={styles.coinsPopoverMeta}>{ratingSummary}</span>
+              </div>
+            </div>
+          )}
         </div>
         <button
           type="button"
