@@ -374,9 +374,9 @@
   box-sizing: border-box;
   max-width: none;
   width: 100%;
-  padding-top: 0.45rem;
+  padding-top: 0 !important;
   padding-right: 0;
-  padding-bottom: 0;
+  padding-bottom: 0.12rem !important;
   padding-left: 0;
 }
 
@@ -416,6 +416,6 @@
   }
 
   .inputAlignWrapper > div {
-    padding-bottom: 0.9rem;
+    padding-bottom: 0.12rem !important;
   }
 }
