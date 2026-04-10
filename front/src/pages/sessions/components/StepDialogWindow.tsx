@@ -662,6 +662,65 @@ function buildSourceBenefitQuestion(thought: string, sourceAnswer?: string): str
     : `Если взять названный вами источник — ${sourceAnswer}, — какую выгоду для себя он мог получать, когда передавал вам эту мысль?`;
 }
 
+function summarizeStepAnswer(value?: string): string {
+  const text = sanitizeThoughtValue(value)
+    .replace(/\s+/g, " ")
+    .replace(/[.?!,:;]+$/g, "")
+    .trim();
+
+  if (!text) return "";
+  if (text.length <= 220) return text;
+  return `${text.slice(0, 219).trimEnd()}…`;
+}
+
+function buildConclusionSummary(
+  subject: Subject,
+  answers?: Record<string, string>,
+): string {
+  const thoughtPrimaryKey = `core:${subject}:3`;
+  const thoughtSecondaryKey =
+    subject === "thought" ? "core:situation:3" : "core:thought:3";
+  const thought = sanitizeThoughtValue(
+    answers?.[thoughtPrimaryKey] || answers?.[thoughtSecondaryKey],
+  );
+
+  const reasons = summarizeStepAnswer(answers?.[`core:${subject}:4`]);
+  const source = sanitizeSourceAnswer(answers?.[`core:${subject}:5`]);
+  const benefit = summarizeStepAnswer(answers?.[`core:${subject}:6`]);
+  const emotional = summarizeStepAnswer(answers?.[`core:${subject}:7`]);
+  const practical = summarizeStepAnswer(answers?.[`core:${subject}:8`]);
+
+  const parts: string[] = [];
+
+  if (thought) {
+    parts.push(`Если собрать всё вместе по мысли «${thought}»`);
+  } else {
+    parts.push("Если собрать всё вместе");
+  }
+
+  if (reasons) {
+    parts.push(`она держалась на том, что ${reasons}`);
+  }
+  if (source) {
+    parts.push(`во многом её передавал или закреплял ${source}`);
+  }
+  if (benefit) {
+    parts.push(`для источника это могло быть выгодно, потому что ${benefit}`);
+  }
+  if (emotional) {
+    parts.push(`эмоционально это отражалось так: ${emotional}`);
+  }
+  if (practical) {
+    parts.push(`а в жизни это приводило к тому, что ${practical}`);
+  }
+
+  if (parts.length === 1) {
+    return `${parts[0]}.`;
+  }
+
+  return `${parts.join(", ")}.`;
+}
+
 function getPrompt(
   view: View,
   importantText: string,
@@ -689,6 +748,12 @@ function getPrompt(
       ]
         .filter(Boolean)
         .join("\n\n");
+    }
+    if (view.step === 9) {
+      const summary = buildConclusionSummary(view.subject, answers);
+      if (summary) {
+        return `${summary}\n\n${baseQuestion}`;
+      }
     }
     if (currentGuidance?.preface) {
       return `${currentGuidance.preface}\n\n${baseQuestion}`;
