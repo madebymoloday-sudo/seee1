@@ -524,6 +524,12 @@ function coreQuestion(
   answers?: Record<string, string>,
 ): string {
   const situation = sanitizeThoughtValue(answers?.["core:situation:1"]);
+  const primaryEmotionKey = `core:${subject}:2`;
+  const secondaryEmotionKey =
+    subject === "thought" ? "core:situation:2" : "core:thought:2";
+  const emotion = sanitizeThoughtValue(
+    answers?.[primaryEmotionKey] || answers?.[secondaryEmotionKey],
+  );
   const primaryThoughtKey = `core:${subject}:3`;
   const secondaryThoughtKey =
     subject === "thought" ? "core:situation:3" : "core:thought:3";
@@ -549,7 +555,9 @@ function coreQuestion(
       }
       return `Какую эмоцию у вас вызывает ${thing}?`;
     case 3:
-      return `Как вы думаете, какая мысль/идея вызывает эту эмоцию?`;
+      return emotion
+        ? `Как вы думаете, какая мысль/идея вызывает эмоцию «${emotion}»?`
+        : `Как вы думаете, какая мысль/идея вызывает эту эмоцию?`;
     case 4:
       return `Почему вы так думаете? Перечислите несколько причин.`;
     case 5:
