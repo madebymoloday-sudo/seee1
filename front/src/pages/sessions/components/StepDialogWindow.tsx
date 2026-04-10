@@ -754,6 +754,25 @@ function looksLikeThoughtReminderQuestion(answer: string): boolean {
   );
 }
 
+function looksLikeNonRewardingAnswer(answer: string): boolean {
+  const normalized = answer.toLowerCase().replace(/ё/g, "е").trim();
+  return [
+    "не знаю",
+    "не знаю как ответить",
+    "не понимаю",
+    "затрудняюсь",
+    "затрудняюсь ответить",
+    "сложно ответить",
+    "сложно сказать",
+    "не могу ответить",
+    "не могу сказать",
+    "без понятия",
+    "не уверен",
+    "не уверена",
+    "не получается ответить",
+  ].some((phrase) => normalized.includes(phrase));
+}
+
 function buildThoughtReminderResponse(
   subject: Subject,
   answers?: Record<string, string>,
@@ -1266,12 +1285,17 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return null;
   };
 
-  const animateStateTransition = (displayAnswer: string, nextState: DialogState) => {
+  const animateStateTransition = (
+    displayAnswer: string,
+    nextState: DialogState,
+    options?: { awardCoins?: boolean },
+  ) => {
     const key = currentStepKey;
     setPendingUserAnswer(null);
     setLastUserAnswer(displayAnswer);
     if (
       key &&
+      options?.awardCoins !== false &&
       !(isDraftSession && view.kind === "core" && view.step === 1)
     ) {
       const reward = awardCoinsForAnswer(session.id, key, 3);
@@ -1318,6 +1342,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     displayAnswer: string,
     nextState: DialogState,
     answerKey: string,
+    options?: { awardCoins?: boolean },
   ) => {
     setPendingUserAnswer(null);
     setLastUserAnswer(displayAnswer);
@@ -1343,9 +1368,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       }
 
       saveState(newSession.id, nextState);
-      const reward = awardCoinsForAnswer(newSession.id, answerKey, 3);
-      if (reward.awarded) {
-        toast.success(`+${reward.delta} монеты`, { position: "top-center" });
+      if (options?.awardCoins !== false) {
+        const reward = awardCoinsForAnswer(newSession.id, answerKey, 3);
+        if (reward.awarded) {
+          toast.success(`+${reward.delta} монеты`, { position: "top-center" });
+        }
       }
       if (
         draftTemplateReward &&
@@ -1441,6 +1468,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     try {
       await waitForAnswerPaint();
       setIsAnalyzingAnswer(true);
+      let shouldAwardCoins =
+        !options?.skipRequested && !looksLikeNonRewardingAnswer(trimmed);
 
       let nextState = computeNextState(trimmed);
       let nextStateWithAnswer: DialogState | null = nextState
@@ -1475,7 +1504,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             }),
           });
 
-          animateStateTransition(trimmed, clarifyState);
+          animateStateTransition(trimmed, clarifyState, { awardCoins: false });
           return;
         }
 
@@ -1516,8 +1545,12 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               stageGuidance: setStageGuidance(state, key, guidancePatch),
             });
 
-            animateStateTransition(trimmed, clarifyState);
+            animateStateTransition(trimmed, clarifyState, { awardCoins: false });
             return;
+          }
+
+          if (options?.skipRequested || currentGuidance.clarificationCount >= 2) {
+            shouldAwardCoins = false;
           }
 
           nextState = computeNextState(normalized);
@@ -1575,11 +1608,15 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       }
 
       if (isDraftSession && view.kind === "core" && view.step === 1) {
-        await finalizeDraftSession(trimmed, nextStateWithAnswer, key);
+        await finalizeDraftSession(trimmed, nextStateWithAnswer, key, {
+          awardCoins: shouldAwardCoins,
+        });
         return;
       }
 
-      animateStateTransition(trimmed, nextStateWithAnswer);
+      animateStateTransition(trimmed, nextStateWithAnswer, {
+        awardCoins: shouldAwardCoins,
+      });
     } catch (error) {
       setPendingUserAnswer(null);
       console.error(error);
