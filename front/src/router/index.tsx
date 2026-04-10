@@ -5,6 +5,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import RegisterPage from "../pages/auth/RegisterPage";
 import CabinetPage from "../pages/cabinet/CabinetPage";
+import ManagersPage from "../pages/cabinet/ManagersPage";
 import JournalPage from "../pages/journal/JournalPage";
 import MapPage from "../pages/map/MapPage";
 import PipelineBuilderPage from "../pages/pipeline-builder/PipelineBuilderPage";
@@ -41,6 +42,10 @@ export const router = createBrowserRouter([
       {
         path: "cabinet",
         element: <CabinetPage />,
+      },
+      {
+        path: "cabinet/managers",
+        element: <ManagersPage />,
       },
       {
         path: "journal",

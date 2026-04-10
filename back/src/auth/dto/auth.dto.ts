@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsString, IsNotEmpty, IsOptional, MinLength, Matches, MaxLength } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty, IsOptional, MinLength, Matches, MaxLength, IsIn } from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({
@@ -62,6 +62,14 @@ export class RegisterDto {
   @IsString()
   @IsOptional()
   referrerId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Код ссылки для регистрации сотрудника',
+    example: 'TEAMABC123',
+  })
+  @IsString()
+  @IsOptional()
+  teamInviteCode?: string;
 }
 
 export class RefreshTokenDto {
@@ -93,6 +101,12 @@ export class UserProfileDto {
   @ApiPropertyOptional({ description: 'Роль пользователя', example: 'user' })
   role?: string;
 
+  @ApiPropertyOptional({
+    description: 'Тип аккаунта',
+    example: 'MANAGER',
+  })
+  accountType?: 'USER' | 'MANAGER' | 'TEAM_MEMBER';
+
   @ApiPropertyOptional({ description: 'Telegram ID (если привязан)' })
   telegramId?: string | null;
 
@@ -119,6 +133,48 @@ export class UserProfileDto {
     example: '2026-03-10T00:00:00.000Z',
   })
   subscriptionEndsAt?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Сколько минут в день пользователь хочет тратить на приложение',
+    example: 10,
+  })
+  dailyPracticeMinutes?: 5 | 10 | 15 | null;
+}
+
+export class ManagerAccessSetupDto {
+  @ApiProperty({
+    description: 'Email аккаунта, которому нужно выдать статус руководителя',
+    example: 'manager@example.com',
+  })
+  @IsEmail()
+  email: string;
+
+  @ApiPropertyOptional({
+    description: 'Лимит сотрудников по ссылке',
+    example: 20,
+  })
+  @IsOptional()
+  teamSeatsLimit?: number;
+}
+
+export class ManagerAccessSetupResponseDto {
+  @ApiProperty({ description: 'ID пользователя' })
+  userId: string;
+
+  @ApiProperty({ description: 'Email пользователя' })
+  email: string;
+
+  @ApiProperty({ description: 'Тип аккаунта' })
+  accountType: 'MANAGER';
+
+  @ApiProperty({ description: 'Лимит сотрудников' })
+  teamSeatsLimit: number;
+
+  @ApiProperty({ description: 'Реферальная ссылка для продаж' })
+  salesReferralLink: string;
+
+  @ApiProperty({ description: 'Ссылка для сотрудников' })
+  employeeInviteLink: string;
 }
 
 export class SubscriptionStatusDto {
@@ -139,6 +195,52 @@ export class SubscriptionStatusDto {
     example: '2026-03-10T00:00:00.000Z',
   })
   endsAt?: string | null;
+}
+
+export class ManagerTeamMemberDto {
+  @ApiProperty({ description: 'Внутренний ID пользователя' })
+  id: string;
+
+  @ApiPropertyOptional({ description: 'Публичный ID пользователя' })
+  userId?: string | null;
+
+  @ApiProperty({ description: 'Имя аккаунта' })
+  username: string;
+
+  @ApiPropertyOptional({ description: 'Полное имя' })
+  fullName?: string | null;
+
+  @ApiProperty({ description: 'Зарегистрирован ли сотрудник по ссылке' })
+  isRegistered: boolean;
+
+  @ApiProperty({ description: 'Количество разобранных карточек' })
+  processedCardsCount: number;
+
+  @ApiProperty({ description: 'Рейтинг в монетах' })
+  coinsRating: number;
+
+  @ApiPropertyOptional({ description: 'Эмоциональный фон по последней обратной связи' })
+  emotionalState?: string | null;
+
+  @ApiPropertyOptional({ description: 'Краткая метка эмоционального фона' })
+  emotionalTone?: string | null;
+
+  @ApiPropertyOptional({ description: 'Дата последней обратной связи' })
+  lastFeedbackAt?: string | null;
+}
+
+export class ManagerTeamOverviewDto {
+  @ApiProperty({ description: 'Количество подключённых аккаунтов' })
+  connectedAccountsCount: number;
+
+  @ApiProperty({ description: 'Лимит мест для сотрудников' })
+  teamSeatsLimit: number;
+
+  @ApiProperty({ description: 'Сколько мест уже занято' })
+  occupiedSeatsCount: number;
+
+  @ApiProperty({ type: [ManagerTeamMemberDto] })
+  members: ManagerTeamMemberDto[];
 }
 
 export class RedeemPromoCodeDto {
@@ -197,6 +299,15 @@ export class UpdateProfileDto {
   @IsString()
   @MinLength(6)
   password?: string;
+
+  @ApiPropertyOptional({
+    description: 'Сколько минут в день пользователь хочет тратить на приложение',
+    example: 10,
+    enum: [5, 10, 15],
+  })
+  @IsOptional()
+  @IsIn([5, 10, 15])
+  dailyPracticeMinutes?: 5 | 10 | 15;
 }
 
 export class ForgotPasswordDto {

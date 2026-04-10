@@ -5,6 +5,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { AccountType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenService } from './token.service';
 import { TelegramAuthService } from './telegram-auth.service';
@@ -19,6 +20,9 @@ import {
   ForgotPasswordDto,
   ResetPasswordDto,
   SubscriptionStatusDto,
+  ManagerTeamOverviewDto,
+  ManagerAccessSetupDto,
+  ManagerAccessSetupResponseDto,
 } from './dto/auth.dto';
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
 import { PasswordResetService } from './password-reset.service';
@@ -41,6 +45,8 @@ export class AuthService {
     avatarUrl: true,
     telegramId: true,
     role: true,
+    accountType: true,
+    dailyPracticeMinutes: true,
     subscriptionStatus: true,
     subscriptionActive: true,
     subscriptionEndsAt: true,
@@ -68,12 +74,24 @@ export class AuthService {
     balance: number;
     promoCode: string;
     referralLink: string;
+    accountType: 'USER' | 'MANAGER' | 'TEAM_MEMBER';
+    employeeInviteLink: string | null;
+    teamSeatsLimit: number;
+    occupiedSeatsCount: number;
   }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
         userId: true,
+        accountType: true,
+        teamInviteCode: true,
+        teamSeatsLimit: true,
+        _count: {
+          select: {
+            teamMembers: true,
+          },
+        },
       },
     });
 
@@ -94,13 +112,187 @@ export class AuthService {
       this.configService.get<string>('FRONTEND_URL')?.replace(/\/+$/, '') ||
       'https://seee.app';
     const referralLink = `${frontendUrl}/?ref=${user.id}&utm_source=referral`;
+    const employeeInviteLink =
+      user.accountType === AccountType.MANAGER && user.teamInviteCode
+        ? `${frontendUrl}/register?team=${user.teamInviteCode}`
+        : null;
 
     return {
       userId: user.userId || user.id,
       balance: amountNumber,
       promoCode,
       referralLink,
+      accountType: user.accountType,
+      employeeInviteLink,
+      teamSeatsLimit: user.teamSeatsLimit,
+      occupiedSeatsCount: user._count.teamMembers,
     };
+  }
+
+  async getManagerTeamOverview(userId: string): Promise<ManagerTeamOverviewDto> {
+    const manager = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        accountType: true,
+        teamSeatsLimit: true,
+        teamMembers: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            userId: true,
+            username: true,
+            fullName: true,
+            sessions: {
+              select: { id: true },
+            },
+            balances: {
+              select: { amount: true },
+            },
+            feedback: {
+              where: { sessionId: { not: null } },
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              select: {
+                emotionAfter: true,
+                createdAt: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!manager) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+    if (manager.accountType !== AccountType.MANAGER) {
+      throw new ForbiddenException('Раздел доступен только руководителям');
+    }
+
+    const occupiedSeatsCount = manager.teamMembers.length;
+    const vacantSeatsCount = Math.max(0, manager.teamSeatsLimit - occupiedSeatsCount);
+
+    return {
+      connectedAccountsCount: occupiedSeatsCount,
+      teamSeatsLimit: manager.teamSeatsLimit,
+      occupiedSeatsCount,
+      members: [
+        ...manager.teamMembers.map((member) => {
+          const latestFeedback = member.feedback[0];
+          const emotionalState = latestFeedback?.emotionAfter?.trim() || null;
+
+          return {
+            id: member.id,
+            userId: member.userId,
+            username: member.username,
+            fullName: member.fullName,
+            isRegistered: true,
+            processedCardsCount: member.sessions.length,
+            coinsRating: Number(member.balances[0]?.amount ?? 0),
+            emotionalState,
+            emotionalTone: this.getEmotionalTone(emotionalState),
+            lastFeedbackAt: latestFeedback?.createdAt?.toISOString?.() ?? null,
+          };
+        }),
+        ...Array.from({ length: vacantSeatsCount }, (_, index) => ({
+          id: `vacant-${index + 1}`,
+          userId: null,
+          username: `slot_${index + 1}`,
+          fullName: `Слот ${occupiedSeatsCount + index + 1}`,
+          isRegistered: false,
+          processedCardsCount: 0,
+          coinsRating: 0,
+          emotionalState: null,
+          emotionalTone: null,
+          lastFeedbackAt: null,
+        })),
+      ],
+    };
+  }
+
+  async configureManagerAccess(
+    dto: ManagerAccessSetupDto,
+  ): Promise<ManagerAccessSetupResponseDto> {
+    const email = (dto.email || '').trim().toLowerCase();
+    const teamSeatsLimit = Math.max(1, Math.floor(Number(dto.teamSeatsLimit || 20)));
+
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, teamInviteCode: true },
+    });
+
+    if (!user?.email) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const inviteCode = user.teamInviteCode || this.generateTeamInviteCode();
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        accountType: AccountType.MANAGER,
+        teamSeatsLimit,
+        teamInviteCode: inviteCode,
+      },
+      select: {
+        id: true,
+        email: true,
+        accountType: true,
+        teamSeatsLimit: true,
+        teamInviteCode: true,
+      },
+    });
+
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL')?.replace(/\/+$/, '') ||
+      'https://seee.app';
+
+    return {
+      userId: updated.id,
+      email: updated.email || email,
+      accountType: 'MANAGER',
+      teamSeatsLimit: updated.teamSeatsLimit,
+      salesReferralLink: `${frontendUrl}/?ref=${updated.id}&utm_source=referral`,
+      employeeInviteLink: `${frontendUrl}/register?team=${updated.teamInviteCode}`,
+    };
+  }
+
+  private getEmotionalTone(emotionRaw?: string | null): string | null {
+    const emotion = String(emotionRaw || '').trim().toLowerCase();
+    if (!emotion) return null;
+
+    const negativeMarkers = [
+      'трев',
+      'стресс',
+      'устал',
+      'выгор',
+      'подав',
+      'груст',
+      'тяжело',
+      'разбит',
+      'зл',
+      'раздраж',
+      'апат',
+    ];
+    if (negativeMarkers.some((marker) => emotion.includes(marker))) {
+      return 'Требует внимания';
+    }
+
+    const positiveMarkers = [
+      'спокой',
+      'уверен',
+      'рад',
+      'хорош',
+      'стабиль',
+      'вдохнов',
+      'мотив',
+      'легче',
+      'лучше',
+    ];
+    if (positiveMarkers.some((marker) => emotion.includes(marker))) {
+      return 'Стабильный';
+    }
+
+    return 'Нейтральный';
   }
 
   assertSupportKey(keyRaw: string | undefined): void {
@@ -313,9 +505,45 @@ export class AuthService {
       // Генерируем userId (первые 8 символов UUID в верхнем регистре)
       const userId = randomBytes(4).toString('hex').toUpperCase();
 
-      // Определяем реферера (если передан корректный ID)
+      // Определяем источник регистрации: продажная ссылка или ссылка сотрудника
       let referrerId: string | null = null;
-      if (dto.referrerId && dto.referrerId.trim().length > 0) {
+      let managerId: string | null = null;
+      let accountType: AccountType = AccountType.USER;
+      let subscriptionStatus: 'NONE' | 'ACTIVE' | 'CANCELED' = 'NONE';
+      let subscriptionActive = false;
+      let subscriptionProvider: string | null = null;
+      let subscriptionExternalId: string | null = null;
+
+      if (dto.teamInviteCode && dto.teamInviteCode.trim().length > 0) {
+        const inviteCode = dto.teamInviteCode.trim().toUpperCase();
+        const manager = await this.prisma.user.findFirst({
+          where: {
+            teamInviteCode: inviteCode,
+            accountType: AccountType.MANAGER,
+          },
+          select: {
+            id: true,
+            teamSeatsLimit: true,
+            _count: {
+              select: { teamMembers: true },
+            },
+          },
+        });
+
+        if (!manager) {
+          throw new BadRequestException('Ссылка для сотрудников недействительна');
+        }
+        if (manager._count.teamMembers >= manager.teamSeatsLimit) {
+          throw new BadRequestException('Лимит регистраций по ссылке сотрудника исчерпан');
+        }
+
+        managerId = manager.id;
+        accountType = AccountType.TEAM_MEMBER;
+        subscriptionStatus = 'ACTIVE';
+        subscriptionActive = true;
+        subscriptionProvider = 'manager-team';
+        subscriptionExternalId = inviteCode;
+      } else if (dto.referrerId && dto.referrerId.trim().length > 0) {
         const refUser = await this.prisma.user.findUnique({
           where: { id: dto.referrerId.trim() },
           select: { id: true },
@@ -334,6 +562,12 @@ export class AuthService {
           fullName: dto.name || null,
           userId,
           referrerId,
+          managerId,
+          accountType,
+          subscriptionStatus,
+          subscriptionActive,
+          subscriptionProvider,
+          subscriptionExternalId,
         },
         select: this.authUserSelect,
       });
@@ -396,6 +630,7 @@ export class AuthService {
           email: null,
           avatarUrl: validated.photoUrl ?? null,
           userId,
+          accountType: AccountType.USER,
         },
         select: this.authUserSelect,
       });
@@ -527,7 +762,12 @@ export class AuthService {
       throw new NotFoundException('Пользователь не найден');
     }
 
-    const dataToUpdate: { username?: string; userId?: string; passwordHash?: string } = {};
+    const dataToUpdate: {
+      username?: string;
+      userId?: string;
+      passwordHash?: string;
+      dailyPracticeMinutes?: 5 | 10 | 15;
+    } = {};
 
     if (typeof dto.password === 'string' && dto.password.length >= 6) {
       dataToUpdate.passwordHash = await bcrypt.hash(dto.password, 12);
@@ -585,6 +825,10 @@ export class AuthService {
 
         dataToUpdate.userId = nextUserId;
       }
+    }
+
+    if (dto.dailyPracticeMinutes === 5 || dto.dailyPracticeMinutes === 10 || dto.dailyPracticeMinutes === 15) {
+      dataToUpdate.dailyPracticeMinutes = dto.dailyPracticeMinutes;
     }
 
     if (Object.keys(dataToUpdate).length === 0) {
@@ -962,6 +1206,14 @@ export class AuthService {
       email: user.email,
       fullName: user.fullName,
       avatarUrl: user.avatarUrl,
+      role: user.role,
+      accountType: user.accountType,
+      dailyPracticeMinutes:
+        user.dailyPracticeMinutes === 5 ||
+        user.dailyPracticeMinutes === 10 ||
+        user.dailyPracticeMinutes === 15
+          ? user.dailyPracticeMinutes
+          : null,
       telegramId: user.telegramId ?? null,
       userId: user.userId ?? null,
       subscriptionStatus: user.subscriptionStatus,
@@ -971,5 +1223,8 @@ export class AuthService {
         : null,
     };
   }
-}
 
+  private generateTeamInviteCode(): string {
+    return `TEAM${randomBytes(4).toString('hex').toUpperCase()}`;
+  }
+}

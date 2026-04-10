@@ -11,6 +11,8 @@ export class FeedbackService {
     const title =
       typeof dto.title === 'string' ? (dto.title.trim() || null) : null;
     const description = dto.description?.trim?.() ?? dto.description;
+    const emotionAfter =
+      typeof dto.emotionAfter === 'string' ? (dto.emotionAfter.trim() || null) : null;
 
     if (!description || description.trim().length < 3) {
       throw new BadRequestException('Описание должно быть не короче 3 символов');
@@ -34,6 +36,7 @@ export class FeedbackService {
         sessionId,
         title,
         description: description.trim(),
+        emotionAfter,
         feedbackType: dto.feedbackType ?? FeedbackType.FULL,
         status: FeedbackStatus.NEW,
       },
@@ -42,6 +45,7 @@ export class FeedbackService {
         sessionId: true,
         title: true,
         description: true,
+        emotionAfter: true,
         feedbackType: true,
         status: true,
         createdAt: true,
@@ -56,6 +60,7 @@ export class FeedbackService {
       sessionTitle: created.session?.title ?? null,
       title: created.title,
       description: created.description,
+      emotionAfter: created.emotionAfter,
       feedbackType: created.feedbackType,
       status: created.status,
       createdAt: created.createdAt,
@@ -75,6 +80,7 @@ export class FeedbackService {
         sessionId: true,
         title: true,
         description: true,
+        emotionAfter: true,
         feedbackType: true,
         status: true,
         createdAt: true,
@@ -89,6 +95,7 @@ export class FeedbackService {
       sessionTitle: f.session?.title ?? null,
       title: f.title,
       description: f.description,
+      emotionAfter: f.emotionAfter,
       feedbackType: f.feedbackType,
       status: f.status,
       createdAt: f.createdAt,
@@ -105,7 +112,11 @@ export class FeedbackService {
       throw new NotFoundException('Обратная связь не найдена');
     }
 
-    const dataToUpdate: { title?: string | null; description?: string } = {};
+    const dataToUpdate: {
+      title?: string | null;
+      description?: string;
+      emotionAfter?: string | null;
+    } = {};
 
     if (typeof dto.title === 'string') {
       dataToUpdate.title = dto.title.trim() || null;
@@ -117,6 +128,15 @@ export class FeedbackService {
       }
       dataToUpdate.description = nextDescription;
     }
+    if (typeof dto.emotionAfter === 'string') {
+      const nextEmotion = dto.emotionAfter.trim();
+      if (nextEmotion.length < 2) {
+        throw new BadRequestException(
+          'Эмоциональное состояние должно быть не короче 2 символов',
+        );
+      }
+      dataToUpdate.emotionAfter = nextEmotion;
+    }
 
     const updated = await this.prisma.feedback.update({
       where: { id },
@@ -126,6 +146,7 @@ export class FeedbackService {
         sessionId: true,
         title: true,
         description: true,
+        emotionAfter: true,
         feedbackType: true,
         status: true,
         createdAt: true,
@@ -140,6 +161,7 @@ export class FeedbackService {
       sessionTitle: updated.session?.title ?? null,
       title: updated.title,
       description: updated.description,
+      emotionAfter: updated.emotionAfter,
       feedbackType: updated.feedbackType,
       status: updated.status,
       createdAt: updated.createdAt,
@@ -147,4 +169,3 @@ export class FeedbackService {
     };
   }
 }
-

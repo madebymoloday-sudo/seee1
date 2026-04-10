@@ -18,6 +18,9 @@ export class FeedbackItemDto {
   @ApiProperty({ description: 'Текст отзыва (или сериализованная форма)' })
   description: string;
 
+  @ApiPropertyOptional({ description: 'Эмоциональное состояние после сессии' })
+  emotionAfter?: string | null;
+
   @ApiProperty({ enum: FeedbackType })
   feedbackType: FeedbackType;
 
@@ -48,6 +51,12 @@ export class CreateFeedbackDto {
   @MinLength(3)
   description: string;
 
+  @ApiPropertyOptional({ description: 'Эмоциональное состояние после сессии' })
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  emotionAfter?: string;
+
   @ApiPropertyOptional({ enum: FeedbackType, description: 'Тип обратной связи' })
   @IsOptional()
   @IsEnum(FeedbackType)
@@ -65,5 +74,10 @@ export class UpdateFeedbackDto {
   @IsString()
   @MinLength(3)
   description?: string;
-}
 
+  @ApiPropertyOptional({ description: 'Эмоциональное состояние после сессии' })
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  emotionAfter?: string;
+}

@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import CabinetPage from "../pages/cabinet/CabinetPage";
+import ManagersPage from "../pages/cabinet/ManagersPage";
 import JournalPage from "../pages/journal/JournalPage";
 import MapPage from "../pages/map/MapPage";
 import NeuroMapPage from "../pages/neuro/NeuroMapPage";
@@ -56,6 +57,10 @@ export const protectedRouter = createBrowserRouter([
       {
         path: "cabinet",
         element: <CabinetPage />,
+      },
+      {
+        path: "cabinet/managers",
+        element: <ManagersPage />,
       },
       {
         path: "people",

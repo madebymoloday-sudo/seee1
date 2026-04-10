@@ -17,6 +17,10 @@ export interface UserProfileDto {
   fullName?: string;
   /** URL аватара */
   avatarUrl?: string;
+  /** Роль пользователя */
+  role?: string;
+  /** Тип аккаунта */
+  accountType?: "USER" | "MANAGER" | "TEAM_MEMBER";
   /** Telegram ID (если привязан) */
   telegramId?: string | null;
   /** Публичный уникальный ID пользователя */
@@ -27,4 +31,6 @@ export interface UserProfileDto {
   subscriptionActive?: boolean;
   /** Дата окончания подписки */
   subscriptionEndsAt?: string | null;
+  /** Сколько минут в день пользователь хочет тратить на приложение */
+  dailyPracticeMinutes?: 5 | 10 | 15 | null;
 }

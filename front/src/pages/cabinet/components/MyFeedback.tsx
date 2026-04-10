@@ -16,6 +16,7 @@ const MyFeedback = () => {
     sessionTitle?: string | null;
     title?: string | null;
     description: string;
+    emotionAfter?: string | null;
     createdAt: string;
     updatedAt: string;
   };
@@ -168,7 +169,15 @@ const MyFeedback = () => {
                         </div>
                       </div>
                     ) : (
-                      <pre className={styles.feedbackText}>{item.description}</pre>
+                      <>
+                        {item.emotionAfter ? (
+                          <div className="mb-3 text-sm text-muted-foreground">
+                            Эмоциональное состояние после сессии:{" "}
+                            <span className="font-medium text-foreground">{item.emotionAfter}</span>
+                          </div>
+                        ) : null}
+                        <pre className={styles.feedbackText}>{item.description}</pre>
+                      </>
                     )}
                   </div>
                 )}

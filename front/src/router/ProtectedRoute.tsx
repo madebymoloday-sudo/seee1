@@ -33,7 +33,8 @@ export const ProtectedRoute = observer(() => {
   }
 
   const isSubscriptionPage = location.pathname === "/subscription";
-  const hasActiveSubscription = !!user?.subscriptionActive;
+  const hasActiveSubscription =
+    !!user?.subscriptionActive || user?.accountType === "TEAM_MEMBER";
 
   if (subscriptionGateEnabled && !hasActiveSubscription && !isSubscriptionPage) {
     return <Navigate to="/subscription" replace />;

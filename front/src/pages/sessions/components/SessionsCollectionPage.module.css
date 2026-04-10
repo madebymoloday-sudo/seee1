@@ -84,7 +84,7 @@
 .archivistControls {
   position: absolute;
   left: 50%;
-  top: 18%;
+  top: 13%;
   width: min(46%, 380px);
   transform: translateX(-2%);
   display: flex;
@@ -191,16 +191,16 @@
 .archivistWelcomeScene {
   width: min(100%, 1080px);
   flex: 1;
-  min-height: 390px;
-  max-height: 580px;
-  margin-top: -0.2rem;
+  min-height: 430px;
+  max-height: 620px;
+  margin-top: 0.15rem;
   position: relative;
 }
 
 .archivistCharacter {
   position: absolute;
   left: clamp(-24px, 2.2vw, 36px);
-  bottom: 52px;
+  bottom: 16px;
   width: min(27vw, 320px);
   max-width: 320px;
   filter: drop-shadow(0 34px 34px rgba(15, 23, 42, 0.16));
@@ -214,9 +214,9 @@
   }
 
   .archivistControls {
-    top: 18%;
+    top: 12%;
     width: min(42%, 392px);
-    transform: translateX(-10%);
+    transform: translateX(-6%);
   }
 }
 
@@ -224,7 +224,7 @@
   position: absolute;
   --archive-shift-x: 0px;
   right: 0.8rem;
-  bottom: -2px;
+  bottom: -26px;
   width: min(48vw, 500px);
   border: none;
   background: transparent;
@@ -356,50 +356,55 @@
 
 @media (max-width: 640px) {
   .archivistWelcome {
-    padding: 1rem 1rem 6.25rem;
+    padding: 0.85rem 0.85rem 6.4rem;
+    gap: 0.55rem;
   }
 
   .archivistWelcomeLogoWrap,
   .archivistWelcomeLogo {
-    width: 88px;
-    height: 88px;
+    width: 74px;
+    height: 74px;
   }
 
   .archivistWelcomeCard {
     min-height: auto;
-    padding: 1rem 1rem 1.1rem;
-    border-radius: 1.6rem;
+    padding: 0.9rem 0.95rem 0.95rem;
+    border-radius: 1.45rem;
   }
 
   .archivistWelcomeTitle {
     text-align: center;
-    font-size: clamp(1.8rem, 9vw, 2.4rem);
+    font-size: clamp(1.75rem, 8vw, 2.25rem);
   }
 
   .archivistWelcomeText {
     margin: 0 auto;
     max-width: 100%;
     text-align: center;
-    font-size: 1rem;
-    line-height: 1.14;
+    font-size: 0.92rem;
+    line-height: 1.18;
   }
 
   .archivistControls {
-    left: 50%;
-    top: 8%;
-    width: min(72%, 280px);
-    transform: translateX(-50%);
-    gap: 0.55rem;
+    left: auto;
+    right: 0.35rem;
+    top: 6.25rem;
+    width: min(47%, 176px);
+    transform: none;
+    align-items: stretch;
+    gap: 0.45rem;
   }
 
   .archivistChoiceButton {
     width: 100%;
-    min-height: 42px;
-    padding: 0.72rem 0.8rem;
-    font-size: 0.8rem;
+    min-height: 40px;
+    padding: 0.62rem 0.7rem;
+    font-size: 0.74rem;
+    line-height: 1.15;
   }
 
   .archivistComposer {
+    width: 100%;
     padding: 0.8rem;
     border-radius: 1.2rem;
   }
@@ -410,22 +415,22 @@
   }
 
   .archivistWelcomeScene {
-    min-height: 344px;
-    max-height: 470px;
-    margin-top: -0.25rem;
+    min-height: 472px;
+    max-height: none;
+    margin-top: -0.05rem;
   }
 
   .archivistCharacter {
-    width: min(58vw, 252px);
-    bottom: 122px;
-    left: -1%;
+    width: min(52vw, 228px);
+    bottom: 118px;
+    left: -4%;
   }
 
   .archivistArchiveButton {
-    width: min(96vw, 520px);
+    width: min(78vw, 310px);
     left: 50%;
     right: auto;
-    bottom: -2px;
+    bottom: 24px;
     --archive-shift-x: -50%;
   }
 

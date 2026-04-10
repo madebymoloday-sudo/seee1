@@ -13,12 +13,14 @@ import {
   clearDraftSessionReward,
   formatStreakLabel,
   loadDraftSessionReward,
+  recordDailyPracticeLineCompletion,
 } from "@/lib/gamification";
 import { ChevronDown } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 import chatStyles from "./ChatWindow.module.css";
 import MessageInput from "./MessageInput";
 import styles from "./StepDialogWindow.module.css";
@@ -109,6 +111,13 @@ const DRAFT_TO_EXPLORE_CATEGORY_PREFIX = "seee_draft_to_explore_category:";
 
 function createThoughtScopeId(): string {
   return `thought-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function buildDailyLineCompletionId(sessionId: string, state: DialogState): string {
+  if (state.subject === "thought") {
+    return `${sessionId}:thought:${state.activeThoughtScopeId || "default"}`;
+  }
+  return `${sessionId}:situation`;
 }
 
 function migrateToV3(state: DialogStateV2): DialogStateV3 {
@@ -665,6 +674,7 @@ interface StepDialogWindowProps {
 
 const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const navigate = useNavigate();
+  const auth = useAuth();
   const { trigger: createSession, isMutating } =
     useSessionsControllerCreateSession();
   const isDraftSession = session.id === "new";
@@ -1368,9 +1378,15 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   const goDeepPick = () => {
-    const streakReward = awardDailyStreakForProgress(10);
-    if (streakReward.awarded) {
-      toast.success(`+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`);
+    const progress = recordDailyPracticeLineCompletion(
+      buildDailyLineCompletionId(session.id, state),
+      auth.user?.dailyPracticeMinutes ?? null,
+    );
+    if (progress.goalCompletedNow) {
+      const streakReward = awardDailyStreakForProgress(10);
+      if (streakReward.awarded) {
+        toast.success(`+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`);
+      }
     }
     setState((s) => ({
       ...s,
@@ -1389,9 +1405,15 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   const goSolve = () => {
-    const streakReward = awardDailyStreakForProgress(10);
-    if (streakReward.awarded) {
-      toast.success(`+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`);
+    const progress = recordDailyPracticeLineCompletion(
+      buildDailyLineCompletionId(session.id, state),
+      auth.user?.dailyPracticeMinutes ?? null,
+    );
+    if (progress.goalCompletedNow) {
+      const streakReward = awardDailyStreakForProgress(10);
+      if (streakReward.awarded) {
+        toast.success(`+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`);
+      }
     }
     setState((s) => ({
       ...s,

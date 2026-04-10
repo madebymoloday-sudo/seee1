@@ -33,6 +33,9 @@ import {
   ResetPasswordDto,
   SubscriptionStatusDto,
   RedeemPromoCodeDto,
+  ManagerTeamOverviewDto,
+  ManagerAccessSetupDto,
+  ManagerAccessSetupResponseDto,
 } from './dto/auth.dto';
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
 import {
@@ -357,8 +360,47 @@ export class AuthController {
     balance: number;
     promoCode: string;
     referralLink: string;
+    accountType: 'USER' | 'MANAGER' | 'TEAM_MEMBER';
+    employeeInviteLink: string | null;
+    teamSeatsLimit: number;
+    occupiedSeatsCount: number;
   }> {
     return this.authService.getReferralInfo(req.user.id);
   }
-}
 
+  @Get('manager/team')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Сводка для руководителя по подключённым аккаунтам' })
+  @ApiResponse({
+    status: 200,
+    description: 'Список подключённых аккаунтов и сводка по ним',
+    type: ManagerTeamOverviewDto,
+  })
+  async getManagerTeamOverview(
+    @Request() req: { user: { id: string } },
+  ): Promise<ManagerTeamOverviewDto> {
+    return this.authService.getManagerTeamOverview(req.user.id);
+  }
+
+  @Post('admin/manager-access')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Админ: выдать аккаунту статус руководителя и ссылку для сотрудников',
+  })
+  @ApiResponse({
+    status: 200,
+    type: ManagerAccessSetupResponseDto,
+  })
+  async configureManagerAccess(
+    @Request() req: { user: { id: string; role?: string } },
+    @Body() dto: ManagerAccessSetupDto,
+  ): Promise<ManagerAccessSetupResponseDto> {
+    if ((req.user?.role || '').toLowerCase() !== 'admin') {
+      throw new ForbiddenException('Admin only');
+    }
+    return this.authService.configureManagerAccess(dto);
+  }
+}

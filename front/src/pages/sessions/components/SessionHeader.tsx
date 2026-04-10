@@ -46,6 +46,13 @@ type DeferredTemplate = {
   sourceSessionId?: string;
 };
 
+type DailyPracticeBanner = {
+  progressPercent: number;
+  completedLines: number;
+  targetLines: number;
+  goalCompleted: boolean;
+};
+
 function saveDeferredTemplate(userKey: string, item: DeferredTemplate) {
   try {
     const key = `seee_to_explore_templates:${userKey}`;
@@ -178,8 +185,10 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
   const [deferredThought, setDeferredThought] = useState("");
   const [coinsBalance, setCoinsBalance] = useState(() => getUserCoins());
   const [isCoinsPopoverOpen, setIsCoinsPopoverOpen] = useState(false);
+  const [dailyPracticeBanner, setDailyPracticeBanner] = useState<DailyPracticeBanner | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const coinsAreaRef = useRef<HTMLDivElement>(null);
+  const dailyPracticeBannerTimeoutRef = useRef<number | null>(null);
 
   const sessionCoinsEarned = getSessionCoinsEarned(session.id);
   const leaderboardEntries = buildLeaderboardEntries();
@@ -193,11 +202,33 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
   useEffect(() => {
     const syncCoins = () => setCoinsBalance(getUserCoins());
     const onCoinsUpdated = () => syncCoins();
+    const onDailyPracticeProgress = (event: Event) => {
+      const detail = (event as CustomEvent<DailyPracticeBanner>).detail;
+      if (!detail) return;
+      setDailyPracticeBanner(detail);
+      if (dailyPracticeBannerTimeoutRef.current) {
+        window.clearTimeout(dailyPracticeBannerTimeoutRef.current);
+      }
+      dailyPracticeBannerTimeoutRef.current = window.setTimeout(() => {
+        setDailyPracticeBanner(null);
+      }, 3200);
+    };
     window.addEventListener("storage", syncCoins);
     window.addEventListener("seee:coins-updated", onCoinsUpdated as EventListener);
+    window.addEventListener(
+      "seee:daily-practice-progress",
+      onDailyPracticeProgress as EventListener,
+    );
     return () => {
       window.removeEventListener("storage", syncCoins);
       window.removeEventListener("seee:coins-updated", onCoinsUpdated as EventListener);
+      window.removeEventListener(
+        "seee:daily-practice-progress",
+        onDailyPracticeProgress as EventListener,
+      );
+      if (dailyPracticeBannerTimeoutRef.current) {
+        window.clearTimeout(dailyPracticeBannerTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -426,6 +457,26 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
           )}
         </div>
         <div className={styles.coinsArea} ref={coinsAreaRef}>
+          {dailyPracticeBanner ? (
+            <div className={styles.dailyPracticeBanner} role="status" aria-live="polite">
+              <div className={styles.dailyPracticeBannerTitle}>
+                {dailyPracticeBanner.goalCompleted
+                  ? "Ежедневная задача закрыта"
+                  : `Задача дня: ${dailyPracticeBanner.progressPercent}%`}
+              </div>
+              <div className={styles.dailyPracticeBannerText}>
+                {dailyPracticeBanner.goalCompleted
+                  ? "Ещё один день ежедневного улучшения себя засчитан."
+                  : `Закрыто ${dailyPracticeBanner.completedLines} из ${dailyPracticeBanner.targetLines} линий.`}
+              </div>
+              <div className={styles.dailyPracticeBannerTrack}>
+                <div
+                  className={styles.dailyPracticeBannerFill}
+                  style={{ width: `${dailyPracticeBanner.progressPercent}%` }}
+                />
+              </div>
+            </div>
+          ) : null}
           <button
             type="button"
             className={styles.coinsPill}

@@ -26,6 +26,7 @@ const FeedbackModal = ({ isOpen, onClose, sessionId }: FeedbackModalProps) => {
   const [feedbackMet, setFeedbackMet] = useState("");
   const [feedbackReality, setFeedbackReality] = useState("");
   const [feedbackContact, setFeedbackContact] = useState("");
+  const [feedbackEmotionAfter, setFeedbackEmotionAfter] = useState("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -79,6 +80,11 @@ const FeedbackModal = ({ isOpen, onClose, sessionId }: FeedbackModalProps) => {
 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (sessionId && feedbackEmotionAfter.trim().length < 2) {
+      toast.error("После сессии нужно указать эмоциональное состояние");
+      return;
+    }
     
     const description = [
       "Тип: Отзыв",
@@ -91,13 +97,20 @@ const FeedbackModal = ({ isOpen, onClose, sessionId }: FeedbackModalProps) => {
 
     try {
       await apiAgent.post<
-        { sessionId?: string; title?: string; description: string; feedbackType?: "FULL" },
+        {
+          sessionId?: string;
+          title?: string;
+          description: string;
+          feedbackType?: "FULL";
+          emotionAfter?: string;
+        },
         any
       >("/feedback", {
         sessionId,
         title: sessionId ? "Отзыв после сессии" : "Отзыв",
         description,
         feedbackType: "FULL",
+        emotionAfter: sessionId ? feedbackEmotionAfter.trim() : undefined,
       });
 
       toast.success("Спасибо за ваш отзыв!");
@@ -112,6 +125,7 @@ const FeedbackModal = ({ isOpen, onClose, sessionId }: FeedbackModalProps) => {
     setFeedbackMet("");
     setFeedbackReality("");
     setFeedbackContact("");
+    setFeedbackEmotionAfter("");
     onClose();
   };
 
@@ -205,6 +219,22 @@ const FeedbackModal = ({ isOpen, onClose, sessionId }: FeedbackModalProps) => {
                   required
                 />
               </div>
+
+              {sessionId ? (
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>
+                    В каком эмоциональном состоянии вы сейчас находитесь?
+                  </label>
+                  <input
+                    type="text"
+                    value={feedbackEmotionAfter}
+                    onChange={(e) => setFeedbackEmotionAfter(e.target.value)}
+                    className={styles.input}
+                    placeholder="Например: спокойно, тревожно, легче, собранно"
+                    required
+                  />
+                </div>
+              ) : null}
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>

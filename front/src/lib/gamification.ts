@@ -2,6 +2,7 @@ const COINS_STORAGE_PREFIX = "seee_user_coins:";
 const SESSION_REWARDS_STORAGE_PREFIX = "seee_session_rewards:";
 const SESSION_BONUS_REWARDS_STORAGE_PREFIX = "seee_session_bonus_rewards:";
 const USER_STREAK_STORAGE_PREFIX = "seee_user_streak:";
+const DAILY_PRACTICE_PROGRESS_PREFIX = "seee_daily_practice_progress:";
 const DRAFT_TEMPLATE_REWARD_PREFIX = "seee_draft_template_reward:";
 const SESSION_PENDING_REWARD_PREFIX = "seee_session_pending_reward:";
 
@@ -34,6 +35,24 @@ type DailyStreakState = {
 type SessionBonusReward = {
   id: string;
   amount: number;
+};
+
+type DailyPracticeMinutes = 5 | 10 | 15;
+
+type DailyPracticeProgressState = {
+  dateKey: string;
+  completedLineIds: string[];
+  goalMinutes: DailyPracticeMinutes;
+};
+
+export type DailyPracticeProgressResult = {
+  completionAccepted: boolean;
+  completedLines: number;
+  targetLines: number;
+  progressPercent: number;
+  goalCompleted: boolean;
+  goalCompletedNow: boolean;
+  goalMinutes: DailyPracticeMinutes;
 };
 
 export type PendingSessionReward = {
@@ -308,6 +327,146 @@ function emitStreakUpdated(streak: number) {
       detail: { streak },
     }),
   );
+}
+
+function emitDailyPracticeProgress(detail: DailyPracticeProgressResult) {
+  window.dispatchEvent(
+    new CustomEvent("seee:daily-practice-progress", {
+      detail,
+    }),
+  );
+}
+
+export function getTargetLinesForDailyPractice(minutes: DailyPracticeMinutes | null | undefined): number {
+  switch (minutes) {
+    case 10:
+      return 2;
+    case 15:
+      return 3;
+    case 5:
+    default:
+      return 1;
+  }
+}
+
+function getDailyPracticeProgressState(
+  userKey = getGamificationUserKey(),
+): DailyPracticeProgressState | null {
+  try {
+    const raw = localStorage.getItem(`${DAILY_PRACTICE_PROGRESS_PREFIX}${userKey}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<DailyPracticeProgressState>;
+    const completedLineIds = Array.isArray(parsed?.completedLineIds)
+      ? parsed.completedLineIds.map((item) => String(item || "").trim()).filter(Boolean)
+      : [];
+    const goalMinutes =
+      parsed?.goalMinutes === 5 || parsed?.goalMinutes === 10 || parsed?.goalMinutes === 15
+        ? parsed.goalMinutes
+        : 5;
+    const dateKey = typeof parsed?.dateKey === "string" ? parsed.dateKey : getLocalDateKey();
+    return {
+      dateKey,
+      completedLineIds,
+      goalMinutes,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function setDailyPracticeProgressState(
+  state: DailyPracticeProgressState,
+  userKey = getGamificationUserKey(),
+) {
+  try {
+    localStorage.setItem(
+      `${DAILY_PRACTICE_PROGRESS_PREFIX}${userKey}`,
+      JSON.stringify(state),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+export function getTodayDailyPracticeProgress(
+  goalMinutes: DailyPracticeMinutes | null | undefined,
+  userKey = getGamificationUserKey(),
+): DailyPracticeProgressResult {
+  const normalizedGoalMinutes: DailyPracticeMinutes =
+    goalMinutes === 10 || goalMinutes === 15 ? goalMinutes : 5;
+  const todayKey = getLocalDateKey();
+  const targetLines = getTargetLinesForDailyPractice(normalizedGoalMinutes);
+  const state = getDailyPracticeProgressState(userKey);
+  const completedLineIds =
+    state && state.dateKey === todayKey ? state.completedLineIds : [];
+  const completedLines = Math.min(targetLines, completedLineIds.length);
+  const progressPercent = Math.min(
+    100,
+    Math.round((completedLines / Math.max(1, targetLines)) * 100),
+  );
+  return {
+    completionAccepted: false,
+    completedLines,
+    targetLines,
+    progressPercent,
+    goalCompleted: completedLines >= targetLines,
+    goalCompletedNow: false,
+    goalMinutes: normalizedGoalMinutes,
+  };
+}
+
+export function recordDailyPracticeLineCompletion(
+  lineId: string,
+  goalMinutes: DailyPracticeMinutes | null | undefined,
+  userKey = getGamificationUserKey(),
+): DailyPracticeProgressResult {
+  const normalizedGoalMinutes: DailyPracticeMinutes =
+    goalMinutes === 10 || goalMinutes === 15 ? goalMinutes : 5;
+  const todayKey = getLocalDateKey();
+  const targetLines = getTargetLinesForDailyPractice(normalizedGoalMinutes);
+  const currentState = getDailyPracticeProgressState(userKey);
+  const baseState: DailyPracticeProgressState =
+    currentState && currentState.dateKey === todayKey
+      ? {
+          ...currentState,
+          goalMinutes: normalizedGoalMinutes,
+        }
+      : {
+          dateKey: todayKey,
+          completedLineIds: [],
+          goalMinutes: normalizedGoalMinutes,
+        };
+
+  const safeLineId = String(lineId || "").trim();
+  if (!safeLineId || baseState.completedLineIds.includes(safeLineId)) {
+    return getTodayDailyPracticeProgress(normalizedGoalMinutes, userKey);
+  }
+
+  const nextCompletedLineIds = [...baseState.completedLineIds, safeLineId];
+  const nextState: DailyPracticeProgressState = {
+    ...baseState,
+    completedLineIds: nextCompletedLineIds,
+  };
+  setDailyPracticeProgressState(nextState, userKey);
+
+  const completedLines = Math.min(targetLines, nextCompletedLineIds.length);
+  const goalCompleted = completedLines >= targetLines;
+  const previousGoalCompleted = baseState.completedLineIds.length >= targetLines;
+  const result: DailyPracticeProgressResult = {
+    completionAccepted: true,
+    completedLines,
+    targetLines,
+    progressPercent: Math.min(
+      100,
+      Math.round((completedLines / Math.max(1, targetLines)) * 100),
+    ),
+    goalCompleted,
+    goalCompletedNow: goalCompleted && !previousGoalCompleted,
+    goalMinutes: normalizedGoalMinutes,
+  };
+
+  emitDailyPracticeProgress(result);
+  return result;
 }
 
 export function awardCoinsForAnswer(

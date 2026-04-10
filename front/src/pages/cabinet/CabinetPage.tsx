@@ -14,16 +14,24 @@ import { useAuth } from "@/hooks/useAuth";
 import apiAgent from "@/lib/api";
 import { toast } from "sonner";
 import BottomNavigation from "../sessions/components/BottomNavigation";
+import { useSWRConfig } from "swr";
+import { getAuthControllerGetMeKey } from "@/api/seee.swr";
 
 const CabinetPage = observer(() => {
   const { data: profile } = useAuthControllerGetMe();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const { mutate } = useSWRConfig();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isCancelingSubscription, setIsCancelingSubscription] = useState(false);
+  const [isSavingDailyPractice, setIsSavingDailyPractice] = useState(false);
 
   const handleNeurocardClick = () => {
     navigate("/map");
+  };
+
+  const handleManagersClick = () => {
+    navigate("/cabinet/managers");
   };
 
   const handleLogout = () => {
@@ -68,6 +76,26 @@ const CabinetPage = observer(() => {
     }
   };
 
+  const handleDailyPracticeChange = async (minutes: 5 | 10 | 15) => {
+    if (isSavingDailyPractice) return;
+    setIsSavingDailyPractice(true);
+    try {
+      const updated = await apiAgent.patch<
+        { dailyPracticeMinutes: 5 | 10 | 15 },
+        { dailyPracticeMinutes?: 5 | 10 | 15 | null }
+      >("/auth/me", { dailyPracticeMinutes: minutes });
+      if (user) {
+        user.dailyPracticeMinutes = updated.dailyPracticeMinutes ?? minutes;
+      }
+      await mutate(getAuthControllerGetMeKey());
+      toast.success("Ежедневная цель обновлена");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Не удалось обновить ежедневную цель");
+    } finally {
+      setIsSavingDailyPractice(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8 pb-28">
@@ -80,13 +108,37 @@ const CabinetPage = observer(() => {
           <h2 className="mb-3 text-lg font-semibold">Разделы</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <Button variant="outline" onClick={handleNeurocardClick}>
-              Нейрокарта
+              Нейрокарты
             </Button>
+            {profile?.accountType === "MANAGER" ? (
+              <Button variant="outline" onClick={handleManagersClick}>
+                Для руководителей
+              </Button>
+            ) : null}
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <ProfileSection profile={profile} />
+        </div>
+
+        <div className="mb-6 rounded-xl border bg-card p-4">
+          <h2 className="mb-3 text-lg font-semibold">Ежедневная цель</h2>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Сколько минут в день я хочу тратить на C каждый день.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {[5, 10, 15].map((minutes) => (
+              <Button
+                key={minutes}
+                variant={profile?.dailyPracticeMinutes === minutes ? "default" : "outline"}
+                disabled={isSavingDailyPractice}
+                onClick={() => handleDailyPracticeChange(minutes as 5 | 10 | 15)}
+              >
+                {minutes} минут
+              </Button>
+            ))}
+          </div>
         </div>
 
         {/* Настройки безопасности */}
@@ -118,6 +170,11 @@ const CabinetPage = observer(() => {
         <div className="mb-6 rounded-xl border bg-card p-4">
           <h2 className="mb-3 text-lg font-semibold">Подписка</h2>
           <div className="space-y-2 text-sm">
+            {profile?.accountType === "TEAM_MEMBER" ? (
+              <p>
+                Доступ: <span className="font-semibold">по приглашению руководителя</span>
+              </p>
+            ) : null}
             <p>
               Статус:{" "}
               <span className="font-semibold">
@@ -138,16 +195,28 @@ const CabinetPage = observer(() => {
             <Button
               variant="outline"
               onClick={() => navigate("/subscription")}
-              disabled={!!profile?.subscriptionActive}
+              disabled={!!profile?.subscriptionActive || profile?.accountType === "TEAM_MEMBER"}
             >
-              {profile?.subscriptionActive ? "Подписка оформлена" : "Оформить подписку"}
+              {profile?.accountType === "TEAM_MEMBER"
+                ? "Доступ управляется руководителем"
+                : profile?.subscriptionActive
+                  ? "Подписка оформлена"
+                  : "Оформить подписку"}
             </Button>
             <Button
               variant="destructive"
               onClick={handleCancelSubscription}
-              disabled={!profile?.subscriptionActive || isCancelingSubscription}
+              disabled={
+                !profile?.subscriptionActive ||
+                isCancelingSubscription ||
+                profile?.accountType === "TEAM_MEMBER"
+              }
             >
-              {isCancelingSubscription ? "Отмена..." : "Отменить подписку"}
+              {profile?.accountType === "TEAM_MEMBER"
+                ? "Недоступно для сотрудников"
+                : isCancelingSubscription
+                  ? "Отмена..."
+                  : "Отменить подписку"}
             </Button>
           </div>
         </div>

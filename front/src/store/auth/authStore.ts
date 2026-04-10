@@ -10,6 +10,8 @@ export default class AuthStore {
         username: string;
         email?: string;
         role?: string;
+        accountType?: "USER" | "MANAGER" | "TEAM_MEMBER";
+        dailyPracticeMinutes?: 5 | 10 | 15 | null;
         userId?: string | null;
         telegramId?: string | null;
         subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
@@ -47,6 +49,8 @@ export default class AuthStore {
             username: string;
             email?: string;
             role?: string;
+            accountType?: "USER" | "MANAGER" | "TEAM_MEMBER";
+            dailyPracticeMinutes?: 5 | 10 | 15 | null;
             userId?: string | null;
             telegramId?: string | null;
             subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
@@ -72,11 +76,25 @@ export default class AuthStore {
     }
   }
 
-  async register(data: { email: string; password: string; name: string; username: string; referrerId?: string }) {
+  async register(data: {
+    email: string;
+    password: string;
+    name: string;
+    username: string;
+    referrerId?: string;
+    teamInviteCode?: string;
+  }) {
     this.isLoading = true;
     try {
       const response = await apiAgent.post<
-        { email: string; password: string; name: string; username: string },
+        {
+          email: string;
+          password: string;
+          name: string;
+          username: string;
+          referrerId?: string;
+          teamInviteCode?: string;
+        },
         {
           accessToken: string;
           refreshToken: string;
@@ -85,6 +103,8 @@ export default class AuthStore {
             username: string;
             email?: string;
             role?: string;
+            accountType?: "USER" | "MANAGER" | "TEAM_MEMBER";
+            dailyPracticeMinutes?: 5 | 10 | 15 | null;
             userId?: string | null;
             telegramId?: string | null;
             subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
@@ -132,6 +152,8 @@ export default class AuthStore {
         username: string;
         email?: string;
         role?: string;
+        accountType?: "USER" | "MANAGER" | "TEAM_MEMBER";
+        dailyPracticeMinutes?: 5 | 10 | 15 | null;
         userId?: string | null;
         telegramId?: string | null;
         subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
@@ -147,4 +169,3 @@ export default class AuthStore {
     }
   }
 }
-

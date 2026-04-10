@@ -24,6 +24,11 @@ const RegisterPage = observer(() => {
   useEffect(() => {
     if (isAuthenticated) return;
     try {
+      const teamInviteCode = searchParams.get("team") || "";
+      if (teamInviteCode) {
+        setAllowed(true);
+        return;
+      }
       const raw = sessionStorage.getItem(PAYMENT_DONE_KEY);
       const ts = raw ? parseInt(raw, 10) : 0;
       const ref = searchParams.get("ref") || "";
@@ -79,6 +84,7 @@ const RegisterPage = observer(() => {
         name: name.trim(),
         username: username,
         referrerId: searchParams.get("ref") || undefined,
+        teamInviteCode: searchParams.get("team") || undefined,
       });
 
       try {
@@ -119,6 +125,11 @@ const RegisterPage = observer(() => {
           <p className={`mt-2 ${styles.loginSubtitle}`}>
             Регистрация
           </p>
+          {searchParams.get("team") ? (
+            <p className={`mt-2 ${styles.loginSubtitle}`}>
+              Регистрация сотрудника по приглашению. Оплата подписки не требуется.
+            </p>
+          ) : null}
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">

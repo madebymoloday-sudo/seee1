@@ -11,6 +11,10 @@ interface ReferralData {
   balance: number;
   promoCode: string;
   referralLink: string;
+  accountType: "USER" | "MANAGER" | "TEAM_MEMBER";
+  employeeInviteLink: string | null;
+  teamSeatsLimit: number;
+  occupiedSeatsCount: number;
 }
 
 const ReferralSystem = () => {
@@ -121,7 +125,7 @@ const ReferralSystem = () => {
 
         {/* Реферальная ссылка */}
         <div className={styles.field}>
-          <label className={styles.label}>Реферальная ссылка</label>
+          <label className={styles.label}>Ссылка для продаж</label>
           <div className={styles.valueWrapper}>
             <span className={styles.valueLink}>{referralData.referralLink}</span>
             <Button
@@ -138,6 +142,40 @@ const ReferralSystem = () => {
             </Button>
           </div>
         </div>
+
+        {referralData.accountType === "MANAGER" && referralData.employeeInviteLink ? (
+          <>
+            <div className={styles.field}>
+              <label className={styles.label}>Ссылка для сотрудников</label>
+              <div className={styles.valueWrapper}>
+                <span className={styles.valueLink}>{referralData.employeeInviteLink}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handleCopy(referralData.employeeInviteLink || "", "employeeInviteLink")
+                  }
+                  className={styles.copyButton}
+                >
+                  {copied === "employeeInviteLink" ? (
+                    <Check className={styles.icon} />
+                  ) : (
+                    <Copy className={styles.icon} />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Сотрудники</label>
+              <div className={styles.valueWrapper}>
+                <span className={styles.value}>
+                  {referralData.occupiedSeatsCount} / {referralData.teamSeatsLimit}
+                </span>
+              </div>
+            </div>
+          </>
+        ) : null}
       </CardContent>
     </Card>
   );

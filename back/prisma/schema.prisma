@@ -50,6 +50,12 @@ enum SubscriptionStatus {
   CANCELED
 }
 
+enum AccountType {
+  USER
+  MANAGER
+  TEAM_MEMBER
+}
+
 // Models
 model User {
   id            String   @id @default(uuid())
@@ -63,6 +69,11 @@ model User {
   userId        String?  @unique @map("user_id")
   avatarUrl     String?  @map("avatar_url")
   role          String   @default("user") // 'user' | 'admin'
+  accountType   AccountType @default(USER) @map("account_type")
+  managerId     String?  @map("manager_id")
+  teamInviteCode String? @unique @map("team_invite_code")
+  teamSeatsLimit Int     @default(0) @map("team_seats_limit")
+  dailyPracticeMinutes Int? @map("daily_practice_minutes")
   openAiPromptTokens      Int      @default(0) @map("openai_prompt_tokens")
   openAiCompletionTokens  Int      @default(0) @map("openai_completion_tokens")
   openAiTotalTokens       Int      @default(0) @map("openai_total_tokens")
@@ -90,6 +101,8 @@ model User {
   referrer           User?    @relation("UserReferrals", fields: [referrerId], references: [id])
   /// Пользователи, которых пригласил данный пользователь
   referrals          User[]   @relation("UserReferrals")
+  manager            User?    @relation("ManagerMembers", fields: [managerId], references: [id])
+  teamMembers        User[]   @relation("ManagerMembers")
   paymentDetails     PaymentDetails?
   refreshTokens        RefreshToken[]
   passwordResetTokens  PasswordResetToken[]
@@ -359,6 +372,7 @@ model Feedback {
   sessionId   String?        @map("session_id")
   title       String?        @map("title")
   description String
+  emotionAfter String?       @map("emotion_after")
   filePath    String?        @map("file_path")
   fileType    String?        @map("file_type")
   feedbackType FeedbackType  @default(FULL) @map("feedback_type")

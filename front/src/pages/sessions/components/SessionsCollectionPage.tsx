@@ -132,6 +132,9 @@ type ArchivistOption = {
   label: string;
   sessionId?: string;
   action:
+    | "set_daily_5"
+    | "set_daily_10"
+    | "set_daily_15"
     | "intro"
     | "telegram"
     | "open_archive"
@@ -143,6 +146,16 @@ type ArchivistOption = {
     | "continue_last_session"
     | "open_suggested_cards";
 };
+
+function describeDailyPracticeGoal(minutes: 5 | 10 | 15): string {
+  if (minutes === 5) {
+    return "Тогда твоя ежедневная задача — закрыть одну линию разбора: от формулировки мысли до развилки «разобраться глубже» или «решить ситуацию».";
+  }
+  if (minutes === 10) {
+    return "Тогда твоя ежедневная задача — закрыть две линии разбора за день. После первой линии ты увидишь прогресс 50%, после второй задача закроется полностью.";
+  }
+  return "Тогда твоя ежедневная задача — закрыть три линии разбора за день. После первой линии будет 33%, после второй 66%, после третьей дневная цель закроется.";
+}
 
 type ArchivistInsightRequest = {
   sessionId?: string;
@@ -866,6 +879,18 @@ const SessionsCollectionPage = observer(() => {
   const buildAutoArchivistState = (
     overrideContext?: ArchivistGalleryContext | null,
   ): { message: string; options: ArchivistOption[]; consumeContext?: ArchivistGalleryContext } => {
+    if (!user?.dailyPracticeMinutes) {
+      return {
+        message:
+          "Сначала скажи, сколько минут в день ты хочешь тратить на приложение. От этого будет зависеть твоя ежедневная задача и счётчик прогресса.",
+        options: [
+          { id: "daily_5", label: "5 минут в день", action: "set_daily_5" },
+          { id: "daily_10", label: "10 минут в день", action: "set_daily_10" },
+          { id: "daily_15", label: "15 минут в день", action: "set_daily_15" },
+        ],
+      };
+    }
+
     const effectiveContext =
       overrideContext ?? archivistContext ?? loadArchivistGalleryContext(userKey);
 
@@ -964,7 +989,7 @@ const SessionsCollectionPage = observer(() => {
     if (archivistMode === "auto") {
       applyAutoArchivistState();
     }
-  }, [archivistContext, archivistMode, sessions, toExplore, user?.telegramId, isArchivistInsightLoading]);
+  }, [archivistContext, archivistMode, sessions, toExplore, user?.telegramId, user?.dailyPracticeMinutes, isArchivistInsightLoading]);
 
   useEffect(() => {
     if (!archivistContext || archivistContext.status !== "pending" || !archivistContext.snapshot) {
@@ -1051,11 +1076,38 @@ const SessionsCollectionPage = observer(() => {
     setArchivistMode("conversation");
     setIsArchivistCustomInputVisible(false);
 
+    if (
+      option.action === "set_daily_5" ||
+      option.action === "set_daily_10" ||
+      option.action === "set_daily_15"
+    ) {
+      const minutes = option.action === "set_daily_5" ? 5 : option.action === "set_daily_10" ? 10 : 15;
+      (async () => {
+        try {
+          await apiAgent.patch("/auth/me", { dailyPracticeMinutes: minutes });
+          if (user) {
+            user.dailyPracticeMinutes = minutes;
+          }
+          setArchivistMessage(
+            `${describeDailyPracticeGoal(minutes)} Я буду показывать прогресс дня, когда ты доведёшь линию до развилки, а потом подскажу, что делать дальше в приложении.`
+          );
+          setArchivistOptions([
+            { id: "intro_after_daily", label: "Понял, показать как всё работает", action: "intro" },
+            { id: "archive_after_daily", label: "Открыть архив сессий", action: "open_archive" },
+            { id: "new_after_daily", label: "Создать новую сессию", action: "new_session" },
+          ]);
+        } catch (error: any) {
+          toast.error(error?.response?.data?.message || "Не удалось сохранить ежедневную цель");
+        }
+      })();
+      return;
+    }
+
     if (option.action === "intro") {
       const sessionsCount = sessions.length;
       const exploreCount = toExplore.length;
       setArchivistMessage(
-        `Сейчас у тебя ${sessionsCount} ${
+        `${user?.dailyPracticeMinutes ? `${describeDailyPracticeGoal(user.dailyPracticeMinutes)} ` : ""}Сейчас у тебя ${sessionsCount} ${
           sessionsCount === 1 ? "сессия" : sessionsCount < 5 && sessionsCount > 1 ? "сессии" : "сессий"
         } в архиве и ${exploreCount} карточ${
           exploreCount === 1 ? "ка" : exploreCount < 5 && exploreCount > 1 ? "ки" : "ек"
