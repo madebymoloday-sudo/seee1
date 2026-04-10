@@ -805,7 +805,7 @@ function getPrompt(
   }
   if (view.kind === "solve") return solveQuestion(view.step, importantText);
   if (view.kind === "deepPick") {
-    return `В ответе на вопрос: "Почему для вас это важно" вы написали:\n\n${view.fromImportant || importantText || "—"}\n\nКакую из этих мыслей вы хотели бы разобрать?`;
+    return `В ответе на вопрос: "Почему для вас это важно" вы написали:\n\n${importantText || view.fromImportant || "—"}\n\nКакую из этих мыслей вы хотели бы разобрать?`;
   }
   if (view.kind === "addToList") {
     return `Добавить мысль в список на будущее.\n\nСюда можно вынести мысль из ответа "Почему для вас это важно":\n${importantText || "—"}`;
@@ -992,7 +992,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const importantOptions = useMemo(() => {
     if (view.kind !== "deepPick") return [];
-    const text = view.fromImportant || currentImportantText;
+    const text = currentImportantText || view.fromImportant;
     return parseImportantOptions(text);
   }, [view, currentImportantText]);
 
@@ -1009,8 +1009,14 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isIdeasModalOpen, setIsIdeasModalOpen] = useState(false);
   const [activeIdeaMenu, setActiveIdeaMenu] = useState<string | null>(null);
+  const [ideaEditorMode, setIdeaEditorMode] = useState<"edit" | "create" | null>(
+    null,
+  );
+  const [ideaEditorOriginal, setIdeaEditorOriginal] = useState("");
+  const [ideaEditorDraft, setIdeaEditorDraft] = useState("");
   const timersRef = useRef<number[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const ideaEditorRef = useRef<HTMLTextAreaElement | null>(null);
   const forceEditOnStepSyncRef = useRef(false);
 
   const focusInputWithoutScroll = () => {
@@ -1022,6 +1028,21 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       el.focus();
     }
   };
+
+  useEffect(() => {
+    if (!ideaEditorMode) return;
+    const timer = window.setTimeout(() => {
+      const el = ideaEditorRef.current;
+      if (!el) return;
+      try {
+        el.focus({ preventScroll: true });
+      } catch {
+        el.focus();
+      }
+      el.select();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [ideaEditorMode]);
 
   const canDeepNow = useMemo(() => {
     // button should be available during the session after step 4 is answered at least once
@@ -1697,29 +1718,41 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     }));
   };
 
+  const closeIdeaEditor = () => {
+    setIdeaEditorMode(null);
+    setIdeaEditorOriginal("");
+    setIdeaEditorDraft("");
+  };
+
   const handleEditIdea = (idea: string) => {
-    const next = window.prompt("Редактировать мысль", idea)?.trim();
     setActiveIdeaMenu(null);
-    if (!next) return;
-    const current = parseImportantOptions(currentImportantText);
-    const updated = current.map((x) => (x === idea ? next : x));
-    updateImportantIdeas(updated);
+    setIdeaEditorMode("edit");
+    setIdeaEditorOriginal(idea);
+    setIdeaEditorDraft(idea);
   };
 
   const handleDeleteIdea = (idea: string) => {
     setActiveIdeaMenu(null);
-    const current = parseImportantOptions(currentImportantText);
-    const updated = current.filter((x) => x !== idea);
+    const updated = importantOptions.filter((x) => x !== idea);
     updateImportantIdeas(updated);
   };
 
   const handleAppendIdea = () => {
-    const next = window.prompt("Введите новую мысль")?.trim();
     setActiveIdeaMenu(null);
+    setIdeaEditorMode("create");
+    setIdeaEditorOriginal("");
+    setIdeaEditorDraft("");
+  };
+
+  const submitIdeaEditor = () => {
+    const next = ideaEditorDraft.trim();
     if (!next) return;
-    const current = parseImportantOptions(currentImportantText);
-    const updated = [...current, next];
+    const updated =
+      ideaEditorMode === "edit"
+        ? importantOptions.map((x) => (x === ideaEditorOriginal ? next : x))
+        : [...importantOptions, next];
     updateImportantIdeas(updated);
+    closeIdeaEditor();
   };
 
   const showCoreChoice = view.kind === "core" && view.step === 10;
@@ -2173,6 +2206,53 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               value={isEditing ? inputText : ""}
               onValueChange={setInputText}
             />
+          </div>
+        </div>
+      )}
+
+      {ideaEditorMode && (
+        <div
+          className={styles.modalOverlay}
+          onClick={closeIdeaEditor}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>
+              {ideaEditorMode === "edit"
+                ? "Редактировать мысль"
+                : "Добавить мысль"}
+            </h3>
+            <div className={styles.modalBody}>
+              <Textarea
+                ref={ideaEditorRef}
+                value={ideaEditorDraft}
+                onChange={(e) => setIdeaEditorDraft(e.target.value)}
+                placeholder="Введите мысль"
+                rows={4}
+              />
+              <p className={styles.modalHint}>
+                {ideaEditorMode === "edit"
+                  ? "Текст выделяется целиком, чтобы его можно было сразу заменить."
+                  : "Добавленная мысль появится в этом списке и станет доступна для разбора."}
+              </p>
+            </div>
+            <div className={styles.modalFooter}>
+              <Button
+                variant="outline"
+                onClick={closeIdeaEditor}
+                className={chatStyles.glassButton}
+              >
+                Отмена
+              </Button>
+              <Button
+                onClick={submitIdeaEditor}
+                disabled={!ideaEditorDraft.trim()}
+                className={chatStyles.glassButton}
+              >
+                Сохранить
+              </Button>
+            </div>
           </div>
         </div>
       )}
