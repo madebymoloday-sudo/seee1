@@ -1,6 +1,7 @@
 .dialogWindow {
   flex: 1;
   min-height: 0;
+  height: 100%;
 }
 
 .messagesStage {
@@ -17,6 +18,7 @@
 .bottomDock {
   margin-top: auto;
   align-self: stretch;
+  flex-shrink: 0;
 }
 
 .choiceRow {
@@ -369,6 +371,7 @@
 
 .inputAlignWrapper > div {
   /* messageInputContainer: полная ширина, фон не обрезан */
+  box-sizing: border-box;
   max-width: none;
   width: 100%;
   padding-top: 0.45rem;
@@ -410,5 +413,9 @@
   .messagesStage {
     justify-content: center;
     padding-top: 4.35rem;
+  }
+
+  .inputAlignWrapper > div {
+    padding-bottom: 0.9rem;
   }
 }

@@ -4,6 +4,7 @@
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  box-sizing: border-box;
   padding-top: calc(112px + env(safe-area-inset-top, 0px));
 }
 
