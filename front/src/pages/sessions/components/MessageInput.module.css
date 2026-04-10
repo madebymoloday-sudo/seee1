@@ -130,7 +130,7 @@
 /* Адаптивные стили для мобильных устройств */
 @media (max-width: 768px) {
   .messageInputContainer {
-    padding: 0.75rem 1rem 0.5rem;
+    padding: 0.68rem 1rem 0.12rem;
   }
 
   .inputWrapper {
@@ -156,14 +156,14 @@
 
 @media (min-width: 769px) {
   .messageInputContainer {
-    padding-top: 0.3rem;
-    padding-bottom: 0.15rem;
+    padding-top: 0.72rem;
+    padding-bottom: 0.28rem;
   }
 }
 
 @media (max-width: 480px) {
   .messageInputContainer {
-    padding: 0.55rem 0.75rem 0.3rem;
+    padding: 0.6rem 0.75rem 0.08rem;
   }
 
   .inputWrapper {
@@ -241,14 +241,14 @@
 /* Поддержка безопасных областей для iOS */
 @supports (padding: max(0px)) {
   .messageInputContainer {
-    padding-bottom: max(0.15rem, min(env(safe-area-inset-bottom), 0.35rem));
+    padding-bottom: 0.28rem;
     padding-left: max(1.25rem, env(safe-area-inset-left));
     padding-right: max(1.25rem, env(safe-area-inset-right));
   }
 
   @media (max-width: 768px) {
     .messageInputContainer {
-      padding-bottom: max(0.18rem, min(env(safe-area-inset-bottom), 0.42rem));
+      padding-bottom: max(0.06rem, min(env(safe-area-inset-bottom), 0.16rem));
       padding-left: max(1rem, env(safe-area-inset-left));
       padding-right: max(1rem, env(safe-area-inset-right));
     }
@@ -256,7 +256,7 @@
 
   @media (max-width: 480px) {
     .messageInputContainer {
-      padding-bottom: max(0.12rem, min(env(safe-area-inset-bottom), 0.34rem));
+      padding-bottom: max(0.04rem, min(env(safe-area-inset-bottom), 0.12rem));
       padding-left: max(0.75rem, env(safe-area-inset-left));
       padding-right: max(0.75rem, env(safe-area-inset-right));
     }

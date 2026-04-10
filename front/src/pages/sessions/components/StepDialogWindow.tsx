@@ -533,6 +533,12 @@ function coreQuestion(
   const thoughtNominative = thought ? `мысль «${thought}»` : "эта мысль";
   const thoughtAccusative = thought ? `мысль «${thought}»` : "эту мысль";
   const thoughtGenitive = thought ? `мысли «${thought}»` : "этой мысли";
+  const primarySourceKey = `core:${subject}:5`;
+  const secondarySourceKey =
+    subject === "thought" ? "core:situation:5" : "core:thought:5";
+  const sourceAnswer = sanitizeSourceAnswer(
+    answers?.[primarySourceKey] || answers?.[secondarySourceKey],
+  );
   const thing = subject === "thought" ? thoughtNominative : "эта ситуация";
   switch (step) {
     case 1:
@@ -551,9 +557,7 @@ function coreQuestion(
         ? `Как вам кажется, от кого или откуда к вам пришла мысль «${thought}»?\n\nЭто может быть конкретный человек, семья, сообщество, культура, вы сами или какой-то прошлый опыт.`
         : `Как вам кажется, от кого или откуда к вам пришла эта мысль?\n\nЭто может быть конкретный человек, семья, сообщество, культура, вы сами или какой-то прошлый опыт.`;
     case 6:
-      return thought
-        ? `Как думаете, с какой выгодой для себя другой человек или система могли передавать вам мысль «${thought}»?`
-        : `Как думаете, с какой выгодой для себя другой человек или система могли передавать вам эту мысль?`;
+      return buildSourceBenefitQuestion(thought, sourceAnswer);
     case 7: {
       if (thought) {
         return `Какие эмоциональные последствия принесла вам мысль «${thought}»?`;
@@ -608,6 +612,54 @@ function sanitizeThoughtValue(v?: string): string {
   const s = (v || "").trim();
   if (!s || s === "—") return "";
   return s;
+}
+
+function sanitizeSourceAnswer(v?: string): string {
+  const raw = sanitizeThoughtValue(v)
+    .replace(/\s+/g, " ")
+    .split(/\n+/)[0]
+    .trim();
+
+  if (!raw) return "";
+
+  const cleaned = raw
+    .replace(
+      /^(это|скорее всего|наверное|возможно|кажется|мне кажется(?:,?\s*что)?|думаю(?:,?\s*что)?|похоже(?:,?\s*что)?|как будто)\s+/iu,
+      "",
+    )
+    .replace(/^от\s+/iu, "")
+    .replace(
+      /\b(заложил(?:а|и)?|передал(?:а|и)?|передавал(?:а|и)?|сформировал(?:а|и)?|навязал(?:а|и)?|внушил(?:а|и)?|говорил(?:а|и)?|твердил(?:а|и)?|повторял(?:а|и)?|транслировал(?:а|и)?|закладывал(?:а|и)?|вкладывал(?:а|и)?)\b.*$/iu,
+      "",
+    )
+    .replace(/[.?!,:;]+$/g, "")
+    .trim();
+
+  if (!cleaned) return "";
+  if (cleaned.length <= 96) return cleaned;
+  return `${cleaned.slice(0, 95).trimEnd()}…`;
+}
+
+function hasMultipleSources(source: string): boolean {
+  return /,/.test(source) || /\s(?:и|или|либо|а также)\s/iu.test(source);
+}
+
+function buildSourceBenefitQuestion(thought: string, sourceAnswer?: string): string {
+  if (!sourceAnswer) {
+    return thought
+      ? `Как думаете, с какой выгодой для себя другой человек или система могли передавать вам мысль «${thought}»?`
+      : `Как думаете, с какой выгодой для себя другой человек или система могли передавать вам эту мысль?`;
+  }
+
+  if (hasMultipleSources(sourceAnswer)) {
+    return thought
+      ? `Если взять названные вами источники — ${sourceAnswer}, — какую выгоду для себя они могли получать, когда передавали вам мысль «${thought}»?`
+      : `Если взять названные вами источники — ${sourceAnswer}, — какую выгоду для себя они могли получать, когда передавали вам эту мысль?`;
+  }
+
+  return thought
+    ? `Если взять названный вами источник — ${sourceAnswer}, — какую выгоду для себя он мог получать, когда передавал вам мысль «${thought}»?`
+    : `Если взять названный вами источник — ${sourceAnswer}, — какую выгоду для себя он мог получать, когда передавал вам эту мысль?`;
 }
 
 function getPrompt(
@@ -1095,7 +1147,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     ) {
       const reward = awardCoinsForAnswer(session.id, key, 3);
       if (reward.awarded) {
-        toast.success(`+${reward.delta} монеты`);
+        toast.success(`+${reward.delta} монеты`, { position: "top-center" });
       }
     }
     if (
@@ -1106,7 +1158,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     ) {
       const recommendedReward = claimPendingSessionReward(session.id);
       if (recommendedReward.awarded) {
-        toast.success(`+${recommendedReward.delta} монет за рекомендованную карточку`);
+        toast.success(`+${recommendedReward.delta} монет за рекомендованную карточку`, {
+          position: "top-center",
+        });
       }
     }
     setIsTransitioning(true);
@@ -1162,7 +1216,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       saveState(newSession.id, nextState);
       const reward = awardCoinsForAnswer(newSession.id, answerKey, 3);
       if (reward.awarded) {
-        toast.success(`+${reward.delta} монеты`);
+        toast.success(`+${reward.delta} монеты`, { position: "top-center" });
       }
       if (
         draftTemplateReward &&
@@ -1385,7 +1439,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     if (progress.goalCompletedNow) {
       const streakReward = awardDailyStreakForProgress(10);
       if (streakReward.awarded) {
-        toast.success(`+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`);
+        toast.success(
+          `+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`,
+          { position: "top-center" },
+        );
       }
     }
     setState((s) => ({
@@ -1412,7 +1469,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     if (progress.goalCompletedNow) {
       const streakReward = awardDailyStreakForProgress(10);
       if (streakReward.awarded) {
-        toast.success(`+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`);
+        toast.success(
+          `+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`,
+          { position: "top-center" },
+        );
       }
     }
     setState((s) => ({

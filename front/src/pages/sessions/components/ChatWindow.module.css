@@ -445,7 +445,7 @@
   }
 
   .composerDock {
-    bottom: max(0.5rem, min(env(safe-area-inset-bottom), 0.95rem));
+    bottom: 0;
     z-index: 70;
   }
 
@@ -474,7 +474,7 @@
   }
 
   .composerDock {
-    bottom: max(0.45rem, min(env(safe-area-inset-bottom), 0.8rem));
+    bottom: 0;
   }
 
   :global(html[data-keyboard-open="true"]) .composerDock {

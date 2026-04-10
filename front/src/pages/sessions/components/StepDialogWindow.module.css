@@ -361,7 +361,11 @@
 }
 
 .centeredUserBubble p {
-  color: rgba(17, 24, 39, 0.94) !important;
+  color: inherit !important;
+}
+
+:global(html.dark) .centeredUserBubble p {
+  color: rgba(255, 255, 255, 0.95) !important;
 }
 
 /* Обёртка поля ввода: выравнивание по ширине сообщений (как в ChatWindow). */
@@ -376,7 +380,7 @@
   width: 100%;
   padding-top: 0 !important;
   padding-right: 0;
-  padding-bottom: 0.12rem !important;
+  padding-bottom: 0 !important;
   padding-left: 0;
 }
 
@@ -416,6 +420,6 @@
   }
 
   .inputAlignWrapper > div {
-    padding-bottom: 0.12rem !important;
+    padding-bottom: 0 !important;
   }
 }
