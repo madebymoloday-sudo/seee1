@@ -721,6 +721,49 @@ function buildConclusionSummary(
   return `${parts.join(", ")}.`;
 }
 
+function getCurrentThoughtLabel(
+  subject: Subject,
+  answers?: Record<string, string>,
+): string {
+  const primaryThoughtKey = `core:${subject}:3`;
+  const secondaryThoughtKey =
+    subject === "thought" ? "core:situation:3" : "core:thought:3";
+  return sanitizeThoughtValue(
+    answers?.[primaryThoughtKey] || answers?.[secondaryThoughtKey],
+  );
+}
+
+function buildConclusionFollowUpQuestion(
+  subject: Subject,
+  answers?: Record<string, string>,
+): string {
+  const thought = getCurrentThoughtLabel(subject, answers);
+  return thought
+    ? `Если сказать совсем прямо: мысль «${thought}» вам сейчас нужна или не нужна? Она помогает вам в жизни или больше мешает?`
+    : "Если сказать совсем прямо: эта мысль вам сейчас нужна или не нужна? Она помогает вам в жизни или больше мешает?";
+}
+
+function looksLikeThoughtReminderQuestion(answer: string): boolean {
+  const normalized = answer.toLowerCase().replace(/ё/g, "е");
+  return (
+    normalized.includes("какая мысль") ||
+    normalized.includes("что за мысль") ||
+    normalized.includes("о какой мысли") ||
+    normalized.includes("какую мысль") ||
+    normalized.includes("что за идея")
+  );
+}
+
+function buildThoughtReminderResponse(
+  subject: Subject,
+  answers?: Record<string, string>,
+): string {
+  const thought = getCurrentThoughtLabel(subject, answers);
+  return thought
+    ? `Мы сейчас разбираем мысль «${thought}».`
+    : "Мы сейчас разбираем ту мысль, которую вы сформулировали как идею, запускающую эмоцию.";
+}
+
 function getPrompt(
   view: View,
   importantText: string,
@@ -1389,10 +1432,35 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         : null;
 
       if (shouldAnalyzeStage) {
+        const currentGuidance = getStageGuidance(state, key);
+
+        if (
+          view.kind === "core" &&
+          view.step === 9 &&
+          looksLikeThoughtReminderQuestion(trimmed)
+        ) {
+          const clarifyState = normalizeStateV3({
+            ...state,
+            stageGuidance: setStageGuidance(state, key, {
+              ...currentGuidance,
+              clarificationLead: buildThoughtReminderResponse(
+                view.subject,
+                currentAnswers,
+              ),
+              clarificationPrompt: buildConclusionFollowUpQuestion(
+                view.subject,
+                currentAnswers,
+              ),
+            }),
+          });
+
+          animateStateTransition(trimmed, clarifyState);
+          return;
+        }
+
         const assist = await requestStageAssist(trimmed, options);
         if (assist) {
           const normalized = (assist.normalizedAnswer || trimmed).trim() || trimmed;
-          const currentGuidance = getStageGuidance(state, key);
 
           if (
             assist.decision === "clarify" &&
@@ -1405,9 +1473,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             const clarificationAnswers = shouldStoreAsClarification
               ? [...currentGuidance.clarificationAnswers, trimmed]
               : currentGuidance.clarificationAnswers;
+            const followUpQuestion =
+              view.step === 9
+                ? buildConclusionFollowUpQuestion(view.subject, currentAnswers)
+                : assist.followUpQuestion;
             const guidancePatch: Partial<StageGuidanceState> = {
               clarificationLead: assist.reaction,
-              clarificationPrompt: assist.followUpQuestion,
+              clarificationPrompt: followUpQuestion,
               clarificationCount: Math.min(
                 2,
                 currentGuidance.clarificationCount + 1,
@@ -1658,6 +1730,12 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     if (view.kind === "deepPick") return true;
     if (view.kind === "solve") return true;
     if (view.kind === "core") {
+      if (
+        currentStageGuidance?.clarificationPrompt ||
+        currentStageGuidance?.reviewPrompt
+      ) {
+        return true;
+      }
       const min = view.subject === "thought" ? 2 : 1;
       if (view.step > min) return true;
       // из списка идей или deepPick — можно вернуться к списку
@@ -1678,6 +1756,21 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     forceEditOnStepSyncRef.current = true;
 
     const applyBackState = (s: DialogState): Partial<DialogState> => {
+      if (
+        view.kind !== "deepPick" &&
+        currentStageGuidance &&
+        (currentStageGuidance.clarificationPrompt ||
+          currentStageGuidance.reviewPrompt)
+      ) {
+        return {
+          stageGuidance: setStageGuidance(s, stepKey(view), {
+            ...clearStageClarification(currentStageGuidance),
+            preface: undefined,
+            reviewLead: undefined,
+            reviewPrompt: undefined,
+          }),
+        };
+      }
       if (view.kind === "deepPick") {
         if (s.deepPickReturn) {
           return {
