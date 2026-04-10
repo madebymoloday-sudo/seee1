@@ -5,7 +5,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { AccountType } from '@prisma/client';
+import { AccountType, FeedbackType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenService } from './token.service';
 import { TelegramAuthService } from './telegram-auth.service';
@@ -142,19 +142,26 @@ export class AuthService {
             userId: true,
             username: true,
             fullName: true,
-            sessions: {
-              select: { id: true },
-            },
+            dailyPracticeMinutes: true,
             balances: {
               select: { amount: true },
             },
             feedback: {
-              where: { sessionId: { not: null } },
+              where: {
+                sessionId: { not: null },
+                feedbackType: FeedbackType.FULL,
+              },
               orderBy: { createdAt: 'desc' },
-              take: 1,
               select: {
+                sessionId: true,
+                description: true,
                 emotionAfter: true,
                 createdAt: true,
+                session: {
+                  select: {
+                    title: true,
+                  },
+                },
               },
             },
           },
@@ -179,7 +186,16 @@ export class AuthService {
       members: [
         ...manager.teamMembers.map((member) => {
           const latestFeedback = member.feedback[0];
-          const emotionalState = latestFeedback?.emotionAfter?.trim() || null;
+          const completedCardsCount = new Set(
+            member.feedback
+              .map((item) => String(item.sessionId || '').trim())
+              .filter(Boolean),
+          ).size;
+          const emotionalState = this.buildTeamMemberEmotionalState({
+            sessionTitle: latestFeedback?.session?.title ?? null,
+            feedbackDescription: latestFeedback?.description ?? null,
+            emotionAfter: latestFeedback?.emotionAfter ?? null,
+          });
 
           return {
             id: member.id,
@@ -187,10 +203,17 @@ export class AuthService {
             username: member.username,
             fullName: member.fullName,
             isRegistered: true,
-            processedCardsCount: member.sessions.length,
+            hasCompletedOnboarding: this.hasCompletedOnboarding(
+              member.dailyPracticeMinutes,
+            ),
+            completedCardsCount,
             coinsRating: Number(member.balances[0]?.amount ?? 0),
             emotionalState,
-            emotionalTone: this.getEmotionalTone(emotionalState),
+            emotionalTone: this.getEmotionalTone(
+              `${latestFeedback?.emotionAfter || ''} ${latestFeedback?.description || ''} ${
+                emotionalState || ''
+              }`,
+            ),
             lastFeedbackAt: latestFeedback?.createdAt?.toISOString?.() ?? null,
           };
         }),
@@ -200,7 +223,8 @@ export class AuthService {
           username: `slot_${index + 1}`,
           fullName: `Слот ${occupiedSeatsCount + index + 1}`,
           isRegistered: false,
-          processedCardsCount: 0,
+          hasCompletedOnboarding: false,
+          completedCardsCount: 0,
           coinsRating: 0,
           emotionalState: null,
           emotionalTone: null,
@@ -293,6 +317,57 @@ export class AuthService {
     }
 
     return 'Нейтральный';
+  }
+
+  private hasCompletedOnboarding(
+    dailyPracticeMinutes?: number | null,
+  ): boolean {
+    return (
+      dailyPracticeMinutes === 5 ||
+      dailyPracticeMinutes === 10 ||
+      dailyPracticeMinutes === 15
+    );
+  }
+
+  private buildTeamMemberEmotionalState(params: {
+    sessionTitle?: string | null;
+    feedbackDescription?: string | null;
+    emotionAfter?: string | null;
+  }): string | null {
+    const sessionTitle = String(params.sessionTitle || '').trim();
+    const feedbackDescription = String(params.feedbackDescription || '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const emotionAfter = String(params.emotionAfter || '').trim();
+    const corpus = `${emotionAfter} ${feedbackDescription} ${sessionTitle}`
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .trim();
+
+    if (!corpus) return null;
+
+    const tone = this.getEmotionalTone(corpus);
+    const topicLead = sessionTitle ? `По теме «${sessionTitle}» ` : '';
+
+    if (tone === 'Стабильный') {
+      if (emotionAfter) {
+        return `${topicLead}после последнего разбора чувствуется больше опоры и спокойствия: ${emotionAfter}.`;
+      }
+      return `${topicLead}после последнего разбора состояние выглядит более спокойным и устойчивым.`;
+    }
+
+    if (tone === 'Требует внимания') {
+      if (emotionAfter) {
+        return `${topicLead}после последнего разбора напряжение ещё сохраняется: ${emotionAfter}.`;
+      }
+      return `${topicLead}в фоне ещё остаются напряжение, усталость или тревога.`;
+    }
+
+    if (emotionAfter) {
+      return `${topicLead}состояние после последнего разбора описывается так: ${emotionAfter}.`;
+    }
+
+    return `${topicLead}состояние пока выглядит нейтральным, без явного перегруза.`;
   }
 
   assertSupportKey(keyRaw: string | undefined): void {

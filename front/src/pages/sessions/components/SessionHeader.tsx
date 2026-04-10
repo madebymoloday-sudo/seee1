@@ -426,7 +426,7 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
               </button>
               <button onClick={handlePause} className={styles.menuItem}>
                 <Pause className={styles.menuIcon} />
-                Приостановить
+                Разбор завершён
               </button>
               <button onClick={handleSave} className={styles.menuItem}>
                 <Save className={styles.menuIcon} />

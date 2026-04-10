@@ -70,9 +70,11 @@ const ReferralSystem = () => {
   }
 
   return (
-    <Card>
+      <Card>
       <CardHeader>
-        <CardTitle>Реферальная система</CardTitle>
+        <CardTitle>
+          {referralData.accountType === "MANAGER" ? "Ссылки основателя" : "Реферальная система"}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* ID пользователя */}
@@ -146,7 +148,7 @@ const ReferralSystem = () => {
         {referralData.accountType === "MANAGER" && referralData.employeeInviteLink ? (
           <>
             <div className={styles.field}>
-              <label className={styles.label}>Ссылка для сотрудников</label>
+              <label className={styles.label}>Ссылка для команды</label>
               <div className={styles.valueWrapper}>
                 <span className={styles.valueLink}>{referralData.employeeInviteLink}</span>
                 <Button
@@ -167,7 +169,7 @@ const ReferralSystem = () => {
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label}>Сотрудники</label>
+              <label className={styles.label}>Команда</label>
               <div className={styles.valueWrapper}>
                 <span className={styles.value}>
                   {referralData.occupiedSeatsCount} / {referralData.teamSeatsLimit}

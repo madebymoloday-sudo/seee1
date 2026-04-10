@@ -135,6 +135,7 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
         sessionId,
         title: "Обратная связь после сессии",
         description,
+        emotionAfter: answers.emotion.trim(),
         feedbackType: "FULL",
       });
 
@@ -144,7 +145,7 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
         // ignore
       }
 
-      toast.success("Обратная связь сохранена");
+      toast.success("Разбор завершён");
 
       // Не создаём пустую сессию автоматически — отправляем в черновик.
       navigate("/sessions/new");
@@ -162,7 +163,7 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <h2 className={styles.title}>Обратная связь</h2>
+          <h2 className={styles.title}>Завершить разбор</h2>
           <button onClick={onClose} className={styles.closeButton}>
             <X className={styles.closeIcon} />
           </button>
@@ -170,7 +171,8 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
 
         <div className={styles.content}>
           <p className={styles.recommendation}>
-            Мы рекомендуем всегда оставлять обратную связь после сессии, это позволит вам правильно завершить работу со своим мышлением.
+            Чтобы завершить разбор, зафиксируйте короткую обратную связь по этой сессии. После
+            этого карточка будет считаться закрытой.
           </p>
 
           <div className={styles.form}>
@@ -253,7 +255,7 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
               disabled={isSubmitting}
               className={styles.submitButton}
             >
-              {isSubmitting ? "Сохранение..." : "Закончить"}
+              {isSubmitting ? "Сохранение..." : "Разбор завершён"}
             </Button>
           </div>
         </div>

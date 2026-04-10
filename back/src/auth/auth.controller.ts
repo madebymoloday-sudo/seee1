@@ -371,7 +371,7 @@ export class AuthController {
   @Get('manager/team')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Сводка для руководителя по подключённым аккаунтам' })
+  @ApiOperation({ summary: 'Сводка для основателя по подключённым аккаунтам команды' })
   @ApiResponse({
     status: 200,
     description: 'Список подключённых аккаунтов и сводка по ним',
@@ -388,7 +388,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Админ: выдать аккаунту статус руководителя и ссылку для сотрудников',
+    summary: 'Админ: выдать аккаунту статус основателя и ссылку для команды',
   })
   @ApiResponse({
     status: 200,

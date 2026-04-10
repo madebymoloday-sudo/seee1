@@ -17,6 +17,28 @@ import BottomNavigation from "../sessions/components/BottomNavigation";
 import { useSWRConfig } from "swr";
 import { getAuthControllerGetMeKey } from "@/api/seee.swr";
 
+function getAccountTypeLabel(accountType?: "USER" | "MANAGER" | "TEAM_MEMBER") {
+  switch (accountType) {
+    case "MANAGER":
+      return "Основатель";
+    case "TEAM_MEMBER":
+      return "Член команды";
+    default:
+      return "Пользователь";
+  }
+}
+
+function getAccountTypeDescription(accountType?: "USER" | "MANAGER" | "TEAM_MEMBER") {
+  switch (accountType) {
+    case "MANAGER":
+      return "У вас есть доступ к кабинету основателя, ссылке для команды и сводке по сотрудникам.";
+    case "TEAM_MEMBER":
+      return "Ваш доступ предоставлен по приглашению основателя, подпиской управляет компания.";
+    default:
+      return "Обычный пользовательский аккаунт с личной подпиской и стандартным доступом.";
+  }
+}
+
 const CabinetPage = observer(() => {
   const { data: profile } = useAuthControllerGetMe();
   const navigate = useNavigate();
@@ -31,7 +53,7 @@ const CabinetPage = observer(() => {
   };
 
   const handleManagersClick = () => {
-    navigate("/cabinet/managers");
+    navigate("/cabinet/founder");
   };
 
   const handleLogout = () => {
@@ -112,7 +134,7 @@ const CabinetPage = observer(() => {
             </Button>
             {profile?.accountType === "MANAGER" ? (
               <Button variant="outline" onClick={handleManagersClick}>
-                Для руководителей
+                Кабинет основателя
               </Button>
             ) : null}
           </div>
@@ -120,6 +142,16 @@ const CabinetPage = observer(() => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <ProfileSection profile={profile} />
+        </div>
+
+        <div className="mb-6 rounded-xl border bg-card p-4">
+          <h2 className="mb-3 text-lg font-semibold">Статус аккаунта</h2>
+          <div className="inline-flex rounded-full border px-3 py-1 text-sm font-semibold">
+            {getAccountTypeLabel(profile?.accountType)}
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground">
+            {getAccountTypeDescription(profile?.accountType)}
+          </p>
         </div>
 
         <div className="mb-6 rounded-xl border bg-card p-4">
@@ -172,7 +204,7 @@ const CabinetPage = observer(() => {
           <div className="space-y-2 text-sm">
             {profile?.accountType === "TEAM_MEMBER" ? (
               <p>
-                Доступ: <span className="font-semibold">по приглашению руководителя</span>
+                Доступ: <span className="font-semibold">по приглашению основателя</span>
               </p>
             ) : null}
             <p>

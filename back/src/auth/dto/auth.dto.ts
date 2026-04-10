@@ -143,8 +143,8 @@ export class UserProfileDto {
 
 export class ManagerAccessSetupDto {
   @ApiProperty({
-    description: 'Email аккаунта, которому нужно выдать статус руководителя',
-    example: 'manager@example.com',
+    description: 'Email аккаунта, которому нужно выдать статус основателя',
+    example: 'founder@example.com',
   })
   @IsEmail()
   email: string;
@@ -213,13 +213,18 @@ export class ManagerTeamMemberDto {
   @ApiProperty({ description: 'Зарегистрирован ли сотрудник по ссылке' })
   isRegistered: boolean;
 
-  @ApiProperty({ description: 'Количество разобранных карточек' })
-  processedCardsCount: number;
+  @ApiProperty({ description: 'Прошёл ли сотрудник стартовое обучение с Архивариусом' })
+  hasCompletedOnboarding: boolean;
+
+  @ApiProperty({ description: 'Количество завершённых разборов карточек' })
+  completedCardsCount: number;
 
   @ApiProperty({ description: 'Рейтинг в монетах' })
   coinsRating: number;
 
-  @ApiPropertyOptional({ description: 'Эмоциональный фон по последней обратной связи' })
+  @ApiPropertyOptional({
+    description: 'Краткое эмоциональное состояние по последнему завершённому разбору',
+  })
   emotionalState?: string | null;
 
   @ApiPropertyOptional({ description: 'Краткая метка эмоционального фона' })

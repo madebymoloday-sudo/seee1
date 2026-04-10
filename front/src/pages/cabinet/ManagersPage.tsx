@@ -23,7 +23,8 @@ type ManagerTeamMember = {
   username: string;
   fullName?: string | null;
   isRegistered: boolean;
-  processedCardsCount: number;
+  hasCompletedOnboarding: boolean;
+  completedCardsCount: number;
   coinsRating: number;
   emotionalState?: string | null;
   emotionalTone?: string | null;
@@ -63,7 +64,7 @@ const ManagersPage = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Назад в кабинет
           </Button>
-          <h1 className="text-3xl font-bold">Для руководителей</h1>
+          <h1 className="text-3xl font-bold">Кабинет основателя</h1>
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -102,8 +103,9 @@ const ManagersPage = () => {
           <CardHeader>
             <CardTitle>Состояние подключённых аккаунтов</CardTitle>
             <CardDescription>
-              Здесь видно, сколько карточек уже разобрал каждый участник, какой у него рейтинг в
-              монетах и какой эмоциональный фон он указал в последней обратной связи после сессии.
+              Здесь видно, кто уже зарегистрировался в компании, кто прошёл стартовое обучение у
+              Архивариуса, сколько завершённых разборов закрыл сотрудник и в каком эмоциональном
+              состоянии он находится по последнему завершённому разбору.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -111,7 +113,7 @@ const ManagersPage = () => {
               <div className="py-8 text-center text-sm text-muted-foreground">Загрузка данных...</div>
             ) : error ? (
               <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-                Раздел доступен только аккаунтам со статусом руководителя.
+                Раздел доступен только аккаунтам со статусом основателя.
               </div>
             ) : members.length === 0 ? (
               <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
@@ -123,11 +125,12 @@ const ManagersPage = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Регистрация</TableHead>
+                    <TableHead>Обучение</TableHead>
                     <TableHead>ID</TableHead>
                     <TableHead>Аккаунт</TableHead>
-                    <TableHead>Разобрано карточек</TableHead>
+                    <TableHead>Завершено разборов</TableHead>
                     <TableHead>Монеты</TableHead>
-                    <TableHead>Эмоциональный фон</TableHead>
+                    <TableHead>Эмоциональное состояние</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -145,6 +148,18 @@ const ManagersPage = () => {
                           {member.isRegistered ? "Да" : "Нет"}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            member.hasCompletedOnboarding
+                              ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                              : "bg-slate-100 text-slate-700 border-slate-200"
+                          }
+                        >
+                          {member.hasCompletedOnboarding ? "Да" : "Нет"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="font-medium">
                         {member.userId || "—"}
                       </TableCell>
@@ -154,7 +169,7 @@ const ManagersPage = () => {
                           {member.isRegistered ? `@${member.username}` : "Слот ожидает регистрацию"}
                         </div>
                       </TableCell>
-                      <TableCell>{member.processedCardsCount}</TableCell>
+                      <TableCell>{member.completedCardsCount}</TableCell>
                       <TableCell>{member.coinsRating}</TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-2">
@@ -168,7 +183,8 @@ const ManagersPage = () => {
                             {member.emotionalTone || "Нет данных"}
                           </Badge>
                           <div className="text-sm">
-                            {member.emotionalState || "Пользователь ещё не оставлял обратную связь после сессии"}
+                            {member.emotionalState ||
+                              "Пользователь ещё не завершал разбор через финальную форму после сессии"}
                           </div>
                           {member.lastFeedbackAt ? (
                             <div className="text-xs text-muted-foreground">

@@ -59,6 +59,10 @@ export const protectedRouter = createBrowserRouter([
         element: <CabinetPage />,
       },
       {
+        path: "cabinet/founder",
+        element: <ManagersPage />,
+      },
+      {
         path: "cabinet/managers",
         element: <ManagersPage />,
       },
