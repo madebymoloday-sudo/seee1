@@ -765,22 +765,31 @@ function looksLikeThoughtReminderQuestion(answer: string): boolean {
 }
 
 function looksLikeNonRewardingAnswer(answer: string): boolean {
-  const normalized = answer.toLowerCase().replace(/ё/g, "е").trim();
-  return [
-    "не знаю",
-    "не знаю как ответить",
-    "не понимаю",
-    "затрудняюсь",
-    "затрудняюсь ответить",
-    "сложно ответить",
-    "сложно сказать",
-    "не могу ответить",
-    "не могу сказать",
-    "без понятия",
-    "не уверен",
-    "не уверена",
-    "не получается ответить",
-  ].some((phrase) => normalized.includes(phrase));
+  const normalized = answer
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[.,!?;:()"«»'-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!normalized) return true;
+
+  const refusalPatterns = [
+    /^(не знаю|не знаю как ответить|не понимаю|затрудняюсь|затрудняюсь ответить)$/u,
+    /^(сложно ответить|сложно сказать|не могу ответить|не могу сказать)$/u,
+    /^(без понятия|не получается ответить|не хочу отвечать|не буду отвечать)$/u,
+  ];
+
+  if (refusalPatterns.some((pattern) => pattern.test(normalized))) {
+    return true;
+  }
+
+  return (
+    /^(?:бла(?:\s+бла){1,}|bla(?:\s+bla){1,}|лалала+|тест|test)$/u.test(
+      normalized,
+    ) ||
+    /^([a-zа-я]{1,4})(?:\s+\1){2,}$/u.test(normalized)
+  );
 }
 
 const MIN_REASON_FIELDS = 3;
@@ -1600,6 +1609,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         const assist = await requestStageAssist(trimmed, options);
         if (assist) {
           const normalized = (assist.normalizedAnswer || trimmed).trim() || trimmed;
+          shouldAwardCoins =
+            shouldAwardCoins && !looksLikeNonRewardingAnswer(normalized);
 
           if (
             assist.decision === "clarify" &&
@@ -1636,10 +1647,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
             animateStateTransition(trimmed, clarifyState, { awardCoins: false });
             return;
-          }
-
-          if (options?.skipRequested || currentGuidance.clarificationCount >= 2) {
-            shouldAwardCoins = false;
           }
 
           nextState = computeNextState(normalized);
