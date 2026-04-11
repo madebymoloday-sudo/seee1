@@ -2505,7 +2505,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     });
   };
 
-  const renderMindMapNode = (node: MindMapNode, depth = 0): JSX.Element => {
+  const renderMindMapNode = (node: MindMapNode, depth = 0) => {
     const isMenuOpen = activeIdeaMenu === node.key;
     const canOpenMenu = !!node.action;
     const reasonAction = node.action?.type === "reason" ? node.action : null;
