@@ -66,18 +66,18 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
       // ignore
     }
 
-    const scrollY = window.scrollY;
     const prevBody = {
       overflow: document.body.style.overflow,
-      position: document.body.style.position,
-      top: document.body.style.top,
-      width: document.body.style.width,
+      overscrollBehavior: document.body.style.overscrollBehavior,
     };
-    const prevOverflow = document.body.style.overflow;
+    const prevHtml = {
+      overflow: document.documentElement.style.overflow,
+      overscrollBehavior: document.documentElement.style.overscrollBehavior,
+    };
     document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
+    document.body.style.overscrollBehavior = "contain";
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "contain";
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -88,11 +88,11 @@ const PauseSessionModal = ({ isOpen, onClose, sessionId }: PauseSessionModalProp
     window.addEventListener("keydown", onKeyDown);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = prevBody.overflow || prevOverflow;
-      document.body.style.position = prevBody.position;
-      document.body.style.top = prevBody.top;
-      document.body.style.width = prevBody.width;
-      window.scrollTo(0, scrollY);
+      document.body.style.overflow = prevBody.overflow;
+      document.body.style.overscrollBehavior = prevBody.overscrollBehavior;
+      document.documentElement.style.overflow = prevHtml.overflow;
+      document.documentElement.style.overscrollBehavior =
+        prevHtml.overscrollBehavior;
     };
   }, [isOpen, onClose, sessionId]);
 

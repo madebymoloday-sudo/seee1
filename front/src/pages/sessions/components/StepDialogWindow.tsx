@@ -1228,9 +1228,18 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     const forceEdit = forceEditOnStepSyncRef.current;
     forceEditOnStepSyncRef.current = false;
     const clarificationPrompt = getStageGuidance(state, key).clarificationPrompt;
+    const isPrefilledThoughtAnswer =
+      view.kind === "core" &&
+      view.subject === "thought" &&
+      view.step === 3 &&
+      sanitizeThoughtValue(saved) !== "" &&
+      sanitizeThoughtValue(saved) === sanitizeThoughtValue(state.situationText);
     if (saved !== undefined) {
       if (clarificationPrompt) {
         setInputText("");
+        setIsEditing(true);
+      } else if (isPrefilledThoughtAnswer) {
+        setInputText(saved);
         setIsEditing(true);
       } else {
         setInputText(saved);

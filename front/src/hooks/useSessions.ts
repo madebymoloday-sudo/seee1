@@ -8,7 +8,7 @@ export const useSessions = () => {
   const { data, error, isLoading, mutate } = useSessionsControllerGetSessions({
     swr: {
       enabled: isAuthenticated, // Отключаем запрос, если пользователь не авторизован
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
       revalidateOnReconnect: true,
       // Отключаем повторные попытки при ошибке 401
       shouldRetryOnError: (error: any) => {

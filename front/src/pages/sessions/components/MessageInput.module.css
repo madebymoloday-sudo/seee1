@@ -1,7 +1,7 @@
 /* Стили для поля ввода в стиле Apple 2007 */
 
 .messageInputContainer {
-  padding: 0.95rem 1.25rem 0.85rem;
+  padding: 1.05rem 1.4rem 0.95rem;
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.2) 0%,
@@ -18,8 +18,8 @@
 .inputWrapper {
   display: flex;
   align-items: flex-end;
-  gap: 0.75rem;
-  max-width: 800px;
+  gap: 0.85rem;
+  max-width: 920px;
   margin: 0 auto;
   width: 100%;
 }
@@ -30,12 +30,12 @@
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  border-radius: 1rem !important;
+  border-radius: 1.05rem !important;
   color: white !important;
-  padding: 0.65rem 1rem !important;
+  padding: 0.82rem 1.1rem !important;
   line-height: 1.35;
-  min-height: 44px !important;
-  max-height: 220px !important;
+  min-height: 50px !important;
+  max-height: 240px !important;
   overflow-y: auto !important;
   resize: none !important;
   font-size: 1rem;
@@ -65,8 +65,8 @@
     rgba(255, 255, 255, 0.2) 100%
   ) !important;
   color: white !important;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 0.75rem;
   transition: all 0.3s ease;
   box-shadow:
@@ -130,7 +130,7 @@
 /* Адаптивные стили для мобильных устройств */
 @media (max-width: 768px) {
   .messageInputContainer {
-    padding: 0.68rem 1rem 0.12rem;
+    padding: 0.82rem 0.95rem 0.46rem;
   }
 
   .inputWrapper {
@@ -139,31 +139,31 @@
   }
 
   .textarea {
-    min-height: 42px !important;
+    min-height: 46px !important;
     max-height: 200px !important;
-    padding: 0.6rem 0.875rem !important;
+    padding: 0.72rem 0.95rem !important;
     font-size: 0.95rem;
   }
 
   .settingsButton,
   .voiceButton,
   .sendButton {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     border-radius: 0.625rem;
   }
 }
 
 @media (min-width: 769px) {
   .messageInputContainer {
-    padding-top: 0.72rem;
-    padding-bottom: 0.28rem;
+    padding-top: 0.9rem;
+    padding-bottom: 0.6rem;
   }
 }
 
 @media (max-width: 480px) {
   .messageInputContainer {
-    padding: 0.6rem 0.75rem 0.08rem;
+    padding: 0.72rem 0.72rem 0.34rem;
   }
 
   .inputWrapper {
@@ -171,18 +171,18 @@
   }
 
   .textarea {
-    min-height: 40px !important;
+    min-height: 44px !important;
     max-height: 180px !important;
-    padding: 0.55rem 0.75rem !important;
+    padding: 0.68rem 0.82rem !important;
     font-size: 0.9rem;
   }
 
   .settingsButton,
   .voiceButton,
   .sendButton {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
   }
 }
 
@@ -241,24 +241,24 @@
 /* Поддержка безопасных областей для iOS */
 @supports (padding: max(0px)) {
   .messageInputContainer {
-    padding-bottom: 0.28rem;
-    padding-left: max(1.25rem, env(safe-area-inset-left));
-    padding-right: max(1.25rem, env(safe-area-inset-right));
+    padding-bottom: max(0.45rem, min(env(safe-area-inset-bottom), 0.7rem));
+    padding-left: max(1.4rem, env(safe-area-inset-left));
+    padding-right: max(1.4rem, env(safe-area-inset-right));
   }
 
   @media (max-width: 768px) {
     .messageInputContainer {
-      padding-bottom: max(0.06rem, min(env(safe-area-inset-bottom), 0.16rem));
-      padding-left: max(1rem, env(safe-area-inset-left));
-      padding-right: max(1rem, env(safe-area-inset-right));
+      padding-bottom: max(0.3rem, min(env(safe-area-inset-bottom), 0.5rem));
+      padding-left: max(0.95rem, env(safe-area-inset-left));
+      padding-right: max(0.95rem, env(safe-area-inset-right));
     }
   }
 
   @media (max-width: 480px) {
     .messageInputContainer {
-      padding-bottom: max(0.04rem, min(env(safe-area-inset-bottom), 0.12rem));
-      padding-left: max(0.75rem, env(safe-area-inset-left));
-      padding-right: max(0.75rem, env(safe-area-inset-right));
+      padding-bottom: max(0.24rem, min(env(safe-area-inset-bottom), 0.4rem));
+      padding-left: max(0.72rem, env(safe-area-inset-left));
+      padding-right: max(0.72rem, env(safe-area-inset-right));
     }
   }
 }

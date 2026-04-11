@@ -378,16 +378,16 @@
   box-sizing: border-box;
   max-width: none;
   width: 100%;
-  padding-top: 0 !important;
+  padding-top: 0.35rem !important;
   padding-right: 0;
-  padding-bottom: 0 !important;
+  padding-bottom: 0.45rem !important;
   padding-left: 0;
 }
 
 .inputAlignWrapper > div > div {
   /* inputWrapper: та же ширина и центрирование, что у сообщения — левые края совпадают */
-  max-width: 680px;
-  width: calc(100% - 2rem);
+  max-width: 760px;
+  width: calc(100% - 1.25rem);
   margin-left: auto;
   margin-right: auto;
 }
@@ -404,6 +404,12 @@
   .inputAlignWrapper > div {
     padding-left: 0;
     padding-right: 0;
+    padding-top: 0.42rem !important;
+    padding-bottom: 0.55rem !important;
+  }
+
+  .inputAlignWrapper > div > div {
+    width: calc(100% - 0.75rem);
   }
 }
 
@@ -420,6 +426,6 @@
   }
 
   .inputAlignWrapper > div {
-    padding-bottom: 0 !important;
+    padding-bottom: 0.45rem !important;
   }
 }

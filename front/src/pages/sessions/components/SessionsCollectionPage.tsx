@@ -579,7 +579,26 @@ const SessionsCollectionPage = observer(() => {
         return titleMatch;
       });
     }
-    return filtered;
+
+    return [...filtered].sort((a, b) => {
+      const left = Date.parse(b.updatedAt || b.createdAt || "");
+      const right = Date.parse(a.updatedAt || a.createdAt || "");
+      if (Number.isFinite(left) && Number.isFinite(right) && left !== right) {
+        return left - right;
+      }
+
+      const createdLeft = Date.parse(b.createdAt || "");
+      const createdRight = Date.parse(a.createdAt || "");
+      if (
+        Number.isFinite(createdLeft) &&
+        Number.isFinite(createdRight) &&
+        createdLeft !== createdRight
+      ) {
+        return createdLeft - createdRight;
+      }
+
+      return a.id.localeCompare(b.id);
+    });
   }, [sessions, searchQuery, movedSessionIds]);
 
   const handleCreateSession = async () => {
