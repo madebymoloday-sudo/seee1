@@ -624,7 +624,143 @@ function sanitizeThoughtValue(v?: string): string {
   return s;
 }
 
+type SourceCandidateMatch = {
+  index: number;
+  label: string;
+};
+
+const SOURCE_NAME_EXCLUDE = new Set([
+  "А",
+  "И",
+  "Или",
+  "Как",
+  "Когда",
+  "Мысль",
+  "От",
+  "Потому",
+  "Просто",
+  "Скорее",
+  "Это",
+  "Если",
+]);
+
+function pushSourceMatch(
+  matches: SourceCandidateMatch[],
+  index: number,
+  label: string,
+) {
+  const trimmed = label.trim();
+  if (!trimmed) return;
+  matches.push({ index, label: trimmed });
+}
+
+function collectPatternMatches(
+  raw: string,
+  regex: RegExp,
+  label: string,
+  matches: SourceCandidateMatch[],
+) {
+  for (const match of raw.matchAll(regex)) {
+    if (typeof match.index !== "number") continue;
+    pushSourceMatch(matches, match.index, label);
+  }
+}
+
+function collectSelfSourceMatches(raw: string, matches: SourceCandidateMatch[]) {
+  for (const match of raw.matchAll(/\bя\s+сам(а)?\b/giu)) {
+    if (typeof match.index !== "number") continue;
+    pushSourceMatch(matches, match.index, match[1] ? "ты сама" : "ты сам");
+  }
+
+  for (const match of raw.matchAll(/\bсам(а)?\s+себе\b/giu)) {
+    if (typeof match.index !== "number") continue;
+    pushSourceMatch(matches, match.index, match[1] ? "ты сама" : "ты сам");
+  }
+}
+
+function formatSourceCandidates(candidates: string[]): string {
+  if (candidates.length <= 1) return candidates[0] || "";
+  if (candidates.length === 2) return `${candidates[0]} и ${candidates[1]}`;
+  return `${candidates.slice(0, -1).join(", ")} и ${candidates.at(-1)}`;
+}
+
+function shouldSkipSourceLabel(nextLabel: string, kept: string[]): boolean {
+  const normalizedNext = nextLabel.toLowerCase();
+  return kept.some((label) => {
+    const normalizedLabel = label.toLowerCase();
+    return (
+      normalizedLabel === normalizedNext ||
+      normalizedLabel.includes(normalizedNext)
+    );
+  });
+}
+
+function extractSourceCandidates(v?: string): string[] {
+  const raw = sanitizeThoughtValue(v)
+    .replace(/\s+/g, " ")
+    .replace(/[«»"]/g, "")
+    .trim();
+
+  if (!raw) return [];
+
+  const matches: SourceCandidateMatch[] = [];
+
+  collectSelfSourceMatches(raw, matches);
+
+  const sourcePatterns: Array<[RegExp, string]> = [
+    [/\b(?:мой|моего|моему|моим|моём|моем)\s+пап(?:а|у|ы|е)?\b/giu, "твой папа"],
+    [/\bпап(?:а|у|ы|е)?\b/giu, "папа"],
+    [/\b(?:мой|моего|моему|моим|моём|моем)\s+от(?:е|ц)(?:а|у|ом|е)?\b/giu, "твой отец"],
+    [/\bот(?:е|ц)(?:а|у|ом|е)?\b/giu, "отец"],
+    [/\b(?:моя|мою|моей|маме|моими|моих)\s+мам(?:а|у|ы|е|ой)?\b/giu, "твоя мама"],
+    [/\bмам(?:а|у|ы|е|ой)?\b/giu, "мама"],
+    [/\b(?:моя|мою|моей|моими|моих)\s+мат(?:ь|ери|ерью)\b/giu, "твоя мать"],
+    [/\bмат(?:ь|ери|ерью)\b/giu, "мать"],
+    [/\b(?:мои|моих|моим)\s+родител(?:и|ей|ям|ями)\b/giu, "твои родители"],
+    [/\bродител(?:и|ей|ям|ями)\b/giu, "родители"],
+    [/\b(?:моя|мою|моей|моими|моих)\s+семь(?:я|ю|и|е|ёй|ей)\b/giu, "твоя семья"],
+    [/\bсемь(?:я|ю|и|е|ёй|ей)\b/giu, "семья"],
+    [/\b(?:мой|моего|моему|моим|моём|моем)\s+опыт\b/giu, "твой опыт"],
+    [/\bдетск\w+\s+опыт\w*\b/giu, "детский опыт"],
+    [/\bпрошл\w+\s+опыт\w*\b/giu, "прошлый опыт"],
+    [/\bопыт\b/giu, "опыт"],
+    [/\bшкол(?:а|у|ы|е|ой)\b/giu, "школа"],
+    [/\bучител(?:ь|я|ю|ем|е|и|ей)\b/giu, "учитель"],
+    [/\bсообществ(?:о|а|у|ом|е)\b/giu, "сообщество"],
+    [/\bкультур(?:а|у|ы|е|ой)\b/giu, "культура"],
+    [/\bсистем(?:а|у|ы|е|ой)\b/giu, "система"],
+    [/\bобществ(?:о|а|у|ом|е)\b/giu, "общество"],
+  ];
+
+  for (const [regex, label] of sourcePatterns) {
+    collectPatternMatches(raw, regex, label, matches);
+  }
+
+  for (const match of raw.matchAll(/\b[A-ZА-ЯЁ][A-Za-zА-ЯЁа-яё-]{2,}\b/gu)) {
+    const candidate = match[0].trim();
+    if (SOURCE_NAME_EXCLUDE.has(candidate)) continue;
+    if (typeof match.index !== "number") continue;
+    pushSourceMatch(matches, match.index, candidate);
+  }
+
+  const unique = matches
+    .sort((a, b) => a.index - b.index)
+    .reduce<string[]>((acc, match) => {
+      if (shouldSkipSourceLabel(match.label, acc)) {
+        return acc;
+      }
+      return [...acc, match.label];
+    }, []);
+
+  return unique.slice(0, 4);
+}
+
 function sanitizeSourceAnswer(v?: string): string {
+  const extracted = extractSourceCandidates(v);
+  if (extracted.length) {
+    return formatSourceCandidates(extracted);
+  }
+
   const raw = sanitizeThoughtValue(v)
     .replace(/\s+/g, " ")
     .split(/\n+/)[0]
