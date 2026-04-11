@@ -66,10 +66,70 @@ type DialogStateV3 = Omit<DialogStateV2, "v"> & {
   thoughtScopes: Record<string, Record<string, string>>;
   activeThoughtScopeId?: string;
   stageGuidance: Record<string, StageGuidanceState>;
+  thoughtScopeLinks: Record<string, ThoughtScopeLink>;
 };
 
 type DialogState = DialogStateV3;
 type TransitionPhase = "idle" | "exiting" | "entering";
+
+type ThoughtScopeLink = {
+  parentSubject: Subject;
+  parentScopeId?: string;
+  parentReason: string;
+};
+
+type MindMapNodeAction =
+  | {
+      type: "root-thought";
+      label: string;
+      answerKey: "core:situation:3" | "core:thought:3";
+      scopeId?: string;
+      parentSubject: Subject;
+      parentScopeId?: string;
+    }
+  | {
+      type: "reason";
+      label: string;
+      ownerSubject: Subject;
+      ownerScopeId?: string;
+      answerKey: "core:situation:4" | "core:thought:4";
+      index: number;
+      linkedScopeIds: string[];
+      parentSubject: Subject;
+      parentScopeId?: string;
+    };
+
+type MindMapNode = {
+  key: string;
+  label: string;
+  kind: "situation" | "thought" | "idea";
+  badge: string;
+  action?: MindMapNodeAction;
+  children: MindMapNode[];
+  active: boolean;
+  activePath: boolean;
+};
+
+type IdeaEditorTarget =
+  | {
+      type: "append-reason";
+      ownerSubject: Subject;
+      ownerScopeId?: string;
+      answerKey: "core:situation:4" | "core:thought:4";
+    }
+  | {
+      type: "edit-root-thought";
+      answerKey: "core:situation:3" | "core:thought:3";
+      scopeId?: string;
+    }
+  | {
+      type: "edit-reason";
+      ownerSubject: Subject;
+      ownerScopeId?: string;
+      answerKey: "core:situation:4" | "core:thought:4";
+      index: number;
+      linkedScopeIds: string[];
+    };
 
 type StageGuidanceState = {
   preface?: string;
@@ -154,6 +214,7 @@ function migrateToV3(state: DialogStateV2): DialogStateV3 {
     thoughtScopes,
     activeThoughtScopeId,
     stageGuidance: {},
+    thoughtScopeLinks: {},
   });
 }
 
@@ -162,6 +223,7 @@ function normalizeStateV3(state: DialogStateV3): DialogStateV3 {
   const answers = { ...(state.answers || {}) };
   const thoughtScopes = { ...(state.thoughtScopes || {}) };
   const stageGuidance = { ...(state.stageGuidance || {}) };
+  const thoughtScopeLinks = { ...(state.thoughtScopeLinks || {}) };
 
   if (
     (!answers["core:situation:1"] ||
@@ -197,6 +259,19 @@ function normalizeStateV3(state: DialogStateV3): DialogStateV3 {
       activeScope["core:thought:3"] = state.situationText.trim();
     }
     thoughtScopes[state.activeThoughtScopeId] = activeScope;
+
+    if (!thoughtScopeLinks[state.activeThoughtScopeId]) {
+      const currentThought =
+        activeScope["core:thought:3"] || state.situationText || "";
+      const parentReturn = state.deepPickReturn || state.ideasPickReturn;
+      if (currentThought && parentReturn) {
+        thoughtScopeLinks[state.activeThoughtScopeId] = {
+          parentSubject: parentReturn.subject,
+          parentScopeId: parentReturn.thoughtScopeId,
+          parentReason: currentThought,
+        };
+      }
+    }
   }
 
   return {
@@ -204,6 +279,7 @@ function normalizeStateV3(state: DialogStateV3): DialogStateV3 {
     answers,
     thoughtScopes,
     stageGuidance,
+    thoughtScopeLinks,
   };
 }
 
@@ -268,9 +344,15 @@ function getCurrentAnswers(state: DialogState): Record<string, string> {
   };
 }
 
-function getAnswerValue(state: DialogState, key: string): string | undefined {
+function getAnswerValue(
+  state: DialogState,
+  key: string,
+  thoughtScopeId?: string,
+): string | undefined {
   if (key.startsWith("core:thought:")) {
-    return getActiveThoughtAnswers(state)[key];
+    const scopeId = thoughtScopeId || state.activeThoughtScopeId;
+    if (!scopeId) return undefined;
+    return state.thoughtScopes[scopeId]?.[key];
   }
   return state.answers[key];
 }
@@ -279,9 +361,11 @@ function setAnswerValue(
   state: DialogState,
   key: string,
   value: string,
+  thoughtScopeId?: string,
 ): Pick<DialogState, "answers" | "thoughtScopes"> {
   if (key.startsWith("core:thought:")) {
-    const scopeId = state.activeThoughtScopeId || createThoughtScopeId();
+    const scopeId =
+      thoughtScopeId || state.activeThoughtScopeId || createThoughtScopeId();
     const currentScope = {
       ...(state.thoughtScopes[scopeId] || {}),
       [key]: value,
@@ -350,6 +434,7 @@ function loadState(sessionId: string): DialogState | null {
         thoughtScopes: parsed.thoughtScopes || {},
         answers: parsed.answers || {},
         stageGuidance: parsed.stageGuidance || {},
+        thoughtScopeLinks: parsed.thoughtScopeLinks || {},
       } as DialogStateV3);
     }
 
@@ -1010,6 +1095,152 @@ function joinReasonDrafts(drafts: string[]): string {
     .join("\n");
 }
 
+function getReasonIdeas(value?: string): string[] {
+  return parseImportantOptions(value || "");
+}
+
+function buildMindMapKey(part: string): string {
+  return part
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[^a-zа-я0-9]+/giu, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
+
+function buildReasonChildren(
+  state: DialogState,
+  ownerSubject: Subject,
+  ownerScopeId: string | undefined,
+): MindMapNode[] {
+  const answerKey = ownerSubject === "situation" ? "core:situation:4" : "core:thought:4";
+  const reasonsText = getAnswerValue(state, answerKey, ownerScopeId) || "";
+  const reasons = getReasonIdeas(reasonsText);
+  const linkEntries = Object.entries(state.thoughtScopeLinks || {}).filter(
+    ([, link]) =>
+      link.parentSubject === ownerSubject &&
+      (link.parentScopeId || "") === (ownerScopeId || ""),
+  );
+
+  return reasons.map((reason, index) => {
+    const linkedScopeIds = linkEntries
+      .filter(([, link]) => {
+        return (
+          normalizeAnswerForComparison(link.parentReason) ===
+          normalizeAnswerForComparison(reason)
+        );
+      })
+      .map(([scopeId]) => scopeId);
+
+    const children = linkedScopeIds.flatMap((scopeId) =>
+      buildReasonChildren(state, "thought", scopeId),
+    );
+    const active = linkedScopeIds.includes(state.activeThoughtScopeId || "");
+    const activePath = active || children.some((child) => child.activePath);
+
+    return {
+      key: `reason-${ownerSubject}-${ownerScopeId || "root"}-${index}-${buildMindMapKey(reason)}`,
+      label: reason,
+      kind: "idea",
+      badge: "Идея",
+      action: {
+        type: "reason",
+        label: reason,
+        ownerSubject,
+        ownerScopeId,
+        answerKey,
+        index,
+        linkedScopeIds,
+        parentSubject: ownerSubject,
+        parentScopeId: ownerScopeId,
+      },
+      children,
+      active,
+      activePath,
+    };
+  });
+}
+
+function buildDeepMindMap(state: DialogState): MindMapNode[] {
+  const rootSituation = sanitizeThoughtValue(
+    state.answers["core:situation:1"] || (state.subject !== "thought" ? state.situationText : ""),
+  );
+  const rootThought = sanitizeThoughtValue(state.answers["core:situation:3"]);
+
+  if (rootSituation) {
+    const rootChildren: MindMapNode[] = [];
+
+    if (rootThought) {
+      const children = buildReasonChildren(state, "situation", undefined);
+      rootChildren.push({
+        key: `root-thought-${buildMindMapKey(rootThought)}`,
+        label: rootThought,
+        kind: "thought",
+        badge: "Мысль",
+        action: {
+          type: "root-thought",
+          label: rootThought,
+          answerKey: "core:situation:3",
+          parentSubject: "situation",
+        },
+        children,
+        active: state.subject === "situation" && state.coreStep >= 3,
+        activePath:
+          (state.subject === "situation" && state.coreStep >= 3) ||
+          children.some((child) => child.activePath),
+      });
+    } else {
+      rootChildren.push(...buildReasonChildren(state, "situation", undefined));
+    }
+
+    return [
+      {
+        key: `root-situation-${buildMindMapKey(rootSituation)}`,
+        label: rootSituation,
+        kind: "situation",
+        badge: "Ситуация",
+        children: rootChildren,
+        active: state.subject === "situation" && state.coreStep <= 10,
+        activePath:
+          (state.subject === "situation" && state.coreStep <= 10) ||
+          rootChildren.some((child) => child.activePath),
+      },
+    ];
+  }
+
+  const standaloneThought = sanitizeThoughtValue(
+    getAnswerValue(state, "core:thought:3") || state.situationText,
+  );
+
+  if (!standaloneThought) return [];
+
+  const standaloneChildren = buildReasonChildren(
+    state,
+    "thought",
+    state.activeThoughtScopeId,
+  );
+
+  return [
+    {
+      key: `standalone-thought-${buildMindMapKey(standaloneThought)}`,
+      label: standaloneThought,
+      kind: "thought",
+      badge: "Мысль",
+      action: {
+        type: "root-thought",
+        label: standaloneThought,
+        answerKey: "core:thought:3",
+        scopeId: state.activeThoughtScopeId,
+        parentSubject: "thought",
+        parentScopeId: state.activeThoughtScopeId,
+      },
+      children: standaloneChildren,
+      active: true,
+      activePath: true,
+    },
+  ];
+}
+
 function buildThoughtReminderResponse(
   subject: Subject,
   answers?: Record<string, string>,
@@ -1146,6 +1377,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         : {},
       activeThoughtScopeId: isThought ? "initial" : undefined,
       stageGuidance: {},
+      thoughtScopeLinks: {},
     };
   });
 
@@ -1252,6 +1484,20 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return parseImportantOptions(text);
   }, [view, currentImportantText]);
 
+  const deepMindMap = useMemo(
+    () => (view.kind === "deepPick" ? buildDeepMindMap(state) : []),
+    [
+      state.answers,
+      state.thoughtScopes,
+      state.activeThoughtScopeId,
+      state.thoughtScopeLinks,
+      state.situationText,
+      state.subject,
+      state.coreStep,
+      view.kind,
+    ],
+  );
+
   const [lastUserAnswer, setLastUserAnswer] = useState<string | null>(null);
   const [pendingUserAnswer, setPendingUserAnswer] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -1271,8 +1517,10 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [ideaEditorMode, setIdeaEditorMode] = useState<"edit" | "create" | null>(
     null,
   );
-  const [ideaEditorOriginal, setIdeaEditorOriginal] = useState("");
   const [ideaEditorDraft, setIdeaEditorDraft] = useState("");
+  const [ideaEditorTarget, setIdeaEditorTarget] = useState<IdeaEditorTarget | null>(
+    null,
+  );
   const timersRef = useRef<number[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const ideaEditorRef = useRef<HTMLTextAreaElement | null>(null);
@@ -1541,6 +1789,14 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           ...state.thoughtScopes,
           [thoughtScopeId]: {
             "core:thought:3": trimmed,
+          },
+        },
+        thoughtScopeLinks: {
+          ...(state.thoughtScopeLinks || {}),
+          [thoughtScopeId]: {
+            parentSubject: state.subject,
+            parentScopeId: state.activeThoughtScopeId,
+            parentReason: trimmed,
           },
         },
       };
@@ -1971,32 +2227,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   const selectIdeaFromModal = (idea: string) => {
-    const trimmed = idea.trim();
-    if (!trimmed) return;
-    const thoughtScopeId = createThoughtScopeId();
-    setIsIdeasModalOpen(false);
-    setState((s) => ({
-      ...s,
-      subject: "thought",
-      situationText: trimmed,
-      coreStep: 2,
-      activeThoughtScopeId: thoughtScopeId,
-      thoughtScopes: {
-        ...s.thoughtScopes,
-        [thoughtScopeId]: {
-          "core:thought:3": trimmed,
-        },
-      },
-      ideasPickReturn: {
-        coreStep: s.coreStep,
-        solveStep: s.solveStep,
-        subject: s.subject,
-        thoughtScopeId: s.activeThoughtScopeId,
-      },
-    }));
-    setInputText("");
-    setLastUserAnswer(null);
-    setIsEditing(true);
+    startThoughtBranch(idea, {
+      parentSubject: state.subject,
+      parentScopeId: state.activeThoughtScopeId,
+      source: "ideasModal",
+    });
   };
 
   const submitAddToList = async () => {
@@ -2027,54 +2262,335 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     }
   };
 
-  const updateImportantIdeas = (ideas: string[]) => {
-    const nextText = ideas.join("\n");
-    const answerKey =
-      state.subject === "thought" ? "core:thought:4" : "core:situation:4";
-    const scopedAnswerUpdate = setAnswerValue(state, answerKey, nextText);
+  const closeIdeaEditor = () => {
+    setIdeaEditorMode(null);
+    setIdeaEditorDraft("");
+    setIdeaEditorTarget(null);
+  };
+
+  const startThoughtBranch = (
+    idea: string,
+    options: {
+      parentSubject: Subject;
+      parentScopeId?: string;
+      source: "deepPick" | "ideasModal";
+    },
+  ) => {
+    const trimmed = idea.trim();
+    if (!trimmed) return;
+
+    const thoughtScopeId = createThoughtScopeId();
+
     setState((s) => ({
       ...s,
-      importantText: s.subject === "situation" ? nextText : s.importantText,
-      answers: scopedAnswerUpdate.answers,
-      thoughtScopes: scopedAnswerUpdate.thoughtScopes,
+      subject: "thought",
+      situationText: trimmed,
+      coreStep: 2,
+      activeThoughtScopeId: thoughtScopeId,
+      thoughtScopes: {
+        ...s.thoughtScopes,
+        [thoughtScopeId]: {
+          "core:thought:3": trimmed,
+        },
+      },
+      thoughtScopeLinks: {
+        ...(s.thoughtScopeLinks || {}),
+        [thoughtScopeId]: {
+          parentSubject: options.parentSubject,
+          parentScopeId: options.parentScopeId,
+          parentReason: trimmed,
+        },
+      },
+      ideasPickReturn:
+        options.source === "ideasModal"
+          ? {
+              coreStep: s.coreStep,
+              solveStep: s.solveStep,
+              subject: s.subject,
+              thoughtScopeId: s.activeThoughtScopeId,
+            }
+          : s.ideasPickReturn,
+    }));
+    setIsIdeasModalOpen(false);
+    setActiveIdeaMenu(null);
+    setInputText("");
+    setLastUserAnswer(null);
+    setIsEditing(true);
+  };
+
+  const handleEditIdea = (idea: string, target: IdeaEditorTarget) => {
+    setActiveIdeaMenu(null);
+    setIdeaEditorMode("edit");
+    setIdeaEditorDraft(idea);
+    setIdeaEditorTarget(target);
+  };
+
+  const handleDeleteIdea = (target: Extract<IdeaEditorTarget, { type: "edit-reason" }>) => {
+    setActiveIdeaMenu(null);
+    const current = getReasonIdeas(
+      getAnswerValue(state, target.answerKey, target.ownerScopeId) || "",
+    );
+    const updated = current.filter((_, index) => index !== target.index);
+    const nextText = joinReasonDrafts(updated);
+    const answerUpdate = setAnswerValue(
+      state,
+      target.answerKey,
+      nextText,
+      target.ownerScopeId,
+    );
+
+    setState((s) => ({
+      ...s,
+      importantText:
+        target.answerKey === "core:situation:4" && s.subject === "situation"
+          ? nextText
+          : s.importantText,
+      answers: answerUpdate.answers,
+      thoughtScopes: answerUpdate.thoughtScopes,
     }));
   };
 
-  const closeIdeaEditor = () => {
-    setIdeaEditorMode(null);
-    setIdeaEditorOriginal("");
-    setIdeaEditorDraft("");
-  };
-
-  const handleEditIdea = (idea: string) => {
-    setActiveIdeaMenu(null);
-    setIdeaEditorMode("edit");
-    setIdeaEditorOriginal(idea);
-    setIdeaEditorDraft(idea);
-  };
-
-  const handleDeleteIdea = (idea: string) => {
-    setActiveIdeaMenu(null);
-    const updated = importantOptions.filter((x) => x !== idea);
-    updateImportantIdeas(updated);
-  };
-
-  const handleAppendIdea = () => {
+  const handleAppendIdea = (target: IdeaEditorTarget) => {
     setActiveIdeaMenu(null);
     setIdeaEditorMode("create");
-    setIdeaEditorOriginal("");
     setIdeaEditorDraft("");
+    setIdeaEditorTarget(target);
   };
 
   const submitIdeaEditor = () => {
     const next = ideaEditorDraft.trim();
-    if (!next) return;
-    const updated =
-      ideaEditorMode === "edit"
-        ? importantOptions.map((x) => (x === ideaEditorOriginal ? next : x))
-        : [...importantOptions, next];
-    updateImportantIdeas(updated);
+    if (!next || !ideaEditorTarget) return;
+
+    if (ideaEditorTarget.type === "append-reason") {
+      const current = getReasonIdeas(
+        getAnswerValue(
+          state,
+          ideaEditorTarget.answerKey,
+          ideaEditorTarget.ownerScopeId,
+        ) || "",
+      );
+      const updated = [...current, next];
+      const nextText = joinReasonDrafts(updated);
+      const answerUpdate = setAnswerValue(
+        state,
+        ideaEditorTarget.answerKey,
+        nextText,
+        ideaEditorTarget.ownerScopeId,
+      );
+      setState((s) => ({
+        ...s,
+        importantText:
+          ideaEditorTarget.answerKey === "core:situation:4" &&
+          s.subject === "situation"
+            ? nextText
+            : s.importantText,
+        answers: answerUpdate.answers,
+        thoughtScopes: answerUpdate.thoughtScopes,
+      }));
+      closeIdeaEditor();
+      return;
+    }
+
+    if (ideaEditorTarget.type === "edit-root-thought") {
+      const answerUpdate = setAnswerValue(
+        state,
+        ideaEditorTarget.answerKey,
+        next,
+        ideaEditorTarget.scopeId,
+      );
+      setState((s) => ({
+        ...s,
+        situationText:
+          ideaEditorTarget.answerKey === "core:thought:3" &&
+          s.activeThoughtScopeId === ideaEditorTarget.scopeId
+            ? next
+            : s.situationText,
+        answers: answerUpdate.answers,
+        thoughtScopes: answerUpdate.thoughtScopes,
+      }));
+      closeIdeaEditor();
+      return;
+    }
+
+    const current = getReasonIdeas(
+      getAnswerValue(
+        state,
+        ideaEditorTarget.answerKey,
+        ideaEditorTarget.ownerScopeId,
+      ) || "",
+    );
+    const updated = current.map((item, index) =>
+      index === ideaEditorTarget.index ? next : item,
+    );
+    const nextText = joinReasonDrafts(updated);
+    const answerUpdate = setAnswerValue(
+      state,
+      ideaEditorTarget.answerKey,
+      nextText,
+      ideaEditorTarget.ownerScopeId,
+    );
+    const nextThoughtScopes = { ...answerUpdate.thoughtScopes };
+    const nextThoughtScopeLinks = { ...(state.thoughtScopeLinks || {}) };
+
+    for (const scopeId of ideaEditorTarget.linkedScopeIds) {
+      nextThoughtScopeLinks[scopeId] = {
+        ...(nextThoughtScopeLinks[scopeId] || {
+          parentSubject: ideaEditorTarget.ownerSubject,
+          parentScopeId: ideaEditorTarget.ownerScopeId,
+          parentReason: next,
+        }),
+        parentReason: next,
+      };
+      nextThoughtScopes[scopeId] = {
+        ...(nextThoughtScopes[scopeId] || {}),
+        "core:thought:3": next,
+      };
+    }
+
+    setState((s) => ({
+      ...s,
+      situationText:
+        ideaEditorTarget.linkedScopeIds.includes(s.activeThoughtScopeId || "")
+          ? next
+          : s.situationText,
+      importantText:
+        ideaEditorTarget.answerKey === "core:situation:4" &&
+        s.subject === "situation"
+          ? nextText
+          : s.importantText,
+      answers: answerUpdate.answers,
+      thoughtScopes: nextThoughtScopes,
+      thoughtScopeLinks: nextThoughtScopeLinks,
+    }));
     closeIdeaEditor();
+  };
+
+  const selectMindMapNode = (action: MindMapNodeAction) => {
+    startThoughtBranch(action.label, {
+      parentSubject: action.parentSubject,
+      parentScopeId: action.parentScopeId,
+      source: "deepPick",
+    });
+  };
+
+  const editMindMapNode = (action: MindMapNodeAction) => {
+    if (action.type === "root-thought") {
+      handleEditIdea(action.label, {
+        type: "edit-root-thought",
+        answerKey: action.answerKey,
+        scopeId: action.scopeId,
+      });
+      return;
+    }
+
+    handleEditIdea(action.label, {
+      type: "edit-reason",
+      ownerSubject: action.ownerSubject,
+      ownerScopeId: action.ownerScopeId,
+      answerKey: action.answerKey,
+      index: action.index,
+      linkedScopeIds: action.linkedScopeIds,
+    });
+  };
+
+  const deleteMindMapNode = (action: MindMapNodeAction) => {
+    if (action.type !== "reason") return;
+    handleDeleteIdea({
+      type: "edit-reason",
+      ownerSubject: action.ownerSubject,
+      ownerScopeId: action.ownerScopeId,
+      answerKey: action.answerKey,
+      index: action.index,
+      linkedScopeIds: action.linkedScopeIds,
+    });
+  };
+
+  const renderMindMapNode = (node: MindMapNode, depth = 0): JSX.Element => {
+    const isMenuOpen = activeIdeaMenu === node.key;
+    const canOpenMenu = !!node.action;
+    const reasonAction = node.action?.type === "reason" ? node.action : null;
+    const canDelete =
+      !!reasonAction && !node.activePath;
+
+    return (
+      <div
+        key={node.key}
+        className={`${styles.mindMapNodeGroup} ${
+          depth === 0 ? styles.mindMapNodeGroupRoot : ""
+        }`}
+      >
+        <div className={styles.mindMapNodeRow}>
+          <button
+            type="button"
+            className={`${styles.mindMapNodeButton} ${
+              node.kind === "situation"
+                ? styles.mindMapSituation
+                : node.kind === "thought"
+                  ? styles.mindMapThought
+                  : styles.mindMapIdea
+            } ${node.activePath ? styles.mindMapNodeActive : ""}`}
+            onClick={() =>
+              canOpenMenu &&
+              setActiveIdeaMenu((prev) => (prev === node.key ? null : node.key))
+            }
+            disabled={!canOpenMenu || isTransitioning}
+          >
+            <span className={styles.mindMapBadge}>{node.badge}</span>
+            <span className={styles.mindMapLabel}>{node.label}</span>
+          </button>
+
+          {isMenuOpen && node.action && (
+            <div className={styles.deepIdeaMenu}>
+              <button
+                type="button"
+                className={styles.deepIdeaMenuItem}
+                onClick={() => selectMindMapNode(node.action!)}
+              >
+                Выбрать эту мысль на разбор
+              </button>
+              <button
+                type="button"
+                className={styles.deepIdeaMenuItem}
+                onClick={() => editMindMapNode(node.action!)}
+              >
+                Редактировать
+              </button>
+              {canDelete && (
+                <button
+                  type="button"
+                  className={styles.deepIdeaMenuItem}
+                  onClick={() => deleteMindMapNode(node.action!)}
+                >
+                  Удалить
+                </button>
+              )}
+              {reasonAction && (
+                <button
+                  type="button"
+                  className={styles.deepIdeaMenuItem}
+                  onClick={() =>
+                    handleAppendIdea({
+                      type: "append-reason",
+                      ownerSubject: reasonAction.ownerSubject,
+                      ownerScopeId: reasonAction.ownerScopeId,
+                      answerKey: reasonAction.answerKey,
+                    })
+                  }
+                >
+                  Добавить ещё одну мысль
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {node.children.length > 0 && (
+          <div className={styles.mindMapChildren}>
+            {node.children.map((child) => renderMindMapNode(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const showCoreChoice = view.kind === "core" && view.step === 10;
@@ -2403,58 +2919,59 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           </div>
         )}
 
-        {view.kind === "deepPick" && importantOptions.length > 0 && (
-          <div className={styles.deepIdeasList}>
-            {importantOptions.map((opt) => (
-              <div key={opt} className={styles.deepIdeaItem}>
-                <button
-                  type="button"
-                  className={`${styles.choiceButton} ${chatStyles.glassButton} ${styles.deepIdeaButton}`}
-                  onClick={() =>
-                    setActiveIdeaMenu((prev) => (prev === opt ? null : opt))
-                  }
-                  disabled={isTransitioning}
-                >
-                  {opt}
-                </button>
+        {view.kind === "deepPick" && (
+          <div className={styles.deepMindMap}>
+            <p className={styles.deepMindMapHint}>
+              Нажмите на ячейку, чтобы выбрать мысль на разбор, отредактировать
+              её или удалить.
+            </p>
 
-                {activeIdeaMenu === opt && (
-                  <div className={styles.deepIdeaMenu}>
-                    <button
-                      type="button"
-                      className={styles.deepIdeaMenuItem}
-                      onClick={() => {
-                        setActiveIdeaMenu(null);
-                        onAnswer(opt);
-                      }}
-                    >
-                      Выбрать эту мысль на разбор
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.deepIdeaMenuItem}
-                      onClick={() => handleEditIdea(opt)}
-                    >
-                      Редактировать
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.deepIdeaMenuItem}
-                      onClick={() => handleDeleteIdea(opt)}
-                    >
-                      Удалить
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.deepIdeaMenuItem}
-                      onClick={handleAppendIdea}
-                    >
-                      Добавить ещё одну мысль
-                    </button>
-                  </div>
-                )}
+            {deepMindMap.length > 0 ? (
+              <div className={styles.deepMindMapTree}>
+                {deepMindMap.map((node) => renderMindMapNode(node))}
               </div>
-            ))}
+            ) : importantOptions.length > 0 ? (
+              <div className={styles.deepIdeasList}>
+                {importantOptions.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    className={`${styles.choiceButton} ${chatStyles.glassButton} ${styles.deepIdeaButton}`}
+                    onClick={() =>
+                      startThoughtBranch(opt, {
+                        parentSubject: state.subject,
+                        parentScopeId: state.activeThoughtScopeId,
+                        source: "deepPick",
+                      })
+                    }
+                    disabled={isTransitioning}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            <div className={styles.deepMindMapFooter}>
+              <Button
+                type="button"
+                variant="outline"
+                className={chatStyles.glassButton}
+                onClick={() =>
+                  handleAppendIdea({
+                    type: "append-reason",
+                    ownerSubject: state.subject,
+                    ownerScopeId: state.activeThoughtScopeId,
+                    answerKey:
+                      state.subject === "thought"
+                        ? "core:thought:4"
+                        : "core:situation:4",
+                  })
+                }
+              >
+                Добавить ещё одну мысль
+              </Button>
+            </div>
           </div>
         )}
 
