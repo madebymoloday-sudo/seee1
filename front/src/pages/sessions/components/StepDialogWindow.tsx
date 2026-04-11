@@ -530,12 +530,7 @@ function coreQuestion(
   const emotion = sanitizeThoughtValue(
     answers?.[primaryEmotionKey] || answers?.[secondaryEmotionKey],
   );
-  const primaryThoughtKey = `core:${subject}:3`;
-  const secondaryThoughtKey =
-    subject === "thought" ? "core:situation:3" : "core:thought:3";
-  const thought = sanitizeThoughtValue(
-    answers?.[primaryThoughtKey] || answers?.[secondaryThoughtKey],
-  );
+  const thought = getExactThoughtLabel(subject, answers);
   const thoughtNominative = thought ? `мысль «${thought}»` : "эта мысль";
   const thoughtAccusative = thought ? `мысль «${thought}»` : "эту мысль";
   const thoughtGenitive = thought ? `мысли «${thought}»` : "этой мысли";
@@ -823,12 +818,7 @@ function buildConclusionSummary(
   subject: Subject,
   answers?: Record<string, string>,
 ): string {
-  const thoughtPrimaryKey = `core:${subject}:3`;
-  const thoughtSecondaryKey =
-    subject === "thought" ? "core:situation:3" : "core:thought:3";
-  const thought = sanitizeThoughtValue(
-    answers?.[thoughtPrimaryKey] || answers?.[thoughtSecondaryKey],
-  );
+  const thought = getExactThoughtLabel(subject, answers);
 
   const reasons = summarizeStepAnswer(answers?.[`core:${subject}:4`]);
   const source = sanitizeSourceAnswer(answers?.[`core:${subject}:5`]);
@@ -871,12 +861,14 @@ function getCurrentThoughtLabel(
   subject: Subject,
   answers?: Record<string, string>,
 ): string {
-  const primaryThoughtKey = `core:${subject}:3`;
-  const secondaryThoughtKey =
-    subject === "thought" ? "core:situation:3" : "core:thought:3";
-  return sanitizeThoughtValue(
-    answers?.[primaryThoughtKey] || answers?.[secondaryThoughtKey],
-  );
+  return getExactThoughtLabel(subject, answers);
+}
+
+function getExactThoughtLabel(
+  subject: Subject,
+  answers?: Record<string, string>,
+): string {
+  return sanitizeThoughtValue(answers?.[`core:${subject}:3`]);
 }
 
 function buildConclusionFollowUpQuestion(
