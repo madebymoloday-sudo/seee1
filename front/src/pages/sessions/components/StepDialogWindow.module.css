@@ -55,6 +55,65 @@
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.32);
 }
 
+.reasonsEditor {
+  width: min(760px, calc(100% - 1.25rem));
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.reasonsHint {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.92rem;
+  text-align: center;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.28);
+}
+
+.reasonsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.85rem;
+}
+
+.reasonCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
+}
+
+.reasonLabel {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.reasonTextarea {
+  min-height: 90px !important;
+  resize: none !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.reasonTextarea::placeholder {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.reasonsActions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .slideExitLeft,
 .slideEnterFromRight {
   will-change: transform, opacity;
@@ -93,6 +152,31 @@
 :global(.dark) .helperText,
 :global(html.dark) .helperText {
   color: rgba(255, 255, 255, 0.76);
+}
+
+:global(:not(.dark)) .reasonsHint {
+  color: rgba(15, 23, 42, 0.7);
+  text-shadow: none;
+}
+
+:global(:not(.dark)) .reasonCard {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+:global(:not(.dark)) .reasonLabel {
+  color: rgba(15, 23, 42, 0.92);
+}
+
+:global(:not(.dark)) .reasonTextarea {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: rgba(15, 23, 42, 0.92) !important;
+}
+
+:global(:not(.dark)) .reasonTextarea::placeholder {
+  color: rgba(15, 23, 42, 0.45) !important;
 }
 
 .modalOverlay {
@@ -397,6 +481,24 @@
     padding-top: 4.15rem;
   }
 
+  .reasonsEditor {
+    width: calc(100% - 0.75rem);
+    gap: 0.75rem;
+  }
+
+  .reasonsGrid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .reasonCard {
+    padding: 0.75rem;
+  }
+
+  .reasonTextarea {
+    min-height: 82px !important;
+  }
+
   .messagesStage [data-chat-current-question="true"] {
     scroll-margin-top: calc(8.35rem + env(safe-area-inset-top));
   }
@@ -416,6 +518,10 @@
 @media (max-width: 480px) {
   .messagesStage {
     padding-top: 4.35rem;
+  }
+
+  .reasonsEditor {
+    width: calc(100% - 0.5rem);
   }
 }
 

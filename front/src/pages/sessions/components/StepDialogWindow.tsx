@@ -783,6 +783,36 @@ function looksLikeNonRewardingAnswer(answer: string): boolean {
   ].some((phrase) => normalized.includes(phrase));
 }
 
+const MIN_REASON_FIELDS = 3;
+const MAX_REASON_FIELDS = 6;
+
+function splitReasonDrafts(value?: string): string[] {
+  const normalized = (value || "").replace(/\r\n/g, "\n").trim();
+  if (!normalized) return [];
+
+  const parts = normalized
+    .split(/\n+|;\s*|•\s*|\u2022\s*|\d+[\)\.]\s+/g)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return parts.length > 0 ? parts : [normalized];
+}
+
+function buildReasonDrafts(value?: string): string[] {
+  const drafts = splitReasonDrafts(value);
+  while (drafts.length < MIN_REASON_FIELDS) {
+    drafts.push("");
+  }
+  return drafts.slice(0, MAX_REASON_FIELDS);
+}
+
+function joinReasonDrafts(drafts: string[]): string {
+  return drafts
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .join("\n");
+}
+
 function buildThoughtReminderResponse(
   subject: Subject,
   answers?: Record<string, string>,
@@ -1032,6 +1062,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [transitionPhase, setTransitionPhase] =
     useState<TransitionPhase>("idle");
   const [inputText, setInputText] = useState("");
+  const [reasonDrafts, setReasonDrafts] = useState<string[]>(() =>
+    buildReasonDrafts(""),
+  );
   const [isEditing, setIsEditing] = useState(true);
   const [listTitle, setListTitle] = useState("");
   const [listNotes, setListNotes] = useState("");
@@ -1088,6 +1121,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   /** Этап «мысль/идея» — core step 3+, вопрос «Как вы думаете, какая мысль/идея вызывает эту эмоцию?» */
   const isIdeasStep = view.kind === "core" && view.step >= 3;
+  const isReasonsStep = view.kind === "core" && view.step === 4;
 
   const ideasList = useMemo(() => {
     const primaryKey = `core:${state.subject}:3` as const;
@@ -1134,6 +1168,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const showBottomEditorActions =
     isTextAnswerView(view) && view.kind !== "deepPick";
+  const showReasonsEditor = isReasonsStep && isEditing;
+  const showDefaultBottomEditorActions =
+    showBottomEditorActions && !showReasonsEditor;
 
   const canGoForward =
     !!savedCurrentAnswer &&
@@ -1219,6 +1256,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   useEffect(() => {
     if (!isTextAnswerView(view)) {
       setInputText("");
+      setReasonDrafts(buildReasonDrafts(""));
       setIsEditing(false);
       forceEditOnStepSyncRef.current = false;
       return;
@@ -1236,17 +1274,26 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       sanitizeThoughtValue(saved) === sanitizeThoughtValue(state.situationText);
     if (saved !== undefined) {
       if (clarificationPrompt) {
-        setInputText("");
+        if (isReasonsStep) {
+          setInputText(saved);
+          setReasonDrafts(buildReasonDrafts(saved));
+        } else {
+          setInputText("");
+          setReasonDrafts(buildReasonDrafts(""));
+        }
         setIsEditing(true);
       } else if (isPrefilledThoughtAnswer) {
         setInputText(saved);
+        setReasonDrafts(buildReasonDrafts(saved));
         setIsEditing(true);
       } else {
         setInputText(saved);
+        setReasonDrafts(buildReasonDrafts(saved));
         setIsEditing(forceEdit ? true : false);
       }
     } else {
       setInputText("");
+      setReasonDrafts(buildReasonDrafts(""));
       setIsEditing(true);
     }
   }, [
@@ -1256,6 +1303,29 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     state.stageGuidance,
     view,
   ]);
+
+  const updateReasonDraft = (index: number, value: string) => {
+    setReasonDrafts((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      setInputText(joinReasonDrafts(next));
+      return next;
+    });
+  };
+
+  const addReasonDraft = () => {
+    setReasonDrafts((prev) => {
+      if (prev.length >= MAX_REASON_FIELDS) return prev;
+      return [...prev, ""];
+    });
+  };
+
+  const submitReasonDrafts = () => {
+    const answer = joinReasonDrafts(reasonDrafts);
+    if (!answer || isAnalyzingAnswer || isTransitioning) return;
+    setInputText(answer);
+    onAnswer(answer);
+  };
 
   const computeNextState = (answer: string): DialogState | null => {
     const trimmed = answer.trim();
@@ -2092,6 +2162,51 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             </p>
           )}
 
+        {showReasonsEditor && (
+          <div className={styles.reasonsEditor}>
+            <p className={styles.reasonsHint}>
+              Каждую причину можно будет потом рассматривать как отдельную
+              линию разбора.
+            </p>
+            <div className={styles.reasonsGrid}>
+              {reasonDrafts.map((reason, index) => (
+                <div key={`reason-${index}`} className={styles.reasonCard}>
+                  <span className={styles.reasonLabel}>
+                    Причина {index + 1}
+                  </span>
+                  <Textarea
+                    value={reason}
+                    onChange={(e) => updateReasonDraft(index, e.target.value)}
+                    placeholder="Коротко сформулируйте причину"
+                    rows={3}
+                    className={styles.reasonTextarea}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className={styles.reasonsActions}>
+              {reasonDrafts.length < MAX_REASON_FIELDS && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addReasonDraft}
+                  className={chatStyles.glassButton}
+                >
+                  Добавить ещё причину
+                </Button>
+              )}
+              <Button
+                type="button"
+                onClick={submitReasonDrafts}
+                disabled={!joinReasonDrafts(reasonDrafts) || isAnalyzingAnswer}
+                className={chatStyles.glassButton}
+              >
+                Дальше
+              </Button>
+            </div>
+          </div>
+        )}
+
         {view.kind === "deepPick" && importantOptions.length > 0 && (
           <div className={styles.deepIdeasList}>
             {importantOptions.map((opt) => (
@@ -2196,7 +2311,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       </div>
 
       {/* Нижняя панель: кнопки и ввод (как в ChatWindow — composerDock). */}
-      {showBottomEditorActions && (
+      {showDefaultBottomEditorActions && (
         <div className={`${chatStyles.composerDock} ${styles.bottomDock}`}>
           {!isEditing && (
             <div className="flex justify-center gap-2 flex-wrap px-4 pt-3 pb-1">
