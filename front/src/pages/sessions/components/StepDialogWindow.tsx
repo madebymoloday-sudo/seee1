@@ -1609,6 +1609,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         const assist = await requestStageAssist(trimmed, options);
         if (assist) {
           const normalized = (assist.normalizedAnswer || trimmed).trim() || trimmed;
+          const answerToPersist = trimmed;
           shouldAwardCoins =
             shouldAwardCoins && !looksLikeNonRewardingAnswer(normalized);
 
@@ -1649,12 +1650,12 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             return;
           }
 
-          nextState = computeNextState(normalized);
+          nextState = computeNextState(answerToPersist);
           if (!nextState) return;
 
           const nextKey =
             view.kind === "core" ? `core:${view.subject}:${view.step + 1}` : null;
-          const answeredState = setAnswerValue(state, key, normalized);
+          const answeredState = setAnswerValue(state, key, answerToPersist);
           const settledGuidance = getStageGuidance(state, key);
           const hadClarificationReview =
             settledGuidance.clarificationCount > 0 &&
