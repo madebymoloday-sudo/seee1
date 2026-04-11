@@ -539,6 +539,7 @@ function coreQuestion(
     subject === "thought" ? "core:situation:5" : "core:thought:5";
   const sourceAnswer = sanitizeSourceAnswer(
     answers?.[primarySourceKey] || answers?.[secondarySourceKey],
+    thought,
   );
   const thing = subject === "thought" ? thoughtNominative : "эта ситуация";
   switch (step) {
@@ -750,7 +751,30 @@ function extractSourceCandidates(v?: string): string[] {
   return unique.slice(0, 4);
 }
 
-function sanitizeSourceAnswer(v?: string): string {
+function normalizeAnswerForComparison(value?: string): string {
+  return (value || "")
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[«»"'`.,!?;:()[\]{}-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function looksLikeThoughtInsteadOfSource(source: string, thought?: string): boolean {
+  const normalizedSource = normalizeAnswerForComparison(source);
+  const normalizedThought = normalizeAnswerForComparison(thought);
+
+  if (!normalizedSource || !normalizedThought) return false;
+  if (normalizedSource === normalizedThought) return true;
+
+  return (
+    normalizedSource.length > 24 &&
+    (normalizedSource.includes(normalizedThought) ||
+      normalizedThought.includes(normalizedSource))
+  );
+}
+
+function sanitizeSourceAnswer(v?: string, thought?: string): string {
   const extracted = extractSourceCandidates(v);
   if (extracted.length) {
     return formatSourceCandidates(extracted);
@@ -775,6 +799,10 @@ function sanitizeSourceAnswer(v?: string): string {
     )
     .replace(/[.?!,:;]+$/g, "")
     .trim();
+
+  if (looksLikeThoughtInsteadOfSource(cleaned, thought)) {
+    return "";
+  }
 
   if (!cleaned) return "";
   if (cleaned.length <= 96) return cleaned;
@@ -814,47 +842,79 @@ function summarizeStepAnswer(value?: string): string {
   return `${text.slice(0, 219).trimEnd()}…`;
 }
 
+function formatSummarySection(title: string, body: string): string {
+  return `${title}\n${body}`;
+}
+
+function formatReasonSummary(value?: string): string {
+  const reasons = splitReasonDrafts(value).slice(0, MAX_REASON_FIELDS);
+  if (!reasons.length) return "";
+
+  return reasons.map((reason, index) => `${index + 1}. ${reason}`).join("\n");
+}
+
 function buildConclusionSummary(
   subject: Subject,
   answers?: Record<string, string>,
 ): string {
   const thought = getExactThoughtLabel(subject, answers);
 
-  const reasons = summarizeStepAnswer(answers?.[`core:${subject}:4`]);
-  const source = sanitizeSourceAnswer(answers?.[`core:${subject}:5`]);
+  const reasons = formatReasonSummary(answers?.[`core:${subject}:4`]);
+  const source = sanitizeSourceAnswer(answers?.[`core:${subject}:5`], thought);
   const benefit = summarizeStepAnswer(answers?.[`core:${subject}:6`]);
   const emotional = summarizeStepAnswer(answers?.[`core:${subject}:7`]);
   const practical = summarizeStepAnswer(answers?.[`core:${subject}:8`]);
 
-  const parts: string[] = [];
+  const sections: string[] = [];
 
   if (thought) {
-    parts.push(`Если собрать всё вместе по мысли «${thought}»`);
+    sections.push(`Если собрать всё вместе по мысли «${thought}»:`);
   } else {
-    parts.push("Если собрать всё вместе");
+    sections.push("Если собрать всё вместе:");
   }
 
   if (reasons) {
-    parts.push(`она держалась на том, что ${reasons}`);
+    sections.push(
+      formatSummarySection(
+        "Почему эта мысль казалась правдой:",
+        reasons,
+      ),
+    );
   }
   if (source) {
-    parts.push(`во многом её передавал или закреплял ${source}`);
+    sections.push(
+      formatSummarySection(
+        "Кто мог передавать или закреплять эту мысль:",
+        source,
+      ),
+    );
   }
   if (benefit) {
-    parts.push(`для источника это могло быть выгодно, потому что ${benefit}`);
+    sections.push(
+      formatSummarySection(
+        "Какая выгода могла быть у источника:",
+        benefit,
+      ),
+    );
   }
   if (emotional) {
-    parts.push(`эмоционально это отражалось так: ${emotional}`);
+    sections.push(
+      formatSummarySection(
+        "Как это влияло эмоционально:",
+        emotional,
+      ),
+    );
   }
   if (practical) {
-    parts.push(`а в жизни это приводило к тому, что ${practical}`);
+    sections.push(
+      formatSummarySection(
+        "Как это влияло на жизнь и поведение:",
+        practical,
+      ),
+    );
   }
 
-  if (parts.length === 1) {
-    return `${parts[0]}.`;
-  }
-
-  return `${parts.join(", ")}.`;
+  return sections.join("\n\n");
 }
 
 function getCurrentThoughtLabel(
