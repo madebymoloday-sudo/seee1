@@ -14,6 +14,9 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { useNavigate } from "react-router-dom";
 import styles from "./RatingPage.module.css";
 
+const PROMOTION_ZONE_SIZE = 5;
+const RELEGATION_ZONE_SIZE = 3;
+
 const RatingPage = () => {
   const navigate = useNavigate();
   const [currentCoins, setCurrentCoins] = useState(() => getUserCoins());
@@ -32,15 +35,21 @@ const RatingPage = () => {
   );
   const currentUser = leagueLeaderboard.find((entry) => entry.isCurrentUser) || leaderboard.find((entry) => entry.isCurrentUser) || leaderboard[0];
   const currentRank = leagueLeaderboard.findIndex((entry) => entry.id === currentUser.id) + 1;
-  const topFive = leagueLeaderboard.slice(0, 5);
-  const currentUserIndex = Math.max(0, currentRank - 1);
-  const focusStart = Math.max(5, currentUserIndex - 2);
-  const focusEnd = Math.min(leagueLeaderboard.length, currentUserIndex + 3);
-  const focusEntries =
-    currentRank > 5 ? leagueLeaderboard.slice(focusStart, focusEnd) : [];
-  const relegationEntries = leagueLeaderboard.slice(
-    currentRank > 5 ? focusEnd : 5,
+  const promotionEntries = leagueLeaderboard.slice(0, PROMOTION_ZONE_SIZE);
+  const relegationStart = Math.max(
+    PROMOTION_ZONE_SIZE,
+    leagueLeaderboard.length - RELEGATION_ZONE_SIZE,
   );
+  const relegationEntries = leagueLeaderboard.slice(relegationStart);
+  const currentUserIndex = Math.max(0, currentRank - 1);
+  const userInPromotionZone = currentUserIndex < PROMOTION_ZONE_SIZE;
+  const userInRelegationZone = currentUserIndex >= relegationStart;
+  const focusStart = Math.max(PROMOTION_ZONE_SIZE, currentUserIndex - 2);
+  const focusEnd = Math.min(relegationStart, currentUserIndex + 3);
+  const focusEntries =
+    !userInPromotionZone && !userInRelegationZone
+      ? leagueLeaderboard.slice(focusStart, focusEnd)
+      : [];
 
   useEffect(() => {
     const syncGamification = () => {
@@ -135,14 +144,18 @@ const RatingPage = () => {
             Очки приходят за архивы и за дни подряд, в которых ты довёл(а) хотя бы одну мысль до следующего этапа.
           </p>
           <div className={styles.fullList}>
-            {topFive.map((entry, index) => renderRow(entry, index + 1))}
-
-            {focusEntries.length > 0 && (
+            {promotionEntries.length > 0 && (
               <>
                 <div className={`${styles.zoneMarker} ${styles.zoneMarkerUp}`}>
                   <span className={styles.zoneArrow}>↑</span>
                   <span>Зона повышения</span>
                 </div>
+                {promotionEntries.map((entry, index) => renderRow(entry, index + 1))}
+              </>
+            )}
+
+            {focusEntries.length > 0 && (
+              <>
                 {focusEntries.map((entry) =>
                   renderRow(entry, leagueLeaderboard.findIndex((item) => item.id === entry.id) + 1),
                 )}
