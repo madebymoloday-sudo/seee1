@@ -1582,7 +1582,7 @@ const SessionsCollectionPage = observer(() => {
         onCabinet={() => navigate("/cabinet")}
         onRating={() => navigate("/rating")}
         onPeople={() => navigate("/people")}
-        onNewSession={handleCreateSession}
+        onMindMap={() => navigate("/map")}
       />
 
       {/* Инфо по обратной связи конкретной сессии */}

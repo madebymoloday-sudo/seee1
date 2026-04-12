@@ -2,7 +2,10 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
+  Param,
   UseGuards,
   Request,
   HttpCode,
@@ -19,6 +22,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   CreateEventMapDto,
   EventMapResponseDto,
+  UpdateEventMapDto,
 } from './dto/event-map.dto';
 
 @ApiTags('EventMap')
@@ -55,5 +59,34 @@ export class EventMapController {
   ): Promise<EventMapResponseDto> {
     return this.eventMapService.create(req.user.id, createEventMapDto);
   }
-}
 
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Обновить узел нейрокарты' })
+  @ApiResponse({
+    status: 200,
+    description: 'Узел успешно обновлен',
+    type: EventMapResponseDto,
+  })
+  async updateEventMap(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+    @Body() updateEventMapDto: UpdateEventMapDto,
+  ): Promise<EventMapResponseDto> {
+    return this.eventMapService.update(id, req.user.id, updateEventMapDto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Удалить узел нейрокарты вместе с потомками' })
+  @ApiResponse({
+    status: 204,
+    description: 'Узел удален',
+  })
+  async deleteEventMap(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+  ): Promise<void> {
+    await this.eventMapService.delete(id, req.user.id);
+  }
+}

@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { User, Plus, Archive, Trophy } from "lucide-react";
+import { User, Archive, Trophy, Map } from "lucide-react";
 import styles from "./BottomNavigation.module.css";
 
 interface BottomNavigationProps {
@@ -7,7 +7,7 @@ interface BottomNavigationProps {
   onRating: () => void;
   onPeople: () => void;
   onArchivist: () => void;
-  onNewSession: () => void;
+  onMindMap: () => void;
 }
 
 const BottomNavigation = ({ 
@@ -15,7 +15,7 @@ const BottomNavigation = ({
   onRating, 
   onPeople,
   onArchivist,
-  onNewSession 
+  onMindMap 
 }: BottomNavigationProps) => {
   const navigation = (
     <div className={styles.bottomNav}>
@@ -40,11 +40,11 @@ const BottomNavigation = ({
         <span className={styles.navLabel}>Архивариус</span>
       </button>
       
-      <button onClick={onNewSession} className={styles.navButton} title="Новая сессия">
+      <button onClick={onMindMap} className={styles.navButton} title="Нейрокарта">
         <span className={styles.navIconBubble}>
-          <Plus className={styles.navIcon} />
+          <Map className={styles.navIcon} />
         </span>
-        <span className={styles.navLabel}>Новая сессия</span>
+        <span className={styles.navLabel}>Нейрокарта</span>
       </button>
       
       <button onClick={onCabinet} className={styles.navButton} title="Личный кабинет">
