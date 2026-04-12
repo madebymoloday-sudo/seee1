@@ -293,7 +293,7 @@ const CabinetPage = observer(() => {
         onRating={() => navigate("/rating")}
         onPeople={() => navigate("/people")}
         onArchivist={() => navigate("/sessions/list")}
-        onNewSession={() => navigate("/sessions/new")}
+        onMindMap={() => navigate("/map")}
         onCabinet={() => navigate("/cabinet")}
       />
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />

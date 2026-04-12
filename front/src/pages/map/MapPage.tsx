@@ -11,11 +11,9 @@ import { parseImportantOptions } from "@/lib/sessionUtils";
 import {
   ChevronDown,
   ChevronRight,
-  Map,
-  Pencil,
+  Map as MapIcon,
   Plus,
   Sparkles,
-  Trash2,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -222,7 +220,9 @@ const MapPage = observer(() => {
   }, []);
 
   const sessionById = useMemo(() => {
-    return new Map(sessions.map((session) => [session.id, session]));
+    return new globalThis.Map<string, SessionResponseDto>(
+      sessions.map((session) => [session.id, session]),
+    );
   }, [sessions]);
 
   const rawNodes = useMemo(() => {
@@ -233,7 +233,7 @@ const MapPage = observer(() => {
   }, [nodes]);
 
   const nodesByParent = useMemo(() => {
-    const grouped = new Map<string, EventMapNodeDto[]>();
+    const grouped = new globalThis.Map<string, EventMapNodeDto[]>();
     for (const node of rawNodes) {
       const key = node.parentId || "__root__";
       const current = grouped.get(key) || [];
@@ -264,7 +264,7 @@ const MapPage = observer(() => {
   const tree = useMemo(() => buildTree(null), [nodesByParent]);
 
   const treeNodeMap = useMemo(() => {
-    const map = new Map<string, MindNode>();
+    const map = new globalThis.Map<string, MindNode>();
     const visit = (items: MindNode[]) => {
       for (const item of items) {
         map.set(item.id, item);
@@ -796,7 +796,7 @@ const MapPage = observer(() => {
         <div className={styles.header}>
           <div>
             <h1 className={styles.title}>
-              <Map className={styles.titleIcon} />
+              <MapIcon className={styles.titleIcon} />
               Mindmap
             </h1>
             <p className={styles.subtitle}>
