@@ -76,10 +76,47 @@
   align-items: center;
 }
 
-.dailyPracticeBanner {
+.coinsFeedbackStack {
   position: absolute;
   right: 0;
   top: calc(100% + 0.7rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.55rem;
+  z-index: 21990;
+  pointer-events: none;
+}
+
+.coinsRewardBanner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.48rem;
+  width: max-content;
+  max-width: min(320px, 82vw);
+  padding: 0.65rem 0.82rem;
+  border-radius: 0.95rem;
+  background: rgba(24, 19, 7, 0.96);
+  border: 1px solid rgba(255, 214, 123, 0.24);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.28),
+    0 6px 18px rgba(214, 163, 66, 0.16);
+  color: rgba(255, 248, 226, 0.98);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.2;
+  animation: coinsRewardBannerIn 0.22s ease;
+}
+
+.coinsRewardIcon {
+  width: 0.92rem;
+  height: 0.92rem;
+  color: #ffd56a;
+  flex-shrink: 0;
+}
+
+.dailyPracticeBanner {
+  position: relative;
   width: min(280px, 74vw);
   padding: 0.8rem 0.85rem 0.85rem;
   border-radius: 1rem;
@@ -89,7 +126,6 @@
     0 18px 40px rgba(15, 23, 42, 0.28),
     0 6px 16px rgba(245, 158, 11, 0.14);
   color: rgba(255, 251, 235, 0.98);
-  z-index: 22010;
   animation: dailyPracticeBannerIn 0.28s ease;
 }
 
@@ -290,7 +326,14 @@
 
   .dailyPracticeBanner {
     width: min(250px, 82vw);
+  }
+
+  .coinsFeedbackStack {
     top: calc(100% + 0.55rem);
+  }
+
+  .coinsRewardBanner {
+    max-width: min(250px, 82vw);
   }
 }
 
@@ -346,6 +389,17 @@
   }
 }
 
+@keyframes coinsRewardBannerIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .menuItem {
   display: flex;
   align-items: center;
@@ -376,6 +430,10 @@
   height: 1rem;
   width: 1rem;
   color: rgba(59, 130, 246, 0.7);
+}
+
+.menuIconGold {
+  color: #d4a54e;
 }
 
 .deleteItem {

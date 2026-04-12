@@ -14,6 +14,7 @@ import {
   formatStreakLabel,
   loadDraftSessionReward,
   recordDailyPracticeLineCompletion,
+  showCoinsRewardNotice,
 } from "@/lib/gamification";
 import { ChevronDown } from "lucide-react";
 import { observer } from "mobx-react-lite";
@@ -1307,6 +1308,18 @@ function stepKey(view: View): string {
   return "other";
 }
 
+function buildRewardAnswerId(
+  state: DialogState,
+  view: View,
+  baseKey: string,
+): string {
+  if (view.kind !== "core" || view.subject !== "thought") {
+    return baseKey;
+  }
+
+  return `${state.activeThoughtScopeId || "thought-root"}:${baseKey}`;
+}
+
 function waitForAnswerPaint(): Promise<void> {
   return new Promise((resolve) => {
     window.requestAnimationFrame(() => {
@@ -1833,16 +1846,17 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     options?: { awardCoins?: boolean },
   ) => {
     const key = currentStepKey;
+    const rewardKey = key ? buildRewardAnswerId(state, view, key) : null;
     setPendingUserAnswer(null);
     setLastUserAnswer(displayAnswer);
     if (
-      key &&
+      rewardKey &&
       options?.awardCoins !== false &&
       !(isDraftSession && view.kind === "core" && view.step === 1)
     ) {
-      const reward = awardCoinsForAnswer(session.id, key, 3);
+      const reward = awardCoinsForAnswer(session.id, rewardKey, 3);
       if (reward.awarded) {
-        toast.success(`+${reward.delta} монеты`, { position: "top-center" });
+        showCoinsRewardNotice(`+${reward.delta} монеты`);
       }
     }
     if (
@@ -1853,9 +1867,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     ) {
       const recommendedReward = claimPendingSessionReward(session.id);
       if (recommendedReward.awarded) {
-        toast.success(`+${recommendedReward.delta} монет за рекомендованную карточку`, {
-          position: "top-center",
-        });
+        showCoinsRewardNotice(
+          `+${recommendedReward.delta} монет за рекомендованную карточку`,
+        );
       }
     }
     setIsTransitioning(true);
@@ -1913,7 +1927,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       if (options?.awardCoins !== false) {
         const reward = awardCoinsForAnswer(newSession.id, answerKey, 3);
         if (reward.awarded) {
-          toast.success(`+${reward.delta} монеты`, { position: "top-center" });
+          showCoinsRewardNotice(`+${reward.delta} монеты`);
         }
       }
       if (
@@ -2175,9 +2189,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     if (progress.goalCompletedNow) {
       const streakReward = awardDailyStreakForProgress(10);
       if (streakReward.awarded) {
-        toast.success(
+        showCoinsRewardNotice(
           `+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`,
-          { position: "top-center" },
         );
       }
     }
@@ -2205,9 +2218,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     if (progress.goalCompletedNow) {
       const streakReward = awardDailyStreakForProgress(10);
       if (streakReward.awarded) {
-        toast.success(
+        showCoinsRewardNotice(
           `+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`,
-          { position: "top-center" },
         );
       }
     }

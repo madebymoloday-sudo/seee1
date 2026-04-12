@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { createPortal } from "react-dom";
-import { MessageSquare, ChevronDown, Edit2, Pause, Save, List, Plus, Trash2, Moon, Coins } from "lucide-react";
+import { MessageSquare, ChevronDown, Edit2, Pause, Save, Archive, Plus, Trash2, Moon, Coins } from "lucide-react";
 import apiAgent from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
@@ -51,6 +51,10 @@ type DailyPracticeBanner = {
   completedLines: number;
   targetLines: number;
   goalCompleted: boolean;
+};
+
+type CoinsRewardBanner = {
+  message: string;
 };
 
 function saveDeferredTemplate(userKey: string, item: DeferredTemplate) {
@@ -186,9 +190,11 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
   const [coinsBalance, setCoinsBalance] = useState(() => getUserCoins());
   const [isCoinsPopoverOpen, setIsCoinsPopoverOpen] = useState(false);
   const [dailyPracticeBanner, setDailyPracticeBanner] = useState<DailyPracticeBanner | null>(null);
+  const [coinsRewardBanner, setCoinsRewardBanner] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const coinsAreaRef = useRef<HTMLDivElement>(null);
   const dailyPracticeBannerTimeoutRef = useRef<number | null>(null);
+  const coinsRewardBannerTimeoutRef = useRef<number | null>(null);
 
   const sessionCoinsEarned = getSessionCoinsEarned(session.id);
   const leaderboardEntries = buildLeaderboardEntries();
@@ -213,8 +219,21 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
         setDailyPracticeBanner(null);
       }, 3200);
     };
+    const onCoinsRewardNotice = (event: Event) => {
+      const detail = (event as CustomEvent<CoinsRewardBanner>).detail;
+      const message = String(detail?.message || "").trim();
+      if (!message) return;
+      setCoinsRewardBanner(message);
+      if (coinsRewardBannerTimeoutRef.current) {
+        window.clearTimeout(coinsRewardBannerTimeoutRef.current);
+      }
+      coinsRewardBannerTimeoutRef.current = window.setTimeout(() => {
+        setCoinsRewardBanner(null);
+      }, 2400);
+    };
     window.addEventListener("storage", syncCoins);
     window.addEventListener("seee:coins-updated", onCoinsUpdated as EventListener);
+    window.addEventListener("seee:coins-reward-notice", onCoinsRewardNotice as EventListener);
     window.addEventListener(
       "seee:daily-practice-progress",
       onDailyPracticeProgress as EventListener,
@@ -223,11 +242,18 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
       window.removeEventListener("storage", syncCoins);
       window.removeEventListener("seee:coins-updated", onCoinsUpdated as EventListener);
       window.removeEventListener(
+        "seee:coins-reward-notice",
+        onCoinsRewardNotice as EventListener,
+      );
+      window.removeEventListener(
         "seee:daily-practice-progress",
         onDailyPracticeProgress as EventListener,
       );
       if (dailyPracticeBannerTimeoutRef.current) {
         window.clearTimeout(dailyPracticeBannerTimeoutRef.current);
+      }
+      if (coinsRewardBannerTimeoutRef.current) {
+        window.clearTimeout(coinsRewardBannerTimeoutRef.current);
       }
     };
   }, []);
@@ -433,8 +459,8 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
                 Сохранить
               </button>
               <button onClick={handleAllSessions} className={styles.menuItem}>
-                <List className={styles.menuIcon} />
-                Галерея сессий
+                <Archive className={`${styles.menuIcon} ${styles.menuIconGold}`} />
+                К Архивариусу
               </button>
               <button onClick={handleThemeToggle} className={`${styles.menuItem} ${styles.themeItem}`}>
                 <span className={styles.themeLabel}>
@@ -457,24 +483,34 @@ const SessionHeader = observer(({ session, isDraft = false }: SessionHeaderProps
           )}
         </div>
         <div className={styles.coinsArea} ref={coinsAreaRef}>
-          {dailyPracticeBanner ? (
-            <div className={styles.dailyPracticeBanner} role="status" aria-live="polite">
-              <div className={styles.dailyPracticeBannerTitle}>
-                {dailyPracticeBanner.goalCompleted
-                  ? "Ежедневная задача закрыта"
-                  : `Задача дня: ${dailyPracticeBanner.progressPercent}%`}
-              </div>
-              <div className={styles.dailyPracticeBannerText}>
-                {dailyPracticeBanner.goalCompleted
-                  ? "Ещё один день ежедневного улучшения себя засчитан."
-                  : `Закрыто ${dailyPracticeBanner.completedLines} из ${dailyPracticeBanner.targetLines} линий.`}
-              </div>
-              <div className={styles.dailyPracticeBannerTrack}>
-                <div
-                  className={styles.dailyPracticeBannerFill}
-                  style={{ width: `${dailyPracticeBanner.progressPercent}%` }}
-                />
-              </div>
+          {coinsRewardBanner || dailyPracticeBanner ? (
+            <div className={styles.coinsFeedbackStack}>
+              {coinsRewardBanner ? (
+                <div className={styles.coinsRewardBanner} role="status" aria-live="polite">
+                  <Coins className={styles.coinsRewardIcon} />
+                  <span>{coinsRewardBanner}</span>
+                </div>
+              ) : null}
+              {dailyPracticeBanner ? (
+                <div className={styles.dailyPracticeBanner} role="status" aria-live="polite">
+                  <div className={styles.dailyPracticeBannerTitle}>
+                    {dailyPracticeBanner.goalCompleted
+                      ? "Ежедневная задача закрыта"
+                      : `Задача дня: ${dailyPracticeBanner.progressPercent}%`}
+                  </div>
+                  <div className={styles.dailyPracticeBannerText}>
+                    {dailyPracticeBanner.goalCompleted
+                      ? "Ещё один день ежедневного улучшения себя засчитан."
+                      : `Закрыто ${dailyPracticeBanner.completedLines} из ${dailyPracticeBanner.targetLines} линий.`}
+                  </div>
+                  <div className={styles.dailyPracticeBannerTrack}>
+                    <div
+                      className={styles.dailyPracticeBannerFill}
+                      style={{ width: `${dailyPracticeBanner.progressPercent}%` }}
+                    />
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
           <button

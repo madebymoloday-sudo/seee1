@@ -321,6 +321,17 @@ function emitCoinsUpdated(balance: number) {
   );
 }
 
+export function showCoinsRewardNotice(message: string) {
+  const safeMessage = String(message || "").trim();
+  if (!safeMessage) return;
+
+  window.dispatchEvent(
+    new CustomEvent("seee:coins-reward-notice", {
+      detail: { message: safeMessage },
+    }),
+  );
+}
+
 function emitStreakUpdated(streak: number) {
   window.dispatchEvent(
     new CustomEvent("seee:streak-updated", {
