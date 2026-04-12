@@ -1,6 +1,11 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import { RootStore } from "../rootStore";
 import apiAgent from "../../lib/api";
+import {
+  clearGamificationMirror,
+  hydrateGamificationSnapshot,
+  syncLocalGamificationRewardsToServer,
+} from "../../lib/gamification";
 
 export default class AuthStore {
   rootStore: RootStore;
@@ -17,6 +22,8 @@ export default class AuthStore {
         subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
         subscriptionActive?: boolean;
         subscriptionEndsAt?: string | null;
+        balance?: number;
+        dailyStreak?: number;
       }
     | null = null;
   isAuthenticated = false;
@@ -56,15 +63,35 @@ export default class AuthStore {
             subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
             subscriptionActive?: boolean;
             subscriptionEndsAt?: string | null;
+            balance?: number;
+            dailyStreak?: number;
           };
         }
       >("/auth/login", { email, password });
 
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("refreshToken", response.refreshToken);
+      const syncResult = await syncLocalGamificationRewardsToServer(
+        response.user.balance ?? 0,
+      );
+      const nextBalance = Math.max(
+        0,
+        Math.floor(
+          Number(
+            syncResult.balance ?? response.user.balance ?? 0,
+          ),
+        ),
+      );
+      hydrateGamificationSnapshot(
+        nextBalance,
+        response.user.dailyStreak ?? 0,
+      );
 
       runInAction(() => {
-        this.user = response.user;
+        this.user = {
+          ...response.user,
+          balance: nextBalance,
+        };
         this.isAuthenticated = true;
         this.isLoading = false;
       });
@@ -110,15 +137,35 @@ export default class AuthStore {
             subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
             subscriptionActive?: boolean;
             subscriptionEndsAt?: string | null;
+            balance?: number;
+            dailyStreak?: number;
           };
         }
       >("/auth/register", data);
 
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("refreshToken", response.refreshToken);
+      const syncResult = await syncLocalGamificationRewardsToServer(
+        response.user.balance ?? 0,
+      );
+      const nextBalance = Math.max(
+        0,
+        Math.floor(
+          Number(
+            syncResult.balance ?? response.user.balance ?? 0,
+          ),
+        ),
+      );
+      hydrateGamificationSnapshot(
+        nextBalance,
+        response.user.dailyStreak ?? 0,
+      );
 
       runInAction(() => {
-        this.user = response.user;
+        this.user = {
+          ...response.user,
+          balance: nextBalance,
+        };
         this.isAuthenticated = true;
         this.isLoading = false;
       });
@@ -133,6 +180,7 @@ export default class AuthStore {
   logout() {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    clearGamificationMirror();
     runInAction(() => {
       this.user = null;
       this.isAuthenticated = false;
@@ -159,9 +207,22 @@ export default class AuthStore {
         subscriptionStatus?: "NONE" | "ACTIVE" | "CANCELED";
         subscriptionActive?: boolean;
         subscriptionEndsAt?: string | null;
+        balance?: number;
+        dailyStreak?: number;
       }>("/auth/me");
+      const syncResult = await syncLocalGamificationRewardsToServer(
+        user.balance ?? 0,
+      );
+      const nextBalance = Math.max(
+        0,
+        Math.floor(Number(syncResult.balance ?? user.balance ?? 0)),
+      );
+      hydrateGamificationSnapshot(nextBalance, user.dailyStreak ?? 0);
       runInAction(() => {
-        this.user = user;
+        this.user = {
+          ...user,
+          balance: nextBalance,
+        };
         this.isAuthenticated = true;
       });
     } catch {

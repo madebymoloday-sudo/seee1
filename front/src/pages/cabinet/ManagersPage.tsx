@@ -64,7 +64,7 @@ const ManagersPage = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Назад в кабинет
           </Button>
-          <h1 className="text-3xl font-bold">Кабинет основателя</h1>
+          <h1 className="text-3xl font-bold">Кабинет владельца</h1>
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -113,7 +113,7 @@ const ManagersPage = () => {
               <div className="py-8 text-center text-sm text-muted-foreground">Загрузка данных...</div>
             ) : error ? (
               <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-                Раздел доступен только аккаунтам со статусом основателя.
+                Раздел доступен только аккаунтам со статусом владельца.
               </div>
             ) : members.length === 0 ? (
               <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">

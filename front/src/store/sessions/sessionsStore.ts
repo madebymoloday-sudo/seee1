@@ -7,6 +7,7 @@ interface SessionResponseDto {
   userId: string;
   title: string | null;
   messageCount: number;
+  coinsEarned?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -63,4 +64,3 @@ export default class SessionsStore {
     this.currentSession = session;
   }
 }
-

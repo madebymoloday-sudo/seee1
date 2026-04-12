@@ -26,7 +26,8 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
     "generate:api": "orval --config orval.config.ts",
-    "make-admin": "ts-node -r tsconfig-paths/register scripts/make-admin.ts"
+    "make-admin": "ts-node -r tsconfig-paths/register scripts/make-admin.ts",
+    "make-manager": "ts-node -r tsconfig-paths/register scripts/make-manager.ts"
   },
   "dependencies": {
     "@langchain/core": "^1.1.7",

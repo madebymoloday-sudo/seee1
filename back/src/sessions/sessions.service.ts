@@ -51,14 +51,13 @@ export class SessionsService {
         },
       });
     }
-
-    return this.toResponseDto(session);
+    return this.toResponseDto(session, 0);
   }
 
   async findAllByUserId(userId: string): Promise<SessionResponseDto[]> {
     const sessions = await this.prisma.session.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { updatedAt: 'desc' },
       include: {
         _count: {
           select: { messages: true },
@@ -66,7 +65,7 @@ export class SessionsService {
       },
     });
 
-    return sessions.map((s) => this.toResponseDto(s));
+    return this.toResponseDtos(userId, sessions);
   }
 
   async findOne(id: string, userId: string): Promise<SessionResponseDto> {
@@ -96,7 +95,8 @@ export class SessionsService {
       throw new ForbiddenException('Нет доступа к этой сессии');
     }
 
-    return this.toResponseDto(session);
+    const [result] = await this.toResponseDtos(userId, [session]);
+    return result;
   }
 
   async update(
@@ -118,11 +118,20 @@ export class SessionsService {
 
     const nextTitle =
       dto.title === undefined ? undefined : dto.title.trim() || null;
+    const nextSessionKind =
+      dto.sessionKind === undefined ? undefined : dto.sessionKind?.trim() || null;
+    const nextNotes =
+      dto.notes === undefined ? undefined : dto.notes?.trim() || null;
 
     const updated = await this.prisma.session.update({
       where: { id: sessionId },
       data: {
         ...(nextTitle !== undefined ? { title: nextTitle } : {}),
+        ...(dto.dialogStateJson !== undefined
+          ? { dialogStateJson: dto.dialogStateJson as any }
+          : {}),
+        ...(nextSessionKind !== undefined ? { sessionKind: nextSessionKind } : {}),
+        ...(nextNotes !== undefined ? { notes: nextNotes } : {}),
       },
       include: {
         _count: {
@@ -131,7 +140,8 @@ export class SessionsService {
       },
     });
 
-    return this.toResponseDto(updated);
+    const [result] = await this.toResponseDtos(userId, [updated]);
+    return result;
   }
 
   async generateDocument(
@@ -377,15 +387,57 @@ export class SessionsService {
     return document;
   }
 
-  private toResponseDto(session: any): SessionResponseDto {
+  private async toResponseDtos(
+    userId: string,
+    sessions: any[],
+  ): Promise<SessionResponseDto[]> {
+    const sessionIds = sessions
+      .map((session) => String(session?.id || "").trim())
+      .filter(Boolean);
+
+    const rewards =
+      sessionIds.length > 0
+        ? await this.prisma.gamificationReward.groupBy({
+            by: ['sessionId'],
+            where: {
+              userId,
+              sessionId: {
+                in: sessionIds,
+              },
+            },
+            _sum: {
+              amount: true,
+            },
+          })
+        : [];
+
+    const coinsBySessionId = new Map<string, number>();
+    for (const reward of rewards) {
+      const sessionId = String(reward.sessionId || '').trim();
+      if (!sessionId) continue;
+      coinsBySessionId.set(
+        sessionId,
+        Math.max(0, Math.floor(Number(reward._sum.amount ?? 0))),
+      );
+    }
+
+    return sessions.map((session) =>
+      this.toResponseDto(session, coinsBySessionId.get(session.id) ?? 0),
+    );
+  }
+
+  private toResponseDto(session: any, coinsEarned = 0): SessionResponseDto {
     return {
       id: session.id,
       userId: session.userId,
       title: session.title,
       messageCount: session._count?.messages || 0,
+      coinsEarned: Math.max(0, Math.floor(Number(coinsEarned || 0))),
+      dialogStateJson: session.dialogStateJson ?? null,
+      sessionKind: session.sessionKind ?? null,
+      notes: session.notes ?? null,
       createdAt: session.createdAt,
       updatedAt: session.updatedAt,
     };
   }
 }
-

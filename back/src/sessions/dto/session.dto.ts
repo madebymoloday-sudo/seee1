@@ -38,6 +38,35 @@ export class SessionResponseDto {
   @ApiProperty({ description: "Количество сообщений", example: 10 })
   messageCount: number;
 
+  @ApiProperty({
+    description: "Сколько монет было заработано в этой сессии",
+    example: 18,
+    required: false,
+  })
+  coinsEarned?: number;
+
+  @ApiProperty({
+    description: "Сериализованное состояние диалога",
+    required: false,
+    nullable: true,
+  })
+  dialogStateJson?: unknown | null;
+
+  @ApiProperty({
+    description: "Режим/вид сессии",
+    required: false,
+    nullable: true,
+    example: "thought",
+  })
+  sessionKind?: string | null;
+
+  @ApiProperty({
+    description: "Заметки по сессии",
+    required: false,
+    nullable: true,
+  })
+  notes?: string | null;
+
   @ApiProperty({ description: "Дата создания" })
   createdAt: Date;
 

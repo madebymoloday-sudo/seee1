@@ -417,89 +417,97 @@ function buildToExploreIntroText(
 Опишите ситуации, связанные с этой темой, и начнём собирать вашу карту развития шаг за шагом.`;
 }
 
+function parseStoredState(parsed: any): DialogState | null {
+  if (!parsed) return null;
+
+  if (parsed?.v === 3) {
+    if (
+      typeof parsed.coreStep !== "number" ||
+      typeof parsed.solveStep !== "number"
+    ) {
+      return null;
+    }
+    return normalizeStateV3({
+      ...parsed,
+      thoughtScopes: parsed.thoughtScopes || {},
+      answers: parsed.answers || {},
+      stageGuidance: parsed.stageGuidance || {},
+      thoughtScopeLinks: parsed.thoughtScopeLinks || {},
+    } as DialogStateV3);
+  }
+
+  if (parsed?.v === 2) {
+    if (
+      typeof parsed.coreStep !== "number" ||
+      typeof parsed.solveStep !== "number"
+    ) {
+      return null;
+    }
+    const state = parsed as DialogStateV2;
+    const answers = { ...(state.answers || {}) };
+    const subj = state.subject || "situation";
+    const key1 = subj === "situation" ? "core:situation:1" : "core:thought:2";
+    const key4 = subj === "situation" ? "core:situation:4" : "core:thought:4";
+    const dash = "—";
+    if (
+      (!answers[key1] || answers[key1].trim() === dash) &&
+      state.situationText?.trim() &&
+      state.situationText.trim() !== dash
+    ) {
+      answers[key1] = state.situationText.trim();
+    }
+    if (
+      (!answers[key4] || answers[key4].trim() === dash) &&
+      state.importantText?.trim() &&
+      state.importantText.trim() !== dash
+    ) {
+      answers[key4] = state.importantText.trim();
+    }
+    return migrateToV3({ ...state, answers });
+  }
+
+  if (parsed?.v === 1) {
+    if (
+      typeof parsed.coreStep !== "number" ||
+      typeof parsed.solveStep !== "number"
+    ) {
+      return null;
+    }
+    const v1 = parsed as DialogStateV1;
+    const answers: Record<string, string> = {};
+    if (v1.situationText?.trim()) {
+      answers[
+        v1.subject === "situation" ? "core:situation:1" : "core:thought:2"
+      ] = v1.situationText.trim();
+    }
+    if (v1.importantText?.trim()) {
+      answers[
+        v1.subject === "situation" ? "core:situation:4" : "core:thought:4"
+      ] = v1.importantText.trim();
+    }
+    const migrated: DialogStateV2 = {
+      ...v1,
+      v: 2,
+      answers,
+    };
+    return migrateToV3(migrated);
+  }
+
+  return null;
+}
+
 function loadState(sessionId: string): DialogState | null {
   try {
     const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${sessionId}`);
     if (!raw) return null;
-    const parsed: any = JSON.parse(raw);
-
-    if (parsed?.v === 3) {
-      if (
-        typeof parsed.coreStep !== "number" ||
-        typeof parsed.solveStep !== "number"
-      ) {
-        return null;
-      }
-      return normalizeStateV3({
-        ...parsed,
-        thoughtScopes: parsed.thoughtScopes || {},
-        answers: parsed.answers || {},
-        stageGuidance: parsed.stageGuidance || {},
-        thoughtScopeLinks: parsed.thoughtScopeLinks || {},
-      } as DialogStateV3);
-    }
-
-    // v2 — восстанавливаем answers из importantText/situationText если они пустые или "—"
-    if (parsed?.v === 2) {
-      if (
-        typeof parsed.coreStep !== "number" ||
-        typeof parsed.solveStep !== "number"
-      )
-        return null;
-      const state = parsed as DialogStateV2;
-      const answers = { ...(state.answers || {}) };
-      const subj = state.subject || "situation";
-      const key1 = subj === "situation" ? "core:situation:1" : "core:thought:2";
-      const key4 = subj === "situation" ? "core:situation:4" : "core:thought:4";
-      const dash = "—";
-      if (
-        (!answers[key1] || answers[key1].trim() === dash) &&
-        state.situationText?.trim() &&
-        state.situationText.trim() !== dash
-      ) {
-        answers[key1] = state.situationText.trim();
-      }
-      if (
-        (!answers[key4] || answers[key4].trim() === dash) &&
-        state.importantText?.trim() &&
-        state.importantText.trim() !== dash
-      ) {
-        answers[key4] = state.importantText.trim();
-      }
-      return migrateToV3({ ...state, answers });
-    }
-
-    // v1 -> v2 migration — сохраняем situationText и importantText в answers
-    if (parsed?.v === 1) {
-      if (
-        typeof parsed.coreStep !== "number" ||
-        typeof parsed.solveStep !== "number"
-      )
-        return null;
-      const v1 = parsed as DialogStateV1;
-      const answers: Record<string, string> = {};
-      if (v1.situationText?.trim()) {
-        answers[
-          v1.subject === "situation" ? "core:situation:1" : "core:thought:2"
-        ] = v1.situationText.trim();
-      }
-      if (v1.importantText?.trim()) {
-        answers[
-          v1.subject === "situation" ? "core:situation:4" : "core:thought:4"
-        ] = v1.importantText.trim();
-      }
-      const migrated: DialogStateV2 = {
-        ...v1,
-        v: 2,
-        answers,
-      };
-      return migrateToV3(migrated);
-    }
-
-    return null;
+    return parseStoredState(JSON.parse(raw));
   } catch {
     return null;
   }
+}
+
+function loadSessionStateFromServer(raw: unknown): DialogState | null {
+  return parseStoredState(raw as any);
 }
 
 function saveState(sessionId: string, state: DialogState) {
@@ -1367,10 +1375,15 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   }, [isDraftSession, userKey]);
 
   const [state, setState] = useState<DialogState>(() => {
-    const existing = loadState(session.id);
+    const existing =
+      loadSessionStateFromServer(session.dialogStateJson) || loadState(session.id);
     if (existing) return existing;
 
-    const kind = getSessionKind(session.id);
+    const kind =
+      getSessionKind(session.id) === "thought" ||
+      session.sessionKind === "thought"
+        ? "thought"
+        : "default";
     const isThought = kind === "thought";
     const situationText = isThought ? session.title || "Новая сессия" : "";
     return {
@@ -1393,10 +1406,67 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       thoughtScopeLinks: {},
     };
   });
+  const persistStateTimeoutRef = useRef<number | null>(null);
+  const lastPersistedStateRef = useRef<string>("");
+
+  useEffect(() => {
+    if (isDraftSession) return;
+    if (session.sessionKind === "thought") {
+      setSessionKind(session.id, "thought");
+    }
+    if (session.notes && session.notes.trim()) {
+      setSessionNotes(session.id, session.notes.trim());
+    }
+  }, [isDraftSession, session.id, session.notes, session.sessionKind]);
 
   useEffect(() => {
     saveState(session.id, state);
   }, [session.id, state]);
+
+  useEffect(() => {
+    if (isDraftSession) return;
+
+    const payload = {
+      dialogStateJson: state,
+      sessionKind:
+        getSessionKind(session.id) === "thought" || session.sessionKind === "thought"
+          ? "thought"
+          : null,
+      notes: getSessionNotes(session.id) ?? session.notes ?? null,
+    };
+    const serialized = JSON.stringify(payload);
+    if (serialized === lastPersistedStateRef.current) {
+      return;
+    }
+
+    if (persistStateTimeoutRef.current) {
+      window.clearTimeout(persistStateTimeoutRef.current);
+    }
+
+    persistStateTimeoutRef.current = window.setTimeout(() => {
+      void apiAgent
+        .patch<
+          {
+            dialogStateJson: DialogState;
+            sessionKind: string | null;
+            notes: string | null;
+          },
+          SessionResponseDto
+        >(`/sessions/${session.id}`, payload)
+        .then(() => {
+          lastPersistedStateRef.current = serialized;
+        })
+        .catch((error: any) => {
+          console.error("Failed to persist session state", error);
+        });
+    }, 250);
+
+    return () => {
+      if (persistStateTimeoutRef.current) {
+        window.clearTimeout(persistStateTimeoutRef.current);
+      }
+    };
+  }, [isDraftSession, session.id, session.notes, session.sessionKind, state]);
 
   // Сохраняем при уходе со страницы (закрытие вкладки, навигация), чтобы сессия открывалась на последнем шаге
   useEffect(() => {
@@ -1840,7 +1910,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return null;
   };
 
-  const animateStateTransition = (
+  const animateStateTransition = async (
     displayAnswer: string,
     nextState: DialogState,
     options?: { awardCoins?: boolean },
@@ -1854,9 +1924,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       options?.awardCoins !== false &&
       !(isDraftSession && view.kind === "core" && view.step === 1)
     ) {
-      const reward = awardCoinsForAnswer(session.id, rewardKey, 3);
-      if (reward.awarded) {
-        showCoinsRewardNotice(`+${reward.delta} монеты`);
+      try {
+        const reward = await awardCoinsForAnswer(session.id, rewardKey, 3);
+        if (reward.awarded) {
+          showCoinsRewardNotice(`+${reward.delta} монеты`);
+        }
+      } catch (error) {
+        console.error("Failed to award answer coins", error);
       }
     }
     if (
@@ -1865,11 +1939,15 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       view.step === 9 &&
       nextState.coreStep === 10
     ) {
-      const recommendedReward = claimPendingSessionReward(session.id);
-      if (recommendedReward.awarded) {
-        showCoinsRewardNotice(
-          `+${recommendedReward.delta} монет за рекомендованную карточку`,
-        );
+      try {
+        const recommendedReward = await claimPendingSessionReward(session.id);
+        if (recommendedReward.awarded) {
+          showCoinsRewardNotice(
+            `+${recommendedReward.delta} монет за рекомендованную карточку`,
+          );
+        }
+      } catch (error) {
+        console.error("Failed to claim pending session reward", error);
       }
     }
     setIsTransitioning(true);
@@ -1925,9 +2003,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
       saveState(newSession.id, nextState);
       if (options?.awardCoins !== false) {
-        const reward = awardCoinsForAnswer(newSession.id, answerKey, 3);
-        if (reward.awarded) {
-          showCoinsRewardNotice(`+${reward.delta} монеты`);
+        try {
+          const reward = await awardCoinsForAnswer(newSession.id, answerKey, 3);
+          if (reward.awarded) {
+            showCoinsRewardNotice(`+${reward.delta} монеты`);
+          }
+        } catch (error) {
+          console.error("Failed to award draft session coins", error);
         }
       }
       if (
@@ -1946,6 +2028,23 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       const notes = getSessionNotes(session.id);
       if (notes && notes.trim()) {
         setSessionNotes(newSession.id, notes.trim());
+      }
+
+      try {
+        await apiAgent.patch<
+          {
+            dialogStateJson: DialogState;
+            sessionKind: string | null;
+            notes: string | null;
+          },
+          SessionResponseDto
+        >(`/sessions/${newSession.id}`, {
+          dialogStateJson: nextState,
+          sessionKind: kind === "thought" ? "thought" : null,
+          notes: notes?.trim() || null,
+        });
+      } catch (error) {
+        console.error("Failed to persist new session state", error);
       }
 
       removeState(session.id);
@@ -2060,7 +2159,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
             }),
           });
 
-          animateStateTransition(trimmed, clarifyState, { awardCoins: false });
+          await animateStateTransition(trimmed, clarifyState, { awardCoins: false });
           return;
         }
 
@@ -2104,7 +2203,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               stageGuidance: setStageGuidance(state, key, guidancePatch),
             });
 
-            animateStateTransition(trimmed, clarifyState, { awardCoins: false });
+            await animateStateTransition(trimmed, clarifyState, { awardCoins: false });
             return;
           }
 
@@ -2169,7 +2268,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         return;
       }
 
-      animateStateTransition(trimmed, nextStateWithAnswer, {
+      await animateStateTransition(trimmed, nextStateWithAnswer, {
         awardCoins: shouldAwardCoins,
       });
     } catch (error) {
@@ -2181,17 +2280,21 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     }
   };
 
-  const goDeepPick = () => {
+  const goDeepPick = async () => {
     const progress = recordDailyPracticeLineCompletion(
       buildDailyLineCompletionId(session.id, state),
       auth.user?.dailyPracticeMinutes ?? null,
     );
     if (progress.goalCompletedNow) {
-      const streakReward = awardDailyStreakForProgress(10);
-      if (streakReward.awarded) {
-        showCoinsRewardNotice(
-          `+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`,
-        );
+      try {
+        const streakReward = await awardDailyStreakForProgress(10);
+        if (streakReward.awarded) {
+          showCoinsRewardNotice(
+            `+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`,
+          );
+        }
+      } catch (error) {
+        console.error("Failed to award daily streak reward", error);
       }
     }
     setState((s) => ({
@@ -2210,17 +2313,21 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     }));
   };
 
-  const goSolve = () => {
+  const goSolve = async () => {
     const progress = recordDailyPracticeLineCompletion(
       buildDailyLineCompletionId(session.id, state),
       auth.user?.dailyPracticeMinutes ?? null,
     );
     if (progress.goalCompletedNow) {
-      const streakReward = awardDailyStreakForProgress(10);
-      if (streakReward.awarded) {
-        showCoinsRewardNotice(
-          `+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`,
-        );
+      try {
+        const streakReward = await awardDailyStreakForProgress(10);
+        if (streakReward.awarded) {
+          showCoinsRewardNotice(
+            `+${streakReward.delta} монет • серия ${formatStreakLabel(streakReward.streak)}`,
+          );
+        }
+      } catch (error) {
+        console.error("Failed to award daily streak reward", error);
       }
     }
     setState((s) => ({

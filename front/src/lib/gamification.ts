@@ -1,3 +1,5 @@
+import apiAgent from "./api";
+
 const COINS_STORAGE_PREFIX = "seee_user_coins:";
 const SESSION_REWARDS_STORAGE_PREFIX = "seee_session_rewards:";
 const SESSION_BONUS_REWARDS_STORAGE_PREFIX = "seee_session_bonus_rewards:";
@@ -35,6 +37,14 @@ type DailyStreakState = {
 type SessionBonusReward = {
   id: string;
   amount: number;
+};
+
+type LocalRewardClaim = {
+  rewardKey: string;
+  amount: number;
+  rewardKind: string;
+  sessionId?: string;
+  description: string;
 };
 
 type DailyPracticeMinutes = 5 | 10 | 15;
@@ -126,8 +136,7 @@ export function getAvatarLabel(username: string): string {
 
 export function getUserCoins(userKey = getGamificationUserKey()): number {
   try {
-    const raw = localStorage.getItem(`${COINS_STORAGE_PREFIX}${userKey}`);
-    const value = Number(raw ?? "0");
+    const value = getStoredCoinsValue(userKey);
     if (Number.isFinite(value) && value > 0) {
       return Math.floor(value);
     }
@@ -153,12 +162,60 @@ export function getUserCoins(userKey = getGamificationUserKey()): number {
   }
 }
 
+function getStoredCoinsValue(userKey = getGamificationUserKey()): number {
+  try {
+    const raw = localStorage.getItem(`${COINS_STORAGE_PREFIX}${userKey}`);
+    const value = Number(raw ?? "0");
+    return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+  } catch {
+    return 0;
+  }
+}
+
 function setUserCoins(value: number, userKey = getGamificationUserKey()) {
   try {
     localStorage.setItem(`${COINS_STORAGE_PREFIX}${userKey}`, String(Math.max(0, Math.floor(value))));
   } catch {
     // ignore
   }
+}
+
+function setStreakSnapshot(
+  streak: number,
+  lastQualifiedDate: string | null,
+  userKey = getGamificationUserKey(),
+) {
+  setStoredStreakState(
+    {
+      streak: Math.max(0, Math.floor(streak)),
+      lastQualifiedDate,
+    },
+    userKey,
+  );
+}
+
+export function hydrateGamificationSnapshot(
+  balance: number,
+  dailyStreak: number,
+  userKey = getGamificationUserKey(),
+) {
+  const safeBalance = Math.max(0, Math.floor(Number(balance || 0)));
+  const safeStreak = Math.max(0, Math.floor(Number(dailyStreak || 0)));
+  setUserCoins(safeBalance, userKey);
+  setStreakSnapshot(
+    safeStreak,
+    safeStreak > 0 ? getLocalDateKey() : null,
+    userKey,
+  );
+  emitCoinsUpdated(safeBalance);
+  emitStreakUpdated(safeStreak);
+}
+
+export function clearGamificationMirror(userKey = getGamificationUserKey()) {
+  setUserCoins(0, userKey);
+  setStreakSnapshot(0, null, userKey);
+  emitCoinsUpdated(0);
+  emitStreakUpdated(0);
 }
 
 function recoverCoinsFromSessionStorage(): number {
@@ -311,6 +368,52 @@ function setSessionBonusRewards(sessionId: string, rewards: SessionBonusReward[]
   } catch {
     // ignore
   }
+}
+
+function collectLocalRewardClaims(): LocalRewardClaim[] {
+  const claims = new Map<string, LocalRewardClaim>();
+
+  try {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const storageKey = localStorage.key(i);
+      if (!storageKey) continue;
+
+      if (storageKey.startsWith(SESSION_REWARDS_STORAGE_PREFIX)) {
+        const sessionId = storageKey.slice(SESSION_REWARDS_STORAGE_PREFIX.length).trim();
+        if (!sessionId) continue;
+        for (const answerId of getRewardedAnswerIds(sessionId)) {
+          const rewardKey = `answer:${sessionId}:${answerId}`;
+          claims.set(rewardKey, {
+            rewardKey,
+            amount: 3,
+            rewardKind: "ANSWER",
+            sessionId,
+            description: "Миграция локальной награды за ответ",
+          });
+        }
+        continue;
+      }
+
+      if (storageKey.startsWith(SESSION_BONUS_REWARDS_STORAGE_PREFIX)) {
+        const sessionId = storageKey.slice(SESSION_BONUS_REWARDS_STORAGE_PREFIX.length).trim();
+        if (!sessionId) continue;
+        for (const reward of getSessionBonusRewards(sessionId)) {
+          const rewardKey = `bonus:${sessionId}:${reward.id}`;
+          claims.set(rewardKey, {
+            rewardKey,
+            amount: reward.amount,
+            rewardKind: "BONUS",
+            sessionId,
+            description: "Миграция локального бонуса за карточку",
+          });
+        }
+      }
+    }
+  } catch {
+    return [];
+  }
+
+  return [...claims.values()];
 }
 
 function emitCoinsUpdated(balance: number) {
@@ -484,18 +587,22 @@ export function awardCoinsForAnswer(
   sessionId: string,
   answerId: string,
   amount = 3,
-): { awarded: boolean; balance: number; delta: number } {
-  const rewardedIds = getRewardedAnswerIds(sessionId);
-  if (rewardedIds.includes(answerId)) {
-    return { awarded: false, balance: getUserCoins(), delta: 0 };
-  }
-
-  const nextBalance = getUserCoins() + amount;
-  setRewardedAnswerIds(sessionId, [...rewardedIds, answerId]);
-  setUserCoins(nextBalance);
-  emitCoinsUpdated(nextBalance);
-
-  return { awarded: true, balance: nextBalance, delta: amount };
+): Promise<{ awarded: boolean; balance: number; delta: number }> {
+  return claimRemoteGamificationReward({
+    rewardKey: `answer:${sessionId}:${answerId}`,
+    amount,
+    rewardKind: "ANSWER",
+    sessionId,
+    description: "Награда за принятый ответ",
+  }).then((result) => {
+    if (result.awarded) {
+      const rewardedIds = getRewardedAnswerIds(sessionId);
+      if (!rewardedIds.includes(answerId)) {
+        setRewardedAnswerIds(sessionId, [...rewardedIds, answerId]);
+      }
+    }
+    return result;
+  });
 }
 
 export function getSessionCoinsEarned(sessionId: string): number {
@@ -511,43 +618,40 @@ export function awardSessionBonus(
   sessionId: string,
   bonusId: string,
   amount: number,
-): { awarded: boolean; balance: number; delta: number; sessionCoins: number } {
+): Promise<{ awarded: boolean; balance: number; delta: number; sessionCoins: number }> {
   const safeBonusId = String(bonusId || "").trim();
   const safeAmount = Math.max(0, Math.floor(amount));
   if (!safeBonusId || safeAmount <= 0) {
-    return {
+    return Promise.resolve({
       awarded: false,
       balance: getUserCoins(),
       delta: 0,
       sessionCoins: getSessionCoinsEarned(sessionId),
-    };
+    });
   }
 
-  const existingRewards = getSessionBonusRewards(sessionId);
-  if (existingRewards.some((reward) => reward.id === safeBonusId)) {
+  return claimRemoteGamificationReward({
+    rewardKey: `bonus:${sessionId}:${safeBonusId}`,
+    amount: safeAmount,
+    rewardKind: "BONUS",
+    sessionId,
+    description: "Бонус за рекомендованную карточку",
+  }).then((result) => {
+    if (result.awarded) {
+      const existingRewards = getSessionBonusRewards(sessionId);
+      if (!existingRewards.some((reward) => reward.id === safeBonusId)) {
+        setSessionBonusRewards(sessionId, [
+          ...existingRewards,
+          { id: safeBonusId, amount: safeAmount },
+        ]);
+      }
+    }
+
     return {
-      awarded: false,
-      balance: getUserCoins(),
-      delta: 0,
+      ...result,
       sessionCoins: getSessionCoinsEarned(sessionId),
     };
-  }
-
-  setSessionBonusRewards(sessionId, [
-    ...existingRewards,
-    { id: safeBonusId, amount: safeAmount },
-  ]);
-
-  const nextBalance = getUserCoins() + safeAmount;
-  setUserCoins(nextBalance);
-  emitCoinsUpdated(nextBalance);
-
-  return {
-    awarded: true,
-    balance: nextBalance,
-    delta: safeAmount,
-    sessionCoins: getSessionCoinsEarned(sessionId),
-  };
+  });
 }
 
 export function loadDraftSessionReward(
@@ -629,16 +733,16 @@ export function assignPendingSessionReward(
 
 export function claimPendingSessionReward(
   sessionId: string,
-): { awarded: boolean; balance: number; delta: number; sessionCoins: number } {
+): Promise<{ awarded: boolean; balance: number; delta: number; sessionCoins: number }> {
   try {
     const raw = localStorage.getItem(`${SESSION_PENDING_REWARD_PREFIX}${sessionId}`);
     if (!raw) {
-      return {
+      return Promise.resolve({
         awarded: false,
         balance: getUserCoins(),
         delta: 0,
         sessionCoins: getSessionCoinsEarned(sessionId),
-      };
+      });
     }
 
     const parsed = JSON.parse(raw) as Partial<PendingSessionReward>;
@@ -646,24 +750,25 @@ export function claimPendingSessionReward(
     const amount = Math.max(0, Math.floor(Number(parsed?.amount ?? 0)));
     if (!rewardId || amount <= 0) {
       localStorage.removeItem(`${SESSION_PENDING_REWARD_PREFIX}${sessionId}`);
-      return {
+      return Promise.resolve({
         awarded: false,
         balance: getUserCoins(),
         delta: 0,
         sessionCoins: getSessionCoinsEarned(sessionId),
-      };
+      });
     }
 
-    const result = awardSessionBonus(sessionId, rewardId, amount);
-    localStorage.removeItem(`${SESSION_PENDING_REWARD_PREFIX}${sessionId}`);
-    return result;
+    return awardSessionBonus(sessionId, rewardId, amount).then((result) => {
+      localStorage.removeItem(`${SESSION_PENDING_REWARD_PREFIX}${sessionId}`);
+      return result;
+    });
   } catch {
-    return {
+    return Promise.resolve({
       awarded: false,
       balance: getUserCoins(),
       delta: 0,
       sessionCoins: getSessionCoinsEarned(sessionId),
-    };
+    });
   }
 }
 
@@ -692,37 +797,93 @@ export function formatStreakLabel(days: number): string {
 export function awardDailyStreakForProgress(
   amount = 10,
   userKey = getGamificationUserKey(),
-): { awarded: boolean; balance: number; delta: number; streak: number } {
+): Promise<{ awarded: boolean; balance: number; delta: number; streak: number }> {
   const todayKey = getLocalDateKey();
-  const state = getStoredStreakState(userKey);
-  const diff = state.lastQualifiedDate
-    ? getDayDiff(state.lastQualifiedDate, todayKey)
-    : null;
-
-  if (diff === 0) {
+  return claimRemoteGamificationReward({
+    rewardKey: `daily-goal:${todayKey}`,
+    amount,
+    rewardKind: "DAILY_STREAK",
+    dateKey: todayKey,
+    description: "Награда за закрытую ежедневную цель",
+  }).then((result) => {
+    setStreakSnapshot(
+      result.dailyStreak,
+      result.dailyStreak > 0 ? todayKey : null,
+      userKey,
+    );
     return {
-      awarded: false,
-      balance: getUserCoins(userKey),
-      delta: 0,
-      streak: getUserStreak(userKey),
+      awarded: result.awarded,
+      balance: result.balance,
+      delta: result.delta,
+      streak: result.dailyStreak,
     };
+  });
+}
+
+async function claimRemoteGamificationReward(params: {
+  rewardKey: string;
+  amount: number;
+  rewardKind?: string;
+  sessionId?: string;
+  description?: string;
+  dateKey?: string;
+}): Promise<{ awarded: boolean; balance: number; delta: number; dailyStreak: number }> {
+  const result = await apiAgent.post<
+    {
+      rewardKey: string;
+      amount: number;
+      rewardKind?: string;
+      sessionId?: string;
+      description?: string;
+      dateKey?: string;
+    },
+    { awarded: boolean; balance: number; delta: number; dailyStreak: number }
+  >("/auth/gamification/reward", params);
+
+  hydrateGamificationSnapshot(
+    result.balance ?? getUserCoins(),
+    result.dailyStreak ?? getUserStreak(),
+  );
+
+  return {
+    awarded: !!result.awarded,
+    balance: Math.max(0, Math.floor(Number(result.balance ?? 0))),
+    delta: Math.max(0, Math.floor(Number(result.delta ?? 0))),
+    dailyStreak: Math.max(0, Math.floor(Number(result.dailyStreak ?? 0))),
+  };
+}
+
+export async function syncLocalGamificationRewardsToServer(
+  serverBalance = getStoredCoinsValue(),
+): Promise<{ synced: boolean; balance: number }> {
+  const safeServerBalance = Math.max(0, Math.floor(Number(serverBalance || 0)));
+  const localRecoveredBalance = recoverCoinsFromSessionStorage();
+  if (localRecoveredBalance <= safeServerBalance) {
+    return { synced: false, balance: safeServerBalance };
   }
 
-  const nextStreak = diff === 1 ? Math.max(1, state.streak + 1) : 1;
-  const nextBalance = getUserCoins(userKey) + amount;
+  const claims = collectLocalRewardClaims();
+  if (claims.length === 0) {
+    return { synced: false, balance: safeServerBalance };
+  }
 
-  setStoredStreakState(
-    {
-      streak: nextStreak,
-      lastQualifiedDate: todayKey,
-    },
-    userKey,
-  );
-  setUserCoins(nextBalance, userKey);
-  emitCoinsUpdated(nextBalance);
-  emitStreakUpdated(nextStreak);
+  let balance = safeServerBalance;
+  let synced = false;
 
-  return { awarded: true, balance: nextBalance, delta: amount, streak: nextStreak };
+  for (const claim of claims) {
+    try {
+      const result = await claimRemoteGamificationReward(claim);
+      balance = Math.max(balance, result.balance);
+      synced = synced || result.awarded;
+    } catch (error) {
+      console.error("Failed to sync local gamification reward", claim.rewardKey, error);
+    }
+  }
+
+  return {
+    synced,
+    balance,
+  };
 }
 
 export function getLeagueForPoints(points: number): League {

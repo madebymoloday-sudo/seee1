@@ -25,7 +25,7 @@ import {
   type ArchivistGalleryContext,
   type ArchivistSuggestedCard,
 } from "@/lib/archivist";
-import { getSessionCoinsEarned, saveDraftSessionReward } from "@/lib/gamification";
+import { saveDraftSessionReward } from "@/lib/gamification";
 
 type SortOption = "my_sessions" | "to_explore" | "freedom" | "happiness" | "deferred" | "recommended";
 
@@ -364,28 +364,43 @@ function mergeArchivistSuggestedTemplates(
   return { items, changed };
 }
 
+function readSessionAnswers(session: SessionResponseDto): Record<string, string> {
+  const parsed = session.dialogStateJson as { answers?: Record<string, string> } | null | undefined;
+  if (parsed?.answers && typeof parsed.answers === "object") {
+    return parsed.answers;
+  }
+
+  try {
+    const rawState = localStorage.getItem(`seee_step_dialog_state:${session.id}`);
+    if (!rawState) return {};
+    const localParsed = JSON.parse(rawState) as { answers?: Record<string, string> };
+    return localParsed?.answers && typeof localParsed.answers === "object"
+      ? localParsed.answers
+      : {};
+  } catch {
+    return {};
+  }
+}
+
 function readSessionAnalysisText(session: SessionResponseDto): string {
   const parts: string[] = [];
   if ((session.title ?? "").trim()) parts.push(session.title!.trim());
 
-  try {
-    const rawState = localStorage.getItem(`seee_step_dialog_state:${session.id}`);
-    if (rawState) {
-      const parsed = JSON.parse(rawState) as { answers?: Record<string, string> };
-      const answers = parsed?.answers || {};
-      for (const value of Object.values(answers)) {
-        if ((value || "").trim()) parts.push(value.trim());
-      }
-    }
-  } catch {
-    // ignore malformed local state
+  const answers = readSessionAnswers(session);
+  for (const value of Object.values(answers)) {
+    if ((value || "").trim()) parts.push(value.trim());
   }
 
-  try {
-    const notes = localStorage.getItem(`${SESSION_NOTES_PREFIX}${session.id}`);
-    if ((notes || "").trim()) parts.push((notes || "").trim());
-  } catch {
-    // ignore
+  const notes = (session.notes ?? "").trim();
+  if (notes) {
+    parts.push(notes);
+  } else {
+    try {
+      const localNotes = localStorage.getItem(`${SESSION_NOTES_PREFIX}${session.id}`);
+      if ((localNotes || "").trim()) parts.push((localNotes || "").trim());
+    } catch {
+      // ignore
+    }
   }
 
   return parts.join(" ");
@@ -453,22 +468,18 @@ function buildRecommendedTemplateIds(
   return new Set(filtered.map((x) => x.id));
 }
 
-function getIdeasFromLocalState(sessionId: string): { coreThought?: string; importantIdeas: string[] } {
-  try {
-    const raw = localStorage.getItem(`seee_step_dialog_state:${sessionId}`);
-    if (!raw) return { importantIdeas: [] };
-    const parsed = JSON.parse(raw) as { v?: number; answers?: Record<string, string> };
-    const answers = parsed?.v === 2 ? parsed.answers || {} : {};
+function getIdeasFromSession(
+  session?: SessionResponseDto | null,
+): { coreThought?: string; importantIdeas: string[] } {
+  if (!session) return { importantIdeas: [] };
 
-    const coreThought =
-      (answers["core:situation:3"] || answers["core:thought:3"] || "").trim() || undefined;
-    const answer4 =
-      answers["core:situation:4"] || answers["core:thought:4"] || "";
-    const importantIdeas = parseImportantOptions(answer4);
-    return { coreThought, importantIdeas };
-  } catch {
-    return { importantIdeas: [] };
-  }
+  const answers = readSessionAnswers(session);
+  const coreThought =
+    (answers["core:situation:3"] || answers["core:thought:3"] || "").trim() || undefined;
+  const answer4 =
+    answers["core:situation:4"] || answers["core:thought:4"] || "";
+  const importantIdeas = parseImportantOptions(answer4);
+  return { coreThought, importantIdeas };
 }
 
 const SessionsCollectionPage = observer(() => {
@@ -1509,7 +1520,7 @@ const SessionsCollectionPage = observer(() => {
                         onMoveToExplore={() => handleMoveToExplore(session)}
                         onShowFeedback={() => setFeedbackInfoSessionId(session.id)}
                         onShowIdeas={() => setIdeasInfoSessionId(session.id)}
-                        coinsLabel={formatCoinsBadgeLabel(getSessionCoinsEarned(session.id))}
+                        coinsLabel={formatCoinsBadgeLabel(session.coinsEarned ?? 0)}
                       />
                     );
                   }
@@ -1637,7 +1648,7 @@ const SessionsCollectionPage = observer(() => {
             <div className={styles.infoModalBody}>
               {(() => {
                 const session = sessions?.find((s) => s.id === ideasInfoSessionId);
-                const { coreThought, importantIdeas } = getIdeasFromLocalState(ideasInfoSessionId);
+                const { coreThought, importantIdeas } = getIdeasFromSession(session);
                 const hasTitle = (session?.title ?? "").trim().length > 0;
                 const displayThought = coreThought || (hasTitle ? (session?.title ?? "").trim() : undefined);
                 if (!displayThought && importantIdeas.length === 0) {

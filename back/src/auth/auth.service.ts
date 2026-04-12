@@ -47,9 +47,17 @@ export class AuthService {
     role: true,
     accountType: true,
     dailyPracticeMinutes: true,
+    dailyStreak: true,
+    lastDailyPracticeDateKey: true,
     subscriptionStatus: true,
     subscriptionActive: true,
     subscriptionEndsAt: true,
+    balances: {
+      select: {
+        amount: true,
+      },
+      take: 1,
+    },
   };
 
   constructor(
@@ -278,6 +286,160 @@ export class AuthService {
       salesReferralLink: `${frontendUrl}/?ref=${updated.id}&utm_source=referral`,
       employeeInviteLink: `${frontendUrl}/register?team=${updated.teamInviteCode}`,
     };
+  }
+
+  async claimGamificationReward(
+    userId: string,
+    dto: {
+      rewardKey: string;
+      amount: number;
+      rewardKind?: string;
+      sessionId?: string;
+      description?: string;
+      dateKey?: string;
+    },
+  ): Promise<{
+    awarded: boolean;
+    balance: number;
+    delta: number;
+    dailyStreak: number;
+  }> {
+    const rewardKey = String(dto.rewardKey || '').trim();
+    const rewardKind = String(dto.rewardKind || 'ANSWER').trim().toUpperCase();
+    const amount = Math.max(0, Math.floor(Number(dto.amount || 0)));
+    const sessionId = String(dto.sessionId || '').trim() || null;
+    const description = String(dto.description || '').trim() || null;
+    const dateKey = String(dto.dateKey || '').trim() || null;
+
+    if (!rewardKey) {
+      throw new BadRequestException('rewardKey is required');
+    }
+    if (amount <= 0) {
+      throw new BadRequestException('amount must be greater than 0');
+    }
+    if (rewardKind === 'DAILY_STREAK') {
+      if (!dateKey || !this.isValidDateKey(dateKey)) {
+        throw new BadRequestException('dateKey must be in YYYY-MM-DD format');
+      }
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          dailyStreak: true,
+          lastDailyPracticeDateKey: true,
+        },
+      });
+
+      if (!user) {
+        throw new NotFoundException('Пользователь не найден');
+      }
+
+      const existingReward = await tx.gamificationReward.findUnique({
+        where: {
+          userId_rewardKey: {
+            userId,
+            rewardKey,
+          },
+        },
+      });
+
+      const currentBalanceRecord = await tx.balance.upsert({
+        where: { userId },
+        update: {},
+        create: {
+          userId,
+          amount: 0,
+        },
+        select: { amount: true },
+      });
+
+      const currentBalance = Number(currentBalanceRecord.amount ?? 0);
+      const rewardsAggregate = await tx.gamificationReward.aggregate({
+        where: { userId },
+        _sum: { amount: true },
+      });
+      const rewardsTotal = Math.max(
+        0,
+        Math.floor(Number(rewardsAggregate._sum.amount ?? 0)),
+      );
+      const baselineBalance = Math.max(currentBalance, rewardsTotal);
+
+      if (baselineBalance !== currentBalance) {
+        await tx.balance.update({
+          where: { userId },
+          data: {
+            amount: baselineBalance,
+          },
+        });
+      }
+
+      if (existingReward) {
+        return {
+          awarded: false,
+          balance: baselineBalance,
+          delta: 0,
+          dailyStreak: Math.max(0, user.dailyStreak || 0),
+        };
+      }
+
+      let nextDailyStreak = Math.max(0, user.dailyStreak || 0);
+      let nextDateKey = user.lastDailyPracticeDateKey;
+
+      if (rewardKind === 'DAILY_STREAK' && dateKey) {
+        const diff = this.getDateKeyDiff(user.lastDailyPracticeDateKey, dateKey);
+        nextDailyStreak = diff === 1 ? Math.max(1, nextDailyStreak + 1) : 1;
+        nextDateKey = dateKey;
+
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            dailyStreak: nextDailyStreak,
+            lastDailyPracticeDateKey: nextDateKey,
+          },
+        });
+      }
+
+      const nextBalance = baselineBalance + amount;
+
+      await tx.balance.update({
+        where: { userId },
+        data: {
+          amount: nextBalance,
+        },
+      });
+
+      await tx.gamificationReward.create({
+        data: {
+          userId,
+          sessionId,
+          rewardKey,
+          rewardKind,
+          amount,
+          description,
+          dateKey,
+        },
+      });
+
+      await tx.transaction.create({
+        data: {
+          userId,
+          amount,
+          transactionType: 'PAYMENT',
+          description:
+            description || `Gamification reward: ${rewardKind.toLowerCase()}`,
+        },
+      });
+
+      return {
+        awarded: true,
+        balance: nextBalance,
+        delta: amount,
+        dailyStreak: nextDailyStreak,
+      };
+    });
   }
 
   private getEmotionalTone(emotionRaw?: string | null): string | null {
@@ -538,7 +700,7 @@ export class AuthService {
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      user: this.toUserProfileDto(user),
+      user: await this.toUserProfileDto(user),
     };
   }
 
@@ -663,7 +825,7 @@ export class AuthService {
       return {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
-        user: this.toUserProfileDto(user),
+        user: await this.toUserProfileDto(user),
       };
     } catch (error: any) {
       // #region agent log
@@ -737,7 +899,7 @@ export class AuthService {
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      user: this.toUserProfileDto(user),
+      user: await this.toUserProfileDto(user),
     };
   }
 
@@ -810,7 +972,7 @@ export class AuthService {
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      user: this.toUserProfileDto(user),
+      user: await this.toUserProfileDto(user),
     };
   }
 
@@ -1274,7 +1436,12 @@ export class AuthService {
     return validated.firstName;
   }
 
-  private toUserProfileDto(user: any): UserProfileDto {
+  private async toUserProfileDto(user: any): Promise<UserProfileDto> {
+    const balance = await this.resolvePersistentBalance(
+      user.id,
+      user.balances?.[0]?.amount ?? 0,
+    );
+
     return {
       id: user.id,
       username: user.username,
@@ -1289,6 +1456,11 @@ export class AuthService {
         user.dailyPracticeMinutes === 15
           ? user.dailyPracticeMinutes
           : null,
+      balance,
+      dailyStreak: this.getEffectiveDailyStreak(
+        Number(user.dailyStreak ?? 0),
+        user.lastDailyPracticeDateKey,
+      ),
       telegramId: user.telegramId ?? null,
       userId: user.userId ?? null,
       subscriptionStatus: user.subscriptionStatus,
@@ -1297,6 +1469,91 @@ export class AuthService {
         ? new Date(user.subscriptionEndsAt).toISOString()
         : null,
     };
+  }
+
+  private async resolvePersistentBalance(
+    userId: string,
+    balanceRaw: unknown,
+  ): Promise<number> {
+    const storedBalance = Math.max(0, Math.floor(Number(balanceRaw ?? 0)));
+    const rewardsAggregate = await this.prisma.gamificationReward.aggregate({
+      where: { userId },
+      _sum: { amount: true },
+    });
+    const rewardsBalance = Math.max(
+      0,
+      Math.floor(Number(rewardsAggregate._sum.amount ?? 0)),
+    );
+    const resolvedBalance = Math.max(storedBalance, rewardsBalance);
+
+    if (resolvedBalance !== storedBalance) {
+      await this.prisma.balance.upsert({
+        where: { userId },
+        update: {
+          amount: resolvedBalance,
+        },
+        create: {
+          userId,
+          amount: resolvedBalance,
+        },
+      });
+    }
+
+    return resolvedBalance;
+  }
+
+  private isValidDateKey(dateKey: string): boolean {
+    return /^\d{4}-\d{2}-\d{2}$/.test(dateKey);
+  }
+
+  private parseDateKey(dateKey?: string | null): Date | null {
+    const raw = String(dateKey || '').trim();
+    if (!this.isValidDateKey(raw)) return null;
+    const [yearRaw, monthRaw, dayRaw] = raw.split('-');
+    const year = Number(yearRaw);
+    const month = Number(monthRaw);
+    const day = Number(dayRaw);
+    const parsed = new Date(year, month - 1, day);
+    if (
+      Number.isNaN(parsed.getTime()) ||
+      parsed.getFullYear() !== year ||
+      parsed.getMonth() !== month - 1 ||
+      parsed.getDate() !== day
+    ) {
+      return null;
+    }
+    return parsed;
+  }
+
+  private getDateKeyDiff(
+    fromDateKey?: string | null,
+    toDateKey?: string | null,
+  ): number | null {
+    const from = this.parseDateKey(fromDateKey);
+    const to = this.parseDateKey(toDateKey);
+    if (!from || !to) return null;
+    return Math.round((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
+  private getEffectiveDailyStreak(
+    streakRaw: number,
+    lastDateKey?: string | null,
+  ): number {
+    const streak = Math.max(0, Math.floor(Number(streakRaw || 0)));
+    if (!streak || !lastDateKey) return 0;
+    const diff = this.getDateKeyDiff(
+      lastDateKey,
+      this.formatTodayDateKey(),
+    );
+    return diff === 0 || diff === 1 ? streak : 0;
+  }
+
+  private formatTodayDateKey(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private generateTeamInviteCode(): string {

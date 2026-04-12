@@ -74,6 +74,8 @@ model User {
   teamInviteCode String? @unique @map("team_invite_code")
   teamSeatsLimit Int     @default(0) @map("team_seats_limit")
   dailyPracticeMinutes Int? @map("daily_practice_minutes")
+  dailyStreak   Int      @default(0) @map("daily_streak")
+  lastDailyPracticeDateKey String? @map("last_daily_practice_date_key")
   openAiPromptTokens      Int      @default(0) @map("openai_prompt_tokens")
   openAiCompletionTokens  Int      @default(0) @map("openai_completion_tokens")
   openAiTotalTokens       Int      @default(0) @map("openai_total_tokens")
@@ -97,6 +99,7 @@ model User {
   interestingThoughts InterestingThought[]
   balances           Balance[]
   transactions       Transaction[]
+  gamificationRewards GamificationReward[]
   /// Реферал, который пригласил этого пользователя
   referrer           User?    @relation("UserReferrals", fields: [referrerId], references: [id])
   /// Пользователи, которых пригласил данный пользователь
@@ -242,6 +245,9 @@ model Session {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
   title     String?
+  dialogStateJson Json? @map("dialog_state_json")
+  sessionKind String? @map("session_kind")
+  notes     String?
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  Message[]
@@ -253,6 +259,7 @@ model Session {
   interestingThoughts InterestingThought[]
   gptStatistics GptStatistics?
   pipelineState PipelineState?
+  gamificationRewards GamificationReward[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -342,6 +349,26 @@ model Transaction {
 
   @@index([userId])
   @@map("transactions")
+}
+
+model GamificationReward {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  sessionId   String?  @map("session_id")
+  rewardKey   String   @map("reward_key")
+  rewardKind  String   @map("reward_kind")
+  amount      Int
+  description String?  @map("description")
+  dateKey     String?  @map("date_key")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session     Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, rewardKey])
+  @@index([userId, createdAt])
+  @@index([sessionId])
+  @@map("gamification_rewards")
 }
 
 model RootBelief {

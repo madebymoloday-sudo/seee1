@@ -18,6 +18,14 @@ export interface SessionResponseDto {
   title: string | null;
   /** Количество сообщений */
   messageCount: number;
+  /** Сколько монет было заработано в этой сессии */
+  coinsEarned?: number;
+  /** Сериализованное состояние диалога */
+  dialogStateJson?: unknown | null;
+  /** Вид сессии */
+  sessionKind?: string | null;
+  /** Заметки по сессии */
+  notes?: string | null;
   /** Дата создания */
   createdAt: string;
   /** Дата обновления */

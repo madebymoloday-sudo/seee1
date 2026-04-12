@@ -36,6 +36,8 @@ import {
   ManagerTeamOverviewDto,
   ManagerAccessSetupDto,
   ManagerAccessSetupResponseDto,
+  ClaimGamificationRewardDto,
+  ClaimGamificationRewardResponseDto,
 } from './dto/auth.dto';
 import { TelegramLoginDto, TelegramLinkDto } from './dto/telegram.dto';
 import {
@@ -402,5 +404,23 @@ export class AuthController {
       throw new ForbiddenException('Admin only');
     }
     return this.authService.configureManagerAccess(dto);
+  }
+
+  @Post('gamification/reward')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Начислить монеты за принятый ответ/бонус/закрытие дневной цели',
+  })
+  @ApiResponse({
+    status: 200,
+    type: ClaimGamificationRewardResponseDto,
+  })
+  async claimGamificationReward(
+    @Request() req: { user: { id: string } },
+    @Body() dto: ClaimGamificationRewardDto,
+  ): Promise<ClaimGamificationRewardResponseDto> {
+    return this.authService.claimGamificationReward(req.user.id, dto);
   }
 }

@@ -33,4 +33,8 @@ export interface UserProfileDto {
   subscriptionEndsAt?: string | null;
   /** Сколько минут в день пользователь хочет тратить на приложение */
   dailyPracticeMinutes?: 5 | 10 | 15 | null;
+  /** Текущий баланс монет */
+  balance?: number;
+  /** Серия дней подряд с закрытой ежедневной целью */
+  dailyStreak?: number;
 }

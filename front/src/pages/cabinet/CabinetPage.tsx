@@ -20,7 +20,7 @@ import { getAuthControllerGetMeKey } from "@/api/seee.swr";
 function getAccountTypeLabel(accountType?: "USER" | "MANAGER" | "TEAM_MEMBER") {
   switch (accountType) {
     case "MANAGER":
-      return "Основатель";
+      return "Владелец компании";
     case "TEAM_MEMBER":
       return "Член команды";
     default:
@@ -31,7 +31,7 @@ function getAccountTypeLabel(accountType?: "USER" | "MANAGER" | "TEAM_MEMBER") {
 function getAccountTypeDescription(accountType?: "USER" | "MANAGER" | "TEAM_MEMBER") {
   switch (accountType) {
     case "MANAGER":
-      return "У вас есть доступ к кабинету основателя, ссылке для команды и сводке по сотрудникам.";
+      return "У вас есть доступ к кабинету владельца, ссылке для команды и сводке по закреплённым аккаунтам.";
     case "TEAM_MEMBER":
       return "Ваш доступ предоставлен по приглашению основателя, подпиской управляет компания.";
     default:
@@ -75,6 +75,12 @@ const CabinetPage = observer(() => {
     const ms = d.getTime() - Date.now();
     return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
   }, [profile?.subscriptionEndsAt]);
+
+  const streakPreview = useMemo(() => {
+    const streak = Math.max(0, Number(profile?.dailyStreak ?? 0));
+    const visibleCount = Math.min(7, Math.max(3, streak || 3));
+    return Array.from({ length: visibleCount }, (_, index) => index < streak);
+  }, [profile?.dailyStreak]);
 
   const handleCancelSubscription = async () => {
     if (!window.confirm("Точно отменить подписку? Доступ к приложению будет заблокирован.")) {
@@ -134,7 +140,7 @@ const CabinetPage = observer(() => {
             </Button>
             {profile?.accountType === "MANAGER" ? (
               <Button variant="outline" onClick={handleManagersClick}>
-                Кабинет основателя
+                Кабинет владельца
               </Button>
             ) : null}
           </div>
@@ -171,6 +177,30 @@ const CabinetPage = observer(() => {
               </Button>
             ))}
           </div>
+        </div>
+
+        <div className="mb-6 rounded-xl border bg-card p-4">
+          <h2 className="mb-3 text-lg font-semibold">Ударный режим</h2>
+          <p className="text-sm text-muted-foreground">
+            Серия дней подряд, в которые вы закрыли ежедневную цель.
+          </p>
+          <div className="mt-4 flex items-center gap-2">
+            {streakPreview.map((active, index) => (
+              <div
+                key={index}
+                className={`flex h-10 w-10 items-center justify-center rounded-full border text-lg ${
+                  active
+                    ? "border-orange-300 bg-orange-100 text-orange-600"
+                    : "border-muted bg-muted/40 text-muted-foreground"
+                }`}
+              >
+                {active ? "🔥" : "·"}
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-base font-semibold">
+            {profile?.dailyStreak ?? 0} дней подряд
+          </p>
         </div>
 
         {/* Настройки безопасности */}

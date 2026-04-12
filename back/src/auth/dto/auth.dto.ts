@@ -139,6 +139,80 @@ export class UserProfileDto {
     example: 10,
   })
   dailyPracticeMinutes?: 5 | 10 | 15 | null;
+
+  @ApiPropertyOptional({
+    description: 'Текущий баланс монет',
+    example: 97,
+  })
+  balance?: number;
+
+  @ApiPropertyOptional({
+    description: 'Серия дней подряд, в которые закрыта ежедневная цель',
+    example: 4,
+  })
+  dailyStreak?: number;
+}
+
+export class ClaimGamificationRewardDto {
+  @ApiProperty({
+    description: 'Уникальный ключ награды для идемпотентности',
+    example: 'answer:session-id:core:situation:3',
+  })
+  @IsString()
+  @IsNotEmpty()
+  rewardKey: string;
+
+  @ApiProperty({
+    description: 'Количество монет к начислению',
+    example: 3,
+  })
+  amount: number;
+
+  @ApiPropertyOptional({
+    description: 'Тип награды',
+    example: 'ANSWER',
+  })
+  @IsOptional()
+  @IsString()
+  rewardKind?: string;
+
+  @ApiPropertyOptional({
+    description: 'ID сессии, если награда привязана к сессии',
+    example: 'session-uuid',
+  })
+  @IsOptional()
+  @IsString()
+  sessionId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Описание награды',
+    example: 'Награда за принятый ответ',
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({
+    description: 'Локальный ключ дня в формате YYYY-MM-DD для серии дней',
+    example: '2026-04-12',
+  })
+  @IsOptional()
+  @IsString()
+  dateKey?: string;
+}
+
+export class ClaimGamificationRewardResponseDto {
+  @ApiProperty({ description: 'Была ли награда начислена' })
+  awarded: boolean;
+
+  @ApiProperty({ description: 'Текущий баланс после обработки награды' })
+  balance: number;
+
+  @ApiProperty({ description: 'Изменение баланса' })
+  delta: number;
+
+  @ApiProperty({ description: 'Текущая серия дней' })
+  dailyStreak: number;
 }
 
 export class ManagerAccessSetupDto {
