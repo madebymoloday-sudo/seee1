@@ -58,7 +58,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
   return (
     <Form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {errors.root && (
-        <div className="bg-red-500/12 border border-red-500/35 text-red-800 dark:text-red-200 px-4 py-3 rounded-md">
+        <div className="rounded-md border border-red-400/45 bg-red-500/12 px-4 py-3 text-red-100">
           {errors.root.message}
         </div>
       )}
@@ -75,15 +75,14 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             autoComplete="email"
             aria-invalid={errors.email ? "true" : "false"}
             className={cn(
-              "bg-transparent border-black/15 text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-zinc-900/20 dark:bg-transparent dark:border-white/30 dark:text-white dark:placeholder:text-white/60 dark:focus-visible:ring-white/50",
-              errors.email &&
-                "border-red-400 focus-visible:ring-red-400"
+              "bg-transparent border-white/24 text-white placeholder:text-white/60 focus-visible:ring-white/40",
+              errors.email && "border-red-400 focus-visible:ring-red-400"
             )}
           />
           {errors.email?.message && (
             <FormMessage 
               message={errors.email?.message} 
-              className="text-red-600 dark:text-red-200"
+              className="text-red-200"
             />
           )}
         </FormItem>
@@ -102,9 +101,8 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             aria-invalid={errors.password ? "true" : "false"}
             aria-describedby={errors.password?.message ? "password-error" : undefined}
             className={cn(
-              "bg-transparent border-black/15 text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-zinc-900/20 dark:bg-transparent dark:border-white/30 dark:text-white dark:placeholder:text-white/60 dark:focus-visible:ring-white/50",
-              errors.password &&
-                "border-red-400 focus-visible:ring-red-400"
+              "bg-transparent border-white/24 text-white placeholder:text-white/60 focus-visible:ring-white/40",
+              errors.password && "border-red-400 focus-visible:ring-red-400"
             )}
           />
           {errors.password?.message ? (
@@ -145,10 +143,10 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
 
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-black/10 dark:border-white/30" />
+          <span className="w-full border-t border-white/25" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-transparent px-2 text-zinc-500 dark:text-white/60">
+          <span className="bg-transparent px-2 text-white/60">
             или
           </span>
         </div>

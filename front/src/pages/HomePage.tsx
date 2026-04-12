@@ -50,7 +50,7 @@ const HomePage = observer(() => {
                   Уже есть аккаунт?{" "}
                   <button
                     onClick={() => setShowRegister(false)}
-                    className="underline hover:opacity-80"
+                    className="text-white underline hover:opacity-80"
                   >
                     Войти
                   </button>
@@ -80,7 +80,7 @@ const HomePage = observer(() => {
                   Нет аккаунта?{" "}
                   <button
                     onClick={() => setShowRegister(true)}
-                    className="underline hover:opacity-80"
+                    className="text-white underline hover:opacity-80"
                   >
                     Оформить подписку и зарегистрироваться
                   </button>

@@ -203,6 +203,13 @@
   color: rgba(255, 255, 255, 1) !important;
 }
 
+.loginFormContainer button,
+.loginFormContainer button span,
+.loginFormContainer button svg,
+.loginFormContainer [role="button"] {
+  color: rgba(255, 255, 255, 0.96) !important;
+}
+
 /* Ссылка "Забыли пароль?" — только текст, без фона и рамки, читаемая */
 .loginFormContainer a[href*="forgot-password"] {
   display: inline-block;
