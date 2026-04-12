@@ -636,9 +636,9 @@
   box-sizing: border-box;
   max-width: none;
   width: 100%;
-  padding-top: 0.35rem !important;
+  padding-top: 0.18rem !important;
   padding-right: 0;
-  padding-bottom: 0.45rem !important;
+  padding-bottom: 0.2rem !important;
   padding-left: 0;
 }
 
@@ -720,9 +720,21 @@
   .messagesStage {
     justify-content: center;
     padding-top: 4.35rem;
+    padding-bottom: 5.35rem;
+    scroll-padding-bottom: 5.75rem;
+  }
+
+  .bottomDock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin-top: 0;
+    z-index: 80;
   }
 
   .inputAlignWrapper > div {
-    padding-bottom: 0.45rem !important;
+    padding-top: 0.08rem !important;
+    padding-bottom: 0.12rem !important;
   }
 }
