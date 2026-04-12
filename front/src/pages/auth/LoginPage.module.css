@@ -136,6 +136,43 @@
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
 }
 
+.authLabel {
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+}
+
+.authButton,
+.authButton:hover,
+.authButton:focus-visible,
+.authButton:active {
+  color: rgba(255, 255, 255, 0.98) !important;
+}
+
+.authInlineButton,
+.authInlineButton:hover,
+.authInlineButton:focus-visible,
+.authInlineButton:active {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.98) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.authInlineLink,
+.authInlineLink:hover,
+.authInlineLink:focus-visible,
+.authInlineLink:active {
+  color: rgba(255, 255, 255, 0.98) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.authMutedText {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
 /* Разделитель */
 .divider {
   border-color: rgba(255, 255, 255, 0.20);

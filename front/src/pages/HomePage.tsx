@@ -50,24 +50,24 @@ const HomePage = observer(() => {
                   Уже есть аккаунт?{" "}
                   <button
                     onClick={() => setShowRegister(false)}
-                    className="text-white underline hover:opacity-80"
+                    className={styles.authInlineButton}
                   >
                     Войти
                   </button>
                 </p>
                 <Button
                   onClick={() => navigate("/subscription")}
-                  className="w-full bg-white/14 hover:bg-white/18 text-white border border-white/22"
+                  className={`w-full bg-white/14 hover:bg-white/18 border border-white/22 ${styles.authButton}`}
                 >
                   Оформить подписку и зарегистрироваться
                 </Button>
-                <p className="text-xs mt-3 text-center text-white/70">
+                <p className={`text-xs mt-3 text-center ${styles.authMutedText}`}>
                   Поддержка:{" "}
                   <a
                     href="https://t.me/SeeeAppBot"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:text-white/90"
+                    className={styles.authInlineLink}
                   >
                     Telegram
                   </a>
@@ -80,18 +80,18 @@ const HomePage = observer(() => {
                   Нет аккаунта?{" "}
                   <button
                     onClick={() => setShowRegister(true)}
-                    className="text-white underline hover:opacity-80"
+                    className={styles.authInlineButton}
                   >
                     Оформить подписку и зарегистрироваться
                   </button>
                 </p>
-                <p className="text-xs mt-3 text-center text-white/70">
+                <p className={`text-xs mt-3 text-center ${styles.authMutedText}`}>
                   Поддержка:{" "}
                   <a
                     href="https://t.me/SeeeAppBot"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:text-white/90"
+                    className={styles.authInlineLink}
                   >
                     Telegram
                   </a>

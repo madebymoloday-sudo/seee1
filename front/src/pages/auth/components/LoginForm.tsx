@@ -16,6 +16,7 @@ import { observer } from "mobx-react-lite";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import styles from "../LoginPage.module.css";
 
 interface LoginFormProps {
   onSwitchToRegister?: () => void;
@@ -65,7 +66,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
 
       <FormField>
         <FormItem>
-          <FormLabel htmlFor="email" className="text-white/90">
+          <FormLabel htmlFor="email" className={styles.authLabel}>
             Email
           </FormLabel>
           <Input
@@ -106,14 +107,14 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             )}
           />
           {errors.password?.message ? (
-            <p id="password-error" className="text-sm font-medium text-red-400 dark:text-red-300">
+            <p id="password-error" className="text-sm font-medium text-red-200">
               {errors.password.message}
             </p>
           ) : null}
           <div className="pt-0.5 text-right">
             <Link
               to="/forgot-password"
-              className="text-sm font-medium text-white/90 hover:text-white underline underline-offset-2 transition-colors"
+              className={styles.authInlineLink}
             >
               Забыли пароль?
             </Link>
@@ -124,7 +125,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
       <div className="flex gap-3">
         <Button 
           type="submit" 
-          className="flex-1 bg-white/14 hover:bg-white/18 text-white border border-white/22"
+          className={`flex-1 bg-white/14 hover:bg-white/18 border border-white/22 ${styles.authButton}`}
           disabled={isLoading}
         >
           {isLoading ? "Вход..." : "Войти"}
@@ -134,7 +135,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             type="button"
             onClick={onSwitchToRegister}
             variant="outline"
-            className="flex-1 bg-white/10 hover:bg-white/14 text-white border border-white/18"
+            className={`flex-1 bg-white/10 hover:bg-white/14 border border-white/18 ${styles.authButton}`}
           >
             Регистрация
           </Button>
@@ -146,7 +147,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
           <span className="w-full border-t border-white/25" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-transparent px-2 text-white/60">
+          <span className={`bg-transparent px-2 ${styles.authMutedText}`}>
             или
           </span>
         </div>
