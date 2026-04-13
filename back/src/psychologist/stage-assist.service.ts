@@ -218,6 +218,7 @@ export class StageAssistService {
       '1a. reaction должен опираться на конкретику ответа пользователя. Ссылайся на его ситуацию, эмоцию, мысль или вывод, а не пиши обезличенные шаблоны.',
       '1b. Не повторяй одни и те же вводные вроде "давай попробуем подробнее разобраться", если уже есть конкретный контекст. Лучше коротко отзеркаль суть и переведи к следующему шагу.',
       '2. Если ответ слишком широкий, абстрактный, не по теме или не помогает двигаться дальше, верни decision=clarify.',
+      '2a. Если ответ прямо отвечает на вопрос, даже коротко, по умолчанию выбирай advance. Не задавай лишних уточнений там, где уже есть рабочий смысл.',
       '3. Максимум два уточнения на шаг. Если пользователь уже получил два уточнения или нажал skipRequested=true, обычно выбирай advance и не зацикливайся.',
       '4. На шаге 4 нормализуй причины в короткие самостоятельные мысли/идеи в отдельных строках без маркеров списка.',
       '5. На шаге 5 речь всегда о том, откуда к человеку пришла мысль/идея, а не о причинах из шага 4.',
@@ -225,7 +226,7 @@ export class StageAssistService {
       '7. На шаге 7 нужны эмоции, состояния и внутренние переживания.',
       '8. На шаге 8 нужны практические последствия: действия, поведение, потери, откладывание, сон, работа, деньги, отношения и т.д.',
       '9. На шаге 9 важно, чтобы пользователь оценил мысль: нужна она ему или нет.',
-      '10. Перед шагом 10 обычно полезно мягко рекомендовать "Разобраться глубже", если у человека уже есть несколько причин или заметные последствия.',
+      '10. Перед шагом 10 обычно полезно мягко рекомендовать "Продолжить разбор", если у человека уже есть несколько причин или заметные последствия.',
       '11. Не ставь диагнозы, не дави и не обесценивай пользователя.',
     ].join('\n');
   }
@@ -313,7 +314,7 @@ export class StageAssistService {
   private getStageGoal(step: number): string {
     switch (step) {
       case 1:
-        return 'Понять, описал ли пользователь конкретную ситуацию, а не только тему одним словом.';
+        return 'Понять, описал ли пользователь конкретную ситуацию. Если он уже назвал понятный контекст, не требуй лишней детализации.';
       case 2:
         return 'Вытащить эмоцию или внутреннее состояние, которое вызывает ситуация.';
       case 3:
@@ -323,7 +324,7 @@ export class StageAssistService {
       case 5:
         return 'Выяснить, от кого или откуда человеку пришла сама мысль.';
       case 6:
-        return 'Понять, какую выгоду для себя мог получать источник мысли.';
+        return 'Понять, какую личную выгоду для себя мог получать источник мысли, а не просто его добрые намерения.';
       case 7:
         return 'Определить эмоциональные последствия этой мысли.';
       case 8:
@@ -413,7 +414,7 @@ export class StageAssistService {
 
     switch (step) {
       case 1:
-        if (this.looksLikeConcreteSituation(answer)) {
+        if (this.looksLikeConcreteSituation(answer) || answer.length >= 8) {
           return {
             decision: 'advance',
             normalizedAnswer: answer,
@@ -429,7 +430,7 @@ export class StageAssistService {
             'Что именно сейчас происходит с этой темой в вашей жизни? Опишите коротко саму ситуацию, которую мы разбираем.',
         };
       case 2:
-        if (this.looksLikeEmotion(answer)) {
+        if (this.looksLikeEmotion(answer) || answer.length >= 4) {
           return {
             decision: 'advance',
             normalizedAnswer: answer,
@@ -445,7 +446,7 @@ export class StageAssistService {
             'Что ближе всего к вашему состоянию: тревога, страх, злость, стыд, грусть, обида, апатия, радость или что-то ещё?',
         };
       case 3:
-        if (this.looksLikeThought(answer)) {
+        if (this.looksLikeThought(answer) || answer.length >= 6) {
           return {
             decision: 'advance',
             normalizedAnswer: answer,
@@ -462,7 +463,7 @@ export class StageAssistService {
         };
       case 4: {
         const reasons = this.normalizeReasons(answer);
-        if (reasons.length >= 2 || answer.length >= 32) {
+        if (reasons.length >= 1 || answer.length >= 12) {
           return {
             decision: 'advance',
             normalizedAnswer: reasons.join('\n') || answer,
@@ -479,7 +480,7 @@ export class StageAssistService {
         };
       }
       case 5:
-        if (answer.length >= 3) {
+        if (answer.length >= 2) {
           return {
             decision: 'advance',
             normalizedAnswer: answer,
@@ -492,11 +493,11 @@ export class StageAssistService {
           reaction:
             'Не всегда получается сразу вспомнить, откуда пришла такая мысль, и это нормально.',
           followUpQuestion:
-            'Когда вы впервые начали так думать? С кем это может быть связано: с родителями, партнёром, обществом, работой, школой, религией, вами самими или с каким-то конкретным событием?',
+            'Когда вы впервые начали так думать? Кто именно это внедрял или повторял: мама, папа, партнёр, школа, общество, вы сами или какой-то конкретный человек?',
         };
       case 6:
         if (
-          answer.length >= 10 &&
+          answer.length >= 4 &&
           (!this.hasOnlyPositiveIntent(answer) || params.clarificationCount > 0)
         ) {
           return {
@@ -514,7 +515,7 @@ export class StageAssistService {
             'Если посмотреть не только на добрые намерения, а на выгоду для источника, что эта мысль могла ему давать: контроль, послушание, удобство, спокойствие, экономию сил, возможность влиять на вас?',
         };
       case 7:
-        if (this.looksLikeEmotion(answer)) {
+        if (this.looksLikeEmotion(answer) || answer.length >= 4) {
           return {
             decision: 'advance',
             normalizedAnswer: answer,
@@ -530,7 +531,7 @@ export class StageAssistService {
             'Что вы чувствуете из-за этой мысли внутри: тревогу, стыд, злость, вину, обиду, грусть, апатию, бессилие, напряжение или что-то ещё?',
         };
       case 8:
-        if (this.looksLikePracticalEffect(answer)) {
+        if (this.looksLikePracticalEffect(answer) || answer.length >= 8) {
           return {
             decision: 'advance',
             normalizedAnswer: answer,

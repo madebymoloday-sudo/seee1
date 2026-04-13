@@ -8,11 +8,19 @@ interface FeedbackModalProps {
   isOpen: boolean;
   onClose: () => void;
   sessionId?: string;
+  situationTitle?: string;
+  thoughtTitle?: string;
 }
 
 type TabType = "feedback" | "error";
 
-const FeedbackModal = ({ isOpen, onClose, sessionId }: FeedbackModalProps) => {
+const FeedbackModal = ({
+  isOpen,
+  onClose,
+  sessionId,
+  situationTitle,
+  thoughtTitle,
+}: FeedbackModalProps) => {
   const [activeTab, setActiveTab] = useState<TabType>("feedback");
   
   // Ошибка
@@ -88,7 +96,10 @@ const FeedbackModal = ({ isOpen, onClose, sessionId }: FeedbackModalProps) => {
     
     const description = [
       "Тип: Отзыв",
-      `Расскажите о себе: ${feedbackAbout}`,
+      sessionId
+        ? `Разбираемая ситуация: ${situationTitle?.trim() || '—'}`
+        : `Расскажите о себе: ${feedbackAbout}`,
+      sessionId ? `Разбираемая мысль: ${thoughtTitle?.trim() || '—'}` : "",
       `Ожидания: ${feedbackExpectations}`,
       `Сбылись или нет: ${feedbackMet}`,
       `Как было на самом деле: ${feedbackReality}`,
@@ -176,16 +187,26 @@ const FeedbackModal = ({ isOpen, onClose, sessionId }: FeedbackModalProps) => {
         <div className={styles.content}>
           {activeTab === "feedback" ? (
             <form onSubmit={handleFeedbackSubmit} className={styles.form}>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>Расскажите о себе</label>
-                <textarea
-                  value={feedbackAbout}
-                  onChange={(e) => setFeedbackAbout(e.target.value)}
-                  className={styles.textarea}
-                  rows={3}
-                  required
-                />
-              </div>
+              {sessionId ? (
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Контекст разбора</label>
+                  <div className={styles.textarea}>
+                    <p><strong>Ситуация:</strong> {situationTitle?.trim() || "—"}</p>
+                    <p><strong>Мысль:</strong> {thoughtTitle?.trim() || "—"}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Расскажите о себе</label>
+                  <textarea
+                    value={feedbackAbout}
+                    onChange={(e) => setFeedbackAbout(e.target.value)}
+                    className={styles.textarea}
+                    rows={3}
+                    required
+                  />
+                </div>
+              )}
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>Какие у вас были ожидания?</label>

@@ -43,23 +43,6 @@
   gap: 0.45rem;
 }
 
-.legend {
-  max-width: 1200px;
-  margin: 0 auto 1.25rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  color: #425066;
-  font-size: 0.9rem;
-}
-
-.legend span {
-  padding: 0.5rem 0.8rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.68);
-  border: 1px solid rgba(133, 160, 196, 0.22);
-}
-
 .canvas {
   max-width: 1400px;
   margin: 0 auto;
@@ -315,6 +298,87 @@
   gap: 0.5rem;
   color: #385070;
   font-weight: 600;
+}
+
+:global(.dark) .page,
+:global(html.dark) .page {
+  background:
+    radial-gradient(circle at top, rgba(117, 187, 255, 0.18), transparent 24%),
+    linear-gradient(180deg, #08111d 0%, #0d1726 100%);
+}
+
+:global(.dark) .title,
+:global(.dark) .subtitle,
+:global(.dark) .emptyState,
+:global(html.dark) .title,
+:global(html.dark) .subtitle,
+:global(html.dark) .emptyState {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+:global(.dark) .treeList::before,
+:global(.dark) .treeNode::before,
+:global(.dark) .treeNode::after,
+:global(html.dark) .treeList::before,
+:global(html.dark) .treeNode::before,
+:global(html.dark) .treeNode::after {
+  background: rgba(148, 163, 184, 0.45);
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+:global(.dark) .nodeCard,
+:global(.dark) .addCard,
+:global(.dark) .emptyAddCard,
+:global(html.dark) .nodeCard,
+:global(html.dark) .addCard,
+:global(html.dark) .emptyAddCard {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+:global(.dark) .nodeSituation,
+:global(html.dark) .nodeSituation {
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.22), rgba(15, 23, 42, 0.92));
+}
+
+:global(.dark) .nodeEmotion,
+:global(html.dark) .nodeEmotion {
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.2), rgba(15, 23, 42, 0.92));
+}
+
+:global(.dark) .nodeThought,
+:global(html.dark) .nodeThought {
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.22), rgba(15, 23, 42, 0.92));
+}
+
+:global(.dark) .nodeMain,
+:global(.dark) .nodeTypeLabel,
+:global(.dark) .nodeTitle,
+:global(.dark) .nodeDescription,
+:global(.dark) .nodeChildCount,
+:global(.dark) .nodeCoins,
+:global(.dark) .nodeMenuItem,
+:global(html.dark) .nodeMain,
+:global(html.dark) .nodeTypeLabel,
+:global(html.dark) .nodeTitle,
+:global(html.dark) .nodeDescription,
+:global(html.dark) .nodeChildCount,
+:global(html.dark) .nodeCoins,
+:global(html.dark) .nodeMenuItem {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+:global(.dark) .iconButton,
+:global(html.dark) .iconButton {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+:global(.dark) .nodeMenu,
+:global(html.dark) .nodeMenu {
+  background: rgba(15, 23, 42, 0.96);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .emptyAddCard {

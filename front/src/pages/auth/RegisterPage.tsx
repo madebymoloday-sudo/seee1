@@ -134,7 +134,7 @@ const RegisterPage = observer(() => {
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label htmlFor="name" className={`block mb-2 ${styles.label}`}>
+            <label htmlFor="name" className={`block mb-2 ${styles.authLabel}`}>
               Имя
             </label>
             <Input
@@ -144,13 +144,13 @@ const RegisterPage = observer(() => {
               onChange={(e) => setName(e.target.value)}
               placeholder="Ваше имя"
               autoComplete="name"
-              className={styles.input}
+              className={styles.authInput}
               required
             />
           </div>
 
           <div>
-            <label htmlFor="email" className={`block mb-2 ${styles.label}`}>
+            <label htmlFor="email" className={`block mb-2 ${styles.authLabel}`}>
               Email
             </label>
             <Input
@@ -160,13 +160,13 @@ const RegisterPage = observer(() => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
               autoComplete="email"
-              className={styles.input}
+              className={styles.authInput}
               required
             />
           </div>
 
           <div>
-            <label htmlFor="password" className={`block mb-2 ${styles.label}`}>
+            <label htmlFor="password" className={`block mb-2 ${styles.authLabel}`}>
               Пароль
             </label>
             <div className="relative">
@@ -177,14 +177,14 @@ const RegisterPage = observer(() => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Пароль (минимум 6 символов)"
                 autoComplete="new-password"
-                className={`${styles.input} pr-10`}
+                className={`${styles.authInput} pr-10`}
                 required
                 minLength={6}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 hover:text-white"
+                className={styles.authIconButton}
                 title={showPassword ? "Скрыть пароль" : "Показать пароль"}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -193,7 +193,7 @@ const RegisterPage = observer(() => {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className={`block mb-2 ${styles.label}`}>
+            <label htmlFor="confirmPassword" className={`block mb-2 ${styles.authLabel}`}>
               Подтвердите пароль
             </label>
             <div className="relative">
@@ -204,14 +204,14 @@ const RegisterPage = observer(() => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Повторите пароль"
                 autoComplete="new-password"
-                className={`${styles.input} pr-10`}
+                className={`${styles.authInput} pr-10`}
                 required
                 minLength={6}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 hover:text-white"
+                className={styles.authIconButton}
                 title={showPassword ? "Скрыть пароль" : "Показать пароль"}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -233,7 +233,7 @@ const RegisterPage = observer(() => {
             Уже есть аккаунт?{" "}
             <button
               onClick={() => navigate("/login")}
-              className="underline hover:text-white/80"
+              className={styles.authInlineButton}
             >
               Войти
             </button>

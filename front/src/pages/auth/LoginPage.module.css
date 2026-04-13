@@ -141,6 +141,35 @@
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
 }
 
+.authInput,
+.authInput:hover,
+.authInput:focus,
+.authInput:active {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  color: rgba(255, 255, 255, 0.96) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.96) !important;
+  caret-color: rgba(255, 255, 255, 0.96) !important;
+}
+
+.authInput[type="password"] {
+  color: rgba(255, 255, 255, 0.96) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.96) !important;
+}
+
+.authIconButton,
+.authIconButton:hover,
+.authIconButton:focus-visible,
+.authIconButton:active {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.96) !important;
+}
+
 .authButton,
 .authButton:hover,
 .authButton:focus-visible,

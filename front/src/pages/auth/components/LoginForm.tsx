@@ -91,7 +91,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
 
       <FormField>
         <FormItem className="space-y-1.5">
-          <FormLabel htmlFor="password" className="text-white/90">
+          <FormLabel htmlFor="password" className={styles.authLabel}>
             Пароль
           </FormLabel>
           <Input
@@ -102,7 +102,7 @@ const LoginForm = observer(({ onSwitchToRegister }: LoginFormProps) => {
             aria-invalid={errors.password ? "true" : "false"}
             aria-describedby={errors.password?.message ? "password-error" : undefined}
             className={cn(
-              "bg-transparent border-white/24 text-white placeholder:text-white/60 focus-visible:ring-white/40",
+              `bg-transparent border-white/24 text-white placeholder:text-white/60 focus-visible:ring-white/40 ${styles.authInput}`,
               errors.password && "border-red-400 focus-visible:ring-red-400"
             )}
           />

@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import chatStyles from "./ChatWindow.module.css";
+import FeedbackModal from "./FeedbackModal";
 import MessageInput from "./MessageInput";
 import styles from "./StepDialogWindow.module.css";
 
@@ -910,8 +911,8 @@ function hasMultipleSources(source: string): boolean {
 function buildSourceBenefitQuestion(thought: string, sourceAnswer?: string): string {
   if (!sourceAnswer) {
     return thought
-      ? `Как думаете, с какой выгодой для себя другой человек или система могли передавать вам мысль «${thought}»?`
-      : `Как думаете, с какой выгодой для себя другой человек или система могли передавать вам эту мысль?`;
+      ? `С какой эгоистичной целью другой человек или система могли внедрять вам мысль «${thought}»? Не описывайте их мотивы по отношению к вам, опишите, в чём была их личная выгода говорить вам такое.`
+      : `С какой эгоистичной целью другой человек или система могли внедрять вам эту мысль? Не описывайте их мотивы по отношению к вам, опишите, в чём была их личная выгода говорить вам такое.`;
   }
 
   if (hasMultipleSources(sourceAnswer)) {
@@ -921,8 +922,8 @@ function buildSourceBenefitQuestion(thought: string, sourceAnswer?: string): str
   }
 
   return thought
-    ? `Если взять названный вами источник — ${sourceAnswer}, — какую выгоду для себя он мог получать, когда передавал вам мысль «${thought}»?`
-    : `Если взять названный вами источник — ${sourceAnswer}, — какую выгоду для себя он мог получать, когда передавал вам эту мысль?`;
+    ? `С какой эгоистичной целью ${sourceAnswer} внедрял${/[ая]$/u.test(sourceAnswer) ? "а" : ""} вам мысль «${thought}»? Не описывайте мотивы по отношению к вам, опишите, в чём была личная выгода ${sourceAnswer} говорить вам такое.`
+    : `С какой эгоистичной целью ${sourceAnswer} внедрял${/[ая]$/u.test(sourceAnswer) ? "а" : ""} вам эту мысль? Не описывайте мотивы по отношению к вам, опишите, в чём была личная выгода ${sourceAnswer} говорить вам такое.`;
 }
 
 function summarizeStepAnswer(value?: string): string {
@@ -1604,6 +1605,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [ideaEditorTarget, setIdeaEditorTarget] = useState<IdeaEditorTarget | null>(
     null,
   );
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const timersRef = useRef<number[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const ideaEditorRef = useRef<HTMLTextAreaElement | null>(null);
@@ -1690,9 +1692,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return true;
   })();
 
-  const skipButtonLabel = hasClarificationPrompt
-    ? "Не знаю, как описать"
-    : "Пропустить →";
+  const skipButtonLabel = "Пропустить →";
 
   const showBottomEditorActions =
     isTextAnswerView(view) && view.kind !== "deepPick";
@@ -1730,6 +1730,37 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const goForward = () => {
     if (!canGoForward) return;
     onAnswer(savedCurrentAnswer);
+  };
+
+  const persistSessionStateNow = async () => {
+    if (isDraftSession) return;
+
+    const payload = {
+      dialogStateJson: state,
+      sessionKind:
+        getSessionKind(session.id) === "thought" || session.sessionKind === "thought"
+          ? "thought"
+          : null,
+      notes: getSessionNotes(session.id) ?? session.notes ?? null,
+    };
+    const serialized = JSON.stringify(payload);
+
+    if (persistStateTimeoutRef.current) {
+      window.clearTimeout(persistStateTimeoutRef.current);
+      persistStateTimeoutRef.current = null;
+    }
+
+    await apiAgent.patch(`/sessions/${session.id}`, payload);
+    lastPersistedStateRef.current = serialized;
+  };
+
+  const openFinishSession = async () => {
+    try {
+      await persistSessionStateNow();
+    } catch (error) {
+      console.error("Failed to persist session before finish", error);
+    }
+    setIsFeedbackOpen(true);
   };
 
   useEffect(() => {
@@ -3106,8 +3137,16 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               className={`${styles.choiceButton} ${chatStyles.glassButton}`}
               variant="outline"
               onClick={goDeepPick}
+              disabled={!canDeepNow}
             >
-              Разобраться глубже
+              Продолжить разбор
+            </Button>
+            <Button
+              className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+              variant="outline"
+              onClick={() => void openFinishSession()}
+            >
+              Завершить сессию
             </Button>
           </div>
         )}
@@ -3125,18 +3164,28 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
         {showSolveChoice && (
           <div className={styles.choiceRow}>
-            <Button
-              className={`${styles.choiceButton} ${chatStyles.glassButton}`}
-              variant="outline"
-              onClick={goDeepPick}
-            >
-              Разобраться глубже
-            </Button>
+            {canDeepNow ? (
+              <Button
+                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+                variant="outline"
+                onClick={goDeepPick}
+              >
+                Продолжить разбор
+              </Button>
+            ) : (
+              <Button
+                className={`${styles.choiceButton} ${chatStyles.glassButton}`}
+                variant="outline"
+                onClick={() => void openFinishSession()}
+              >
+                Закончить сессию
+              </Button>
+            )}
             <Button
               className={`${styles.choiceButton} ${chatStyles.glassButton}`}
               onClick={openAddToList}
             >
-              Добавить в список
+              Добавить мысль
             </Button>
           </div>
         )}
@@ -3259,6 +3308,18 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           </div>
         </div>
       )}
+
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        sessionId={session.id}
+        situationTitle={sanitizeThoughtValue(state.answers["core:situation:1"] || state.situationText)}
+        thoughtTitle={sanitizeThoughtValue(
+          getAnswerValue(state, "core:thought:3") ||
+            state.answers["core:situation:3"] ||
+            state.importantText,
+        )}
+      />
 
       {/* Модалка «Список идей» — кликабельные идеи, выбор запускает этапы по этой идее */}
       {isIdeasModalOpen && (

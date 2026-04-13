@@ -624,7 +624,7 @@ const SessionsCollectionPage = observer(() => {
   };
 
   const handleOpenArchiveGallery = () => {
-    setIsArchivistWelcomeVisible(false);
+    navigate("/map");
   };
 
   const closeSortMenu = () => {
@@ -855,7 +855,7 @@ const SessionsCollectionPage = observer(() => {
     } else {
       options.push({
         id: "archive",
-        label: "Открыть архив сессий",
+        label: "Открыть нейрокарту",
         action: "open_archive",
       });
     }
@@ -892,7 +892,7 @@ const SessionsCollectionPage = observer(() => {
     } else {
       options.push({
         id: "archive_from_context",
-        label: "Открыть архив сессий",
+        label: "Открыть нейрокарту",
         action: "open_archive",
       });
     }
@@ -967,7 +967,7 @@ const SessionsCollectionPage = observer(() => {
           },
           {
             id: "open_archive_latest",
-            label: "Открыть архив сессий",
+            label: "Открыть нейрокарту",
             action: "open_archive",
           },
           {
@@ -1123,7 +1123,7 @@ const SessionsCollectionPage = observer(() => {
           );
           setArchivistOptions([
             { id: "intro_after_daily", label: "Понял, показать как всё работает", action: "intro" },
-            { id: "archive_after_daily", label: "Открыть архив сессий", action: "open_archive" },
+            { id: "archive_after_daily", label: "Открыть нейрокарту", action: "open_archive" },
             { id: "new_after_daily", label: "Создать новую сессию", action: "new_session" },
           ]);
         } catch (error: any) {
@@ -1145,7 +1145,7 @@ const SessionsCollectionPage = observer(() => {
       );
       setArchivistOptions([
         { id: "new_session", label: "Создать новую сессию", action: "new_session" },
-        { id: "open_archive_after_intro", label: "Открыть архив сессий", action: "open_archive" },
+        { id: "open_archive_after_intro", label: "Открыть нейрокарту", action: "open_archive" },
         { id: "custom_after_intro", label: "Написать ответ самостоятельно", action: "custom_input" },
       ]);
       return;
@@ -1173,10 +1173,10 @@ const SessionsCollectionPage = observer(() => {
 
     if (option.action === "telegram_done") {
       setArchivistMessage(
-        "Отлично. Тогда давай двигаться дальше: можешь открыть архив сессий, создать новую сессию или написать мне вопрос своими словами."
+        "Отлично. Тогда давай двигаться дальше: можешь открыть нейрокарту, создать новую сессию или написать мне вопрос своими словами."
       );
       setArchivistOptions([
-        { id: "archive_after_tg", label: "Открыть архив сессий", action: "open_archive" },
+        { id: "archive_after_tg", label: "Открыть нейрокарту", action: "open_archive" },
         { id: "new_after_tg", label: "Создать новую сессию", action: "new_session" },
         { id: "custom_after_tg_done", label: "Написать ответ самостоятельно", action: "custom_input" },
       ]);
@@ -1234,8 +1234,8 @@ const SessionsCollectionPage = observer(() => {
     }
 
     if (normalized.includes("архив") || normalized.includes("сесс")) {
-      setArchivistMessage("Открываю архив сессий. Там ты увидишь все папки, отложенные карточки и рекомендованные разборы.");
-      setArchivistOptions([{ id: "go_archive_from_text", label: "Перейти в архив сессий", action: "open_archive" }]);
+      setArchivistMessage("Открываю нейрокарту. Там ты увидишь ситуации, эмоции, мысли и все цепочки разбора.");
+      setArchivistOptions([{ id: "go_archive_from_text", label: "Перейти в нейрокарту", action: "open_archive" }]);
       return;
     }
 
@@ -1252,7 +1252,7 @@ const SessionsCollectionPage = observer(() => {
     }
 
     setArchivistMessage(
-      "Я понял запрос. Прямо сейчас лучше всего помочь тебе через архив сессий, новую сессию или Telegram-привязку. Выбери ближайший вариант, и я продолжу."
+      "Я понял запрос. Прямо сейчас лучше всего помочь тебе через нейрокарту, новую сессию или Telegram-привязку. Выбери ближайший вариант, и я продолжу."
     );
     setArchivistOptions(buildArchivistRootOptions());
   };
@@ -1319,9 +1319,9 @@ const SessionsCollectionPage = observer(() => {
               type="button"
               className={styles.archivistArchiveButton}
               onClick={handleOpenArchiveGallery}
-              aria-label="Открыть архив сессий"
+              aria-label="Открыть нейрокарту"
             >
-              <img src="/archivist-source-drawer-only.png" alt="Архив сессий" className={styles.archivistDrawer} />
+              <img src="/archivist-source-drawer-only.png" alt="Нейрокарта" className={styles.archivistDrawer} />
             </button>
           </div>
         </div>

@@ -8,7 +8,7 @@ import ReferralSystem from "./components/ReferralSystem";
 import MyFeedback from "./components/MyFeedback";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import FeedbackModal from "../sessions/components/FeedbackModal";
 import { useAuth } from "@/hooks/useAuth";
 import apiAgent from "@/lib/api";
@@ -52,6 +52,10 @@ const CabinetPage = observer(() => {
     navigate("/map");
   };
 
+  const handleSessionsGalleryClick = () => {
+    navigate("/sessions/list");
+  };
+
   const handleManagersClick = () => {
     navigate("/cabinet/founder");
   };
@@ -81,6 +85,18 @@ const CabinetPage = observer(() => {
     const visibleCount = Math.min(7, Math.max(3, streak || 3));
     return Array.from({ length: visibleCount }, (_, index) => index < streak);
   }, [profile?.dailyStreak]);
+
+  useEffect(() => {
+    const syncProfile = () => {
+      void mutate(getAuthControllerGetMeKey());
+    };
+    window.addEventListener("seee:streak-updated", syncProfile as EventListener);
+    window.addEventListener("seee:coins-updated", syncProfile as EventListener);
+    return () => {
+      window.removeEventListener("seee:streak-updated", syncProfile as EventListener);
+      window.removeEventListener("seee:coins-updated", syncProfile as EventListener);
+    };
+  }, [mutate]);
 
   const handleCancelSubscription = async () => {
     if (!window.confirm("Точно отменить подписку? Доступ к приложению будет заблокирован.")) {
@@ -136,7 +152,10 @@ const CabinetPage = observer(() => {
           <h2 className="mb-3 text-lg font-semibold">Разделы</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <Button variant="outline" onClick={handleNeurocardClick}>
-              Нейрокарты
+              Нейрокарта
+            </Button>
+            <Button variant="outline" onClick={handleSessionsGalleryClick}>
+              Галерея сессий
             </Button>
             {profile?.accountType === "MANAGER" ? (
               <Button variant="outline" onClick={handleManagersClick}>

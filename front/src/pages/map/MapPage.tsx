@@ -209,7 +209,7 @@ const MapPage = observer(() => {
       setSessions(sessionItems);
     } catch (error) {
       console.error(error);
-      toast.error("Не удалось загрузить mindmap");
+      toast.error("Не удалось загрузить нейрокарту");
     } finally {
       setLoading(false);
     }
@@ -520,7 +520,7 @@ const MapPage = observer(() => {
             title,
             idea: title,
             parentId: modal.parent.id,
-            level: 3,
+            level: levelForNode(modal.parent) + 1,
             displayOrder: index,
             sourceSessionId: session.id,
             isMuted: false,
@@ -626,6 +626,9 @@ const MapPage = observer(() => {
             <button type="button" className={styles.nodeMenuItem} onClick={() => void openThoughtSession(node)}>
               Начать разбирать эту мысль
             </button>
+            <button type="button" className={styles.nodeMenuItem} onClick={() => openCreateThoughts(node)}>
+              Добавить ещё одну мысль
+            </button>
             <button type="button" className={styles.nodeMenuItem} onClick={() => openEditThought(node)}>
               Редактировать
             </button>
@@ -690,7 +693,7 @@ const MapPage = observer(() => {
         openCreateEmotions(parent);
         return;
       }
-      if (parent.resolvedType === "EMOTION") {
+      if (parent.resolvedType === "EMOTION" || parent.resolvedType === "THOUGHT") {
         openCreateThoughts(parent);
       }
     };
@@ -701,8 +704,6 @@ const MapPage = observer(() => {
         : level === 2
           ? "Добавить эмоцию"
           : "Добавить мысль";
-
-    if (level > 3) return null;
 
     return (
       <li className={styles.treeNode}>
@@ -780,7 +781,7 @@ const MapPage = observer(() => {
           {renderMenu(node)}
         </div>
 
-        {showChildren && (node.children.length > 0 || node.resolvedType !== "THOUGHT") ? (
+        {showChildren ? (
           <ul className={styles.treeList}>
             {node.children.map(renderNode)}
             {renderAddPlaceholder(node)}
@@ -797,10 +798,10 @@ const MapPage = observer(() => {
           <div>
             <h1 className={styles.title}>
               <MapIcon className={styles.titleIcon} />
-              Mindmap
+              Нейрокарта
             </h1>
             <p className={styles.subtitle}>
-              Ситуации, эмоции, мысли и глубокие цепочки разбора в одном дереве.
+              Ситуации, эмоции, мысли и цепочки разбора в одном дереве.
             </p>
           </div>
           <Button onClick={openCreateSituation} className={styles.primaryButton}>
@@ -809,15 +810,9 @@ const MapPage = observer(() => {
           </Button>
         </div>
 
-        <div className={styles.legend}>
-          <span><strong>1 уровень</strong> Ситуации</span>
-          <span><strong>2 уровень</strong> Эмоции</span>
-          <span><strong>3+ уровень</strong> Мысли и идеи</span>
-        </div>
-
         <div className={styles.canvas}>
           {loading ? (
-            <div className={styles.emptyState}>Загружаю mindmap...</div>
+            <div className={styles.emptyState}>Загружаю нейрокарту...</div>
           ) : tree.length === 0 ? (
             <div className={styles.emptyState}>
               <button type="button" className={styles.emptyAddCard} onClick={openCreateSituation}>
