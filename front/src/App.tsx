@@ -27,8 +27,16 @@ const AppContent = observer(() => {
   // Показываем загрузку пока проверяем авторизацию
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div>Загрузка...</div>
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <img
+            src="/seee-logo-128.png"
+            alt="Seee"
+            className="h-16 w-16 rounded-full bg-white/90 shadow-sm"
+            draggable={false}
+          />
+          <div className="text-2xl font-semibold tracking-tight">Cииикундочку!</div>
+        </div>
       </div>
     );
   }
