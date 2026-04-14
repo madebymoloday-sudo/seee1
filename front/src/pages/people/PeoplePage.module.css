@@ -287,11 +287,11 @@
   min-height: 0;
   overflow-y: auto;
   padding: 0.8rem;
-  padding-bottom: calc(0.8rem + var(--bottom-nav-height) + 5rem);
+  padding-bottom: 0.8rem;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  scroll-padding-bottom: calc(0.8rem + var(--bottom-nav-height) + 5rem);
+  scroll-padding-bottom: 0.8rem;
 }
 
 .questionCard {
@@ -347,9 +347,8 @@
 }
 
 .composer {
-  position: sticky;
-  bottom: calc(var(--bottom-nav-height) + 0.35rem);
-  margin-top: 0;
+  position: relative;
+  margin-top: auto;
   flex-shrink: 0;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   padding: 0.64rem 0.72rem;
@@ -500,8 +499,8 @@
 
   .messages {
     padding: 0.62rem;
-    padding-bottom: calc(0.62rem + var(--bottom-nav-height) + 4.7rem);
-    scroll-padding-bottom: calc(0.62rem + var(--bottom-nav-height) + 4.7rem);
+    padding-bottom: 0.62rem;
+    scroll-padding-bottom: 0.62rem;
   }
 
   .bubble {
@@ -514,7 +513,6 @@
   }
 
   .composer {
-    bottom: calc(var(--bottom-nav-height) + 0.35rem);
     padding: 0.5rem 0.55rem max(0.5rem, env(safe-area-inset-bottom));
     gap: 0.4rem;
   }
