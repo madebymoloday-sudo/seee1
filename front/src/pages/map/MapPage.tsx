@@ -5,6 +5,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import BottomNavigation from "../sessions/components/BottomNavigation";
 import type { SessionResponseDto } from "@/api/schemas";
 import apiAgent from "@/lib/api";
 import { parseImportantOptions } from "@/lib/sessionUtils";
@@ -828,6 +829,14 @@ const MapPage = observer(() => {
           )}
         </div>
       </div>
+
+      <BottomNavigation
+        onArchivist={() => navigate("/sessions/list")}
+        onCabinet={() => navigate("/cabinet")}
+        onRating={() => navigate("/rating")}
+        onPeople={() => navigate("/people")}
+        onMindMap={() => navigate("/map")}
+      />
 
       {modal && (
         <div className={styles.modalOverlay} onClick={closeModal}>
