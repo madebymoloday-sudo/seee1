@@ -187,6 +187,7 @@ const MapPage = observer(() => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [inspectedNode, setInspectedNode] = useState<MindNode | null>(null);
   const [modal, setModal] = useState<ModalState>(null);
   const [situationTitle, setSituationTitle] = useState("");
   const [situationDescription, setSituationDescription] = useState("");
@@ -416,6 +417,10 @@ const MapPage = observer(() => {
   const closeModal = () => {
     setModal(null);
     setThoughtHint("");
+  };
+
+  const closeNodeDetails = () => {
+    setInspectedNode(null);
   };
 
   const submitSituation = async () => {
@@ -733,13 +738,7 @@ const MapPage = observer(() => {
             <button
               type="button"
               className={styles.nodeMain}
-              onClick={() => {
-                if (node.resolvedType === "THOUGHT") {
-                  setActiveMenuId((prev) => (prev === node.id ? null : node.id));
-                  return;
-                }
-                setExpanded((prev) => ({ ...prev, [node.id]: !prev[node.id] }));
-              }}
+              onClick={() => setInspectedNode(node)}
             >
               <span className={styles.nodeTypeLabel}>
                 {node.resolvedType === "SITUATION"
@@ -837,6 +836,40 @@ const MapPage = observer(() => {
         onPeople={() => navigate("/people")}
         onMindMap={() => navigate("/map")}
       />
+
+      {inspectedNode && (
+        <div className={styles.modalOverlay} onClick={closeNodeDetails}>
+          <div className={styles.modalCard} onClick={(event) => event.stopPropagation()}>
+            <button type="button" className={styles.modalClose} onClick={closeNodeDetails}>
+              <X size={18} />
+            </button>
+            <h2 className={styles.modalTitle}>
+              {inspectedNode.resolvedType === "SITUATION"
+                ? "Ситуация"
+                : inspectedNode.resolvedType === "EMOTION"
+                  ? "Эмоция"
+                  : "Мысль"}
+            </h2>
+            <div className={styles.modalBody}>
+              <div className={styles.detailSection}>
+                <div className={styles.detailLabel}>Название</div>
+                <div className={styles.detailText}>{inspectedNode.resolvedTitle}</div>
+              </div>
+              {inspectedNode.description?.trim() ? (
+                <div className={styles.detailSection}>
+                  <div className={styles.detailLabel}>Полный текст</div>
+                  <div className={styles.detailText}>{inspectedNode.description}</div>
+                </div>
+              ) : null}
+            </div>
+            <div className={styles.modalFooter}>
+              <Button variant="outline" onClick={closeNodeDetails}>
+                Закрыть
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {modal && (
         <div className={styles.modalOverlay} onClick={closeModal}>
