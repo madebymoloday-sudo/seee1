@@ -610,6 +610,11 @@ export class StageAssistService {
     const emotion =
       this.getAnswerByStep(params.subject, params.answers, 2) || params.answer;
     const thought = this.getThoughtAnswer(params.subject, params.answers);
+    const currentAnswer =
+      params.answer ||
+      params.clarificationAnswers.at(-1) ||
+      params.stageAnswer ||
+      '';
     const situation =
       this.getAnswerByStep(params.subject, params.answers, 1) ||
       params.situationText ||
@@ -618,6 +623,7 @@ export class StageAssistService {
     const shortEmotion = this.quoteForReaction(emotion, 44);
     const shortThought = this.quoteForReaction(thought, 64);
     const shortSituation = this.quoteForReaction(situation, 72);
+    const shortCurrentAnswer = this.quoteForReaction(currentAnswer, 64);
 
     switch (previousStep) {
       case 1:
@@ -646,7 +652,9 @@ export class StageAssistService {
           ? `Так становится понятнее, как у вас закрепилась мысль ${shortThought}. Давайте теперь посмотрим, какую выгоду она могла давать источнику.`
           : 'Это помогает увидеть контекст, в котором мысль закрепилась. Давайте теперь посмотрим, какую выгоду она могла давать источнику.';
       case 6:
-        return 'Это важное наблюдение. Теперь посмотрим, что эта мысль делает с вами эмоционально.';
+        return shortCurrentAnswer
+          ? `Понял, здесь уже видна выгода ${shortCurrentAnswer}. Теперь посмотрим, какие эмоциональные последствия эта мысль вам приносит.`
+          : 'Понял, выгода для источника здесь уже обозначилась. Теперь посмотрим, какие эмоциональные последствия эта мысль вам приносит.';
       case 7:
         return shortEmotion
           ? `Спасибо, эмоциональный след ${shortEmotion} уже хорошо виден. Давайте посмотрим, как мысль влияет на вашу жизнь на практике.`
