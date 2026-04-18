@@ -46,9 +46,11 @@
 .canvas {
   max-width: 1400px;
   margin: 0 auto;
-  min-height: 60dvh;
+  min-height: calc(100dvh - 13rem);
   overflow-x: auto;
-  padding: 1rem 0 3rem;
+  overflow-y: auto;
+  padding: 1rem 12rem 24rem;
+  scroll-padding: 3rem 12rem 16rem;
 }
 
 .emptyState {
@@ -514,6 +516,12 @@
 
   .header {
     flex-direction: column;
+  }
+
+  .canvas {
+    min-height: calc(100dvh - 11rem);
+    padding: 1rem 3rem 16rem;
+    scroll-padding: 2rem 3rem 12rem;
   }
 
   .treeListRoot,
