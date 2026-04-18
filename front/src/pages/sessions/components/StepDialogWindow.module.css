@@ -756,7 +756,7 @@
 
 @media (min-width: 769px) {
   .messagesStage {
-    justify-content: center;
+    justify-content: flex-start;
     padding-top: 4.35rem;
     padding-bottom: 5.35rem;
     scroll-padding-bottom: 5.75rem;
