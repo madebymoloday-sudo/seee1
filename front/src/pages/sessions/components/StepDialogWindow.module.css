@@ -624,10 +624,11 @@
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: anywhere;
+  color: rgba(255, 255, 255, 0.96) !important;
 }
 
 .centeredUserBubble p {
-  color: inherit !important;
+  color: rgba(255, 255, 255, 0.96) !important;
 }
 
 :global(html.dark) .centeredUserBubble p {
