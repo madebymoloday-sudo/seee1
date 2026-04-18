@@ -595,11 +595,9 @@ export function awardCoinsForAnswer(
     sessionId,
     description: "Награда за принятый ответ",
   }).then((result) => {
-    if (result.awarded) {
-      const rewardedIds = getRewardedAnswerIds(sessionId);
-      if (!rewardedIds.includes(answerId)) {
-        setRewardedAnswerIds(sessionId, [...rewardedIds, answerId]);
-      }
+    const rewardedIds = getRewardedAnswerIds(sessionId);
+    if (!rewardedIds.includes(answerId)) {
+      setRewardedAnswerIds(sessionId, [...rewardedIds, answerId]);
     }
     return result;
   });
@@ -637,14 +635,12 @@ export function awardSessionBonus(
     sessionId,
     description: "Бонус за рекомендованную карточку",
   }).then((result) => {
-    if (result.awarded) {
-      const existingRewards = getSessionBonusRewards(sessionId);
-      if (!existingRewards.some((reward) => reward.id === safeBonusId)) {
-        setSessionBonusRewards(sessionId, [
-          ...existingRewards,
-          { id: safeBonusId, amount: safeAmount },
-        ]);
-      }
+    const existingRewards = getSessionBonusRewards(sessionId);
+    if (!existingRewards.some((reward) => reward.id === safeBonusId)) {
+      setSessionBonusRewards(sessionId, [
+        ...existingRewards,
+        { id: safeBonusId, amount: safeAmount },
+      ]);
     }
 
     return {

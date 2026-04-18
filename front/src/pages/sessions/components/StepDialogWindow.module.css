@@ -163,8 +163,7 @@
 }
 
 :global(:not(.dark)) .reasonsHint {
-  color: rgba(15, 23, 42, 0.7);
-  text-shadow: none;
+  color: rgba(255, 255, 255, 0.94);
 }
 
 :global(:not(.dark)) .reasonCard {
@@ -181,10 +180,13 @@
   background: rgba(255, 255, 255, 0.92) !important;
   border-color: rgba(15, 23, 42, 0.12) !important;
   color: rgba(15, 23, 42, 0.92) !important;
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.92) !important;
+  text-shadow: none !important;
 }
 
 :global(:not(.dark)) .reasonTextarea::placeholder {
   color: rgba(15, 23, 42, 0.45) !important;
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.45) !important;
 }
 
 :global(:not(.dark)) .deepMindMapHint {
@@ -649,6 +651,14 @@
   padding-right: 0;
   padding-bottom: 0.2rem !important;
   padding-left: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(16, 19, 15, 0.02) 0%,
+    rgba(16, 19, 15, 0.22) 18%,
+    rgba(16, 19, 15, 0.78) 100%
+  ) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.26) !important;
 }
 
 .inputAlignWrapper > div > div {
@@ -657,6 +667,25 @@
   width: calc(100% - 1.25rem);
   margin-left: auto;
   margin-right: auto;
+}
+
+.inputAlignWrapper textarea {
+  background: rgba(15, 23, 42, 0.62) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.95) !important;
+  text-shadow: none !important;
+}
+
+.inputAlignWrapper textarea::placeholder {
+  color: rgba(255, 255, 255, 0.58) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.58) !important;
+}
+
+.inputAlignWrapper textarea:focus {
+  background: rgba(15, 23, 42, 0.74) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12) !important;
 }
 
 @media (max-width: 768px) {
