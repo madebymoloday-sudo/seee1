@@ -841,7 +841,7 @@ const SessionsCollectionPage = observer(() => {
     const options: ArchivistOption[] = [
       {
         id: "intro",
-        label: "Разобраться, как работает приложение",
+        label: "Пройти обучение",
         action: "intro",
       },
     ];
@@ -862,11 +862,32 @@ const SessionsCollectionPage = observer(() => {
 
     options.push({
       id: "custom",
-      label: "Написать ответ самостоятельно",
+      label: "Написать Архивариусу",
       action: "custom_input",
     });
 
     return options;
+  };
+
+  const withArchivistTrainingOption = (
+    options: ArchivistOption[],
+  ): ArchivistOption[] => {
+    if (options.some((option) => option.action === "intro")) {
+      return options.map((option) =>
+        option.action === "intro"
+          ? { ...option, label: "Пройти обучение" }
+          : option,
+      );
+    }
+
+    return [
+      ...options,
+      {
+        id: "intro_always",
+        label: "Пройти обучение",
+        action: "intro",
+      },
+    ];
   };
 
   const buildArchivistContextOptions = (
@@ -899,11 +920,11 @@ const SessionsCollectionPage = observer(() => {
 
     options.push({
       id: "custom_from_context",
-      label: "Написать ответ самостоятельно",
+      label: "Написать Архивариусу",
       action: "custom_input",
     });
 
-    return options;
+    return withArchivistTrainingOption(options);
   };
 
   const buildAutoArchivistState = (
@@ -913,11 +934,11 @@ const SessionsCollectionPage = observer(() => {
       return {
         message:
           "Сначала скажи, сколько минут в день ты хочешь тратить на приложение. От этого будет зависеть твоя ежедневная задача и счётчик прогресса.",
-        options: [
+        options: withArchivistTrainingOption([
           { id: "daily_5", label: "5 минут в день", action: "set_daily_5" },
           { id: "daily_10", label: "10 минут в день", action: "set_daily_10" },
           { id: "daily_15", label: "15 минут в день", action: "set_daily_15" },
-        ],
+        ]),
       };
     }
 
@@ -958,7 +979,7 @@ const SessionsCollectionPage = observer(() => {
           toExplore.length > 0
             ? `Привет. Последнее, что ты разбирал(а), это «${latestTitle}». У тебя ещё есть ${toExplore.length} карточ${toExplore.length === 1 ? "ка" : toExplore.length > 1 && toExplore.length < 5 ? "ки" : "ек"} на продолжение, так что я бы рекомендовал либо вернуться к этой сессии, либо открыть архив и взять следующую тему.`
             : `Привет. Последнее, что ты разбирал(а), это «${latestTitle}». Я бы рекомендовал вернуться к этой сессии и продолжить разбор, если хочешь.`,
-        options: [
+        options: withArchivistTrainingOption([
           {
             id: "continue_latest_session",
             label: `Продолжить «${truncateLabel(latestTitle, 30)}»`,
@@ -972,17 +993,17 @@ const SessionsCollectionPage = observer(() => {
           },
           {
             id: "custom_latest",
-            label: "Написать ответ самостоятельно",
+            label: "Написать Архивариусу",
             action: "custom_input",
           },
-        ],
+        ]),
       };
     }
 
     return {
       message:
         "Привет, меня зовут Архивариус. Я помогу тебе разобраться с приложением, напомню о важных шагах и подскажу, что у тебя уже сохранено в архиве.",
-      options: buildArchivistRootOptions(),
+      options: withArchivistTrainingOption(buildArchivistRootOptions()),
     };
   };
 
@@ -1121,11 +1142,11 @@ const SessionsCollectionPage = observer(() => {
           setArchivistMessage(
             `${describeDailyPracticeGoal(minutes)} Я буду показывать прогресс дня, когда ты доведёшь линию до развилки, а потом подскажу, что делать дальше в приложении.`
           );
-          setArchivistOptions([
+          setArchivistOptions(withArchivistTrainingOption([
             { id: "intro_after_daily", label: "Понял, показать как всё работает", action: "intro" },
             { id: "archive_after_daily", label: "Открыть нейрокарту", action: "open_archive" },
             { id: "new_after_daily", label: "Создать новую сессию", action: "new_session" },
-          ]);
+          ]));
         } catch (error: any) {
           toast.error(error?.response?.data?.message || "Не удалось сохранить ежедневную цель");
         }
@@ -1143,11 +1164,11 @@ const SessionsCollectionPage = observer(() => {
           exploreCount === 1 ? "ка" : exploreCount < 5 && exploreCount > 1 ? "ки" : "ек"
         } для разбора. Можем открыть архив, создать новую сессию или ты можешь спросить меня о приложении своим текстом.`
       );
-      setArchivistOptions([
+      setArchivistOptions(withArchivistTrainingOption([
         { id: "new_session", label: "Создать новую сессию", action: "new_session" },
         { id: "open_archive_after_intro", label: "Открыть нейрокарту", action: "open_archive" },
-        { id: "custom_after_intro", label: "Написать ответ самостоятельно", action: "custom_input" },
-      ]);
+        { id: "custom_after_intro", label: "Написать Архивариусу", action: "custom_input" },
+      ]));
       return;
     }
 
@@ -1155,11 +1176,11 @@ const SessionsCollectionPage = observer(() => {
       setArchivistMessage(
         "Telegram нужен, чтобы быстрее восстановить доступ к аккаунту и получать важные напоминания. Я могу открыть Seee-бота прямо сейчас, а после привязки мы вернёмся сюда."
       );
-      setArchivistOptions([
+      setArchivistOptions(withArchivistTrainingOption([
         { id: "open_bot", label: "Открыть Seee бота", action: "open_bot" },
         { id: "telegram_done", label: "Уже привязал Telegram", action: "telegram_done" },
-        { id: "custom_after_tg", label: "Написать ответ самостоятельно", action: "custom_input" },
-      ]);
+        { id: "custom_after_tg", label: "Написать Архивариусу", action: "custom_input" },
+      ]));
       return;
     }
 
@@ -1175,11 +1196,11 @@ const SessionsCollectionPage = observer(() => {
       setArchivistMessage(
         "Отлично. Тогда давай двигаться дальше: можешь открыть нейрокарту, создать новую сессию или написать мне вопрос своими словами."
       );
-      setArchivistOptions([
+      setArchivistOptions(withArchivistTrainingOption([
         { id: "archive_after_tg", label: "Открыть нейрокарту", action: "open_archive" },
         { id: "new_after_tg", label: "Создать новую сессию", action: "new_session" },
-        { id: "custom_after_tg_done", label: "Написать ответ самостоятельно", action: "custom_input" },
-      ]);
+        { id: "custom_after_tg_done", label: "Написать Архивариусу", action: "custom_input" },
+      ]));
       return;
     }
 
