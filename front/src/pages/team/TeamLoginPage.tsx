@@ -7,11 +7,11 @@ import {
   CheckSquare,
   FileText,
   Folder,
+  GitBranch,
   LogOut,
   Mic,
   MessageCircle,
   Send,
-  Sitemap,
   User,
   UsersRound,
 } from "lucide-react";
@@ -94,7 +94,7 @@ export default function TeamLoginPage() {
 
         <nav className={styles.topNav} aria-label="Разделы команды">
           <button className={styles.navButton} type="button">
-            <Sitemap size={16} />
+            <GitBranch size={16} />
             Оргсхема
           </button>
           <button className={styles.navButton} type="button">
