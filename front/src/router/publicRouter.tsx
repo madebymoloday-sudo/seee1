@@ -13,6 +13,7 @@ import PrivacyPolicyPage from "../pages/legal/PrivacyPolicyPage";
 import RefundPolicyPage from "../pages/legal/RefundPolicyPage";
 import PublicSubscriptionPage from "../pages/subscription/PublicSubscriptionPage";
 import PaymentSuccessPage from "../pages/subscription/PaymentSuccessPage";
+import TeamLoginPage from "../pages/team/TeamLoginPage";
 
 /**
  * Роутер для неавторизованных пользователей
@@ -31,6 +32,14 @@ export const publicRouter = createBrowserRouter([
     element: (
       <PublicRoute>
         <HomePage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/team-login",
+    element: (
+      <PublicRoute>
+        <TeamLoginPage />
       </PublicRoute>
     ),
   },

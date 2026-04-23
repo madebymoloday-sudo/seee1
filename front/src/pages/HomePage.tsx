@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
+import { Loader2, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LoginForm from "./auth/components/LoginForm";
 import styles from "./auth/LoginPage.module.css";
@@ -100,6 +100,18 @@ const HomePage = observer(() => {
             )}
           </div>
         </div>
+        <button
+          type="button"
+          className={styles.teamEntryButton}
+          onClick={() => navigate("/team-login")}
+          aria-label="Вход для команды"
+          title="Вход для команды"
+        >
+          <span className={styles.teamEntryIcon}>
+            <UsersRound size={20} strokeWidth={2.4} />
+          </span>
+          <span className={styles.teamEntryLabel}>Вход для команды</span>
+        </button>
       </div>
     );
   }

@@ -202,6 +202,63 @@
   color: rgba(255, 255, 255, 0.72) !important;
 }
 
+.teamEntryButton {
+  position: absolute;
+  right: clamp(1rem, 3vw, 2rem);
+  bottom: clamp(1rem, 3vw, 2rem);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 3rem;
+  padding: 0.45rem 1rem 0.45rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.96);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 58%),
+    rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 18px 36px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.teamEntryButton:hover,
+.teamEntryButton:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.42);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 58%),
+    rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+
+.teamEntryIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 999px;
+  color: #08111f;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.teamEntryLabel {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+}
+
 /* Разделитель */
 .divider {
   border-color: rgba(255, 255, 255, 0.20);
@@ -328,3 +385,16 @@
 }
 
 /* Dark theme remains supported via global app theme; base is already dark */
+
+@media (max-width: 640px) {
+  .teamEntryButton {
+    right: 50%;
+    bottom: 1rem;
+    transform: translateX(50%);
+  }
+
+  .teamEntryButton:hover,
+  .teamEntryButton:focus-visible {
+    transform: translateX(50%) translateY(-2px);
+  }
+}
