@@ -1,36 +1,62 @@
+.authPage,
 .page {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 19rem minmax(0, 1fr);
   color: #172033;
   background:
     radial-gradient(circle at 12% 12%, rgba(67, 160, 220, 0.14), transparent 32rem),
     linear-gradient(135deg, #f4fbff 0%, #eef6fb 48%, #f8fbfd 100%);
 }
 
-.sidebar {
-  min-height: 100vh;
-  padding: 1rem;
-  border-right: 1px solid rgba(26, 57, 88, 0.08);
-  background: rgba(255, 255, 255, 0.76);
-  box-shadow: 18px 0 44px rgba(39, 89, 128, 0.08);
+.authPage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 28rem);
+  gap: 1.5rem;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.authHero,
+.authCard,
+.sidebar,
+.composer,
+.orgDetailPanel,
+.cabinetCard,
+.orgExecutiveCard,
+.orgRoleCard,
+.orgDepartmentCard {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(26, 57, 88, 0.08);
+  box-shadow: 0 18px 44px rgba(39, 89, 128, 0.1);
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
 }
 
+.authHero,
+.authCard {
+  border-radius: 1.5rem;
+}
+
+.authHero {
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.authCard {
+  align-self: center;
+  padding: 1.2rem;
+}
+
+.authBrand,
 .brandBlock,
-.profileCard {
+.profileCard,
+.singleMemberCard {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.brandBlock {
-  margin-bottom: 1.1rem;
-}
-
+.authLogo,
 .logoCircle,
-.profileAvatar {
+.profileAvatar,
+.singleMemberAvatar {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
@@ -38,37 +64,242 @@
   font-weight: 800;
 }
 
+.authLogo,
 .logoCircle {
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2.8rem;
+  height: 2.8rem;
   color: #fff;
   background: linear-gradient(135deg, #42a9e2, #1f78bd);
   box-shadow: 0 12px 28px rgba(31, 149, 209, 0.28);
 }
 
-.profileAvatar {
-  width: 2.5rem;
-  height: 2.5rem;
+.authBrandName,
+.brandName,
+.profileName,
+.authCopyWrap h1,
+.chatHeader h1,
+.panelHeader h1,
+.orgExecutiveCard h2,
+.orgRoleCard h3,
+.orgDetailHeader h3 {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.authBrandCaption,
+.brandCaption,
+.profileRole,
+.authCopy,
+.chatHeader span,
+.panelHeader span,
+.orgRoleAssignee,
+.orgDetailHeader span,
+.cabinetCard span,
+.singleMemberCard p,
+.messageAuthor,
+.chatKicker,
+.authEyebrow,
+.cabinetLabel,
+.orgRoleType {
+  color: #69788e;
+}
+
+.authBrand {
+  margin-bottom: 2rem;
+}
+
+.authCopyWrap {
+  max-width: 44rem;
+}
+
+.authEyebrow,
+.chatKicker,
+.cabinetLabel,
+.orgRoleType {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.authCopyWrap h1 {
+  font-size: clamp(2.2rem, 4vw, 3.8rem);
+  line-height: 0.96;
+  margin-bottom: 1rem;
+}
+
+.authCopy {
+  margin: 0;
+  max-width: 42rem;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.authFactGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-top: 2rem;
+}
+
+.authFactCard {
+  padding: 1rem;
+  border: 1px solid rgba(31, 149, 209, 0.12);
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.authFactCard span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #1f78bd;
+  font-size: 1.6rem;
+  font-weight: 900;
+}
+
+.authFactCard p {
+  margin: 0;
+  color: #4f5f77;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.authTabRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.authTab,
+.authGhostButton,
+.authPrimaryButton,
+.navButton,
+.folderButton,
+.chatPreview,
+.renameButton,
+.voiceButton,
+.sendButton,
+.orgDepartmentHeader,
+.orgSectionChip,
+.orgExecutiveCard,
+.orgRoleCard {
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.authTab {
+  min-height: 2.75rem;
+  border-radius: 0.9rem;
+  color: #22324a;
+  background: #edf6fd;
+  font-weight: 800;
+}
+
+.authTabActive,
+.authPrimaryButton,
+.sendButton,
+.folderButtonActive,
+.chatPreview {
+  color: #fff;
+  background: linear-gradient(135deg, #4ab0e6, #2388ca);
+  box-shadow: 0 14px 28px rgba(31, 149, 209, 0.24);
+}
+
+.authForm {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.authField {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #233149;
+}
+
+.authField input {
+  min-height: 2.85rem;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(31, 149, 209, 0.16);
+  border-radius: 0.9rem;
+  color: #1f2b3f;
+  background: rgba(255, 255, 255, 0.94);
+  font: inherit;
+  outline: none;
+}
+
+.authField input:focus,
+.composer textarea:focus {
+  border-color: rgba(31, 149, 209, 0.42);
+  box-shadow: 0 0 0 3px rgba(31, 149, 209, 0.12);
+}
+
+.authHint,
+.authError {
+  padding: 0.85rem 0.95rem;
+  border-radius: 0.9rem;
+  font-size: 0.88rem;
+}
+
+.authHint {
+  color: #214567;
+  background: #e8f5ff;
+}
+
+.authError {
+  color: #9a2740;
+  background: #ffe8ee;
+}
+
+.authActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-top: 0.4rem;
+}
+
+.authGhostButton,
+.authPrimaryButton {
+  min-height: 2.8rem;
+  padding: 0 1rem;
+  border-radius: 0.9rem;
+  font-weight: 800;
+}
+
+.authGhostButton {
+  color: #22324a;
+  background: #edf6fd;
+}
+
+.page {
+  display: grid;
+  grid-template-columns: 19rem minmax(0, 1fr);
+}
+
+.sidebar {
+  min-height: 100vh;
+  padding: 1rem;
+  border-right: 1px solid rgba(26, 57, 88, 0.08);
+}
+
+.profileAvatar,
+.singleMemberAvatar {
+  width: 2.6rem;
+  height: 2.6rem;
   color: #1f78bd;
   background: #e2f3ff;
 }
 
-.brandName,
-.profileName {
-  margin: 0;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-
-.brandCaption,
-.profileRole {
-  margin: 0.1rem 0 0;
-  font-size: 0.78rem;
-  color: #6b7890;
-}
-
 .profileCard {
-  margin-bottom: 1rem;
+  margin: 1rem 0;
   padding: 0.75rem;
   border: 1px solid rgba(31, 149, 209, 0.12);
   border-radius: 1.15rem;
@@ -92,31 +323,35 @@
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  border: 1px solid transparent;
   border-radius: 0.8rem;
   color: #22324a;
   background: rgba(255, 255, 255, 0.88);
   font-size: 0.9rem;
   font-weight: 750;
   text-align: left;
-  cursor: pointer;
-  transition:
-    background 0.16s ease,
-    border-color 0.16s ease,
-    transform 0.16s ease;
 }
 
-.navButton {
-  min-height: 2.3rem;
+.navButton,
+.folderButton {
+  min-height: 2.45rem;
   padding: 0.55rem 0.7rem;
 }
 
 .navButton:hover,
 .folderButton:hover,
-.chatPreview:hover {
-  transform: translateX(2px);
-  border-color: rgba(31, 149, 209, 0.2);
-  background: #f7fcff;
+.chatPreview:hover,
+.renameButton:hover,
+.voiceButton:hover,
+.sendButton:hover,
+.authTab:hover,
+.authGhostButton:hover,
+.authPrimaryButton:hover,
+.orgExecutiveCard:hover,
+.orgRoleCard:hover,
+.orgDepartmentHeader:hover,
+.orgSectionChip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(31, 149, 209, 0.22);
 }
 
 .section {
@@ -144,11 +379,6 @@
   cursor: pointer;
 }
 
-.folderButton {
-  min-height: 2.6rem;
-  padding: 0.55rem 0.6rem;
-}
-
 .folderButton span {
   flex: 1;
 }
@@ -162,13 +392,6 @@
   font-weight: 850;
 }
 
-.folderButtonActive {
-  color: #fff;
-  border-color: #1f95d1;
-  background: linear-gradient(135deg, #4ab0e6, #2388ca);
-  box-shadow: 0 14px 28px rgba(31, 149, 209, 0.24);
-}
-
 .folderButtonActive small {
   color: #0f6ca5;
   background: rgba(255, 255, 255, 0.92);
@@ -177,24 +400,23 @@
 .chatPreview {
   display: grid;
   gap: 0.2rem;
-  padding: 0.7rem 0.8rem;
-  color: #fff;
-  background: linear-gradient(135deg, #4ab0e6, #2388ca);
+  padding: 0.75rem 0.85rem;
 }
 
 .chatPreview small {
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .chatArea {
   min-width: 0;
   min-height: 100vh;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  padding: 1.5rem clamp(1rem, 3vw, 2.5rem);
+  grid-template-rows: minmax(0, 1fr);
+  padding: 1.5rem clamp(1rem, 3vw, 2.4rem);
 }
 
-.chatHeader {
+.chatHeader,
+.panelHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -202,36 +424,25 @@
   margin-bottom: 1rem;
 }
 
-.chatHeader h1 {
-  margin: 0;
+.chatHeader h1,
+.panelHeader h1 {
   font-size: clamp(1.7rem, 3vw, 2.5rem);
   line-height: 1;
-  letter-spacing: -0.06em;
 }
 
-.chatHeader span,
-.chatKicker {
-  color: #69788e;
-}
-
-.chatKicker {
-  margin: 0 0 0.25rem;
-  font-size: 0.78rem;
-  font-weight: 850;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.renameButton {
-  flex: 0 0 auto;
-  min-height: 2.35rem;
+.renameButton,
+.voiceButton,
+.sendButton {
+  min-height: 2.45rem;
   padding: 0 0.9rem;
-  border: 1px solid rgba(31, 149, 209, 0.16);
-  border-radius: 999px;
-  color: #1f78bd;
-  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0.8rem;
   font-weight: 800;
-  cursor: pointer;
+}
+
+.renameButton,
+.voiceButton {
+  color: #22324a;
+  background: rgba(255, 255, 255, 0.88);
 }
 
 .messageList {
@@ -267,7 +478,6 @@
   align-items: center;
   gap: 0.35rem;
   margin-bottom: 0.35rem;
-  color: #6b7890;
   font-size: 0.78rem;
   font-weight: 850;
 }
@@ -283,17 +493,14 @@
   display: grid;
   gap: 0.6rem;
   padding: 0.85rem;
-  border: 1px solid rgba(26, 57, 88, 0.08);
   border-radius: 1.25rem;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 -12px 34px rgba(31, 64, 91, 0.08);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
 
 .composer textarea {
   width: 100%;
   resize: none;
+  min-height: 4.5rem;
+  padding: 0.1rem;
   border: 0;
   outline: none;
   color: #1f2b3f;
@@ -311,32 +518,225 @@
   gap: 0.5rem;
 }
 
-.voiceButton,
-.sendButton {
-  display: inline-flex;
-  align-items: center;
+.orgLayout,
+.cabinetLayout {
+  display: grid;
+  gap: 1rem;
+}
+
+.orgExecutiveWrap {
+  display: flex;
   justify-content: center;
-  gap: 0.45rem;
-  min-height: 2.35rem;
-  border: 0;
-  border-radius: 0.75rem;
-  font-weight: 850;
-  cursor: pointer;
 }
 
-.voiceButton {
-  padding: 0 0.8rem;
+.orgExecutiveCard,
+.orgRoleCard,
+.orgDepartmentHeader {
+  width: 100%;
+  text-align: left;
+  border-radius: 1.1rem;
+}
+
+.orgExecutiveCard {
+  max-width: 26rem;
+  padding: 1rem 1.15rem;
+}
+
+.orgExecutiveCardActive,
+.orgRoleCardActive,
+.orgDepartmentHeaderActive,
+.orgSectionChipActive {
+  border-color: rgba(31, 149, 209, 0.32);
+  box-shadow: 0 16px 36px rgba(31, 149, 209, 0.16);
+}
+
+.orgExecutiveCard h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.orgExecutiveCard span {
+  color: #1f78bd;
+  font-weight: 700;
+}
+
+.orgMainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 26rem);
+  gap: 1rem;
+  align-items: start;
+}
+
+.orgCanvas {
+  min-width: 0;
+}
+
+.orgDeputyGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.orgBranch {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.orgRoleCard {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+}
+
+.orgRoleCard h3 {
+  font-size: 1.1rem;
+}
+
+.orgRoleAssignee {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.orgDepartmentList {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.orgDepartmentCard {
+  padding: 0.75rem;
+  border-radius: 1.1rem;
+}
+
+.orgDepartmentHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding: 0.75rem 0.85rem;
+  background: rgba(244, 251, 255, 0.88);
+  font-weight: 800;
+}
+
+.orgDepartmentHeader small {
+  color: #1f78bd;
+  font-size: 0.75rem;
+}
+
+.orgSectionList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+.orgSectionChip {
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  color: #28405d;
+  background: #edf6fd;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.orgDetailPanel {
+  padding: 1rem;
+  border-radius: 1.25rem;
+}
+
+.orgDetailHeader {
+  margin-bottom: 1rem;
+}
+
+.orgDetailSection + .orgDetailSection {
+  margin-top: 1rem;
+}
+
+.orgDetailSection h4 {
+  margin: 0 0 0.55rem;
   color: #22324a;
-  background: #eef7fd;
+  font-size: 0.94rem;
 }
 
-.sendButton {
-  color: #fff;
-  background: linear-gradient(135deg, #4ab0e6, #2388ca);
+.orgLeadText {
+  margin: 0;
+  color: #22324a;
+  line-height: 1.55;
 }
 
-@media (max-width: 860px) {
-  .page {
+.orgStatsGrid,
+.cabinetGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.orgStatCard,
+.cabinetCard {
+  padding: 0.95rem;
+  border-radius: 1rem;
+}
+
+.orgStatCard span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #69788e;
+  font-size: 0.78rem;
+}
+
+.orgStatCard strong,
+.cabinetCard strong {
+  display: block;
+  color: #1b2b42;
+  font-size: 1rem;
+}
+
+.orgList {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.orgListItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  color: #22324a;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.singleMemberCard {
+  padding: 0.85rem;
+  border: 1px solid rgba(31, 149, 209, 0.12);
+  border-radius: 1rem;
+  background: #edf6fd;
+}
+
+.singleMemberCard strong {
+  display: block;
+  margin-bottom: 0.1rem;
+}
+
+.singleMemberCard p {
+  margin: 0;
+}
+
+.cabinetGrid {
+  align-items: start;
+}
+
+.cabinetCard {
+  border-radius: 1.1rem;
+}
+
+.cabinetLabel {
+  color: #69788e;
+}
+
+@media (max-width: 1100px) {
+  .authPage,
+  .page,
+  .orgMainGrid {
     grid-template-columns: 1fr;
   }
 
@@ -346,16 +746,31 @@
     border-bottom: 1px solid rgba(26, 57, 88, 0.08);
   }
 
+  .orgDeputyGrid,
+  .authFactGrid,
+  .orgStatsGrid,
+  .cabinetGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .authPage,
   .chatArea {
-    min-height: calc(100vh - 26rem);
-    padding-bottom: 1rem;
+    padding: 1rem;
   }
 
-  .chatHeader {
+  .authActions,
+  .chatHeader,
+  .panelHeader {
     flex-direction: column;
   }
 
   .messageBubble {
     width: 100%;
+  }
+
+  .composerActions {
+    grid-template-columns: 1fr;
   }
 }
