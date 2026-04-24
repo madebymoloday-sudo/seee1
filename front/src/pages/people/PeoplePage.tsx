@@ -97,11 +97,13 @@ type ChatSettings = {
   blacklistCount: number;
   exceptionsCount: number;
   inviteLink: string;
+  ownerId: string;
+  adminIds: string[];
 };
 
 const CHAT_SETTINGS_PREFIX = "seee_people_chat_settings:";
 
-const createDefaultChatSettings = (chat: ChatListItem): ChatSettings => ({
+const createDefaultChatSettings = (chat: ChatListItem, ownerId: string): ChatSettings => ({
   title: chat.title,
   description: "",
   groupType: chat.isGroup ? "private" : "public",
@@ -121,6 +123,8 @@ const createDefaultChatSettings = (chat: ChatListItem): ChatSettings => ({
   blacklistCount: 0,
   exceptionsCount: 0,
   inviteLink: `https://seee.app/invite/${chat.id}`,
+  ownerId,
+  adminIds: [],
 });
 
 const decodeSub = () => {
@@ -164,6 +168,7 @@ const PeoplePage = () => {
   const [isHistoryVisibilityModalOpen, setIsHistoryVisibilityModalOpen] = useState(false);
   const [isTopicsModalOpen, setIsTopicsModalOpen] = useState(false);
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
+  const [isAdminsModalOpen, setIsAdminsModalOpen] = useState(false);
   const quickActionsRef = useRef<HTMLDivElement | null>(null);
   const videoMenuRef = useRef<HTMLDivElement | null>(null);
   const infoActionsMenuRef = useRef<HTMLDivElement | null>(null);
@@ -190,8 +195,23 @@ const PeoplePage = () => {
   );
   const selectedChatSettings = useMemo(() => {
     if (!selectedChat) return null;
-    return chatSettings[selectedChat.id] || createDefaultChatSettings(selectedChat);
-  }, [chatSettings, selectedChat]);
+    return chatSettings[selectedChat.id] || createDefaultChatSettings(selectedChat, myUserId || "owner");
+  }, [chatSettings, myUserId, selectedChat]);
+  const allChatMembers = useMemo(() => {
+    if (!selectedChat) return [];
+    return [
+      { id: myUserId || "owner", username: myUsername, isCurrentUser: true },
+      ...selectedChat.participants.map((participant) => ({
+        id: participant.id,
+        username: participant.username,
+        isCurrentUser: false,
+      })),
+    ];
+  }, [myUserId, myUsername, selectedChat]);
+  const adminCount = useMemo(() => {
+    if (!selectedChatSettings) return 0;
+    return 1 + selectedChatSettings.adminIds.length;
+  }, [selectedChatSettings]);
   const filteredChats = useMemo(() => {
     const q = chatSearch.trim().toLowerCase();
     return chats.filter((chat) => {
@@ -442,9 +462,9 @@ const PeoplePage = () => {
 
     setChatSettings((current) => ({
       ...current,
-      [selectedChat.id]: current[selectedChat.id] || createDefaultChatSettings(selectedChat),
+      [selectedChat.id]: current[selectedChat.id] || createDefaultChatSettings(selectedChat, myUserId || "owner"),
     }));
-  }, [selectedChat]);
+  }, [myUserId, selectedChat]);
 
   useEffect(() => {
     if (!selectedChat || !selectedChatSettings) return;
@@ -645,10 +665,37 @@ const PeoplePage = () => {
     setChatSettings((current) => ({
       ...current,
       [selectedChat.id]: {
-        ...(current[selectedChat.id] || createDefaultChatSettings(selectedChat)),
+        ...(current[selectedChat.id] || createDefaultChatSettings(selectedChat, myUserId || "owner")),
         ...patch,
       },
     }));
+  };
+
+  const toggleAdmin = (memberId: string) => {
+    if (!selectedChatSettings) return;
+    if (memberId === selectedChatSettings.ownerId) return;
+
+    const hasAdmin = selectedChatSettings.adminIds.includes(memberId);
+    patchChatSettings({
+      adminIds: hasAdmin
+        ? selectedChatSettings.adminIds.filter((id) => id !== memberId)
+        : [...selectedChatSettings.adminIds, memberId],
+    });
+  };
+
+  const transferOwnership = (memberId: string) => {
+    if (!selectedChatSettings || memberId === selectedChatSettings.ownerId) return;
+
+    const previousOwnerId = selectedChatSettings.ownerId;
+    patchChatSettings({
+      ownerId: memberId,
+      adminIds: Array.from(
+        new Set(
+          [...selectedChatSettings.adminIds.filter((id) => id !== memberId), previousOwnerId].filter(Boolean),
+        ),
+      ),
+    });
+    toast.success("Права владельца переданы");
   };
 
   const patchChatPermissions = (key: keyof ChatSettings["permissions"], value: boolean) => {
@@ -1346,9 +1393,9 @@ const PeoplePage = () => {
                 <span>Пригласительные ссылки</span>
                 <strong>1</strong>
               </button>
-              <button type="button" className={styles.settingsRow}>
+              <button type="button" className={styles.settingsRow} onClick={() => setIsAdminsModalOpen(true)}>
                 <span>Администраторы</span>
-                <strong>1</strong>
+                <strong>{adminCount}</strong>
               </button>
               <button type="button" className={styles.settingsRow}>
                 <span>Участники</span>
@@ -1588,6 +1635,72 @@ const PeoplePage = () => {
                 Отмена
               </button>
               <button type="button" className={styles.telegramPrimaryButton} onClick={() => setIsPermissionsModalOpen(false)}>
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {isAdminsModalOpen && selectedChatSettings ? (
+        <div className={styles.notesOverlay} onClick={() => setIsAdminsModalOpen(false)}>
+          <div className={styles.telegramDialogWide} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.telegramModalHeader}>
+              <div>
+                <h3 className={styles.telegramModalTitle}>Администраторы</h3>
+                <p className={styles.telegramModalSubtitle}>
+                  Выберите участников, которым нужно выдать права администратора, или передайте владельца.
+                </p>
+              </div>
+              <button type="button" className={styles.telegramModalClose} onClick={() => setIsAdminsModalOpen(false)}>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className={styles.adminsList}>
+              {allChatMembers.map((member) => {
+                const isOwner = selectedChatSettings.ownerId === member.id;
+                const isAdmin = isOwner || selectedChatSettings.adminIds.includes(member.id);
+
+                return (
+                  <div key={member.id} className={styles.adminRow}>
+                    <div className={styles.adminIdentity}>
+                      <div className={styles.memberAvatar}>
+                        {(member.username || "У").slice(0, 1).toUpperCase()}
+                      </div>
+                      <div className={styles.adminMeta}>
+                        <strong>{member.username}</strong>
+                        <span>
+                          {isOwner ? "владелец" : isAdmin ? "администратор" : "участник"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className={styles.adminActions}>
+                      <button
+                        type="button"
+                        className={`${styles.adminToggleButton} ${isAdmin ? styles.adminToggleButtonActive : ""}`}
+                        onClick={() => toggleAdmin(member.id)}
+                        disabled={isOwner}
+                      >
+                        {isOwner ? "Владелец" : isAdmin ? "Снять права" : "Сделать админом"}
+                      </button>
+                      {!isOwner ? (
+                        <button
+                          type="button"
+                          className={styles.telegramGhostButton}
+                          onClick={() => transferOwnership(member.id)}
+                        >
+                          Передать владельца
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className={styles.telegramModalFooter}>
+              <button type="button" className={styles.telegramGhostButton} onClick={() => setIsAdminsModalOpen(false)}>
+                Отмена
+              </button>
+              <button type="button" className={styles.telegramPrimaryButton} onClick={() => setIsAdminsModalOpen(false)}>
                 Сохранить
               </button>
             </div>
