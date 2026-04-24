@@ -6,13 +6,10 @@ import {
   BarChart3,
   Bell,
   Check,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Copy,
   FileText,
-  FolderPlus,
-  History,
   Link2,
   Mic,
   MoreVertical,
@@ -22,11 +19,9 @@ import {
   Settings2,
   Share2,
   StickyNote,
-  Trash2,
   UserPlus,
   Users,
   Video,
-  Vote,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -1210,7 +1205,7 @@ const PeoplePage = () => {
               </button>
               <button type="button" className={styles.settingsRow}>
                 <span>Участники</span>
-                <strong>{selectedChat.participants.length + 1}</strong>
+                <strong>{(selectedChat?.participants.length || 0) + 1}</strong>
               </button>
               <button type="button" className={styles.settingsRow}>
                 <span>Недавние действия</span>
