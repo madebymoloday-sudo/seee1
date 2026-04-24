@@ -450,7 +450,7 @@ const PeoplePage = () => {
         setChatSettings((current) => ({
           ...current,
           [selectedChat.id]: {
-            ...createDefaultChatSettings(selectedChat),
+            ...createDefaultChatSettings(selectedChat, myUserId || "owner"),
             ...(JSON.parse(raw) as Partial<ChatSettings>),
           },
         }));
