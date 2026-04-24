@@ -683,3 +683,776 @@ const PeoplePage = () => {
                         : "Личный чат"}
                     </div>
                   </div>
+                </button>
+              ))}
+            </div>
+          </aside>
+
+          <section className={`${styles.right} ${mobilePane === "list" ? styles.rightHiddenOnMobile : ""}`}>
+            {selectedChat ? (
+              <>
+                <div className={styles.chatHeader}>
+                  <div className={styles.chatHeaderMain}>
+                    <button
+                      type="button"
+                      className={styles.backToListButton}
+                      onClick={() => setMobilePane("list")}
+                      aria-label="Назад к мега-чатам"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <div className={styles.chatHeaderIdentity}>
+                      <span>{selectedChatSettings?.title || selectedChat.title}</span>
+                      <small>
+                        {selectedChat.isGroup
+                          ? `${selectedChat.participants.length + 1} участников`
+                          : "Личный чат"}
+                      </small>
+                    </div>
+                  </div>
+                  <div className={styles.headerActions}>
+                    <span className={styles.modeBadge}>
+                      {modeState?.activeMode === "Объяснить" ? 'Режим: "Объяснить"' : "Обычный режим"}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.headerIconButton}
+                      onClick={() => setIsChatSearchOpen((prev) => !prev)}
+                      aria-label="Поиск по чату"
+                    >
+                      <Search className="h-4 w-4" />
+                      <span className={styles.headerActionLabel}>Поиск</span>
+                    </button>
+                    <div className={styles.headerMenuWrap} ref={videoMenuRef}>
+                      <button
+                        type="button"
+                        className={styles.headerIconButton}
+                        onClick={() => setIsVideoMenuOpen((prev) => !prev)}
+                        aria-label="Видеочаты"
+                      >
+                        <Video className="h-4 w-4" />
+                        <span className={styles.headerActionLabel}>Звонок</span>
+                      </button>
+                      {isVideoMenuOpen ? (
+                        <div className={styles.headerDropdownMenu}>
+                          <button type="button" className={styles.headerDropdownItem}>
+                            Начать видеочат
+                          </button>
+                          <button type="button" className={styles.headerDropdownItem}>
+                            Анонсировать видеочат
+                          </button>
+                          <button type="button" className={styles.headerDropdownItem}>
+                            Трансляция с помощью...
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      className={`${styles.headerIconButton} ${isInfoPanelOpen ? styles.headerIconButtonActive : ""}`}
+                      onClick={() => setIsInfoPanelOpen((prev) => !prev)}
+                      aria-label="Панель информации о чате"
+                    >
+                      <PanelRightOpen className="h-4 w-4" />
+                      <span className={styles.headerActionLabel}>Инфо</span>
+                    </button>
+                    <div className={styles.headerMenuWrap} ref={moreMenuRef}>
+                      <button
+                        type="button"
+                        className={styles.headerIconButton}
+                        onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+                        aria-label="Меню чата"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                        <span className={styles.headerActionLabel}>Ещё</span>
+                      </button>
+                      {isMoreMenuOpen ? (
+                        <div className={`${styles.headerDropdownMenu} ${styles.headerDropdownMenuWide}`}>
+                          <button type="button" className={styles.headerDropdownItem}>
+                            Создать тему
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.headerDropdownItem}
+                            onClick={() => {
+                              setIsManageModalOpen(true);
+                              setIsMoreMenuOpen(false);
+                            }}
+                          >
+                            Управление группой
+                          </button>
+                          <button type="button" className={styles.headerDropdownItem}>
+                            Архив историй
+                          </button>
+                          <button type="button" className={styles.headerDropdownItem}>
+                            Проголосовать
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.headerDropdownItem}
+                            onClick={() => void handleExportHistory()}
+                          >
+                            Экспорт истории чата
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.headerDropdownItem}
+                            onClick={handleClearHistory}
+                          >
+                            Очистить историю
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.headerDropdownItem} ${styles.headerDropdownDanger}`}
+                            onClick={handleLeaveGroup}
+                          >
+                            Покинуть группу
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                    {modeState?.canControl && modeState.activeMode === "Объяснить" ? (
+                      <Button size="sm" variant="ghost" onClick={() => handleExplainControl("finish")}>
+                        Закончить
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+                {isChatSearchOpen ? (
+                  <div className={styles.inlineSearchBar}>
+                    <Search className={styles.inlineSearchIcon} />
+                    <input
+                      value={messageSearch}
+                      onChange={(event) => setMessageSearch(event.target.value)}
+                      placeholder="Поиск по ключевым словам внутри чата"
+                      className={styles.inlineSearchInput}
+                    />
+                    <div className={styles.inlineSearchMeta}>
+                      <span>
+                        {messageSearchMatches.length
+                          ? `${activeSearchResult + 1}/${messageSearchMatches.length}`
+                          : "0/0"}
+                      </span>
+                      <button type="button" className={styles.inlineSearchNav} onClick={goToPrevSearchResult}>
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button type="button" className={styles.inlineSearchNav} onClick={goToNextSearchResult}>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.inlineSearchClose}
+                        onClick={() => {
+                          setIsChatSearchOpen(false);
+                          setMessageSearch("");
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+                {modeState?.pendingRequest && (
+                  <div className={styles.pendingCard}>
+                    <p className={styles.pendingText}>
+                      Пользователь хочет запустить режим "{modeState.pendingRequest.mode}", согласны?
+                    </p>
+                    {pendingNeedsMyResponse ? (
+                      <div className={styles.pendingActions}>
+                        <Button size="sm" onClick={() => handleRespondModeRequest(true)}>
+                          Запустить
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => handleRespondModeRequest(false)}>
+                          Отклонить
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className={styles.chatSubtitle}>Ожидание ответов участников...</div>
+                    )}
+                  </div>
+                )}
+                <div className={styles.chatWorkspace}>
+                  <div className={styles.chatBody}>
+                    <div className={styles.messages}>
+                      {modeState?.activeMode === "Объяснить" && modeState.currentQuestion ? (
+                        <div className={styles.questionCard}>
+                          <p className={styles.questionTitle}>Вопрос этапа</p>
+                          <p className={styles.questionText}>{modeState.currentQuestion}</p>
+                          {modeState.canControl ? (
+                            <div className={styles.modeActions}>
+                              <Button size="sm" variant="outline" onClick={() => handleExplainControl("back")}>
+                                Назад
+                              </Button>
+                              <Button size="sm" onClick={() => handleExplainControl("next")}>
+                                Далее
+                              </Button>
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {messages.map((m) => {
+                        const mine = m.sender.id === myUserId;
+                        const isExplainAnswer = m.meta?.type === "explain-answer";
+                        const isSearchMatch = messageSearchMatches.includes(m.id);
+                        const isActiveSearchMatch = activeSearchMessageId === m.id;
+                        return (
+                          <div
+                            key={m.id}
+                            ref={(node) => {
+                              searchResultRefs.current[m.id] = node;
+                            }}
+                            className={`${styles.bubble} ${mine ? styles.mine : ""} ${
+                              isSearchMatch ? styles.bubbleSearchMatch : ""
+                            } ${isActiveSearchMatch ? styles.bubbleSearchMatchActive : ""}`}
+                            onClick={() => {
+                              if (!isExplainAnswer || !modeState?.canControl) return;
+                              handleEditExplainAnswer(
+                                Number(m.meta?.step || 1),
+                                Number(m.meta?.answerIndex || 0),
+                                m.content
+                              );
+                            }}
+                          >
+                            <div className={styles.meta}>
+                              {m.sender.username} · {m.mode}
+                            </div>
+                            <div>{m.content}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className={styles.composer}>
+                      <div className={styles.modeWrap}>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setModeOpen((v) => !v)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        {modeOpen && (
+                          <div className={styles.modeList}>
+                            {modeState?.activeMode === "Объяснить" && modeState?.canControl ? (
+                              <button
+                                type="button"
+                                className={styles.modeBtn}
+                                onClick={() => {
+                                  setModeOpen(false);
+                                  setNotesOpen(true);
+                                }}
+                              >
+                                <span className={styles.modeBtnIcon}>
+                                  <StickyNote className="h-4 w-4" />
+                                </span>
+                                Заметка
+                              </button>
+                            ) : null}
+                            {modeState?.activeMode === "Объяснить" && modeState?.canControl ? (
+                              <div className={styles.modeDivider} />
+                            ) : null}
+                            {MODES.map((item) => (
+                              <button
+                                key={item}
+                                type="button"
+                                className={styles.modeBtn}
+                                onClick={() => handleStartModeRequest(item)}
+                              >
+                                {item}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className={styles.chatInputArea}>
+                        <MessageInput
+                          onSend={(value) => {
+                            void handleSend(value);
+                          }}
+                          value={messageInput}
+                          onValueChange={setMessageInput}
+                          placeholder="Введите сообщение"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {isInfoPanelOpen ? (
+                    <aside className={styles.infoPanel}>
+                      <div className={styles.infoPanelHeader}>
+                        <div className={styles.infoPanelAvatar}>
+                          {(selectedChatSettings?.title || selectedChat.title).slice(0, 1).toUpperCase()}
+                        </div>
+                        <button
+                          type="button"
+                          className={styles.infoPanelClose}
+                          onClick={() => setIsInfoPanelOpen(false)}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className={styles.infoPanelIdentity}>
+                        <h3>{selectedChatSettings?.title || selectedChat.title}</h3>
+                        <span>{selectedChat.participants.length + 1} участников</span>
+                      </div>
+                      <div className={styles.infoActionGrid}>
+                        <button type="button" className={styles.infoActionCard}>
+                          <Bell className="h-4 w-4" />
+                          Звук
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.infoActionCard}
+                          onClick={() => setIsManageModalOpen(true)}
+                        >
+                          <Settings2 className="h-4 w-4" />
+                          Управление
+                        </button>
+                        <button type="button" className={styles.infoActionCard} onClick={handleLeaveGroup}>
+                          <ChevronRight className="h-4 w-4" />
+                          Покинуть
+                        </button>
+                        <div className={styles.infoActionMenuWrap} ref={infoActionsMenuRef}>
+                          <button
+                            type="button"
+                            className={styles.infoActionCard}
+                            onClick={() => setIsInfoActionsMenuOpen((prev) => !prev)}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                            Ещё
+                          </button>
+                          {isInfoActionsMenuOpen ? (
+                            <div className={`${styles.headerDropdownMenu} ${styles.infoActionsMenu}`}>
+                              <button type="button" className={styles.headerDropdownItem}>
+                                Автоудаление
+                              </button>
+                              <button type="button" className={styles.headerDropdownItem}>
+                                Добавить участников
+                              </button>
+                              <button type="button" className={styles.headerDropdownItem}>
+                                Голоса
+                              </button>
+                              <button type="button" className={styles.headerDropdownItem}>
+                                Архив историй
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.headerDropdownItem}
+                                onClick={() => {
+                                  setIsManageModalOpen(true);
+                                  setIsInfoActionsMenuOpen(false);
+                                }}
+                              >
+                                Управление группой
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.headerDropdownItem}
+                                onClick={() => void handleExportHistory()}
+                              >
+                                Экспорт истории чата
+                              </button>
+                              <button type="button" className={styles.headerDropdownItem}>
+                                Добавить в папку
+                              </button>
+                              <button
+                                type="button"
+                                className={`${styles.headerDropdownItem} ${styles.headerDropdownDanger}`}
+                                onClick={handleLeaveGroup}
+                              >
+                                Покинуть группу
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className={styles.infoSectionTitle}>Показать список тем</div>
+                      <div className={styles.infoStatsList}>
+                        {mediaStats.map((stat) => (
+                          <div key={stat.label} className={styles.infoStatRow}>
+                            {stat.icon}
+                            <span>{stat.value}</span>
+                            <strong>{stat.label}</strong>
+                          </div>
+                        ))}
+                      </div>
+                      <div className={styles.infoMembersHeader}>
+                        <span>{selectedChat.participants.length + 1} участников</span>
+                        <button type="button" className={styles.infoMembersAddButton}>
+                          <UserPlus className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className={styles.membersList}>
+                        <div className={styles.memberRow}>
+                          <div className={styles.memberAvatar}>П</div>
+                          <div className={styles.memberMeta}>
+                            <strong>{myUsername}</strong>
+                            <span>в сети</span>
+                          </div>
+                          <div className={styles.memberTag}>владелец</div>
+                        </div>
+                        {selectedChat.participants.map((participant) => (
+                          <div key={participant.id} className={styles.memberRow}>
+                            <div className={styles.memberAvatar}>
+                              {(participant.username || "У").slice(0, 1).toUpperCase()}
+                            </div>
+                            <div className={styles.memberMeta}>
+                              <strong>{participant.username}</strong>
+                              <span>был(а) недавно</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </aside>
+                  ) : null}
+                </div>
+              </>
+            ) : (
+              <div className={styles.placeholder}>Выберите чат</div>
+            )}
+          </section>
+        </div>
+      </div>
+      <BottomNavigation
+        onRating={() => navigate("/rating")}
+        onPeople={() => navigate("/people")}
+        onArchivist={() => navigate("/sessions/list")}
+        onMindMap={() => navigate("/map")}
+        onCabinet={() => navigate("/cabinet")}
+      />
+      {notesOpen ? (
+        <div className={styles.notesOverlay} onClick={() => setNotesOpen(false)}>
+          <div className={styles.notesModal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.notesTitle}>Приватная заметка</h3>
+            <textarea
+              className={styles.notesTextarea}
+              value={notesText}
+              onChange={(e) => setNotesText(e.target.value)}
+              placeholder={`${myUsername}, запишите мысли...`}
+            />
+            <div className={styles.notesFooter}>
+              <Button variant="outline" onClick={() => setNotesOpen(false)}>
+                Отмена
+              </Button>
+              <Button onClick={saveNotes}>Сохранить</Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {isManageModalOpen && selectedChatSettings ? (
+        <div className={styles.notesOverlay} onClick={() => setIsManageModalOpen(false)}>
+          <div className={styles.telegramModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.telegramModalHeader}>
+              <div>
+                <h3 className={styles.telegramModalTitle}>Настройки группы</h3>
+                <p className={styles.telegramModalSubtitle}>Базовые параметры чата без платных функций.</p>
+              </div>
+              <button type="button" className={styles.telegramModalClose} onClick={() => setIsManageModalOpen(false)}>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className={styles.manageGroupHero}>
+              <div className={styles.manageGroupAvatar}>
+                {selectedChatSettings.title.slice(0, 1).toUpperCase()}
+              </div>
+              <div className={styles.manageGroupFields}>
+                <label className={styles.telegramField}>
+                  <span>Название группы</span>
+                  <input
+                    value={selectedChatSettings.title}
+                    onChange={(event) => patchChatSettings({ title: event.target.value })}
+                  />
+                </label>
+                <label className={styles.telegramField}>
+                  <span>Описание</span>
+                  <input
+                    value={selectedChatSettings.description}
+                    onChange={(event) => patchChatSettings({ description: event.target.value })}
+                    placeholder="Описание (необязательно)"
+                  />
+                </label>
+              </div>
+            </div>
+            <div className={styles.settingsList}>
+              <button type="button" className={styles.settingsRow} onClick={() => setIsGroupTypeModalOpen(true)}>
+                <span>Тип группы</span>
+                <strong>{selectedChatSettings.groupType === "public" ? "Публичная" : "Частная"}</strong>
+              </button>
+              <button
+                type="button"
+                className={styles.settingsRow}
+                onClick={() => setIsHistoryVisibilityModalOpen(true)}
+              >
+                <span>История чата для новых участников</span>
+                <strong>{selectedChatSettings.historyVisible ? "Видна" : "Скрыта"}</strong>
+              </button>
+              <button type="button" className={styles.settingsRow} onClick={() => setIsTopicsModalOpen(true)}>
+                <span>Темы</span>
+                <strong>{selectedChatSettings.topicsEnabled ? "Включены" : "Выключены"}</strong>
+              </button>
+              <button type="button" className={styles.settingsRow}>
+                <span>Оформление</span>
+                <strong>Стандарт</strong>
+              </button>
+              <button type="button" className={styles.settingsRow} onClick={() => setIsPermissionsModalOpen(true)}>
+                <span>Разрешения</span>
+                <strong>
+                  {Object.values(selectedChatSettings.permissions).filter(Boolean).length}/6
+                </strong>
+              </button>
+              <button type="button" className={styles.settingsRow}>
+                <span>Пригласительные ссылки</span>
+                <strong>1</strong>
+              </button>
+              <button type="button" className={styles.settingsRow}>
+                <span>Администраторы</span>
+                <strong>1</strong>
+              </button>
+              <button type="button" className={styles.settingsRow}>
+                <span>Участники</span>
+                <strong>{(selectedChat?.participants.length || 0) + 1}</strong>
+              </button>
+              <button type="button" className={styles.settingsRow}>
+                <span>Недавние действия</span>
+                <strong>Журнал</strong>
+              </button>
+            </div>
+            <div className={styles.telegramModalFooter}>
+              <button type="button" className={styles.telegramGhostButton} onClick={() => setIsManageModalOpen(false)}>
+                Отмена
+              </button>
+              <button type="button" className={styles.telegramPrimaryButton} onClick={() => setIsManageModalOpen(false)}>
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {isGroupTypeModalOpen && selectedChatSettings ? (
+        <div className={styles.notesOverlay} onClick={() => setIsGroupTypeModalOpen(false)}>
+          <div className={styles.telegramDialog} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.telegramDialogTitle}>Тип группы</h3>
+            <button
+              type="button"
+              className={styles.radioRow}
+              onClick={() => patchChatSettings({ groupType: "public" })}
+            >
+              <span className={`${styles.radioDot} ${selectedChatSettings.groupType === "public" ? styles.radioDotActive : ""}`} />
+              <div>
+                <strong>Публичная группа</strong>
+                <p>Группу можно найти через поиск и присоединиться по ссылке.</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              className={styles.radioRow}
+              onClick={() => patchChatSettings({ groupType: "private" })}
+            >
+              <span className={`${styles.radioDot} ${selectedChatSettings.groupType === "private" ? styles.radioDotActive : ""}`} />
+              <div>
+                <strong>Частная группа</strong>
+                <p>Вход только по приглашению или ссылке.</p>
+              </div>
+            </button>
+            <div className={styles.inviteLinkBlock}>
+              <span>Постоянная ссылка</span>
+              <div className={styles.inviteLinkValue}>{selectedChatSettings.inviteLink}</div>
+              <div className={styles.inviteLinkActions}>
+                <button type="button" className={styles.telegramPrimaryButton} onClick={() => void handleCopyInviteLink()}>
+                  <Copy className="h-4 w-4" />
+                  Копировать
+                </button>
+                <button type="button" className={styles.telegramPrimaryButton}>
+                  <Share2 className="h-4 w-4" />
+                  Поделиться
+                </button>
+              </div>
+            </div>
+            <div className={styles.telegramModalFooter}>
+              <button type="button" className={styles.telegramGhostButton} onClick={() => setIsGroupTypeModalOpen(false)}>
+                Отмена
+              </button>
+              <button type="button" className={styles.telegramPrimaryButton} onClick={() => setIsGroupTypeModalOpen(false)}>
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {isHistoryVisibilityModalOpen && selectedChatSettings ? (
+        <div className={styles.notesOverlay} onClick={() => setIsHistoryVisibilityModalOpen(false)}>
+          <div className={styles.telegramDialog} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.telegramDialogTitle}>История чата для новых участников</h3>
+            <button
+              type="button"
+              className={styles.radioRow}
+              onClick={() => patchChatSettings({ historyVisible: true })}
+            >
+              <span className={`${styles.radioDot} ${selectedChatSettings.historyVisible ? styles.radioDotActive : ""}`} />
+              <div>
+                <strong>Видна</strong>
+                <p>Новые участники увидят полную историю сообщений.</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              className={styles.radioRow}
+              onClick={() => patchChatSettings({ historyVisible: false })}
+            >
+              <span className={`${styles.radioDot} ${!selectedChatSettings.historyVisible ? styles.radioDotActive : ""}`} />
+              <div>
+                <strong>Скрыта</strong>
+                <p>Новые участники не будут видеть более ранние сообщения.</p>
+              </div>
+            </button>
+            <div className={styles.telegramModalFooter}>
+              <button type="button" className={styles.telegramGhostButton} onClick={() => setIsHistoryVisibilityModalOpen(false)}>
+                Отмена
+              </button>
+              <button type="button" className={styles.telegramPrimaryButton} onClick={() => setIsHistoryVisibilityModalOpen(false)}>
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {isTopicsModalOpen && selectedChatSettings ? (
+        <div className={styles.notesOverlay} onClick={() => setIsTopicsModalOpen(false)}>
+          <div className={styles.telegramDialog} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.telegramDialogTitle}>Темы</h3>
+            <div className={styles.toggleRow}>
+              <span>Включить темы</span>
+              <button
+                type="button"
+                className={`${styles.toggleSwitch} ${selectedChatSettings.topicsEnabled ? styles.toggleSwitchActive : ""}`}
+                onClick={() => patchChatSettings({ topicsEnabled: !selectedChatSettings.topicsEnabled })}
+              >
+                <span />
+              </button>
+            </div>
+            <div className={styles.topicLayoutGrid}>
+              <button
+                type="button"
+                className={`${styles.topicLayoutCard} ${
+                  selectedChatSettings.topicsLayout === "tabs" ? styles.topicLayoutCardActive : ""
+                }`}
+                onClick={() => patchChatSettings({ topicsLayout: "tabs" })}
+              >
+                Вкладки
+              </button>
+              <button
+                type="button"
+                className={`${styles.topicLayoutCard} ${
+                  selectedChatSettings.topicsLayout === "list" ? styles.topicLayoutCardActive : ""
+                }`}
+                onClick={() => patchChatSettings({ topicsLayout: "list" })}
+              >
+                Список
+              </button>
+            </div>
+            <div className={styles.telegramModalFooter}>
+              <button type="button" className={styles.telegramGhostButton} onClick={() => setIsTopicsModalOpen(false)}>
+                Отмена
+              </button>
+              <button type="button" className={styles.telegramPrimaryButton} onClick={() => setIsTopicsModalOpen(false)}>
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {isPermissionsModalOpen && selectedChatSettings ? (
+        <div className={styles.notesOverlay} onClick={() => setIsPermissionsModalOpen(false)}>
+          <div className={styles.telegramModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.telegramModalHeader}>
+              <div>
+                <h3 className={styles.telegramModalTitle}>Разрешения</h3>
+                <p className={styles.telegramModalSubtitle}>Возможности участников</p>
+              </div>
+            </div>
+            <div className={styles.permissionsList}>
+              {[
+                ["sendMessages", "Отправка сообщений"],
+                ["sendMedia", "Отправка медиафайлов"],
+                ["addParticipants", "Добавление участников"],
+                ["createTopics", "Создание тем"],
+                ["pinMessages", "Закрепление сообщений"],
+                ["changeInfo", "Изменение профиля группы"],
+              ].map(([key, label]) => (
+                <div key={key} className={styles.permissionRow}>
+                  <span>{label}</span>
+                  <button
+                    type="button"
+                    className={`${styles.permissionToggle} ${
+                      selectedChatSettings.permissions[key as keyof ChatSettings["permissions"]]
+                        ? styles.permissionToggleActive
+                        : ""
+                    }`}
+                    onClick={() =>
+                      patchChatPermissions(
+                        key as keyof ChatSettings["permissions"],
+                        !selectedChatSettings.permissions[key as keyof ChatSettings["permissions"]]
+                      )
+                    }
+                  >
+                    {selectedChatSettings.permissions[key as keyof ChatSettings["permissions"]] ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <X className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className={styles.toggleRow}>
+              <span>Сообщения за звёзды</span>
+              <button
+                type="button"
+                className={`${styles.toggleSwitch} ${selectedChatSettings.starsOnly ? styles.toggleSwitchActive : ""}`}
+                onClick={() => patchChatSettings({ starsOnly: !selectedChatSettings.starsOnly })}
+              >
+                <span />
+              </button>
+            </div>
+            <div className={styles.slowModeBlock}>
+              <p className={styles.slowModeTitle}>Медленный режим</p>
+              <div className={styles.slowModeOptions}>
+                {(["off", "5s", "10s", "30s", "1m", "5m", "15m", "1h"] as SlowMode[]).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className={`${styles.slowModeChip} ${
+                      selectedChatSettings.slowMode === item ? styles.slowModeChipActive : ""
+                    }`}
+                    onClick={() => patchChatSettings({ slowMode: item })}
+                  >
+                    {item === "off" ? "Нет" : item}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className={styles.settingsList}>
+              <div className={styles.settingsRowStatic}>
+                <span>Исключения</span>
+                <strong>{selectedChatSettings.exceptionsCount}</strong>
+              </div>
+              <div className={styles.settingsRowStatic}>
+                <span>Чёрный список</span>
+                <strong>{selectedChatSettings.blacklistCount}</strong>
+              </div>
+            </div>
+            <div className={styles.telegramModalFooter}>
+              <button type="button" className={styles.telegramGhostButton} onClick={() => setIsPermissionsModalOpen(false)}>
+                Отмена
+              </button>
+              <button type="button" className={styles.telegramPrimaryButton} onClick={() => setIsPermissionsModalOpen(false)}>
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </Layout>
+  );
+};
+
+export default PeoplePage;

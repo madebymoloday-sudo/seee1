@@ -648,4 +648,746 @@
   justify-content: center;
   gap: 0.3rem;
   font-size: 0.82rem;
-  font-wei
+  font-weight: 600;
+}
+
+.infoActionMenuWrap {
+  position: relative;
+}
+
+.infoActionsMenu {
+  width: 250px;
+  right: auto;
+  left: 0;
+}
+
+.infoSectionTitle {
+  padding: 0.8rem 0 0.55rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  color: #3b82f6;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.infoStatsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.infoStatRow {
+  display: grid;
+  grid-template-columns: 1rem 2.5rem 1fr;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+}
+
+.infoStatRow span {
+  font-weight: 600;
+}
+
+.infoStatRow strong {
+  font-weight: 500;
+}
+
+.infoStatIcon {
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.7;
+}
+
+.infoMembersHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  font-size: 0.96rem;
+  font-weight: 700;
+}
+
+.infoMembersAddButton {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  background: rgba(245, 248, 252, 0.95);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.membersList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.memberAvatar {
+  width: 2.55rem;
+  height: 2.55rem;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.16);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.memberMeta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.memberMeta strong {
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.memberMeta span {
+  font-size: 0.77rem;
+  color: #3b82f6;
+}
+
+.memberTag {
+  border-radius: 999px;
+  padding: 0.2rem 0.45rem;
+  background: rgba(168, 85, 247, 0.12);
+  color: #a855f7;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.telegramModal,
+.telegramDialog {
+  width: min(720px, calc(100vw - 1.5rem));
+  max-height: min(88vh, 920px);
+  overflow-y: auto;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 28px 56px rgba(0, 0, 0, 0.28);
+  padding: 1rem;
+}
+
+.telegramDialog {
+  width: min(560px, calc(100vw - 1.5rem));
+}
+
+.telegramModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+
+.telegramModalTitle,
+.telegramDialogTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.telegramModalSubtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.84rem;
+  opacity: 0.68;
+}
+
+.telegramModalClose {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.manageGroupHero {
+  display: flex;
+  gap: 0.85rem;
+  margin-bottom: 0.95rem;
+}
+
+.manageGroupAvatar {
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 1rem;
+  background: rgba(59, 130, 246, 0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.manageGroupFields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.telegramField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.83rem;
+  font-weight: 600;
+}
+
+.telegramField input {
+  min-height: 2.65rem;
+  border: 1px solid rgba(0, 0, 0, 0.11);
+  border-radius: 0.75rem;
+  padding: 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+.settingsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.settingsRow,
+.settingsRowStatic {
+  min-height: 3rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: transparent;
+  text-align: left;
+}
+
+.settingsRow {
+  width: 100%;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.settingsRow span,
+.settingsRowStatic span {
+  font-size: 0.92rem;
+}
+
+.settingsRow strong,
+.settingsRowStatic strong {
+  color: #3b82f6;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.telegramModalFooter {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.telegramGhostButton,
+.telegramPrimaryButton {
+  min-height: 2.6rem;
+  border-radius: 0.75rem;
+  padding: 0 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.telegramGhostButton {
+  border: 1px solid rgba(0, 0, 0, 0.11);
+  background: #fff;
+}
+
+.telegramPrimaryButton {
+  border: none;
+  color: #fff;
+  background: #3b82f6;
+}
+
+.radioRow {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.8rem 0;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: transparent;
+  text-align: left;
+}
+
+.radioRow p {
+  margin: 0.2rem 0 0;
+  font-size: 0.83rem;
+  opacity: 0.7;
+}
+
+.radioDot {
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 999px;
+  border: 2px solid rgba(0, 0, 0, 0.18);
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+.radioDotActive {
+  border-color: #3b82f6;
+  box-shadow: inset 0 0 0 4px #fff, inset 0 0 0 999px #3b82f6;
+}
+
+.inviteLinkBlock {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.inviteLinkValue {
+  padding: 0.8rem;
+  border-radius: 0.8rem;
+  background: #f3f5f8;
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+
+.inviteLinkActions {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.toggleRow {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.toggleSwitch {
+  width: 3rem;
+  height: 1.8rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.16);
+  padding: 0.2rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.toggleSwitch span {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: #fff;
+  transition: transform 0.18s ease;
+}
+
+.toggleSwitchActive {
+  background: #60a5fa;
+}
+
+.toggleSwitchActive span {
+  transform: translateX(1.2rem);
+}
+
+.topicLayoutGrid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.topicLayoutCard {
+  min-height: 6rem;
+  border: 1px solid rgba(0, 0, 0, 0.11);
+  border-radius: 0.9rem;
+  background: #fff;
+  font-weight: 700;
+}
+
+.topicLayoutCardActive {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.permissionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.permissionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+}
+
+.permissionToggle {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 0.65rem;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+}
+
+.permissionToggleActive {
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.32);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.slowModeBlock {
+  margin-top: 1rem;
+}
+
+.slowModeTitle {
+  margin: 0 0 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.slowModeOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.slowModeChip {
+  border: 1px solid rgba(0, 0, 0, 0.11);
+  border-radius: 999px;
+  padding: 0.34rem 0.66rem;
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.slowModeChipActive {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.notesOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.notesModal {
+  width: min(540px, calc(100vw - 1.4rem));
+  border-radius: 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.66) 0%, rgba(255, 255, 255, 0.42) 100%);
+  backdrop-filter: blur(18px) saturate(140%);
+  padding: 0.84rem;
+}
+
+.notesTitle {
+  margin: 0 0 0.45rem;
+  font-weight: 700;
+}
+
+.notesTextarea {
+  width: 100%;
+  min-height: 180px;
+  border-radius: 0.72rem;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.66rem 0.72rem;
+  resize: vertical;
+}
+
+.notesFooter {
+  margin-top: 0.62rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@media (max-width: 980px) {
+  .page {
+    padding: 0;
+  }
+
+  .shell {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    grid-template-columns: 1fr;
+  }
+
+  .leftHiddenOnMobile {
+    display: none;
+  }
+
+  .rightHiddenOnMobile {
+    display: none;
+  }
+
+  .infoPanel {
+    position: fixed;
+    top: 4rem;
+    right: 0;
+    bottom: 6rem;
+    z-index: 150;
+    box-shadow: -10px 0 34px rgba(0, 0, 0, 0.18);
+  }
+
+  .backToListButton {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    --bottom-nav-height: 6.35rem;
+  }
+
+  .chatHeader {
+    padding: 0.62rem;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .headerActionLabel {
+    display: none;
+  }
+
+  .messages {
+    padding: 0.62rem;
+    padding-bottom: 0.62rem;
+    scroll-padding-bottom: 0.62rem;
+  }
+
+  .bubble {
+    max-width: 88%;
+  }
+
+  .modeBadge {
+    max-width: 132px;
+    text-align: center;
+  }
+
+  .composer {
+    padding: 0.5rem 0.55rem max(0.5rem, env(safe-area-inset-bottom));
+    gap: 0.4rem;
+  }
+
+  .telegramModal,
+  .telegramDialog {
+    padding: 0.85rem;
+  }
+
+  .manageGroupHero,
+  .inviteLinkActions,
+  .topicLayoutGrid {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .infoPanel {
+    width: min(100vw, 360px);
+  }
+}
+
+:global(.dark) .page {
+  background: radial-gradient(120% 90% at 8% 0%, rgba(255, 214, 156, 0.06) 0%, rgba(255, 214, 156, 0) 55%),
+    linear-gradient(180deg, #121212 0%, #090909 100%);
+}
+
+:global(.dark) .shell {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(16, 16, 16, 0.86);
+}
+
+:global(.dark) .left,
+:global(.dark) .sidebarTop,
+:global(.dark) .chatHeader,
+:global(.dark) .composer {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+:global(.dark) .composer {
+  background: rgba(10, 10, 10, 0.84);
+}
+
+:global(.dark) .sidebarTitle,
+:global(.dark) .chatTitle,
+:global(.dark) .chatHeaderMain {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:global(.dark) .chatItem {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .chatItemActive {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .chatAvatar {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:global(.dark) .chatSubtitle,
+:global(.dark) .chatTime,
+:global(.dark) .friendCount,
+:global(.dark) .meta,
+:global(.dark) .chatHeaderIdentity small {
+  color: rgba(255, 255, 255, 0.67);
+}
+
+:global(.dark) .filterChip,
+:global(.dark) .backToListButton,
+:global(.dark) .modeBadge,
+:global(.dark) .headerIconButton,
+:global(.dark) .inlineSearchNav,
+:global(.dark) .inlineSearchClose,
+:global(.dark) .infoActionCard,
+:global(.dark) .infoMembersAddButton,
+:global(.dark) .topicLayoutCard,
+:global(.dark) .slowModeChip,
+:global(.dark) .permissionToggle,
+:global(.dark) .telegramGhostButton {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .filterChipActive {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+:global(.dark) .quickActionsMenu,
+:global(.dark) .modeList,
+:global(.dark) .headerDropdownMenu,
+:global(.dark) .infoPanel,
+:global(.dark) .telegramModal,
+:global(.dark) .telegramDialog,
+:global(.dark) .inlineSearchBar {
+  background: #121212;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+:global(.dark) .quickMenuItem,
+:global(.dark) .modeBtn,
+:global(.dark) .headerDropdownItem,
+:global(.dark) .telegramModalTitle,
+:global(.dark) .telegramDialogTitle,
+:global(.dark) .settingsRow,
+:global(.dark) .settingsRowStatic,
+:global(.dark) .radioRow,
+:global(.dark) .permissionRow,
+:global(.dark) .memberMeta strong,
+:global(.dark) .infoMembersHeader,
+:global(.dark) .infoPanelIdentity h3,
+:global(.dark) .infoStatRow strong,
+:global(.dark) .infoStatRow span,
+:global(.dark) .telegramField,
+:global(.dark) .toggleRow,
+:global(.dark) .slowModeTitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .quickMenuItem:hover,
+:global(.dark) .modeBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+:global(.dark) .modeDivider {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+:global(.dark) .bubbleSearchMatch {
+  border-color: rgba(250, 204, 21, 0.46);
+}
+
+:global(.dark) .bubbleSearchMatchActive {
+  border-color: rgba(251, 191, 36, 0.9);
+}
+
+:global(.dark) .questionCard,
+:global(.dark) .pendingCard {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(28, 28, 28, 0.9);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:global(.dark) .bubble {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(34, 34, 34, 0.92);
+  color: rgba(255, 255, 255, 0.94);
+}
+
+:global(.dark) .mine {
+  background: rgba(50, 50, 50, 0.95);
+}
+
+:global(.dark) .notesModal {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(155deg, rgba(32, 32, 32, 0.9) 0%, rgba(18, 18, 18, 0.88) 100%);
+}
+
+:global(.dark) .notesTitle {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:global(.dark) .notesTextarea {
+  background: rgba(20, 20, 20, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:global(.dark) .telegramField input,
+:global(.dark) .inlineSearchInput,
+:global(.dark) .inviteLinkValue {
+  background: rgba(20, 20, 20, 0.9);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:global(.dark) .memberAvatar,
+:global(.dark) .manageGroupAvatar,
+:global(.dark) .infoPanelAvatar {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+}
