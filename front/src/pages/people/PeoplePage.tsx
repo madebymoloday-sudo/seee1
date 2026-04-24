@@ -26,9 +26,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import apiAgent from "@/lib/api";
+import { socketService } from "@/lib/socket";
+import { registerBrowserPushNotifications } from "@/lib/pushNotifications";
 import styles from "./PeoplePage.module.css";
 import BottomNavigation from "@/pages/sessions/components/BottomNavigation";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import MessageInput from "@/pages/sessions/components/MessageInput";
 
 type FriendDto = { id: string; username: string; userId?: string | null; avatarUrl?: string | null };
@@ -38,6 +40,7 @@ type ChatListItem = {
   isGroup: boolean;
   participants: FriendDto[];
   lastMessage: { id: string; content: string; mode: string; createdAt: string } | null;
+  unreadCount: number;
 };
 type ChatMessage = {
   id: string;
@@ -133,6 +136,7 @@ const decodeSub = () => {
 
 const PeoplePage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [friends, setFriends] = useState<FriendDto[]>([]);
   const [chats, setChats] = useState<ChatListItem[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -166,6 +170,8 @@ const PeoplePage = () => {
   const moreMenuRef = useRef<HTMLDivElement | null>(null);
   const searchResultRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const myUserId = useMemo(() => decodeSub(), []);
+  const previousChatIdRef = useRef<string | null>(null);
+  const selectedChatIdRef = useRef<string | null>(null);
   const myUsername = useMemo(() => {
     try {
       const auth = localStorage.getItem("accessToken");
@@ -223,6 +229,15 @@ const PeoplePage = () => {
     ]);
     setFriends(friendsData);
     setChats(chatsData);
+    const requestedChatId = searchParams.get("chatId");
+    const requestedChat = requestedChatId ? chatsData.find((chat) => chat.id === requestedChatId) : null;
+
+    if (requestedChat) {
+      setSelectedChatId(requestedChat.id);
+      setMobilePane("chat");
+      return;
+    }
+
     if (!selectedChatId && chatsData.length > 0) {
       setSelectedChatId(chatsData[0].id);
       setMobilePane("chat");
@@ -244,6 +259,112 @@ const PeoplePage = () => {
   }, []);
 
   useEffect(() => {
+    selectedChatIdRef.current = selectedChatId;
+  }, [selectedChatId]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    socketService.connect(token);
+    registerBrowserPushNotifications().catch(() => undefined);
+
+    const handleRealtimeMessage = (payload: {
+      chatId: string;
+      chatTitle?: string | null;
+      message: ChatMessage;
+    }) => {
+      const incomingMessage = payload.message;
+
+      setChats((current) => {
+        const next = current.map((chat) =>
+          chat.id === payload.chatId
+            ? {
+                ...chat,
+                title: payload.chatTitle || chat.title,
+                lastMessage: {
+                  id: incomingMessage.id,
+                  content: incomingMessage.content,
+                  mode: incomingMessage.mode,
+                  createdAt: incomingMessage.createdAt,
+                },
+              }
+            : chat,
+        );
+
+        return [...next].sort((a, b) => {
+          const aTime = a.lastMessage?.createdAt || "";
+          const bTime = b.lastMessage?.createdAt || "";
+          return aTime < bTime ? 1 : -1;
+        });
+      });
+
+      if (payload.chatId === selectedChatIdRef.current) {
+        setMessages((current) =>
+          current.some((message) => message.id === incomingMessage.id)
+            ? current
+            : [...current, incomingMessage],
+        );
+
+        if (incomingMessage.sender.id !== myUserId) {
+          void apiAgent.post<{ lastMessageId: string }, { ok: boolean }>(
+            `/social/chats/${payload.chatId}/read`,
+            { lastMessageId: incomingMessage.id },
+          );
+        }
+        return;
+      }
+
+      if (incomingMessage.sender.id === myUserId) {
+        return;
+      }
+
+      toast.message(`Новое сообщение в ${payload.chatTitle || "мега-чате"}`, {
+        description: `${incomingMessage.sender.username}: ${incomingMessage.content}`,
+      });
+
+      if (document.visibilityState !== "visible" && Notification.permission === "granted") {
+        new Notification(payload.chatTitle || "Seee", {
+          body: `${incomingMessage.sender.username}: ${incomingMessage.content}`,
+        });
+      }
+    };
+
+    const handleUnreadUpdate = (payload: { chatId: string; unreadCount: number }) => {
+      setChats((current) =>
+        current.map((chat) =>
+          chat.id === payload.chatId ? { ...chat, unreadCount: payload.unreadCount } : chat,
+        ),
+      );
+    };
+
+    const handleRefresh = () => {
+      refreshChats().catch(() => undefined);
+    };
+
+    const handleConnect = () => {
+      const chatId = previousChatIdRef.current || selectedChatIdRef.current;
+      if (chatId) {
+        socketService.emit("join_chat", { chatId });
+      }
+    };
+
+    socketService.on("social:message", handleRealtimeMessage);
+    socketService.on("social:unread", handleUnreadUpdate);
+    socketService.on("social:chat_refresh", handleRefresh);
+    socketService.on("connect", handleConnect);
+
+    return () => {
+      socketService.off("social:message", handleRealtimeMessage);
+      socketService.off("social:unread", handleUnreadUpdate);
+      socketService.off("social:chat_refresh", handleRefresh);
+      socketService.off("connect", handleConnect);
+      socketService.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myUserId]);
+
+  useEffect(() => {
     if (!selectedChatId) return;
     Promise.all([loadMessages(selectedChatId), loadModeState(selectedChatId)]).catch(() =>
       toast.error("Не удалось загрузить данные чата")
@@ -255,6 +376,23 @@ const PeoplePage = () => {
     }, 2500);
     return () => window.clearInterval(t);
   }, [selectedChatId]);
+
+  useEffect(() => {
+    if (!selectedChatId) return;
+
+    const previousChatId = previousChatIdRef.current;
+    if (previousChatId && previousChatId !== selectedChatId) {
+      socketService.emit("leave_chat", { chatId: previousChatId });
+    }
+
+    previousChatIdRef.current = selectedChatId;
+    socketService.emit("join_chat", { chatId: selectedChatId });
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set("chatId", selectedChatId);
+      return next;
+    });
+  }, [selectedChatId, setSearchParams]);
 
   useEffect(() => {
     const saved = localStorage.getItem(notesKey);
@@ -671,8 +809,13 @@ const PeoplePage = () => {
                   <div className={styles.chatMain}>
                     <div className={styles.chatMainTop}>
                       <div className={styles.chatTitle}>{chat.title}</div>
-                      <div className={styles.chatTime}>
-                        {formatPreviewTime(chat.lastMessage?.createdAt)}
+                      <div className={styles.chatMeta}>
+                        <div className={styles.chatTime}>
+                          {formatPreviewTime(chat.lastMessage?.createdAt)}
+                        </div>
+                        {chat.unreadCount > 0 ? (
+                          <div className={styles.unreadBadge}>{chat.unreadCount}</div>
+                        ) : null}
                       </div>
                     </div>
                     <div className={styles.chatSubtitle}>

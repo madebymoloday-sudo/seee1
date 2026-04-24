@@ -11,6 +11,7 @@ import { PipelineModule } from './pipeline/pipeline.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
 import { SocialModule } from './social/social.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -25,10 +26,10 @@ import { SocialModule } from './social/social.module';
     PipelineModule,
     FeedbackModule,
     TelegramBotModule,
+    NotificationsModule,
     SocialModule,
   ],
   controllers: [],
   providers: [],
 })
 export class AppModule {}
-

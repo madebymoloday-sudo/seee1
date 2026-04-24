@@ -76,6 +76,7 @@ model User {
   dailyPracticeMinutes Int? @map("daily_practice_minutes")
   dailyStreak   Int      @default(0) @map("daily_streak")
   lastDailyPracticeDateKey String? @map("last_daily_practice_date_key")
+  megaChatTelegramNotificationsEnabled Boolean @default(false) @map("mega_chat_telegram_notifications_enabled")
   openAiPromptTokens      Int      @default(0) @map("openai_prompt_tokens")
   openAiCompletionTokens  Int      @default(0) @map("openai_completion_tokens")
   openAiTotalTokens       Int      @default(0) @map("openai_total_tokens")
@@ -117,6 +118,7 @@ model User {
   chatMembers        ChatMember[]
   sentChatMessages   ChatMessage[]
   chatModeApprovals  ChatModeApproval[]
+  pushSubscriptions  PushSubscription[]
 
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -163,6 +165,7 @@ model ChatMember {
   chatId    String   @map("chat_id")
   userId    String   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
+  lastReadAt DateTime? @map("last_read_at")
 
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -170,6 +173,22 @@ model ChatMember {
   @@unique([chatId, userId])
   @@index([userId])
   @@map("chat_members")
+}
+
+model PushSubscription {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  endpoint       String    @unique
+  p256dh         String
+  auth           String
+  expirationTime DateTime? @map("expiration_time")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 model ChatMessage {

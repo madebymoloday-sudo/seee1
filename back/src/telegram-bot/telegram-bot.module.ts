@@ -7,6 +7,6 @@ import { PrismaModule } from '../prisma/prisma.module';
 @Module({
   imports: [PrismaModule],
   providers: [TelegramBotService, PersonalityTestService, LevelImageService],
+  exports: [TelegramBotService],
 })
 export class TelegramBotModule {}
-

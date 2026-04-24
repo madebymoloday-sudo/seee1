@@ -87,3 +87,42 @@ export class ExplainEditAnswerDto {
   text: string;
 }
 
+export class MarkChatReadDto {
+  @ApiPropertyOptional({ description: 'Последнее прочитанное сообщение', example: 'chat-message-id' })
+  @IsOptional()
+  @IsString()
+  lastMessageId?: string;
+}
+
+export class BrowserPushSubscriptionDto {
+  @ApiProperty({ description: 'Push endpoint браузера' })
+  @IsString()
+  @IsNotEmpty()
+  endpoint: string;
+
+  @ApiPropertyOptional({ description: 'Время истечения подписки' })
+  @IsOptional()
+  expirationTime?: number | null;
+
+  @ApiProperty({
+    description: 'Ключи браузерной push-подписки',
+    example: { p256dh: '...', auth: '...' },
+  })
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
+
+export class RemoveBrowserPushSubscriptionDto {
+  @ApiProperty({ description: 'Push endpoint браузера' })
+  @IsString()
+  @IsNotEmpty()
+  endpoint: string;
+}
+
+export class UpdateTelegramNotificationPreferenceDto {
+  @ApiProperty({ description: 'Включить Telegram-уведомления для мегачатов', example: true })
+  @IsBoolean()
+  enabled: boolean;
+}

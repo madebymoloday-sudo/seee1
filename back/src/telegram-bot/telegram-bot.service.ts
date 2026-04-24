@@ -987,6 +987,30 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     await this.sendRawMessage(chatId, text, replyMarkup, parseMode);
   }
 
+  async sendUserNotificationByTelegramId(telegramId: string, text: string) {
+    if (!this.token || !telegramId?.trim()) {
+      return false;
+    }
+
+    const chatId = Number(telegramId);
+    if (!Number.isFinite(chatId)) {
+      this.logger.warn(`Invalid telegramId for notification: ${telegramId}`);
+      return false;
+    }
+
+    try {
+      await this.sendRawMessage(chatId, text);
+      return true;
+    } catch (error: any) {
+      this.logger.warn(
+        `Failed to send telegram notification to ${telegramId}: ${
+          error?.response?.data?.description || error?.message || error
+        }`,
+      );
+      return false;
+    }
+  }
+
   private async sendRawMessage(chatId: number, text: string, replyMarkup?: any, parseMode?: 'Markdown' | 'HTML') {
     try {
       const body: Record<string, unknown> = {

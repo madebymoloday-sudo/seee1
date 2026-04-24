@@ -8,9 +8,10 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, ServiceUnavailableException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PsychologistService } from '../psychologist/psychologist.service';
+import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway({
   cors: {
@@ -30,14 +31,69 @@ export class ChatWebSocketGateway
   constructor(
     private prisma: PrismaService,
     private psychologistService: PsychologistService,
+    private jwtService: JwtService,
   ) {}
 
-  handleConnection(client: Socket) {
-    this.logger.log(`Client connected: ${client.id}`);
+  async handleConnection(client: Socket) {
+    const userId = await this.resolveUserId(client);
+    if (!userId) {
+      client.emit('error', { message: 'Необходима авторизация' });
+      client.disconnect(true);
+      return;
+    }
+
+    client.data.userId = userId;
+    client.join(`user:${userId}`);
+    this.logger.log(`Client connected: ${client.id} (user ${userId})`);
   }
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
+  }
+
+  @SubscribeMessage('join_chat')
+  async handleJoinChat(
+    @MessageBody() data: { chatId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = client.data.userId as string | undefined;
+    if (!userId || !data?.chatId) {
+      client.emit('error', { message: 'Необходима авторизация' });
+      return;
+    }
+
+    const isMember = await this.prisma.chatMember.findFirst({
+      where: { chatId: data.chatId, userId },
+      select: { id: true },
+    });
+
+    if (!isMember) {
+      client.emit('error', { message: 'Нет доступа к чату' });
+      return;
+    }
+
+    const previousChatId = client.data.activeChatId as string | undefined;
+    if (previousChatId && previousChatId !== data.chatId) {
+      client.leave(`chat:${previousChatId}`);
+    }
+
+    client.join(`chat:${data.chatId}`);
+    client.data.activeChatId = data.chatId;
+  }
+
+  @SubscribeMessage('leave_chat')
+  async handleLeaveChat(
+    @MessageBody() data: { chatId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    if (!data?.chatId) {
+      return;
+    }
+
+    client.leave(`chat:${data.chatId}`);
+    if (client.data.activeChatId === data.chatId) {
+      client.data.activeChatId = undefined;
+    }
   }
 
   @SubscribeMessage('join_session')
@@ -171,5 +227,59 @@ export class ChatWebSocketGateway
       this.logger.log(`Concepts saved for session ${sessionId}`);
     }
   }
-}
 
+  emitMegaChatMessage(chatId: string, payload: unknown) {
+    this.server.to(`chat:${chatId}`).emit('social:message', payload);
+  }
+
+  emitMegaChatUnread(userId: string, payload: unknown) {
+    this.server.to(`user:${userId}`).emit('social:unread', payload);
+  }
+
+  emitMegaChatRefresh(userIds: string[], payload: unknown) {
+    for (const userId of userIds) {
+      this.server.to(`user:${userId}`).emit('social:chat_refresh', payload);
+    }
+  }
+
+  isUserOnline(userId: string) {
+    return (this.server.sockets.adapter.rooms.get(`user:${userId}`)?.size || 0) > 0;
+  }
+
+  isUserViewingChat(userId: string, chatId: string) {
+    const room = this.server.sockets.adapter.rooms.get(`user:${userId}`);
+    if (!room?.size) {
+      return false;
+    }
+
+    for (const socketId of room) {
+      const socket = this.server.sockets.sockets.get(socketId);
+      if (socket?.rooms.has(`chat:${chatId}`)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private async resolveUserId(client: Socket) {
+    const rawToken =
+      (client.handshake.auth?.token as string | undefined) ||
+      (client.handshake.headers.authorization as string | undefined);
+    if (!rawToken) {
+      return null;
+    }
+
+    const token = rawToken.startsWith('Bearer ')
+      ? rawToken.slice('Bearer '.length)
+      : rawToken;
+
+    try {
+      const payload = this.jwtService.verify(token) as { sub?: string };
+
+      return payload.sub || null;
+    } catch {
+      return null;
+    }
+  }
+}

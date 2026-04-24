@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ChatWebSocketGateway } from '../websocket/websocket.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const EXPLAIN_QUESTIONS: Record<number, string> = {
   1: 'Как называется идея, которую объясняем?',
@@ -18,7 +20,11 @@ const DEFAULT_MODE = 'Обычный';
 
 @Injectable()
 export class SocialService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly chatGateway: ChatWebSocketGateway,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async findUserByPublicId(userId: string, currentUserId: string) {
     const target = await this.prisma.user.findFirst({
@@ -103,6 +109,12 @@ export class SocialService {
       const title = chat.isGroup
         ? chat.name || 'Группа'
         : others[0]?.username || 'Чат с собой';
+      const currentMember = chat.members.find((member) => member.userId === currentUserId);
+      const unreadCount = await this.countUnreadMessages(
+        chat.id,
+        currentUserId,
+        currentMember?.lastReadAt ?? null,
+      );
 
       const pendingRequest = await this.prisma.chatModeRequest.findFirst({
         where: { chatId: chat.id, status: 'PENDING' },
@@ -121,6 +133,7 @@ export class SocialService {
         title,
         isGroup: chat.isGroup,
         participants,
+        unreadCount,
         pendingModeRequest: pendingRequest
           ? {
               id: pendingRequest.id,
@@ -157,6 +170,9 @@ export class SocialService {
       take: 300,
     });
 
+    await this.setChatReadMarker(currentUserId, chatId, messages[messages.length - 1]?.createdAt ?? new Date());
+    this.chatGateway.emitMegaChatUnread(currentUserId, { chatId, unreadCount: 0 });
+
     return messages.map((m) => ({
       id: m.id,
       content: m.content,
@@ -184,10 +200,97 @@ export class SocialService {
       },
     });
 
+    await this.setChatReadMarker(currentUserId, chatId, message.createdAt);
+
     await this.prisma.chat.update({
       where: { id: chatId },
       data: { updatedAt: new Date() },
       select: { id: true },
+    });
+
+    const chat = await this.prisma.chat.findUnique({
+      where: { id: chatId },
+      select: { id: true, name: true, isGroup: true },
+    });
+
+    const recipients = await this.prisma.chatMember.findMany({
+      where: {
+        chatId,
+        userId: { not: currentUserId },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            telegramId: true,
+            megaChatTelegramNotificationsEnabled: true,
+          },
+        },
+      },
+    });
+
+    const unreadEntries = await Promise.all(
+      recipients.map(async (recipient) => {
+        const isViewingChat = this.chatGateway.isUserViewingChat(recipient.userId, chatId);
+        if (isViewingChat) {
+          await this.setChatReadMarker(recipient.userId, chatId, message.createdAt);
+          return { userId: recipient.userId, unreadCount: 0, isViewingChat };
+        }
+
+        return {
+          userId: recipient.userId,
+          unreadCount: await this.countUnreadMessages(chatId, recipient.userId),
+          isViewingChat,
+        };
+      }),
+    );
+
+    const payload = {
+      chatId,
+      message: {
+        id: message.id,
+        content: message.content,
+        mode: message.mode,
+        meta: message.meta ?? null,
+        createdAt: message.createdAt,
+        sender: message.sender,
+      },
+      chatTitle: chat?.name || null,
+    };
+
+    this.chatGateway.emitMegaChatMessage(chatId, payload);
+    this.chatGateway.emitMegaChatUnread(currentUserId, { chatId, unreadCount: 0 });
+
+    for (const unreadEntry of unreadEntries) {
+      this.chatGateway.emitMegaChatUnread(unreadEntry.userId, {
+        chatId,
+        unreadCount: unreadEntry.unreadCount,
+      });
+    }
+
+    this.chatGateway.emitMegaChatRefresh(
+      [currentUserId, ...unreadEntries.map((entry) => entry.userId)],
+      { chatId },
+    );
+
+    await this.notificationsService.notifyMegaChatMessage({
+      chatId,
+      chatTitle: chat?.name || (chat?.isGroup ? 'Группа' : message.sender.username),
+      senderUsername: message.sender.username,
+      messagePreview: this.getMessagePreview(message.content),
+      recipients: recipients.map((recipient) => recipient.user),
+      shouldSendBrowserPushToUserIds: unreadEntries
+        .filter((entry) => !entry.isViewingChat)
+        .map((entry) => entry.userId),
+      shouldSendTelegramToUserIds: recipients
+        .filter(
+          (recipient) =>
+            recipient.user.telegramId &&
+            recipient.user.megaChatTelegramNotificationsEnabled &&
+            !this.chatGateway.isUserOnline(recipient.userId),
+        )
+        .map((recipient) => recipient.userId),
     });
 
     return {
@@ -504,12 +607,105 @@ export class SocialService {
     return chat;
   }
 
+  async markChatRead(currentUserId: string, chatId: string, lastMessageId?: string) {
+    await this.assertMember(chatId, currentUserId);
+
+    let readAt = new Date();
+    if (lastMessageId) {
+      const message = await this.prisma.chatMessage.findFirst({
+        where: { id: lastMessageId, chatId },
+        select: { createdAt: true },
+      });
+      if (message) {
+        readAt = message.createdAt;
+      }
+    } else {
+      const latestMessage = await this.prisma.chatMessage.findFirst({
+        where: { chatId },
+        orderBy: { createdAt: 'desc' },
+        select: { createdAt: true },
+      });
+      if (latestMessage) {
+        readAt = latestMessage.createdAt;
+      }
+    }
+
+    await this.setChatReadMarker(currentUserId, chatId, readAt);
+    this.chatGateway.emitMegaChatUnread(currentUserId, { chatId, unreadCount: 0 });
+    return { ok: true, chatId, unreadCount: 0 };
+  }
+
+  async getNotificationSettings(currentUserId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: currentUserId },
+      select: {
+        telegramId: true,
+        megaChatTelegramNotificationsEnabled: true,
+      },
+    });
+
+    return this.notificationsService.getSettings(user || {});
+  }
+
+  async saveBrowserPushSubscription(
+    currentUserId: string,
+    subscription: {
+      endpoint: string;
+      expirationTime?: number | null;
+      keys: { p256dh: string; auth: string };
+    },
+  ) {
+    return this.notificationsService.saveBrowserSubscription(currentUserId, subscription);
+  }
+
+  async removeBrowserPushSubscription(currentUserId: string, endpoint: string) {
+    return this.notificationsService.removeBrowserSubscription(currentUserId, endpoint);
+  }
+
+  async updateTelegramNotificationPreference(currentUserId: string, enabled: boolean) {
+    return this.notificationsService.updateTelegramNotificationPreference(currentUserId, enabled);
+  }
+
   private async assertMember(chatId: string, userId: string) {
     const membership = await this.prisma.chatMember.findFirst({
       where: { chatId, userId },
       select: { id: true },
     });
     if (!membership) throw new NotFoundException('Чат не найден');
+  }
+
+  private async setChatReadMarker(userId: string, chatId: string, readAt: Date) {
+    await this.prisma.chatMember.updateMany({
+      where: { userId, chatId },
+      data: { lastReadAt: readAt },
+    });
+  }
+
+  private async countUnreadMessages(chatId: string, userId: string, lastReadAt?: Date | null) {
+    const membership =
+      typeof lastReadAt !== 'undefined'
+        ? { lastReadAt }
+        : await this.prisma.chatMember.findFirst({
+            where: { chatId, userId },
+            select: { lastReadAt: true },
+          });
+
+    return this.prisma.chatMessage.count({
+      where: {
+        chatId,
+        senderId: { not: userId },
+        ...(membership?.lastReadAt ? { createdAt: { gt: membership.lastReadAt } } : {}),
+      },
+    });
+  }
+
+  private getMessagePreview(content: string) {
+    const normalized = content.replace(/\s+/g, ' ').trim();
+    if (normalized.length <= 140) {
+      return normalized;
+    }
+
+    return `${normalized.slice(0, 137)}...`;
   }
 
   private async ensureDirectChat(userA: string, userB: string) {
@@ -711,4 +907,3 @@ export class SocialService {
     };
   }
 }
-

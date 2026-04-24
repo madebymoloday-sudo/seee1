@@ -17,9 +17,13 @@ import {
   ExplainEditAnswerDto,
   ExplainSessionActionDto,
   ExplainStepAnswerDto,
+  BrowserPushSubscriptionDto,
+  MarkChatReadDto,
+  RemoveBrowserPushSubscriptionDto,
   RespondModeRequestDto,
   SendChatMessageDto,
   StartModeRequestDto,
+  UpdateTelegramNotificationPreferenceDto,
 } from './dto/social.dto';
 
 @ApiTags('Social')
@@ -90,6 +94,16 @@ export class SocialController {
     @Param('chatId') chatId: string,
   ) {
     return this.socialService.getChatMessages(req.user.id, chatId);
+  }
+
+  @Post('chats/:chatId/read')
+  @ApiOperation({ summary: 'Отметить чат прочитанным' })
+  markRead(
+    @Request() req: { user: { id: string } },
+    @Param('chatId') chatId: string,
+    @Body() dto: MarkChatReadDto,
+  ) {
+    return this.socialService.markChatRead(req.user.id, chatId, dto.lastMessageId);
   }
 
   @Post('chats/:chatId/messages')
@@ -167,5 +181,37 @@ export class SocialController {
       dto.text,
     );
   }
-}
 
+  @Get('notifications/settings')
+  @ApiOperation({ summary: 'Настройки уведомлений мегачатов' })
+  getNotificationSettings(@Request() req: { user: { id: string } }) {
+    return this.socialService.getNotificationSettings(req.user.id);
+  }
+
+  @Post('notifications/browser-subscriptions')
+  @ApiOperation({ summary: 'Сохранить browser push-подписку' })
+  saveBrowserPushSubscription(
+    @Request() req: { user: { id: string } },
+    @Body() dto: BrowserPushSubscriptionDto,
+  ) {
+    return this.socialService.saveBrowserPushSubscription(req.user.id, dto);
+  }
+
+  @Post('notifications/browser-subscriptions/remove')
+  @ApiOperation({ summary: 'Удалить browser push-подписку' })
+  removeBrowserPushSubscription(
+    @Request() req: { user: { id: string } },
+    @Body() dto: RemoveBrowserPushSubscriptionDto,
+  ) {
+    return this.socialService.removeBrowserPushSubscription(req.user.id, dto.endpoint);
+  }
+
+  @Post('notifications/telegram')
+  @ApiOperation({ summary: 'Включить или выключить Telegram-уведомления мегачатов' })
+  updateTelegramNotifications(
+    @Request() req: { user: { id: string } },
+    @Body() dto: UpdateTelegramNotificationPreferenceDto,
+  ) {
+    return this.socialService.updateTelegramNotificationPreference(req.user.id, dto.enabled);
+  }
+}
