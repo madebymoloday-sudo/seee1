@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { observer } from "mobx-react-lite";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
+import { PENDING_CHAT_INVITE_KEY } from "./people/InviteRedirectPage";
 
 const EntryGatePage = observer(() => {
   const subscriptionGateEnabled =
@@ -20,6 +21,12 @@ const EntryGatePage = observer(() => {
     const hasActiveSubscription = !!user.subscriptionActive;
     if (subscriptionGateEnabled && !hasActiveSubscription) {
       navigate("/subscription", { replace: true });
+      return;
+    }
+
+    const pendingChatInvite = localStorage.getItem(PENDING_CHAT_INVITE_KEY);
+    if (pendingChatInvite) {
+      navigate(`/invite/${encodeURIComponent(pendingChatInvite)}`, { replace: true });
       return;
     }
 

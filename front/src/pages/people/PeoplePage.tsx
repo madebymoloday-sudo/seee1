@@ -103,6 +103,11 @@ type ChatSettings = {
 
 const CHAT_SETTINGS_PREFIX = "seee_people_chat_settings:";
 
+const buildChatInviteLink = (chatId: string) => {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/invite/${chatId}`;
+};
+
 const createDefaultChatSettings = (chat: ChatListItem, ownerId: string): ChatSettings => ({
   title: chat.title,
   description: "",
@@ -122,7 +127,7 @@ const createDefaultChatSettings = (chat: ChatListItem, ownerId: string): ChatSet
   slowMode: "off",
   blacklistCount: 0,
   exceptionsCount: 0,
-  inviteLink: `https://seee.app/invite/${chat.id}`,
+  inviteLink: buildChatInviteLink(chat.id),
   ownerId,
   adminIds: [],
 });
@@ -249,7 +254,7 @@ const PeoplePage = () => {
     ]);
     setFriends(friendsData);
     setChats(chatsData);
-    const requestedChatId = searchParams.get("chatId");
+    const requestedChatId = searchParams.get("chatId") || searchParams.get("chat");
     const requestedChat = requestedChatId ? chatsData.find((chat) => chat.id === requestedChatId) : null;
 
     if (requestedChat) {
@@ -447,11 +452,17 @@ const PeoplePage = () => {
     const raw = localStorage.getItem(storageKey);
     if (raw) {
       try {
+        const parsed = JSON.parse(raw) as Partial<ChatSettings>;
+        const inviteLink =
+          !parsed.inviteLink || parsed.inviteLink.includes("seee.app")
+            ? buildChatInviteLink(selectedChat.id)
+            : parsed.inviteLink;
         setChatSettings((current) => ({
           ...current,
           [selectedChat.id]: {
             ...createDefaultChatSettings(selectedChat, myUserId || "owner"),
-            ...(JSON.parse(raw) as Partial<ChatSettings>),
+            ...parsed,
+            inviteLink,
           },
         }));
         return;

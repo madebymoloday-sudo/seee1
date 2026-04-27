@@ -14,6 +14,7 @@ import RefundPolicyPage from "../pages/legal/RefundPolicyPage";
 import PublicSubscriptionPage from "../pages/subscription/PublicSubscriptionPage";
 import PaymentSuccessPage from "../pages/subscription/PaymentSuccessPage";
 import TeamLoginPage from "../pages/team/TeamLoginPage";
+import InviteRedirectPage from "../pages/people/InviteRedirectPage";
 
 /**
  * Роутер для неавторизованных пользователей
@@ -42,6 +43,10 @@ export const publicRouter = createBrowserRouter([
         <TeamLoginPage />
       </PublicRoute>
     ),
+  },
+  {
+    path: "/invite/:chatId",
+    element: <InviteRedirectPage />,
   },
   {
     path: "/sessions",

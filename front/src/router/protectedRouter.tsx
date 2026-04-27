@@ -10,6 +10,7 @@ import SessionPage from "../pages/sessions/SessionPage";
 import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
 import WizardDemoPage from "../pages/sessions/WizardDemoPage";
 import PeoplePage from "../pages/people/PeoplePage";
+import InviteRedirectPage from "../pages/people/InviteRedirectPage";
 import RatingPage from "../pages/rating/RatingPage";
 import SubscriptionGatePage from "../pages/subscription/SubscriptionGatePage";
 import { ProtectedRoute } from "./ProtectedRoute";
@@ -69,6 +70,10 @@ export const protectedRouter = createBrowserRouter([
       {
         path: "people",
         element: <PeoplePage />,
+      },
+      {
+        path: "invite/:chatId",
+        element: <InviteRedirectPage />,
       },
       {
         path: "rating",

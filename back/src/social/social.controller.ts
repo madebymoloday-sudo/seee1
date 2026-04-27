@@ -87,6 +87,15 @@ export class SocialController {
     return this.socialService.createGroup(req.user.id, dto.name, dto.memberUserIds);
   }
 
+  @Post('chats/:chatId/join')
+  @ApiOperation({ summary: 'Войти в групповой чат по пригласительной ссылке' })
+  joinGroupChat(
+    @Request() req: { user: { id: string } },
+    @Param('chatId') chatId: string,
+  ) {
+    return this.socialService.joinGroupChat(req.user.id, chatId);
+  }
+
   @Get('chats/:chatId/messages')
   @ApiOperation({ summary: 'Получить сообщения чата' })
   getMessages(

@@ -607,6 +607,35 @@ export class SocialService {
     return chat;
   }
 
+  async joinGroupChat(currentUserId: string, chatId: string) {
+    const chat = await this.prisma.chat.findUnique({
+      where: { id: chatId },
+      select: { id: true, name: true, isGroup: true },
+    });
+
+    if (!chat || !chat.isGroup) {
+      throw new NotFoundException('Чат не найден');
+    }
+
+    await this.prisma.chatMember.upsert({
+      where: {
+        chatId_userId: {
+          chatId,
+          userId: currentUserId,
+        },
+      },
+      update: {},
+      create: {
+        chatId,
+        userId: currentUserId,
+      },
+    });
+
+    this.chatGateway.emitMegaChatRefresh([currentUserId], { chatId });
+
+    return { ok: true, chatId: chat.id, title: chat.name || 'Группа' };
+  }
+
   async markChatRead(currentUserId: string, chatId: string, lastMessageId?: string) {
     await this.assertMember(chatId, currentUserId);
 
