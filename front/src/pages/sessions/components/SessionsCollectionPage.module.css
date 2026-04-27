@@ -73,6 +73,18 @@
   color: #101010;
 }
 
+.archivistTrainingProgress {
+  width: fit-content;
+  margin: 0 0 0.55rem;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(214, 163, 66, 0.12);
+  color: #765315;
+  font-size: 0.78rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
 .archivistWelcomeText {
   margin: 0;
   max-width: 31ch;
@@ -80,9 +92,9 @@
   font-size: clamp(1rem, 1.7vw, 1.4rem);
   line-height: 1.2;
   font-weight: 700;
-  letter-spacing: -0.03em;
   color: #111111;
   overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 
 .archivistControls {
@@ -381,6 +393,10 @@
   .archivistWelcomeTitle {
     text-align: center;
     font-size: clamp(1.75rem, 8vw, 2.25rem);
+  }
+
+  .archivistTrainingProgress {
+    margin: 0 auto 0.5rem;
   }
 
   .archivistWelcomeText {

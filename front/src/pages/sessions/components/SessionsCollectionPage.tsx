@@ -131,6 +131,9 @@ type ArchivistOption = {
   id: string;
   label: string;
   sessionId?: string;
+  trainingStepIndex?: number;
+  trainingAnswerIndex?: number;
+  trainingMinutes?: 5 | 10 | 15;
   action:
     | "set_daily_5"
     | "set_daily_10"
@@ -144,8 +147,96 @@ type ArchivistOption = {
     | "open_bot"
     | "telegram_done"
     | "continue_last_session"
-    | "open_suggested_cards";
+    | "open_suggested_cards"
+    | "training_answer"
+    | "training_daily"
+    | "finish_training";
 };
+
+type ArchivistTrainingAnswer = {
+  label: string;
+  isCorrect?: boolean;
+  correction?: string;
+};
+
+type ArchivistTrainingStep = {
+  message: string;
+  answers: ArchivistTrainingAnswer[];
+  success?: string;
+};
+
+const ARCHIVIST_TRAINING_STEPS: ArchivistTrainingStep[] = [
+  {
+    message:
+      "Seee — это инструмент для работы с мышлением. Здесь ты разбираешь ситуации через СИ-терапию: находишь эмоции, мысли и причины, которые держат проблему.",
+    answers: [
+      { label: "Seee помогает разбирать ситуации через мысли и эмоции", isCorrect: true },
+      { label: "Seee просто даёт советы, что делать", correction: "Не совсем. Seee не заменяет твой выбор и не выдаёт готовые указания. Он ведёт тебя вопросами." },
+      { label: "Seee нужен только для хранения заметок", correction: "Заметки могут появляться, но главное — разбор ситуации и мыслей внутри неё." },
+    ],
+    success: "Да. Главная задача Seee — помочь тебе разложить ситуацию на понятные элементы.",
+  },
+  {
+    message:
+      "Нейрокарта строится сверху вниз: ситуация, затем эмоции, затем мысли, которые вызывают эти эмоции. Эти мысли становятся карточками для разбора.",
+    answers: [
+      { label: "Сначала ситуация, потом эмоции, потом мысли", isCorrect: true },
+      { label: "Сначала монеты, потом рейтинг, потом чат", correction: "Нет. Это отдельные части приложения. Нейрокарта начинается с ситуации и эмоциональной цепочки." },
+      { label: "Эмоция появляется без мысли", correction: "В Seee мы ищем мысль или идею, которая запускает эмоцию." },
+    ],
+    success: "Верно. Мысль часто является тем узлом, который потом нужно разобрать глубже.",
+  },
+  {
+    message:
+      "Сессия — это разбор конкретной мысли из нейрокарты. Seee не говорит тебе, как жить. Он задаёт точные вопросы, а ответ ты находишь сам.",
+    answers: [
+      { label: "Seee задаёт вопросы, а я сам нахожу ответ", isCorrect: true },
+      { label: "Seee должен решить ситуацию вместо меня", correction: "Нет. Seee может поддержать и направить, но решение должно быть твоим." },
+      { label: "Сессию можно проходить только один раз", correction: "Нет. К мысли можно возвращаться и продолжать разбор." },
+    ],
+    success: "Да. Это важный принцип: не готовые советы, а правильная последовательность вопросов.",
+  },
+  {
+    message:
+      "Во время разбора одной мысли ты находишь другие скрытые мысли и убеждения. Они автоматически попадают в нейрокарту уровнем ниже, и их тоже можно разбирать.",
+    answers: [
+      { label: "После разбора могут появляться новые мысли для нейрокарты", isCorrect: true },
+      { label: "Все найденные мысли нужно удалить", correction: "Нет. Их нужно сохранить, чтобы при необходимости разобрать дальше." },
+      { label: "Новые мысли не связаны с исходной", correction: "Связаны. Они появляются из конкретной мысли или причины уровнем выше." },
+    ],
+    success: "Правильно. Так нейрокарта постепенно показывает всю цепочку.",
+  },
+  {
+    message:
+      "Разбор заканчивается, когда ты доходишь до корневой установки: она сильно откликается, даёт инсайт, и после неё уже не появляются новые важные мысли.",
+    answers: [
+      { label: "Финал — инсайт, облегчение и отсутствие новых важных веток", isCorrect: true },
+      { label: "Финал — когда я устал отвечать", correction: "Усталость может быть, но ориентир другой: инсайт, эмоциональный отклик и завершение цепочки." },
+      { label: "Финал — первая мысль, которую я написал", correction: "Обычно первая мысль только вход в цепочку. Корневая установка часто находится глубже." },
+    ],
+    success: "Да. Старые мысли могут жить годами, поэтому их разбор часто даёт заметное облегчение.",
+  },
+  {
+    message:
+      "За разбор карточек и хорошие ответы начисляются монеты. Монеты суммируются и показывают твой прогресс в приложении.",
+    answers: [
+      { label: "Монеты начисляются за разбор и качественные ответы", isCorrect: true },
+      { label: "Монеты начисляются только за вход в приложение", correction: "Нет. Основной смысл монет — отмечать реальную работу внутри разборов." },
+      { label: "Монеты никак не связаны с прогрессом", correction: "Связаны. Они отражают вклад в прохождение сессий и карточек." },
+    ],
+    success: "Да. Монеты нужны, чтобы прогресс был виден, а не терялся.",
+  },
+  {
+    message:
+      "Все заработанные монеты отображаются в общем рейтинге. Кнопка «Рейтинг» находится в нижней панели слева.",
+    answers: [
+      { label: "Рейтинг показывает общий прогресс по монетам", isCorrect: true },
+      { label: "Рейтинг нужен для настроек чата", correction: "Нет. Для чатов есть отдельный раздел «Мега-чаты»." },
+      { label: "Рейтинг находится только в нейрокарте", correction: "Нет. Он вынесен отдельной кнопкой в нижнюю панель." },
+    ],
+    success: "Верно. Рейтинг — отдельная точка, где виден общий результат.",
+  },
+];
 
 function describeDailyPracticeGoal(minutes: 5 | 10 | 15): string {
   if (minutes === 5) {
@@ -492,6 +583,7 @@ const SessionsCollectionPage = observer(() => {
   const [archivistOptions, setArchivistOptions] = useState<ArchivistOption[]>([]);
   const [isArchivistCustomInputVisible, setIsArchivistCustomInputVisible] = useState(false);
   const [archivistDraft, setArchivistDraft] = useState("");
+  const [archivistTrainingStepIndex, setArchivistTrainingStepIndex] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("my_sessions");
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
@@ -1009,6 +1101,7 @@ const SessionsCollectionPage = observer(() => {
 
   const applyAutoArchivistState = (overrideContext?: ArchivistGalleryContext | null) => {
     const nextState = buildAutoArchivistState(overrideContext);
+    setArchivistTrainingStepIndex(null);
     setArchivistMessage(nextState.message);
     setArchivistOptions(nextState.options);
     setArchivistDraft("");
@@ -1023,6 +1116,70 @@ const SessionsCollectionPage = observer(() => {
         userKey,
       );
     }
+  };
+
+  const buildTrainingOptions = (stepIndex: number): ArchivistOption[] => {
+    const step = ARCHIVIST_TRAINING_STEPS[stepIndex];
+    return step.answers.map((answer, answerIndex) => ({
+      id: `training_${stepIndex}_${answerIndex}`,
+      label: answer.label,
+      action: "training_answer",
+      trainingStepIndex: stepIndex,
+      trainingAnswerIndex: answerIndex,
+    }));
+  };
+
+  const showTrainingStep = (stepIndex: number, prefix?: string) => {
+    const step = ARCHIVIST_TRAINING_STEPS[stepIndex];
+    setArchivistMode("conversation");
+    setIsArchivistCustomInputVisible(false);
+    setArchivistDraft("");
+    setArchivistTrainingStepIndex(stepIndex);
+    setArchivistMessage(`${prefix ? `${prefix}\n\n` : ""}${step.message}`);
+    setArchivistOptions(buildTrainingOptions(stepIndex));
+  };
+
+  const showDailyGoalTrainingStep = (prefix?: string) => {
+    setArchivistMode("conversation");
+    setIsArchivistCustomInputVisible(false);
+    setArchivistDraft("");
+    setArchivistTrainingStepIndex(ARCHIVIST_TRAINING_STEPS.length);
+    setArchivistMessage(
+      `${prefix ? `${prefix}\n\n` : ""}Теперь выбери ежедневную цель. 5 минут — примерно одна линия разбора до развилки «продолжить разбор» или «решить ситуацию». Потом это можно поменять в личном кабинете.`
+    );
+    setArchivistOptions([
+      { id: "training_daily_5", label: "5 минут в день", action: "training_daily", trainingMinutes: 5 },
+      { id: "training_daily_10", label: "10 минут в день", action: "training_daily", trainingMinutes: 10 },
+      { id: "training_daily_15", label: "15 минут в день", action: "training_daily", trainingMinutes: 15 },
+    ]);
+  };
+
+  const showTelegramTrainingStep = (prefix?: string) => {
+    setArchivistTrainingStepIndex(ARCHIVIST_TRAINING_STEPS.length + 1);
+    setArchivistMessage(
+      `${prefix ? `${prefix}\n\n` : ""}Telegram нужен для восстановления доступа, связи с поддержкой и важных уведомлений. Если он ещё не привязан, лучше сделать это сейчас.`
+    );
+    setArchivistOptions(
+      user && !user.telegramId
+        ? [
+            { id: "training_open_bot", label: "Привязать Telegram", action: "open_bot" },
+            { id: "training_finish_without_tg", label: "Закончить обучение", action: "finish_training" },
+          ]
+        : [{ id: "training_finish", label: "Закончить обучение", action: "finish_training" }]
+    );
+  };
+
+  const finishArchivistTraining = () => {
+    setArchivistTrainingStepIndex(null);
+    setArchivistMessage(
+      "Обучение закончено. Теперь можно открыть нейрокарту, создать первую или новую сессию, либо написать мне вопрос по приложению."
+    );
+    setArchivistOptions([
+      { id: "training_open_archive", label: "Открыть нейрокарту", action: "open_archive" },
+      { id: "training_new_session", label: "Создать новую сессию", action: "new_session" },
+      { id: "training_custom", label: "Написать Архивариусу", action: "custom_input" },
+      { id: "training_again", label: "Пройти обучение ещё раз", action: "intro" },
+    ]);
   };
 
   const resetArchivistConversation = () => {
@@ -1127,6 +1284,52 @@ const SessionsCollectionPage = observer(() => {
     setArchivistMode("conversation");
     setIsArchivistCustomInputVisible(false);
 
+    if (option.action === "training_answer") {
+      const stepIndex = option.trainingStepIndex ?? archivistTrainingStepIndex ?? 0;
+      const answerIndex = option.trainingAnswerIndex ?? -1;
+      const step = ARCHIVIST_TRAINING_STEPS[stepIndex];
+      const answer = step?.answers[answerIndex];
+      if (!step || !answer) return;
+
+      if (!answer.isCorrect) {
+        showTrainingStep(
+          stepIndex,
+          answer.correction || "Не совсем. Давай уточним и попробуем ещё раз.",
+        );
+        return;
+      }
+
+      const nextStepIndex = stepIndex + 1;
+      if (nextStepIndex < ARCHIVIST_TRAINING_STEPS.length) {
+        showTrainingStep(nextStepIndex, step.success || "Верно.");
+        return;
+      }
+
+      showDailyGoalTrainingStep(step.success || "Верно.");
+      return;
+    }
+
+    if (option.action === "training_daily") {
+      const minutes = option.trainingMinutes || 5;
+      (async () => {
+        try {
+          await apiAgent.patch("/auth/me", { dailyPracticeMinutes: minutes });
+          if (user) {
+            user.dailyPracticeMinutes = minutes;
+          }
+          showTelegramTrainingStep(`${describeDailyPracticeGoal(minutes)} Цель сохранена.`);
+        } catch (error: any) {
+          toast.error(error?.response?.data?.message || "Не удалось сохранить ежедневную цель");
+        }
+      })();
+      return;
+    }
+
+    if (option.action === "finish_training") {
+      finishArchivistTraining();
+      return;
+    }
+
     if (
       option.action === "set_daily_5" ||
       option.action === "set_daily_10" ||
@@ -1155,20 +1358,7 @@ const SessionsCollectionPage = observer(() => {
     }
 
     if (option.action === "intro") {
-      const sessionsCount = sessions.length;
-      const exploreCount = toExplore.length;
-      setArchivistMessage(
-        `${user?.dailyPracticeMinutes ? `${describeDailyPracticeGoal(user.dailyPracticeMinutes)} ` : ""}Сейчас у тебя ${sessionsCount} ${
-          sessionsCount === 1 ? "сессия" : sessionsCount < 5 && sessionsCount > 1 ? "сессии" : "сессий"
-        } в архиве и ${exploreCount} карточ${
-          exploreCount === 1 ? "ка" : exploreCount < 5 && exploreCount > 1 ? "ки" : "ек"
-        } для разбора. Можем открыть архив, создать новую сессию или ты можешь спросить меня о приложении своим текстом.`
-      );
-      setArchivistOptions(withArchivistTrainingOption([
-        { id: "new_session", label: "Создать новую сессию", action: "new_session" },
-        { id: "open_archive_after_intro", label: "Открыть нейрокарту", action: "open_archive" },
-        { id: "custom_after_intro", label: "Написать Архивариусу", action: "custom_input" },
-      ]));
+      showTrainingStep(0);
       return;
     }
 
@@ -1187,20 +1377,17 @@ const SessionsCollectionPage = observer(() => {
     if (option.action === "open_bot") {
       window.open("https://t.me/SeeeAppBot", "_blank", "noopener,noreferrer");
       setArchivistMessage(
-        "Открыл Seee-бота. Когда закончишь с привязкой, нажми «Уже привязал Telegram», и я продолжу помогать тебе здесь."
+        "Открыл Seee-бота. Когда закончишь с привязкой, нажми «Уже привязал Telegram». Если хочешь продолжить без привязки, можно закончить обучение сейчас."
       );
+      setArchivistOptions([
+        { id: "training_telegram_done", label: "Уже привязал Telegram", action: "telegram_done" },
+        { id: "training_finish_after_bot", label: "Закончить обучение", action: "finish_training" },
+      ]);
       return;
     }
 
     if (option.action === "telegram_done") {
-      setArchivistMessage(
-        "Отлично. Тогда давай двигаться дальше: можешь открыть нейрокарту, создать новую сессию или написать мне вопрос своими словами."
-      );
-      setArchivistOptions(withArchivistTrainingOption([
-        { id: "archive_after_tg", label: "Открыть нейрокарту", action: "open_archive" },
-        { id: "new_after_tg", label: "Создать новую сессию", action: "new_session" },
-        { id: "custom_after_tg_done", label: "Написать Архивариусу", action: "custom_input" },
-      ]));
+      finishArchivistTraining();
       return;
     }
 
@@ -1232,6 +1419,7 @@ const SessionsCollectionPage = observer(() => {
     }
 
     if (option.action === "custom_input") {
+      setArchivistTrainingStepIndex(null);
       setIsArchivistCustomInputVisible(true);
       setArchivistMessage(
         "Напиши мне, что именно ты хочешь сделать прямо сейчас. Например: открыть архив, создать новую сессию, привязать Telegram или разобраться, как всё устроено."
@@ -1288,6 +1476,11 @@ const SessionsCollectionPage = observer(() => {
 
           <div className={styles.archivistWelcomeCard}>
             <h2 className={styles.archivistWelcomeTitle}>Привет!</h2>
+            {archivistTrainingStepIndex !== null && (
+              <div className={styles.archivistTrainingProgress}>
+                Шаг {Math.min(archivistTrainingStepIndex + 1, ARCHIVIST_TRAINING_STEPS.length + 2)} из {ARCHIVIST_TRAINING_STEPS.length + 2}
+              </div>
+            )}
             <p className={styles.archivistWelcomeText}>
               {archivistMessage}
             </p>
