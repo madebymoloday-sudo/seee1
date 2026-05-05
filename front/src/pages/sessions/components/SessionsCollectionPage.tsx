@@ -576,7 +576,7 @@ function getIdeasFromSession(
 const SessionsCollectionPage = observer(() => {
   const navigate = useNavigate();
   const { sessions, isLoading, error, refetch } = useSessions();
-  const [isArchivistWelcomeVisible, setIsArchivistWelcomeVisible] = useState(true);
+  const isArchivistWelcomeVisible = true;
   const [archivistMessage, setArchivistMessage] = useState(
     "Привет, меня зовут Архивариус. Я помогу тебе разобраться с приложением, напомню о важных шагах и подскажу, что у тебя уже сохранено в архиве."
   );
@@ -1180,17 +1180,6 @@ const SessionsCollectionPage = observer(() => {
       { id: "training_custom", label: "Написать Архивариусу", action: "custom_input" },
       { id: "training_again", label: "Пройти обучение ещё раз", action: "intro" },
     ]);
-  };
-
-  const resetArchivistConversation = () => {
-    setArchivistMode("auto");
-    const latestContext = loadArchivistGalleryContext(userKey);
-    if (latestContext) {
-      setArchivistContext(latestContext);
-      applyAutoArchivistState(latestContext);
-      return;
-    }
-    applyAutoArchivistState(null);
   };
 
   useEffect(() => {
