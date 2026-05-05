@@ -1,20 +1,16 @@
 import { createPortal } from "react-dom";
-import { User, Archive, Trophy, Map } from "lucide-react";
+import { User, Trophy, Map } from "lucide-react";
 import styles from "./BottomNavigation.module.css";
 
 interface BottomNavigationProps {
   onCabinet: () => void;
   onRating: () => void;
-  onPeople: () => void;
-  onArchivist: () => void;
   onMindMap: () => void;
 }
 
 const BottomNavigation = ({ 
   onCabinet, 
   onRating, 
-  onPeople,
-  onArchivist,
   onMindMap 
 }: BottomNavigationProps) => {
   const navigation = (
@@ -26,22 +22,8 @@ const BottomNavigation = ({
         <span className={styles.navLabel}>Рейтинг</span>
       </button>
 
-      <button onClick={onPeople} className={styles.navButton} title="Мега-чаты">
-        <span className={styles.navIconBubble}>
-          <span className={styles.emojiIcon} role="img" aria-label="Мега-чаты">🫂</span>
-        </span>
-        <span className={styles.navLabel}>Мега-чаты</span>
-      </button>
-
-      <button onClick={onArchivist} className={`${styles.navButton} ${styles.navButtonPrimary}`} title="Архивариус">
+      <button onClick={onMindMap} className={`${styles.navButton} ${styles.navButtonPrimary}`} title="Нейрокарта">
         <span className={`${styles.navIconBubble} ${styles.navIconBubblePrimary}`}>
-          <Archive className={styles.navIcon} />
-        </span>
-        <span className={styles.navLabel}>Архивариус</span>
-      </button>
-      
-      <button onClick={onMindMap} className={styles.navButton} title="Нейрокарта">
-        <span className={styles.navIconBubble}>
           <Map className={styles.navIcon} />
         </span>
         <span className={styles.navLabel}>Нейрокарта</span>

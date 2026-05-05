@@ -30,7 +30,7 @@ const EntryGatePage = observer(() => {
       return;
     }
 
-    navigate("/sessions/list", { replace: true });
+    navigate("/map", { replace: true });
   }, [
     navigate,
     subscriptionGateEnabled,
@@ -53,7 +53,7 @@ const EntryGatePage = observer(() => {
     <div className="flex items-center justify-center h-screen">
       <div className="flex items-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Открываем архивариуса...
+        Открываем нейрокарту...
       </div>
     </div>
   );

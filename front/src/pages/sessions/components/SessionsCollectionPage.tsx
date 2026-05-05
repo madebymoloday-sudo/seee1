@@ -1789,13 +1789,8 @@ const SessionsCollectionPage = observer(() => {
 
       {/* Нижняя панель навигации */}
       <BottomNavigation
-        onArchivist={() => {
-          resetArchivistConversation();
-          setIsArchivistWelcomeVisible(true);
-        }}
         onCabinet={() => navigate("/cabinet")}
         onRating={() => navigate("/rating")}
-        onPeople={() => navigate("/people")}
         onMindMap={() => navigate("/map")}
       />
 

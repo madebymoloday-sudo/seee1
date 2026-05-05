@@ -1315,8 +1315,6 @@ const PeoplePage = () => {
       </div>
       <BottomNavigation
         onRating={() => navigate("/rating")}
-        onPeople={() => navigate("/people")}
-        onArchivist={() => navigate("/sessions/list")}
         onMindMap={() => navigate("/map")}
         onCabinet={() => navigate("/cabinet")}
       />

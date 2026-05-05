@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { WheelEvent } from "react";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -13,8 +14,8 @@ import {
   ChevronDown,
   ChevronRight,
   Map as MapIcon,
+  MoreHorizontal,
   Plus,
-  Sparkles,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -81,6 +82,12 @@ type ModalState =
 const DEFAULT_EMOTION_FIELDS = 3;
 const DEFAULT_THOUGHT_FIELDS = 1;
 const THOUGHT_REWARD = 25;
+const MIN_MAP_SCALE = 0.35;
+const MAX_MAP_SCALE = 1.35;
+
+function clampScale(value: number) {
+  return Math.min(MAX_MAP_SCALE, Math.max(MIN_MAP_SCALE, value));
+}
 
 function normalizeText(value?: string | null) {
   return (value || "")
@@ -122,10 +129,22 @@ function getThoughtScopeIds(state: DialogState) {
   return Object.keys(state.thoughtScopes || {});
 }
 
-function getThoughtScopeIdForNode(state: DialogState, node: EventMapNodeDto) {
-  if (node.sourceThoughtScopeId) return node.sourceThoughtScopeId;
-  if (state.activeThoughtScopeId) return state.activeThoughtScopeId;
-  return getThoughtScopeIds(state)[0];
+function getCandidateThoughtScopeIds(state: DialogState, node: EventMapNodeDto) {
+  const ids = new globalThis.Set<string>();
+  if (node.sourceThoughtScopeId) ids.add(node.sourceThoughtScopeId);
+  if (state.activeThoughtScopeId) ids.add(state.activeThoughtScopeId);
+
+  const nodeTitle = normalizeText(titleForNode(node));
+  for (const scopeId of getThoughtScopeIds(state)) {
+    const scopeTitle = normalizeText(state.thoughtScopes?.[scopeId]?.["core:thought:3"]);
+    if (scopeTitle && scopeTitle === nodeTitle) ids.add(scopeId);
+  }
+
+  for (const scopeId of getThoughtScopeIds(state)) {
+    ids.add(scopeId);
+  }
+
+  return [...ids];
 }
 
 function getThoughtAnswer(
@@ -141,26 +160,43 @@ function getThoughtAnswer(
   return state.answers?.[key] || "";
 }
 
-function getReasonIdeasForNode(state: DialogState, node: EventMapNodeDto) {
-  const ownerScopeId = getThoughtScopeIdForNode(state, node);
-  return parseImportantOptions(getThoughtAnswer(state, "core:thought:4", ownerScopeId));
-}
-
 function getLinkedScopeIdsForReason(
   state: DialogState,
-  node: EventMapNodeDto,
+  ownerScopeId: string | undefined,
   reason: string,
 ) {
-  const ownerScopeId = getThoughtScopeIdForNode(state, node) || "";
+  const normalizedOwnerScopeId = ownerScopeId || "";
   return Object.entries(state.thoughtScopeLinks || {})
     .filter(([, link]) => {
       return (
         link.parentSubject === "thought" &&
-        (link.parentScopeId || "") === ownerScopeId &&
+        (link.parentScopeId || "") === normalizedOwnerScopeId &&
         normalizeText(link.parentReason) === normalizeText(reason)
       );
     })
     .map(([scopeId]) => scopeId);
+}
+
+function getReasonEntriesForNode(state: DialogState, node: EventMapNodeDto) {
+  const entries: Array<{ reason: string; linkedScopeId: string | null; displayOrder: number }> = [];
+  const seen = new globalThis.Set<string>();
+  const ownerScopeIds = getCandidateThoughtScopeIds(state, node);
+
+  ownerScopeIds.forEach((ownerScopeId) => {
+    const reasons = parseImportantOptions(getThoughtAnswer(state, "core:thought:4", ownerScopeId));
+    reasons.forEach((reason) => {
+      const normalized = normalizeText(reason);
+      if (!normalized || seen.has(normalized)) return;
+      seen.add(normalized);
+      entries.push({
+        reason,
+        linkedScopeId: getLinkedScopeIdsForReason(state, ownerScopeId, reason)[0] || null,
+        displayOrder: entries.length,
+      });
+    });
+  });
+
+  return entries;
 }
 
 function toState(raw: unknown): DialogState | null {
@@ -189,6 +225,7 @@ const MapPage = observer(() => {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [inspectedNode, setInspectedNode] = useState<MindNode | null>(null);
   const [modal, setModal] = useState<ModalState>(null);
+  const [mapScale, setMapScale] = useState(1);
   const [situationTitle, setSituationTitle] = useState("");
   const [situationDescription, setSituationDescription] = useState("");
   const [emotionDrafts, setEmotionDrafts] = useState<string[]>(
@@ -329,11 +366,11 @@ const MapPage = observer(() => {
           const state = toState(session?.dialogStateJson);
           if (!state) continue;
 
-          const reasons = getReasonIdeasForNode(state, node);
-          if (reasons.length === 0) continue;
+          const reasonEntries = getReasonEntriesForNode(state, node);
+          if (reasonEntries.length === 0) continue;
 
-          for (let index = 0; index < reasons.length; index += 1) {
-            const reason = reasons[index];
+          for (const entry of reasonEntries) {
+            const reason = entry.reason;
             const siblings = currentByParent.get(node.id) || [];
             const existingChild = siblings.find(
               (item) =>
@@ -341,11 +378,23 @@ const MapPage = observer(() => {
                 normalizeText(titleForNode(item)) === normalizeText(reason),
             );
             if (existingChild) {
+              if (
+                entry.linkedScopeId &&
+                (existingChild.sourceSessionId !== node.sourceSessionId ||
+                  existingChild.sourceThoughtScopeId !== entry.linkedScopeId)
+              ) {
+                await apiAgent.patch(`/event-map/${existingChild.id}`, {
+                  sourceSessionId: node.sourceSessionId,
+                  sourceThoughtScopeId: entry.linkedScopeId,
+                });
+                changed = true;
+              }
               continue;
             }
 
-            const linkedScopeId = getLinkedScopeIdsForReason(state, node, reason)[0];
-            const thoughtSession = await createThoughtSession(reason);
+            const derivedSessionId = entry.linkedScopeId
+              ? node.sourceSessionId
+              : (await createThoughtSession(reason)).id;
             const created = await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>(
               "/event-map",
               {
@@ -353,9 +402,9 @@ const MapPage = observer(() => {
                 title: reason,
                 parentId: node.id,
                 level: levelForNode(node) + 1,
-                displayOrder: index,
-                sourceSessionId: thoughtSession.id,
-                sourceThoughtScopeId: linkedScopeId || null,
+                displayOrder: entry.displayOrder,
+                sourceSessionId: derivedSessionId,
+                sourceThoughtScopeId: entry.linkedScopeId,
                 isMuted: false,
               },
             );
@@ -421,6 +470,16 @@ const MapPage = observer(() => {
 
   const closeNodeDetails = () => {
     setInspectedNode(null);
+  };
+
+  const handleMapWheel = (event: WheelEvent<HTMLDivElement>) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    setMapScale((current) => clampScale(current - event.deltaY * 0.0015));
+  };
+
+  const zoomMap = (delta: number) => {
+    setMapScale((current) => clampScale(Number((current + delta).toFixed(2))));
   };
 
   const submitSituation = async () => {
@@ -758,13 +817,18 @@ const MapPage = observer(() => {
             </button>
 
             <div className={styles.nodeActions}>
-              {node.resolvedType !== "THOUGHT" && node.childCount > 0 ? (
+              {node.childCount > 0 ? (
                 <button
                   type="button"
                   className={styles.iconButton}
-                  onClick={() =>
-                    setExpanded((prev) => ({ ...prev, [node.id]: !prev[node.id] }))
-                  }
+                  aria-label={showChildren ? "Свернуть ветку" : "Раскрыть всю ветку"}
+                  onClick={() => {
+                    if (showChildren) {
+                      collapseBranch(node.id);
+                    } else {
+                      expandBranch(node.id);
+                    }
+                  }}
                 >
                   {showChildren ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 </button>
@@ -772,9 +836,10 @@ const MapPage = observer(() => {
               <button
                 type="button"
                 className={styles.iconButton}
+                aria-label="Действия с карточкой"
                 onClick={() => setActiveMenuId((prev) => (prev === node.id ? null : node.id))}
               >
-                <Sparkles size={16} />
+                <MoreHorizontal size={16} />
               </button>
             </div>
           </div>
@@ -804,13 +869,26 @@ const MapPage = observer(() => {
               Ситуации, эмоции, мысли и цепочки разбора в одном дереве.
             </p>
           </div>
-          <Button onClick={openCreateSituation} className={styles.primaryButton}>
-            <Plus size={16} />
-            Добавить ситуацию
-          </Button>
+          <div className={styles.headerActions}>
+            <div className={styles.zoomControls} aria-label="Масштаб нейрокарты">
+              <button type="button" className={styles.zoomButton} onClick={() => zoomMap(-0.1)}>
+                −
+              </button>
+              <button type="button" className={styles.zoomValue} onClick={() => setMapScale(0.58)}>
+                {Math.round(mapScale * 100)}%
+              </button>
+              <button type="button" className={styles.zoomButton} onClick={() => zoomMap(0.1)}>
+                +
+              </button>
+            </div>
+            <Button onClick={openCreateSituation} className={styles.primaryButton}>
+              <Plus size={16} />
+              Добавить ситуацию
+            </Button>
+          </div>
         </div>
 
-        <div className={styles.canvas}>
+        <div className={styles.canvas} onWheel={handleMapWheel}>
           {loading ? (
             <div className={styles.emptyState}>Загружаю нейрокарту...</div>
           ) : tree.length === 0 ? (
@@ -821,19 +899,25 @@ const MapPage = observer(() => {
               </button>
             </div>
           ) : (
-            <ul className={styles.treeListRoot}>
-              {tree.map(renderNode)}
-              {renderAddPlaceholder()}
-            </ul>
+            <div
+              className={styles.scaledCanvas}
+              style={{
+                width: `${Math.max(100, 100 / mapScale)}%`,
+                transform: `scale(${mapScale})`,
+              }}
+            >
+              <ul className={styles.treeListRoot}>
+                {tree.map(renderNode)}
+                {renderAddPlaceholder()}
+              </ul>
+            </div>
           )}
         </div>
       </div>
 
       <BottomNavigation
-        onArchivist={() => navigate("/sessions/list")}
         onCabinet={() => navigate("/cabinet")}
         onRating={() => navigate("/rating")}
-        onPeople={() => navigate("/people")}
         onMindMap={() => navigate("/map")}
       />
 

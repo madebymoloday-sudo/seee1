@@ -56,6 +56,14 @@ const CabinetPage = observer(() => {
     navigate("/sessions/list");
   };
 
+  const handleMegachatsClick = () => {
+    navigate("/people");
+  };
+
+  const handleArchivistClick = () => {
+    navigate("/sessions/list");
+  };
+
   const handleManagersClick = () => {
     navigate("/cabinet/founder");
   };
@@ -156,6 +164,12 @@ const CabinetPage = observer(() => {
             </Button>
             <Button variant="outline" onClick={handleSessionsGalleryClick}>
               Галерея сессий
+            </Button>
+            <Button variant="outline" onClick={handleMegachatsClick}>
+              Мега-чаты
+            </Button>
+            <Button variant="outline" onClick={handleArchivistClick}>
+              Архивариус
             </Button>
             {profile?.accountType === "MANAGER" ? (
               <Button variant="outline" onClick={handleManagersClick}>
@@ -310,8 +324,6 @@ const CabinetPage = observer(() => {
       </div>
       <BottomNavigation
         onRating={() => navigate("/rating")}
-        onPeople={() => navigate("/people")}
-        onArchivist={() => navigate("/sessions/list")}
         onMindMap={() => navigate("/map")}
         onCabinet={() => navigate("/cabinet")}
       />
