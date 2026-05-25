@@ -22,6 +22,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { extractApiMessage, isSeeTokensExpiredError } from "@/lib/subscription";
 import chatStyles from "./ChatWindow.module.css";
 import FeedbackModal from "./FeedbackModal";
 import MessageInput from "./MessageInput";
@@ -2096,7 +2097,15 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       navigate(`/sessions/${newSession.id}`, { replace: true });
     } catch (e) {
       console.error(e);
-      toast.error("Не удалось создать сессию");
+      const message = extractApiMessage(e) || "Не удалось создать сессию";
+      toast.error(message, {
+        action: isSeeTokensExpiredError(e)
+          ? {
+              label: "Пополнить баланс",
+              onClick: () => navigate("/subscription"),
+            }
+          : undefined,
+      });
       setIsTransitioning(false);
       setTransitionPhase("idle");
     }
@@ -2408,7 +2417,15 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       navigate("/sessions/list");
     } catch (e) {
       console.error(e);
-      toast.error("Не удалось добавить мысль");
+      const message = extractApiMessage(e) || "Не удалось добавить мысль";
+      toast.error(message, {
+        action: isSeeTokensExpiredError(e)
+          ? {
+              label: "Пополнить баланс",
+              onClick: () => navigate("/subscription"),
+            }
+          : undefined,
+      });
     }
   };
 

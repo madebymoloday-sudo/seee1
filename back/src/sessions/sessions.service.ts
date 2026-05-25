@@ -2,7 +2,9 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
+import { AccountType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSessionDto, SessionResponseDto } from './dto/session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
@@ -17,6 +19,8 @@ export class SessionsService {
     userId: string,
     createSessionDto: CreateSessionDto,
   ): Promise<SessionResponseDto> {
+    await this.assertCanCreateSession(userId);
+
     const session = await this.prisma.session.create({
       data: {
         userId,
@@ -52,6 +56,35 @@ export class SessionsService {
       });
     }
     return this.toResponseDto(session, 0);
+  }
+
+  private async assertCanCreateSession(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        accountType: true,
+        subscriptionActive: true,
+        subscriptionEndsAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    if (user.accountType === AccountType.TEAM_MEMBER) {
+      return;
+    }
+
+    const hasActiveSubscription =
+      user.subscriptionActive &&
+      (!user.subscriptionEndsAt || user.subscriptionEndsAt.getTime() > Date.now());
+
+    if (!hasActiveSubscription) {
+      throw new BadRequestException(
+        'У вас закончились seee-токены, нужно пополнить баланс 💛',
+      );
+    }
   }
 
   async findAllByUserId(userId: string): Promise<SessionResponseDto[]> {

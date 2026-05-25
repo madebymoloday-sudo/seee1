@@ -2,7 +2,10 @@ import type { SessionResponseDto } from "@/api/schemas";
 import { useSessionsControllerGetSession } from "@/api/seee.swr";
 import { Loader2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { isSubscriptionActive, SEE_TOKENS_EXPIRED_MESSAGE } from "@/lib/subscription";
 import SessionHeader from "./components/SessionHeader";
 import StepDialogWindow from "./components/StepDialogWindow";
 import styles from "./SessionPage.module.css";
@@ -13,6 +16,7 @@ const sessionLayoutClass =
 
 const SessionPage = observer(() => {
   const { id } = useParams<{ id: string }>();
+  const auth = useAuth();
   const isDraft = id === "new";
 
   const {
@@ -26,6 +30,24 @@ const SessionPage = observer(() => {
   });
 
   if (isDraft) {
+    if (auth.isAuthenticated && !isSubscriptionActive(auth.user)) {
+      return (
+        <div className={`${sceneStyles.scene} flex min-h-screen items-center justify-center px-4`}>
+          <div className="w-full max-w-md rounded-3xl border border-white/35 bg-white/84 p-6 text-center shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/72">
+            <h1 className="text-2xl font-bold text-slate-950 dark:text-white">
+              Seee-токены закончились
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-200">
+              {SEE_TOKENS_EXPIRED_MESSAGE}
+            </p>
+            <Button asChild className="mt-5 w-full rounded-2xl">
+              <Link to="/subscription">Пополнить баланс</Link>
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     // Черновик: сессию на сервере НЕ создаём, пока пользователь не ответит на первый вопрос.
     let draftTitle = "Новая сессия";
     try {

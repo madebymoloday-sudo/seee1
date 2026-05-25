@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import BottomNavigation from "../sessions/components/BottomNavigation";
 import { useSWRConfig } from "swr";
 import { getAuthControllerGetMeKey } from "@/api/seee.swr";
+import { getSubscriptionTimeLeftLabel, isSubscriptionActive } from "@/lib/subscription";
 
 function getAccountTypeLabel(accountType?: "USER" | "MANAGER" | "TEAM_MEMBER") {
   switch (accountType) {
@@ -87,6 +88,13 @@ const CabinetPage = observer(() => {
     const ms = d.getTime() - Date.now();
     return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
   }, [profile?.subscriptionEndsAt]);
+
+  const subscriptionTimeLeftText = useMemo(
+    () => getSubscriptionTimeLeftLabel(profile?.subscriptionEndsAt),
+    [profile?.subscriptionEndsAt],
+  );
+
+  const effectiveSubscriptionActive = isSubscriptionActive(profile);
 
   const streakPreview = useMemo(() => {
     const streak = Math.max(0, Number(profile?.dailyStreak ?? 0));
@@ -194,6 +202,25 @@ const CabinetPage = observer(() => {
         </div>
 
         <div className="mb-6 rounded-xl border bg-card p-4">
+          <h2 className="mb-3 text-lg font-semibold">Seee-токены</h2>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-2xl font-bold">
+                {effectiveSubscriptionActive ? subscriptionTimeLeftText : "Закончились"}
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {effectiveSubscriptionActive
+                  ? "Столько осталось до окончания текущего доступа."
+                  : "У вас закончились seee-токены, нужно пополнить баланс 💛"}
+              </p>
+            </div>
+            <Button onClick={() => navigate("/subscription")}>
+              {effectiveSubscriptionActive ? "Пополнить заранее" : "Пополнить баланс"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-xl border bg-card p-4">
           <h2 className="mb-3 text-lg font-semibold">Ежедневная цель</h2>
           <p className="mb-3 text-sm text-muted-foreground">
             Сколько минут в день я хочу тратить на C каждый день.
@@ -273,7 +300,7 @@ const CabinetPage = observer(() => {
             <p>
               Статус:{" "}
               <span className="font-semibold">
-                {profile?.subscriptionActive ? "Активна" : "Не активна"}
+                {effectiveSubscriptionActive ? "Активна" : "Не активна"}
               </span>
             </p>
             <p>
@@ -290,11 +317,11 @@ const CabinetPage = observer(() => {
             <Button
               variant="outline"
               onClick={() => navigate("/subscription")}
-              disabled={!!profile?.subscriptionActive || profile?.accountType === "TEAM_MEMBER"}
+              disabled={effectiveSubscriptionActive || profile?.accountType === "TEAM_MEMBER"}
             >
               {profile?.accountType === "TEAM_MEMBER"
                 ? "Доступ управляется руководителем"
-                : profile?.subscriptionActive
+                : effectiveSubscriptionActive
                   ? "Подписка оформлена"
                   : "Оформить подписку"}
             </Button>
@@ -302,7 +329,7 @@ const CabinetPage = observer(() => {
               variant="destructive"
               onClick={handleCancelSubscription}
               disabled={
-                !profile?.subscriptionActive ||
+                !effectiveSubscriptionActive ||
                 isCancelingSubscription ||
                 profile?.accountType === "TEAM_MEMBER"
               }

@@ -1,6 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { isSubscriptionActive } from "@/lib/subscription";
 
 export const ProtectedRoute = observer(() => {
   const subscriptionGateEnabled =
@@ -33,8 +34,7 @@ export const ProtectedRoute = observer(() => {
   }
 
   const isSubscriptionPage = location.pathname === "/subscription";
-  const hasActiveSubscription =
-    !!user?.subscriptionActive || user?.accountType === "TEAM_MEMBER";
+  const hasActiveSubscription = isSubscriptionActive(user);
 
   if (subscriptionGateEnabled && !hasActiveSubscription && !isSubscriptionPage) {
     return <Navigate to="/subscription" replace />;

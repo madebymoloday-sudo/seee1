@@ -16,6 +16,7 @@ import useSwr from "swr";
 import { Textarea } from "@/components/ui/textarea";
 import type { SessionResponseDto } from "@/api/schemas";
 import { parseImportantOptions, clearDraftSession } from "@/lib/sessionUtils";
+import { isSubscriptionActive } from "@/lib/subscription";
 import {
   buildArchivistSuggestedTemplateId,
   buildFallbackResumeMessage,
@@ -611,7 +612,7 @@ const SessionsCollectionPage = observer(() => {
 
   useEffect(() => {
     if (!user) return;
-    if (!user.subscriptionActive) return;
+    if (!isSubscriptionActive(user)) return;
     if (user.telegramId) return;
     try {
       const dismissed = localStorage.getItem(`seee_telegram_prompt_dismissed:${user.id}`);

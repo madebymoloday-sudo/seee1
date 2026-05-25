@@ -36,6 +36,10 @@ import { ForbiddenException } from '@nestjs/common';
 @Injectable()
 export class AuthService {
   private static readonly FREE_ACCESS_PROMO_CODE = 'SEEEFREEE';
+  private static readonly SEVEN_DAY_TRIAL_EMAILS = new Set([
+    'vanyas.friend@seee.app',
+  ]);
+  private static readonly SEVEN_DAY_TRIAL_MS = 7 * 24 * 60 * 60 * 1000;
   private readonly authUserSelect = {
     id: true,
     username: true,
@@ -748,6 +752,7 @@ export class AuthService {
       let accountType: AccountType = AccountType.USER;
       let subscriptionStatus: 'NONE' | 'ACTIVE' | 'CANCELED' = 'NONE';
       let subscriptionActive = false;
+      let subscriptionEndsAt: Date | null = null;
       let subscriptionProvider: string | null = null;
       let subscriptionExternalId: string | null = null;
 
@@ -790,11 +795,23 @@ export class AuthService {
         }
       }
 
+      const normalizedEmail = (dto.email || '').trim().toLowerCase();
+      if (
+        accountType === AccountType.USER &&
+        AuthService.SEVEN_DAY_TRIAL_EMAILS.has(normalizedEmail)
+      ) {
+        subscriptionStatus = 'ACTIVE';
+        subscriptionActive = true;
+        subscriptionEndsAt = new Date(Date.now() + AuthService.SEVEN_DAY_TRIAL_MS);
+        subscriptionProvider = 'seee-trial';
+        subscriptionExternalId = '7-day-trial';
+      }
+
       // Создаем пользователя
       const user = await this.prisma.user.create({
         data: {
           username: dto.username,
-          email: dto.email,
+          email: normalizedEmail || dto.email,
           passwordHash: hashedPassword,
           fullName: dto.name || null,
           userId,
@@ -803,6 +820,7 @@ export class AuthService {
           accountType,
           subscriptionStatus,
           subscriptionActive,
+          subscriptionEndsAt,
           subscriptionProvider,
           subscriptionExternalId,
         },
@@ -1097,7 +1115,7 @@ export class AuthService {
 
     return {
       status: user.subscriptionStatus,
-      isActive: user.subscriptionActive,
+      isActive: this.isSubscriptionCurrentlyActive(user),
       endsAt: user.subscriptionEndsAt?.toISOString() ?? null,
     };
   }
@@ -1464,11 +1482,29 @@ export class AuthService {
       telegramId: user.telegramId ?? null,
       userId: user.userId ?? null,
       subscriptionStatus: user.subscriptionStatus,
-      subscriptionActive: !!user.subscriptionActive,
+      subscriptionActive: this.isSubscriptionCurrentlyActive(user),
       subscriptionEndsAt: user.subscriptionEndsAt
         ? new Date(user.subscriptionEndsAt).toISOString()
         : null,
     };
+  }
+
+  private isSubscriptionCurrentlyActive(user: {
+    accountType?: AccountType | string | null;
+    subscriptionActive?: boolean | null;
+    subscriptionEndsAt?: Date | string | null;
+  }): boolean {
+    if (user.accountType === AccountType.TEAM_MEMBER || user.accountType === 'TEAM_MEMBER') {
+      return true;
+    }
+    if (!user.subscriptionActive) {
+      return false;
+    }
+    if (!user.subscriptionEndsAt) {
+      return true;
+    }
+    const endsAt = new Date(user.subscriptionEndsAt).getTime();
+    return Number.isFinite(endsAt) && endsAt > Date.now();
   }
 
   private async resolvePersistentBalance(
