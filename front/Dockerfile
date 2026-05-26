@@ -16,7 +16,7 @@ RUN npm i
 COPY . .
 
 # Force rebuild cache bust (update to trigger)
-ARG CACHE_BUST=2026-02-12-botid
+ARG CACHE_BUST=2026-05-26-neuro-map-fix
 RUN echo "CACHE_BUST(front)=$CACHE_BUST"
 
 # Telegram Bot ID для Login Widget (Vite встраивает при сборке)
