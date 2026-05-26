@@ -239,7 +239,7 @@ export class SessionsService {
       return [];
     }
 
-    const ownerNodes = await this.prisma.eventMap.findMany({
+    let ownerNodes = await this.prisma.eventMap.findMany({
       where: {
         userId,
         nodeType: 'THOUGHT',
@@ -247,6 +247,31 @@ export class SessionsService {
       },
       orderBy: [{ level: 'asc' }, { createdAt: 'asc' }],
     });
+
+    if (ownerNodes.length === 0) {
+      const sessionTitle = session.title?.trim();
+      if (sessionTitle) {
+        const ownerNode = await this.prisma.eventMap.findFirst({
+          where: {
+            userId,
+            nodeType: 'THOUGHT',
+            OR: [
+              { title: { equals: sessionTitle, mode: 'insensitive' } },
+              { idea: { equals: sessionTitle, mode: 'insensitive' } },
+            ],
+          },
+          orderBy: [{ level: 'asc' }, { createdAt: 'asc' }],
+        });
+
+        if (ownerNode) {
+          const updatedOwnerNode = await this.prisma.eventMap.update({
+            where: { id: ownerNode.id },
+            data: { sourceSessionId: session.id },
+          });
+          ownerNodes = [updatedOwnerNode];
+        }
+      }
+    }
 
     if (ownerNodes.length === 0) {
       return [];

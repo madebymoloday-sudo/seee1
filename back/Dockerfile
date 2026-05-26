@@ -2,7 +2,7 @@
 FROM node:20.12.2 AS deps
 
 # Force rebuild cache bust - change this value to force rebuild
-ARG CACHE_BUST=2026-01-14-17-00-URGENT-MIGRATIONS
+ARG CACHE_BUST=2026-05-27-mobile-reasons-map-sync
 RUN echo "Cache bust: $CACHE_BUST"
 
 WORKDIR /app
@@ -44,4 +44,3 @@ COPY --from=builder /app/programs ./programs
 # Миграции теперь выполняются в PrismaService.onModuleInit
 # Упрощаем: просто запускаем приложение
 CMD ["npm", "run", "start:prod"]
-

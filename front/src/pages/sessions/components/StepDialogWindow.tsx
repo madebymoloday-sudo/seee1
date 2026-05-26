@@ -1900,11 +1900,44 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     });
   };
 
+  const syncThoughtReasonsToMap = async (reasonAnswer: string) => {
+    if (isDraftSession || state.subject !== "thought") return;
+
+    const answerUpdate = setAnswerValue(
+      state,
+      "core:thought:4",
+      reasonAnswer,
+      state.activeThoughtScopeId,
+    );
+    const nextState = normalizeStateV3({
+      ...state,
+      v: 3,
+      coreStep: Math.max(state.coreStep, 5),
+      answers: answerUpdate.answers,
+      thoughtScopes: answerUpdate.thoughtScopes,
+    });
+    const payload = {
+      dialogStateJson: nextState,
+      sessionKind: "thought",
+      notes: getSessionNotes(session.id) ?? session.notes ?? null,
+    };
+
+    await apiAgent.patch(`/sessions/${session.id}`, payload);
+    lastPersistedStateRef.current = JSON.stringify(payload);
+    await apiAgent.post<undefined, unknown>(
+      `/sessions/${session.id}/add-to-map`,
+      undefined,
+    );
+  };
+
   const submitReasonDrafts = () => {
     const answer = joinReasonDrafts(reasonDrafts);
     if (!answer || isAnalyzingAnswer || isTransitioning) return;
     setInputText(answer);
-    onAnswer(answer);
+    void onAnswer(answer);
+    void syncThoughtReasonsToMap(answer).catch((error) => {
+      console.error("Failed to sync reason cards to map", error);
+    });
   };
 
   const computeNextState = (answer: string): DialogState | null => {
