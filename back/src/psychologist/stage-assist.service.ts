@@ -615,6 +615,25 @@ export class StageAssistService {
       params.clarificationAnswers.at(-1) ||
       params.stageAnswer ||
       '';
+    const unknownAnswer =
+      params.skipRequested ||
+      /^(не знаю|не знаю как ответить|не понимаю|затрудняюсь|затрудняюсь ответить|сложно ответить|сложно сказать|не могу ответить|не могу сказать|без понятия|—)$/iu.test(
+        currentAnswer.trim(),
+      );
+
+    if (unknownAnswer) {
+      if (previousStep === 6) {
+        return 'Ничего страшного, если сейчас не получается понять цели или выгоду источника. Это нормально.';
+      }
+      if (previousStep === 5) {
+        return 'Ничего страшного, если сейчас не получается точно понять, откуда пришла эта мысль. Давайте двигаться дальше по тому, что можно заметить.';
+      }
+      if (previousStep === 7) {
+        return 'Ничего страшного, если эмоциональные последствия пока трудно назвать точно. Давайте посмотрим на практическую сторону.';
+      }
+      return 'Ничего страшного, если сейчас нет точного ответа. Давайте перейдём к следующему шагу.';
+    }
+
     const situation =
       this.getAnswerByStep(params.subject, params.answers, 1) ||
       params.situationText ||

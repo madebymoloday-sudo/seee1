@@ -1076,6 +1076,26 @@ function looksLikeNonRewardingAnswer(answer: string): boolean {
   );
 }
 
+function buildUnknownAnswerAdvancePreface(view: View): string {
+  if (view.kind !== "core") {
+    return "Ничего страшного, если сейчас нет точного ответа. Давайте двигаться дальше.";
+  }
+
+  if (view.step === 6) {
+    return "Ничего страшного, если сейчас не получается понять цели или выгоду источника. Это нормально.";
+  }
+
+  if (view.step === 5) {
+    return "Ничего страшного, если сейчас не получается точно понять, откуда пришла эта мысль. Давайте двигаться дальше по тому, что можно заметить.";
+  }
+
+  if (view.step === 7) {
+    return "Ничего страшного, если эмоциональные последствия пока трудно назвать точно. Давайте посмотрим на практическую сторону.";
+  }
+
+  return "Ничего страшного, если сейчас нет точного ответа. Давайте перейдём к следующему шагу.";
+}
+
 const MIN_REASON_FIELDS = 3;
 const MAX_REASON_FIELDS = 6;
 
@@ -2322,6 +2342,13 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           });
 
           if (nextKey) {
+            const shouldUseUnknownAdvancePreface =
+              options?.skipRequested ||
+              looksLikeNonRewardingAnswer(answerToPersist) ||
+              (
+                settledGuidance.clarificationCount >= 2 &&
+                looksLikeNonRewardingAnswer(answerToPersist)
+              );
             stageGuidance = {
               ...stageGuidance,
               [nextKey]: {
@@ -2329,7 +2356,9 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
                   { ...state, stageGuidance } as DialogState,
                   nextKey,
                 ),
-                preface: assist.reaction,
+                preface: shouldUseUnknownAdvancePreface
+                  ? buildUnknownAnswerAdvancePreface(view)
+                  : assist.reaction,
                 clarificationLead: undefined,
                 clarificationPrompt: undefined,
                 clarificationCount: 0,
