@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { observer } from "mobx-react-lite";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSessions } from "@/hooks/useSessions";
 import { Plus, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -576,8 +576,9 @@ function getIdeasFromSession(
 
 const SessionsCollectionPage = observer(() => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { sessions, isLoading, error, refetch } = useSessions();
-  const isArchivistWelcomeVisible = true;
+  const isArchivistWelcomeVisible = searchParams.get("view") !== "gallery";
   const [archivistMessage, setArchivistMessage] = useState(
     "Привет, меня зовут Архивариус. Я помогу тебе разобраться с приложением, напомню о важных шагах и подскажу, что у тебя уже сохранено в архиве."
   );

@@ -9,6 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import BottomNavigation from "../sessions/components/BottomNavigation";
 import type { SessionResponseDto } from "@/api/schemas";
 import apiAgent from "@/lib/api";
+import {
+  extractApiMessage,
+  isSeeTokensExpiredError,
+  SEE_TOKENS_EXPIRED_MESSAGE,
+} from "@/lib/subscription";
 import { parseImportantOptions } from "@/lib/sessionUtils";
 import {
   ChevronDown,
@@ -236,6 +241,20 @@ const MapPage = observer(() => {
   );
   const [thoughtHint, setThoughtHint] = useState("");
   const syncingRef = useRef(false);
+
+  const showMapSaveError = (error: unknown, fallback: string) => {
+    const message = isSeeTokensExpiredError(error)
+      ? SEE_TOKENS_EXPIRED_MESSAGE
+      : extractApiMessage(error) || fallback;
+    toast.error(message, {
+      action: isSeeTokensExpiredError(error)
+        ? {
+            label: "Пополнить баланс",
+            onClick: () => navigate("/subscription?topup=1"),
+          }
+        : undefined,
+    });
+  };
 
   const fetchMap = async () => {
     setLoading(true);
@@ -512,7 +531,7 @@ const MapPage = observer(() => {
       await fetchMap();
     } catch (error) {
       console.error(error);
-      toast.error("Не удалось сохранить ситуацию");
+      showMapSaveError(error, "Не удалось сохранить ситуацию");
     } finally {
       setSaving(false);
     }
@@ -550,7 +569,7 @@ const MapPage = observer(() => {
       await fetchMap();
     } catch (error) {
       console.error(error);
-      toast.error("Не удалось сохранить эмоции");
+      showMapSaveError(error, "Не удалось сохранить эмоции");
     } finally {
       setSaving(false);
     }
@@ -597,7 +616,7 @@ const MapPage = observer(() => {
       await fetchMap();
     } catch (error) {
       console.error(error);
-      toast.error("Не удалось сохранить мысли");
+      showMapSaveError(error, "Не удалось сохранить мысли");
     } finally {
       setSaving(false);
     }
@@ -650,7 +669,7 @@ const MapPage = observer(() => {
       navigate(`/sessions/${sessionId}`);
     } catch (error) {
       console.error(error);
-      toast.error("Не удалось открыть разбор мысли");
+      showMapSaveError(error, "Не удалось открыть разбор мысли");
     }
   };
 
@@ -1043,7 +1062,11 @@ const MapPage = observer(() => {
             {(modal.type === "create-thoughts" || modal.type === "edit-thought") && (
               <>
                 <h2 className={styles.modalTitle}>
-                  Как вы думаете, какая мысль вызывает эту эмоцию?
+                  {modal.type === "create-thoughts" && modal.parent.resolvedType === "EMOTION"
+                    ? `Какая мысль у вас вызывает эмоцию «${modal.parent.resolvedTitle}»?`
+                    : modal.type === "create-thoughts"
+                      ? `Какая следующая мысль связана с «${modal.parent.resolvedTitle}»?`
+                      : "Редактировать мысль"}
                 </h2>
                 <div className={styles.modalBody}>
                   {modal.type === "create-thoughts" && (

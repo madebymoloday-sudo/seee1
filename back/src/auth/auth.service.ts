@@ -39,6 +39,9 @@ export class AuthService {
   private static readonly SEVEN_DAY_TRIAL_EMAILS = new Set([
     'vanyas.friend@seee.app',
   ]);
+  private static readonly UNLIMITED_ACCESS_EMAILS = new Set([
+    'gulopavel@gmail.com',
+  ]);
   private static readonly SEVEN_DAY_TRIAL_MS = 7 * 24 * 60 * 60 * 1000;
   private readonly authUserSelect = {
     id: true,
@@ -798,6 +801,15 @@ export class AuthService {
       const normalizedEmail = (dto.email || '').trim().toLowerCase();
       if (
         accountType === AccountType.USER &&
+        AuthService.UNLIMITED_ACCESS_EMAILS.has(normalizedEmail)
+      ) {
+        subscriptionStatus = 'ACTIVE';
+        subscriptionActive = true;
+        subscriptionEndsAt = null;
+        subscriptionProvider = 'seee-owner';
+        subscriptionExternalId = 'unlimited-access';
+      } else if (
+        accountType === AccountType.USER &&
         AuthService.SEVEN_DAY_TRIAL_EMAILS.has(normalizedEmail)
       ) {
         subscriptionStatus = 'ACTIVE';
@@ -1106,6 +1118,7 @@ export class AuthService {
         subscriptionStatus: true,
         subscriptionActive: true,
         subscriptionEndsAt: true,
+        email: true,
       },
     });
 
@@ -1490,11 +1503,19 @@ export class AuthService {
   }
 
   private isSubscriptionCurrentlyActive(user: {
+    email?: string | null;
     accountType?: AccountType | string | null;
     subscriptionActive?: boolean | null;
     subscriptionEndsAt?: Date | string | null;
   }): boolean {
     if (user.accountType === AccountType.TEAM_MEMBER || user.accountType === 'TEAM_MEMBER') {
+      return true;
+    }
+    if (
+      AuthService.UNLIMITED_ACCESS_EMAILS.has(
+        String(user.email || '').trim().toLowerCase(),
+      )
+    ) {
       return true;
     }
     if (!user.subscriptionActive) {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +16,7 @@ const LAVA_WIDGET_URL =
 
 const SubscriptionGatePage = () => {
   const auth = useAuth();
+  const [searchParams] = useSearchParams();
   const [isChecking, setIsChecking] = useState(true);
   const [promoCode, setPromoCode] = useState("");
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
@@ -26,6 +27,7 @@ const SubscriptionGatePage = () => {
     if (subscription?.isActive) return true;
     return !!auth.user?.subscriptionActive;
   }, [auth.user?.subscriptionActive, subscription?.isActive]);
+  const isTopUpMode = searchParams.get("topup") === "1";
 
   const refreshSubscription = async () => {
     setIsChecking(true);
@@ -85,7 +87,7 @@ const SubscriptionGatePage = () => {
     }
   };
 
-  if (hasActiveSubscription) {
+  if (hasActiveSubscription && !isTopUpMode) {
     return <Navigate to="/sessions/list" replace />;
   }
 

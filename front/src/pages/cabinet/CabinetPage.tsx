@@ -54,7 +54,7 @@ const CabinetPage = observer(() => {
   };
 
   const handleSessionsGalleryClick = () => {
-    navigate("/sessions/list");
+    navigate("/sessions/list?view=gallery");
   };
 
   const handleMegachatsClick = () => {
@@ -62,7 +62,7 @@ const CabinetPage = observer(() => {
   };
 
   const handleArchivistClick = () => {
-    navigate("/sessions/list");
+    navigate("/sessions/list?view=archivist");
   };
 
   const handleManagersClick = () => {
@@ -214,7 +214,7 @@ const CabinetPage = observer(() => {
                   : "У вас закончились seee-токены, нужно пополнить баланс 💛"}
               </p>
             </div>
-            <Button onClick={() => navigate("/subscription")}>
+            <Button onClick={() => navigate("/subscription?topup=1")}>
               {effectiveSubscriptionActive ? "Пополнить заранее" : "Пополнить баланс"}
             </Button>
           </div>
@@ -316,7 +316,7 @@ const CabinetPage = observer(() => {
           <div className="mt-3 flex flex-wrap gap-3">
             <Button
               variant="outline"
-              onClick={() => navigate("/subscription")}
+              onClick={() => navigate("/subscription?topup=1")}
               disabled={effectiveSubscriptionActive || profile?.accountType === "TEAM_MEMBER"}
             >
               {profile?.accountType === "TEAM_MEMBER"

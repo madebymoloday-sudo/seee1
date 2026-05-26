@@ -34,13 +34,20 @@ export const ProtectedRoute = observer(() => {
   }
 
   const isSubscriptionPage = location.pathname === "/subscription";
+  const isTopUpSubscriptionPage =
+    isSubscriptionPage && new URLSearchParams(location.search).get("topup") === "1";
   const hasActiveSubscription = isSubscriptionActive(user);
 
   if (subscriptionGateEnabled && !hasActiveSubscription && !isSubscriptionPage) {
     return <Navigate to="/subscription" replace />;
   }
 
-  if (subscriptionGateEnabled && hasActiveSubscription && isSubscriptionPage) {
+  if (
+    subscriptionGateEnabled &&
+    hasActiveSubscription &&
+    isSubscriptionPage &&
+    !isTopUpSubscriptionPage
+  ) {
     return <Navigate to="/sessions/list" replace />;
   }
 

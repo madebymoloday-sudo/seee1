@@ -4,6 +4,7 @@ import { observer } from "mobx-react-lite";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { PENDING_CHAT_INVITE_KEY } from "./people/InviteRedirectPage";
+import { isSubscriptionActive } from "@/lib/subscription";
 
 const EntryGatePage = observer(() => {
   const subscriptionGateEnabled =
@@ -18,7 +19,7 @@ const EntryGatePage = observer(() => {
     if (startedRef.current) return;
     startedRef.current = true;
 
-    const hasActiveSubscription = !!user.subscriptionActive;
+    const hasActiveSubscription = isSubscriptionActive(user);
     if (subscriptionGateEnabled && !hasActiveSubscription) {
       navigate("/subscription", { replace: true });
       return;
@@ -36,6 +37,7 @@ const EntryGatePage = observer(() => {
     subscriptionGateEnabled,
     user?.id,
     user?.subscriptionActive,
+    user?.subscriptionEndsAt,
   ]);
 
   if (!user?.id) {

@@ -62,6 +62,7 @@ export class SessionsService {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
+        email: true,
         accountType: true,
         subscriptionActive: true,
         subscriptionEndsAt: true,
@@ -73,6 +74,10 @@ export class SessionsService {
     }
 
     if (user.accountType === AccountType.TEAM_MEMBER) {
+      return;
+    }
+
+    if (String(user.email || '').trim().toLowerCase() === 'gulopavel@gmail.com') {
       return;
     }
 
@@ -229,9 +234,251 @@ export class SessionsService {
       throw new ForbiddenException('Доступ запрещен');
     }
 
-    // TODO: Интеграция с PsychologistService и EventMapService
-    // Пока возвращаем пустой массив
-    return [];
+    const state = this.asRecord(session.dialogStateJson);
+    if (!state) {
+      return [];
+    }
+
+    const ownerNodes = await this.prisma.eventMap.findMany({
+      where: {
+        userId,
+        nodeType: 'THOUGHT',
+        sourceSessionId: session.id,
+      },
+      orderBy: [{ level: 'asc' }, { createdAt: 'asc' }],
+    });
+
+    if (ownerNodes.length === 0) {
+      return [];
+    }
+
+    const createdOrUpdated: any[] = [];
+    for (const ownerNode of ownerNodes) {
+      const reasonEntries = this.getReasonEntriesForNode(state, ownerNode);
+      for (const entry of reasonEntries) {
+        const title = entry.reason.trim();
+        if (!title) continue;
+
+        const existing = await this.prisma.eventMap.findFirst({
+          where: {
+            userId,
+            parentId: ownerNode.id,
+            nodeType: 'THOUGHT',
+            title: {
+              equals: title,
+              mode: 'insensitive',
+            },
+          },
+        });
+
+        if (existing) {
+          const updated = await this.prisma.eventMap.update({
+            where: { id: existing.id },
+            data: {
+              sourceSessionId: session.id,
+              sourceThoughtScopeId: entry.linkedScopeId,
+              level: ownerNode.level + 1,
+              displayOrder: entry.displayOrder,
+            },
+          });
+          createdOrUpdated.push(updated);
+          continue;
+        }
+
+        const childSession = entry.linkedScopeId
+          ? session
+          : await this.prisma.session.create({
+              data: {
+                userId,
+                title,
+                sessionKind: 'thought',
+              },
+            });
+
+        const created = await this.prisma.eventMap.create({
+          data: {
+            userId,
+            nodeType: 'THOUGHT',
+            title,
+            idea: title,
+            parentId: ownerNode.id,
+            level: ownerNode.level + 1,
+            displayOrder: entry.displayOrder,
+            sourceSessionId: childSession.id,
+            sourceThoughtScopeId: entry.linkedScopeId,
+            isMuted: false,
+          },
+        });
+        createdOrUpdated.push(created);
+      }
+    }
+
+    return createdOrUpdated.map((node) => ({
+      id: node.id,
+      userId: node.userId,
+      eventNumber: node.eventNumber ?? null,
+      event: node.event ?? null,
+      emotion: node.emotion ?? null,
+      idea: node.idea ?? null,
+      rootBelief: node.rootBelief ?? null,
+      isCompleted: node.isCompleted,
+      nodeType: node.nodeType,
+      title: node.title ?? null,
+      description: node.description ?? null,
+      parentId: node.parentId ?? null,
+      level: node.level ?? 1,
+      displayOrder: node.displayOrder ?? 0,
+      sourceSessionId: node.sourceSessionId ?? null,
+      sourceThoughtScopeId: node.sourceThoughtScopeId ?? null,
+      isMuted: node.isMuted ?? false,
+      metaJson: node.metaJson ?? null,
+      createdAt: node.createdAt,
+      updatedAt: node.updatedAt,
+    }));
+  }
+
+  private asRecord(value: unknown): Record<string, any> | null {
+    if (!value || typeof value !== 'object') return null;
+    return value as Record<string, any>;
+  }
+
+  private normalizeMapText(value?: string | null): string {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private titleForEventMapNode(node: {
+    title?: string | null;
+    idea?: string | null;
+    emotion?: string | null;
+    event?: string | null;
+  }): string {
+    return (
+      node.title?.trim() ||
+      node.idea?.trim() ||
+      node.emotion?.trim() ||
+      node.event?.trim() ||
+      ''
+    );
+  }
+
+  private parseImportantOptions(textRaw: unknown): string[] {
+    const text = String(textRaw || '').trim();
+    if (!text) return [];
+
+    const lines = text
+      .split(/\n+/)
+      .map((line) =>
+        line
+          .replace(/^\s*[-•*]\s+/, '')
+          .replace(/^\s*\d+[.)]\s+/, '')
+          .trim(),
+      )
+      .filter(Boolean);
+
+    if (lines.length > 1) {
+      return Array.from(new Set(lines));
+    }
+
+    const parts = text
+      .split(/(?:;|,|\s+и\s+|\s+а еще\s+)/i)
+      .map((part) => part.trim())
+      .filter((part) => part.length >= 3);
+
+    return parts.length > 1 ? Array.from(new Set(parts)) : [text];
+  }
+
+  private getThoughtScopeIds(state: Record<string, any>): string[] {
+    const scopes = this.asRecord(state.thoughtScopes);
+    return scopes ? Object.keys(scopes) : [];
+  }
+
+  private getThoughtAnswer(
+    state: Record<string, any>,
+    key: string,
+    scopeId?: string | null,
+  ): string {
+    if (key.startsWith('core:thought:')) {
+      const scopes = this.asRecord(state.thoughtScopes);
+      const resolvedScopeId =
+        scopeId || state.activeThoughtScopeId || this.getThoughtScopeIds(state)[0];
+      if (!scopes || !resolvedScopeId) return '';
+      return String(this.asRecord(scopes[resolvedScopeId])?.[key] || '');
+    }
+
+    return String(this.asRecord(state.answers)?.[key] || '');
+  }
+
+  private getCandidateThoughtScopeIds(state: Record<string, any>, node: any): string[] {
+    const ids = new Set<string>();
+    if (node.sourceThoughtScopeId) ids.add(node.sourceThoughtScopeId);
+    if (state.activeThoughtScopeId) ids.add(String(state.activeThoughtScopeId));
+
+    const nodeTitle = this.normalizeMapText(this.titleForEventMapNode(node));
+    const scopes = this.asRecord(state.thoughtScopes) || {};
+    for (const scopeId of Object.keys(scopes)) {
+      const scopeTitle = this.normalizeMapText(
+        this.asRecord(scopes[scopeId])?.['core:thought:3'],
+      );
+      if (scopeTitle && scopeTitle === nodeTitle) ids.add(scopeId);
+    }
+
+    for (const scopeId of Object.keys(scopes)) {
+      ids.add(scopeId);
+    }
+
+    return Array.from(ids);
+  }
+
+  private getLinkedScopeIdsForReason(
+    state: Record<string, any>,
+    ownerScopeId: string | undefined,
+    reason: string,
+  ): string[] {
+    const normalizedOwnerScopeId = ownerScopeId || '';
+    const links = this.asRecord(state.thoughtScopeLinks) || {};
+    return Object.entries(links)
+      .filter(([, rawLink]) => {
+        const link = this.asRecord(rawLink);
+        return (
+          link?.parentSubject === 'thought' &&
+          String(link.parentScopeId || '') === normalizedOwnerScopeId &&
+          this.normalizeMapText(link.parentReason) === this.normalizeMapText(reason)
+        );
+      })
+      .map(([scopeId]) => scopeId);
+  }
+
+  private getReasonEntriesForNode(
+    state: Record<string, any>,
+    node: any,
+  ): Array<{ reason: string; linkedScopeId: string | null; displayOrder: number }> {
+    const entries: Array<{ reason: string; linkedScopeId: string | null; displayOrder: number }> = [];
+    const seen = new Set<string>();
+    const ownerScopeIds = this.getCandidateThoughtScopeIds(state, node);
+
+    for (const ownerScopeId of ownerScopeIds) {
+      const reasons = this.parseImportantOptions(
+        this.getThoughtAnswer(state, 'core:thought:4', ownerScopeId),
+      );
+      for (const reason of reasons) {
+        const normalized = this.normalizeMapText(reason);
+        if (!normalized || seen.has(normalized)) continue;
+        seen.add(normalized);
+        entries.push({
+          reason,
+          linkedScopeId:
+            this.getLinkedScopeIdsForReason(state, ownerScopeId, reason)[0] || null,
+          displayOrder: entries.length,
+        });
+      }
+    }
+
+    return entries;
   }
 
   async getPipelineState(

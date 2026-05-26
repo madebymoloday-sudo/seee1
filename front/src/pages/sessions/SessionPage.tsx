@@ -41,7 +41,7 @@ const SessionPage = observer(() => {
               {SEE_TOKENS_EXPIRED_MESSAGE}
             </p>
             <Button asChild className="mt-5 w-full rounded-2xl">
-              <Link to="/subscription">Пополнить баланс</Link>
+              <Link to="/subscription?topup=1">Пополнить баланс</Link>
             </Button>
           </div>
         </div>
