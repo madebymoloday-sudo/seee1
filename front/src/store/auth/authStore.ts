@@ -43,6 +43,44 @@ export default class AuthStore {
     return this.user?.role === 'admin';
   }
 
+  private hydrateAuthUser(user: NonNullable<AuthStore["user"]>) {
+    const nextBalance = Math.max(
+      0,
+      Math.floor(Number(user.balance ?? 0)),
+    );
+
+    hydrateGamificationSnapshot(nextBalance, user.dailyStreak ?? 0);
+
+    runInAction(() => {
+      this.user = {
+        ...user,
+        balance: nextBalance,
+      };
+      this.isAuthenticated = true;
+      this.isLoading = false;
+    });
+
+    void syncLocalGamificationRewardsToServer(nextBalance)
+      .then((syncResult) => {
+        if (!syncResult.synced) return;
+        const syncedBalance = Math.max(
+          0,
+          Math.floor(Number(syncResult.balance ?? nextBalance)),
+        );
+        hydrateGamificationSnapshot(syncedBalance, user.dailyStreak ?? 0);
+        runInAction(() => {
+          if (this.user?.id !== user.id) return;
+          this.user = {
+            ...this.user,
+            balance: syncedBalance,
+          };
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to sync gamification after auth", error);
+      });
+  }
+
   async login(email: string, password: string) {
     this.isLoading = true;
     try {
@@ -71,30 +109,7 @@ export default class AuthStore {
 
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("refreshToken", response.refreshToken);
-      const syncResult = await syncLocalGamificationRewardsToServer(
-        response.user.balance ?? 0,
-      );
-      const nextBalance = Math.max(
-        0,
-        Math.floor(
-          Number(
-            syncResult.balance ?? response.user.balance ?? 0,
-          ),
-        ),
-      );
-      hydrateGamificationSnapshot(
-        nextBalance,
-        response.user.dailyStreak ?? 0,
-      );
-
-      runInAction(() => {
-        this.user = {
-          ...response.user,
-          balance: nextBalance,
-        };
-        this.isAuthenticated = true;
-        this.isLoading = false;
-      });
+      this.hydrateAuthUser(response.user);
     } catch (error) {
       runInAction(() => {
         this.isLoading = false;
@@ -145,30 +160,7 @@ export default class AuthStore {
 
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("refreshToken", response.refreshToken);
-      const syncResult = await syncLocalGamificationRewardsToServer(
-        response.user.balance ?? 0,
-      );
-      const nextBalance = Math.max(
-        0,
-        Math.floor(
-          Number(
-            syncResult.balance ?? response.user.balance ?? 0,
-          ),
-        ),
-      );
-      hydrateGamificationSnapshot(
-        nextBalance,
-        response.user.dailyStreak ?? 0,
-      );
-
-      runInAction(() => {
-        this.user = {
-          ...response.user,
-          balance: nextBalance,
-        };
-        this.isAuthenticated = true;
-        this.isLoading = false;
-      });
+      this.hydrateAuthUser(response.user);
     } catch (error) {
       runInAction(() => {
         this.isLoading = false;
@@ -210,21 +202,7 @@ export default class AuthStore {
         balance?: number;
         dailyStreak?: number;
       }>("/auth/me");
-      const syncResult = await syncLocalGamificationRewardsToServer(
-        user.balance ?? 0,
-      );
-      const nextBalance = Math.max(
-        0,
-        Math.floor(Number(syncResult.balance ?? user.balance ?? 0)),
-      );
-      hydrateGamificationSnapshot(nextBalance, user.dailyStreak ?? 0);
-      runInAction(() => {
-        this.user = {
-          ...user,
-          balance: nextBalance,
-        };
-        this.isAuthenticated = true;
-      });
+      this.hydrateAuthUser(user);
     } catch {
       this.logout();
     }
