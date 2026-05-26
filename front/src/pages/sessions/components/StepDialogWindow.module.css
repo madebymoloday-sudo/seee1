@@ -669,23 +669,23 @@
   margin-right: auto;
 }
 
-.inputAlignWrapper textarea {
-  background: rgba(15, 23, 42, 0.62) !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  color: rgba(255, 255, 255, 0.95) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.95) !important;
+.inputAlignWrapper.inputAlignWrapper textarea {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: rgba(15, 23, 42, 0.94) !important;
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.94) !important;
   text-shadow: none !important;
 }
 
-.inputAlignWrapper textarea::placeholder {
-  color: rgba(255, 255, 255, 0.58) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.58) !important;
+.inputAlignWrapper.inputAlignWrapper textarea::placeholder {
+  color: rgba(15, 23, 42, 0.46) !important;
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.46) !important;
 }
 
-.inputAlignWrapper textarea:focus {
-  background: rgba(15, 23, 42, 0.74) !important;
-  border-color: rgba(255, 255, 255, 0.28) !important;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12) !important;
+.inputAlignWrapper.inputAlignWrapper textarea:focus {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(59, 130, 246, 0.42) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12) !important;
 }
 
 @media (max-width: 768px) {
