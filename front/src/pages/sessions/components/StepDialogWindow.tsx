@@ -1479,7 +1479,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           lastPersistedStateRef.current = serialized;
           if (
             state.subject === "thought" &&
-            parseImportantOptions(getAnswerValue(state, "core:thought:4")).length > 0
+            parseImportantOptions(getAnswerValue(state, "core:thought:4") || "").length > 0
           ) {
             void apiAgent.post<undefined, unknown>(
               `/sessions/${session.id}/add-to-map`,
@@ -1786,7 +1786,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     lastPersistedStateRef.current = serialized;
     if (
       state.subject === "thought" &&
-      parseImportantOptions(getAnswerValue(state, "core:thought:4")).length > 0
+      parseImportantOptions(getAnswerValue(state, "core:thought:4") || "").length > 0
     ) {
       await apiAgent.post<undefined, unknown>(
         `/sessions/${session.id}/add-to-map`,
