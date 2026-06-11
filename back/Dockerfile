@@ -2,7 +2,7 @@
 FROM node:20.12.2 AS deps
 
 # Force rebuild cache bust - change this value to force rebuild
-ARG CACHE_BUST=2026-05-27-neutral-unknown-preface
+ARG CACHE_BUST=2026-06-11-map-autoflow-dark-session
 RUN echo "Cache bust: $CACHE_BUST"
 
 WORKDIR /app

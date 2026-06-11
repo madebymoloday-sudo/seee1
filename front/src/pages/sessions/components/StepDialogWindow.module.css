@@ -162,6 +162,41 @@
   color: rgba(255, 255, 255, 0.76);
 }
 
+:global(.dark) .reasonCard,
+:global(html.dark) .reasonCard {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+:global(.dark) .reasonLabel,
+:global(html.dark) .reasonLabel {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .reasonTextarea,
+:global(html.dark) .reasonTextarea {
+  background: rgba(2, 6, 23, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+  text-shadow: none !important;
+}
+
+:global(.dark) .reasonTextarea::placeholder,
+:global(html.dark) .reasonTextarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+:global(.dark) .reasonTextarea:focus,
+:global(.dark) .reasonTextarea:active,
+:global(html.dark) .reasonTextarea:focus,
+:global(html.dark) .reasonTextarea:active {
+  background: rgba(2, 6, 23, 0.86) !important;
+  border-color: rgba(147, 197, 253, 0.48) !important;
+}
+
 :global(:not(.dark)) .reasonsHint {
   color: rgba(255, 255, 255, 0.94);
 }

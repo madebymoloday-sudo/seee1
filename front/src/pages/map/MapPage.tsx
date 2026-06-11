@@ -209,6 +209,16 @@ function toState(raw: unknown): DialogState | null {
   return raw as DialogState;
 }
 
+function asMindNode(node: EventMapNodeDto, children: MindNode[] = []): MindNode {
+  return {
+    ...node,
+    resolvedType: ((node.nodeType || "LEGACY").toUpperCase() as MindNodeType) || "LEGACY",
+    resolvedTitle: titleForNode(node),
+    childCount: children.length,
+    children,
+  };
+}
+
 async function createThoughtSession(title: string) {
   const session = await apiAgent.post<{ title: string }, SessionResponseDto>("/sessions", {
     title: title.trim(),
@@ -411,9 +421,6 @@ const MapPage = observer(() => {
               continue;
             }
 
-            const derivedSessionId = entry.linkedScopeId
-              ? node.sourceSessionId
-              : (await createThoughtSession(reason)).id;
             const created = await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>(
               "/event-map",
               {
@@ -422,7 +429,7 @@ const MapPage = observer(() => {
                 parentId: node.id,
                 level: levelForNode(node) + 1,
                 displayOrder: entry.displayOrder,
-                sourceSessionId: derivedSessionId,
+                sourceSessionId: entry.linkedScopeId ? node.sourceSessionId : null,
                 sourceThoughtScopeId: entry.linkedScopeId,
                 isMuted: false,
               },
@@ -516,8 +523,10 @@ const MapPage = observer(() => {
           event: title,
           rootBelief: situationDescription.trim() || null,
         });
+        closeModal();
+        await fetchMap();
       } else {
-        await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>("/event-map", {
+        const created = await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>("/event-map", {
           nodeType: "SITUATION",
           title,
           description: situationDescription.trim() || null,
@@ -526,9 +535,12 @@ const MapPage = observer(() => {
           level: 1,
           displayOrder: tree.length,
         });
+        await fetchMap();
+        setExpanded((prev) => ({ ...prev, [created.id]: true }));
+        setEmotionDrafts(Array.from({ length: DEFAULT_EMOTION_FIELDS }, () => ""));
+        setModal({ type: "create-emotions", parent: asMindNode(created) });
+        toast.success("Ситуация сохранена. Теперь добавьте эмоции к этой ситуации.");
       }
-      closeModal();
-      await fetchMap();
     } catch (error) {
       console.error(error);
       showMapSaveError(error, "Не удалось сохранить ситуацию");
@@ -551,10 +563,13 @@ const MapPage = observer(() => {
           title,
           emotion: title,
         });
+        closeModal();
+        await fetchMap();
       } else {
+        const createdEmotions: EventMapNodeDto[] = [];
         for (let index = 0; index < values.length; index += 1) {
           const title = values[index];
-          await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>("/event-map", {
+          const created = await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>("/event-map", {
             nodeType: "EMOTION",
             title,
             emotion: title,
@@ -562,11 +577,24 @@ const MapPage = observer(() => {
             level: 2,
             displayOrder: index,
           });
+          createdEmotions.push(created);
         }
-        setExpanded((prev) => ({ ...prev, [modal.parent.id]: true }));
+        const firstEmotion = createdEmotions[0];
+        await fetchMap();
+        if (firstEmotion) {
+          setExpanded((prev) => ({
+            ...prev,
+            [modal.parent.id]: true,
+            [firstEmotion.id]: true,
+          }));
+          setThoughtDrafts(Array.from({ length: DEFAULT_THOUGHT_FIELDS }, () => ""));
+          setThoughtHint("");
+          setModal({ type: "create-thoughts", parent: asMindNode(firstEmotion) });
+          toast.success(`Эмоции сохранены. Теперь добавьте мысль для эмоции «${firstEmotion.title || firstEmotion.emotion || "эмоция"}».`);
+        } else {
+          closeModal();
+        }
       }
-      closeModal();
-      await fetchMap();
     } catch (error) {
       console.error(error);
       showMapSaveError(error, "Не удалось сохранить эмоции");
@@ -598,7 +626,6 @@ const MapPage = observer(() => {
       } else {
         for (let index = 0; index < values.length; index += 1) {
           const title = values[index];
-          const session = await createThoughtSession(title);
           await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>("/event-map", {
             nodeType: "THOUGHT",
             title,
@@ -606,7 +633,7 @@ const MapPage = observer(() => {
             parentId: modal.parent.id,
             level: levelForNode(modal.parent) + 1,
             displayOrder: index,
-            sourceSessionId: session.id,
+            sourceSessionId: null,
             isMuted: false,
           });
         }
