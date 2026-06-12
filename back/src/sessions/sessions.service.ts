@@ -178,6 +178,10 @@ export class SessionsService {
       },
     });
 
+    if (dto.dialogStateJson !== undefined) {
+      await this.addSessionToMap(sessionId, userId);
+    }
+
     const [result] = await this.toResponseDtos(userId, [updated]);
     return result;
   }
@@ -297,10 +301,24 @@ export class SessionsService {
         });
 
         if (existing) {
+          let sourceSessionId = existing.sourceSessionId;
+          if (entry.linkedScopeId) {
+            sourceSessionId = session.id;
+          } else if (!sourceSessionId || sourceSessionId === session.id) {
+            const childSession = await this.prisma.session.create({
+              data: {
+                userId,
+                title,
+                sessionKind: 'thought',
+              },
+            });
+            sourceSessionId = childSession.id;
+          }
+
           const updated = await this.prisma.eventMap.update({
             where: { id: existing.id },
             data: {
-              sourceSessionId: session.id,
+              sourceSessionId,
               sourceThoughtScopeId: entry.linkedScopeId,
               level: ownerNode.level + 1,
               displayOrder: entry.displayOrder,
@@ -439,24 +457,25 @@ export class SessionsService {
   }
 
   private getCandidateThoughtScopeIds(state: Record<string, any>, node: any): string[] {
-    const ids = new Set<string>();
-    if (node.sourceThoughtScopeId) ids.add(node.sourceThoughtScopeId);
-    if (state.activeThoughtScopeId) ids.add(String(state.activeThoughtScopeId));
+    if (node.sourceThoughtScopeId) {
+      return [node.sourceThoughtScopeId];
+    }
 
     const nodeTitle = this.normalizeMapText(this.titleForEventMapNode(node));
     const scopes = this.asRecord(state.thoughtScopes) || {};
+    const matchingScopeIds: string[] = [];
     for (const scopeId of Object.keys(scopes)) {
       const scopeTitle = this.normalizeMapText(
         this.asRecord(scopes[scopeId])?.['core:thought:3'],
       );
-      if (scopeTitle && scopeTitle === nodeTitle) ids.add(scopeId);
+      if (scopeTitle && scopeTitle === nodeTitle) matchingScopeIds.push(scopeId);
     }
+    if (matchingScopeIds.length > 0) return matchingScopeIds;
 
-    for (const scopeId of Object.keys(scopes)) {
-      ids.add(scopeId);
-    }
+    if (state.activeThoughtScopeId) return [String(state.activeThoughtScopeId)];
 
-    return Array.from(ids);
+    const firstScopeId = Object.keys(scopes)[0];
+    return firstScopeId ? [firstScopeId] : [];
   }
 
   private getLinkedScopeIdsForReason(
@@ -498,6 +517,22 @@ export class SessionsService {
           reason,
           linkedScopeId:
             this.getLinkedScopeIdsForReason(state, ownerScopeId, reason)[0] || null,
+          displayOrder: entries.length,
+        });
+      }
+    }
+
+    if (entries.length === 0) {
+      const fallbackReasons = this.parseImportantOptions(
+        state.importantText || this.asRecord(state.answers)?.['core:thought:4'],
+      );
+      for (const reason of fallbackReasons) {
+        const normalized = this.normalizeMapText(reason);
+        if (!normalized || seen.has(normalized)) continue;
+        seen.add(normalized);
+        entries.push({
+          reason,
+          linkedScopeId: null,
           displayOrder: entries.length,
         });
       }

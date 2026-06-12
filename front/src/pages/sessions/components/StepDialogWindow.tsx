@@ -1477,17 +1477,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
         >(`/sessions/${session.id}`, payload)
         .then(() => {
           lastPersistedStateRef.current = serialized;
-          if (
-            state.subject === "thought" &&
-            parseImportantOptions(getAnswerValue(state, "core:thought:4") || "").length > 0
-          ) {
-            void apiAgent.post<undefined, unknown>(
-              `/sessions/${session.id}/add-to-map`,
-              undefined,
-            ).catch((error) => {
-              console.error("Failed to sync session reasons to map", error);
-            });
-          }
         })
         .catch((error: any) => {
           console.error("Failed to persist session state", error);
@@ -1784,15 +1773,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
     await apiAgent.patch(`/sessions/${session.id}`, payload);
     lastPersistedStateRef.current = serialized;
-    if (
-      state.subject === "thought" &&
-      parseImportantOptions(getAnswerValue(state, "core:thought:4") || "").length > 0
-    ) {
-      await apiAgent.post<undefined, unknown>(
-        `/sessions/${session.id}/add-to-map`,
-        undefined,
-      );
-    }
   };
 
   const openFinishSession = async () => {
@@ -1944,10 +1924,6 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
     await apiAgent.patch(`/sessions/${session.id}`, payload);
     lastPersistedStateRef.current = JSON.stringify(payload);
-    await apiAgent.post<undefined, unknown>(
-      `/sessions/${session.id}/add-to-map`,
-      undefined,
-    );
   };
 
   const submitReasonDrafts = () => {

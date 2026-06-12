@@ -115,62 +115,55 @@
 .treeListRoot,
 .treeList {
   display: flex;
-  justify-content: center;
   width: max-content;
-  min-width: 100%;
   margin: 0;
-  padding: 1.8rem 0 0;
   list-style: none;
+}
+
+.treeListRoot {
+  min-width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 0 0;
 }
 
 .treeList {
   position: relative;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  margin-left: 2.8rem;
+  padding: 0.6rem 0 0.6rem 2rem;
+  border-left: 1px solid rgba(96, 123, 160, 0.48);
 }
 
 .treeList::before {
   content: "";
   position: absolute;
-  top: 0.95rem;
-  left: 50%;
-  width: 1px;
-  height: 0.9rem;
+  top: 50%;
+  left: -2.8rem;
+  width: 2.8rem;
+  height: 1px;
   background: rgba(96, 123, 160, 0.48);
 }
 
 .treeNode {
   position: relative;
-  padding: 0.95rem 0.65rem 0;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  text-align: left;
 }
 
-.treeNode::before,
-.treeNode::after {
+.treeList > .treeNode::before {
   content: "";
   position: absolute;
-  top: 0;
-  width: 50%;
-  height: 1rem;
+  top: 50%;
+  left: -2rem;
+  width: 2rem;
+  height: 1px;
   border-top: 1px solid rgba(96, 123, 160, 0.48);
-}
-
-.treeNode::before {
-  right: 50%;
-  border-right: 1px solid rgba(96, 123, 160, 0.48);
-}
-
-.treeNode::after {
-  left: 50%;
-  border-left: 1px solid rgba(96, 123, 160, 0.48);
-}
-
-.treeNode:first-child::before,
-.treeNode:last-child::after {
-  border: 0;
-}
-
-.treeNode:only-child::before,
-.treeNode:only-child::after {
-  display: none;
 }
 
 .nodeWrap {
@@ -594,9 +587,26 @@
 
   .treeListRoot,
   .treeList {
-    justify-content: flex-start;
     min-width: max-content;
-    padding-top: 1.4rem;
+  }
+
+  .treeListRoot {
+    padding-top: 0.8rem;
+  }
+
+  .treeList {
+    margin-left: 1.8rem;
+    padding-left: 1.4rem;
+  }
+
+  .treeList::before {
+    left: -1.8rem;
+    width: 1.8rem;
+  }
+
+  .treeList > .treeNode::before {
+    left: -1.4rem;
+    width: 1.4rem;
   }
 
   .nodeCard,

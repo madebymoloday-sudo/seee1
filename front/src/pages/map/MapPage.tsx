@@ -135,21 +135,22 @@ function getThoughtScopeIds(state: DialogState) {
 }
 
 function getCandidateThoughtScopeIds(state: DialogState, node: EventMapNodeDto) {
-  const ids = new globalThis.Set<string>();
-  if (node.sourceThoughtScopeId) ids.add(node.sourceThoughtScopeId);
-  if (state.activeThoughtScopeId) ids.add(state.activeThoughtScopeId);
+  if (node.sourceThoughtScopeId) {
+    return [node.sourceThoughtScopeId];
+  }
 
   const nodeTitle = normalizeText(titleForNode(node));
+  const matchingScopeIds: string[] = [];
   for (const scopeId of getThoughtScopeIds(state)) {
     const scopeTitle = normalizeText(state.thoughtScopes?.[scopeId]?.["core:thought:3"]);
-    if (scopeTitle && scopeTitle === nodeTitle) ids.add(scopeId);
+    if (scopeTitle && scopeTitle === nodeTitle) matchingScopeIds.push(scopeId);
   }
+  if (matchingScopeIds.length > 0) return matchingScopeIds;
 
-  for (const scopeId of getThoughtScopeIds(state)) {
-    ids.add(scopeId);
-  }
+  if (state.activeThoughtScopeId) return [state.activeThoughtScopeId];
 
-  return [...ids];
+  const firstScopeId = getThoughtScopeIds(state)[0];
+  return firstScopeId ? [firstScopeId] : [];
 }
 
 function getThoughtAnswer(
@@ -309,7 +310,15 @@ const MapPage = observer(() => {
       grouped.set(key, current);
     }
     for (const [key, value] of grouped) {
-      grouped.set(key, sortNodes(value));
+      grouped.set(
+        key,
+        key === "__root__"
+          ? [...value].sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+            )
+          : sortNodes(value),
+      );
     }
     return grouped;
   }, [rawNodes]);
