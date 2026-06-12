@@ -99,9 +99,9 @@
 }
 
 .scaledCanvas {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   min-height: 38rem;
-  transform-origin: top left;
 }
 
 .emptyState {

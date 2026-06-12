@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { WheelEvent } from "react";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +14,6 @@ import {
   isSeeTokensExpiredError,
   SEE_TOKENS_EXPIRED_MESSAGE,
 } from "@/lib/subscription";
-import { parseImportantOptions } from "@/lib/sessionUtils";
 import {
   ChevronDown,
   ChevronRight,
@@ -49,23 +48,6 @@ type EventMapNodeDto = {
   metaJson?: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
-};
-
-type DialogState = {
-  subject?: "situation" | "thought";
-  situationText?: string;
-  importantText?: string;
-  answers?: Record<string, string>;
-  thoughtScopes?: Record<string, Record<string, string>>;
-  activeThoughtScopeId?: string;
-  thoughtScopeLinks?: Record<
-    string,
-    {
-      parentSubject: "situation" | "thought";
-      parentScopeId?: string;
-      parentReason: string;
-    }
-  >;
 };
 
 type MindNode = EventMapNodeDto & {
@@ -130,86 +112,6 @@ function sortNodes(nodes: EventMapNodeDto[]) {
   });
 }
 
-function getThoughtScopeIds(state: DialogState) {
-  return Object.keys(state.thoughtScopes || {});
-}
-
-function getCandidateThoughtScopeIds(state: DialogState, node: EventMapNodeDto) {
-  if (node.sourceThoughtScopeId) {
-    return [node.sourceThoughtScopeId];
-  }
-
-  const nodeTitle = normalizeText(titleForNode(node));
-  const matchingScopeIds: string[] = [];
-  for (const scopeId of getThoughtScopeIds(state)) {
-    const scopeTitle = normalizeText(state.thoughtScopes?.[scopeId]?.["core:thought:3"]);
-    if (scopeTitle && scopeTitle === nodeTitle) matchingScopeIds.push(scopeId);
-  }
-  if (matchingScopeIds.length > 0) return matchingScopeIds;
-
-  if (state.activeThoughtScopeId) return [state.activeThoughtScopeId];
-
-  const firstScopeId = getThoughtScopeIds(state)[0];
-  return firstScopeId ? [firstScopeId] : [];
-}
-
-function getThoughtAnswer(
-  state: DialogState,
-  key: string,
-  scopeId?: string | null,
-) {
-  if (key.startsWith("core:thought:")) {
-    const resolvedScopeId = scopeId || state.activeThoughtScopeId || getThoughtScopeIds(state)[0];
-    if (!resolvedScopeId) return "";
-    return state.thoughtScopes?.[resolvedScopeId]?.[key] || "";
-  }
-  return state.answers?.[key] || "";
-}
-
-function getLinkedScopeIdsForReason(
-  state: DialogState,
-  ownerScopeId: string | undefined,
-  reason: string,
-) {
-  const normalizedOwnerScopeId = ownerScopeId || "";
-  return Object.entries(state.thoughtScopeLinks || {})
-    .filter(([, link]) => {
-      return (
-        link.parentSubject === "thought" &&
-        (link.parentScopeId || "") === normalizedOwnerScopeId &&
-        normalizeText(link.parentReason) === normalizeText(reason)
-      );
-    })
-    .map(([scopeId]) => scopeId);
-}
-
-function getReasonEntriesForNode(state: DialogState, node: EventMapNodeDto) {
-  const entries: Array<{ reason: string; linkedScopeId: string | null; displayOrder: number }> = [];
-  const seen = new globalThis.Set<string>();
-  const ownerScopeIds = getCandidateThoughtScopeIds(state, node);
-
-  ownerScopeIds.forEach((ownerScopeId) => {
-    const reasons = parseImportantOptions(getThoughtAnswer(state, "core:thought:4", ownerScopeId));
-    reasons.forEach((reason) => {
-      const normalized = normalizeText(reason);
-      if (!normalized || seen.has(normalized)) return;
-      seen.add(normalized);
-      entries.push({
-        reason,
-        linkedScopeId: getLinkedScopeIdsForReason(state, ownerScopeId, reason)[0] || null,
-        displayOrder: entries.length,
-      });
-    });
-  });
-
-  return entries;
-}
-
-function toState(raw: unknown): DialogState | null {
-  if (!raw || typeof raw !== "object") return null;
-  return raw as DialogState;
-}
-
 function asMindNode(node: EventMapNodeDto, children: MindNode[] = []): MindNode {
   return {
     ...node,
@@ -234,7 +136,6 @@ async function createThoughtSession(title: string) {
 const MapPage = observer(() => {
   const navigate = useNavigate();
   const [nodes, setNodes] = useState<EventMapNodeDto[]>([]);
-  const [sessions, setSessions] = useState<SessionResponseDto[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -251,7 +152,6 @@ const MapPage = observer(() => {
     Array.from({ length: DEFAULT_THOUGHT_FIELDS }, () => ""),
   );
   const [thoughtHint, setThoughtHint] = useState("");
-  const syncingRef = useRef(false);
 
   const showMapSaveError = (error: unknown, fallback: string) => {
     const message = isSeeTokensExpiredError(error)
@@ -270,12 +170,8 @@ const MapPage = observer(() => {
   const fetchMap = async () => {
     setLoading(true);
     try {
-      const [mapNodes, sessionItems] = await Promise.all([
-        apiAgent.get<EventMapNodeDto[]>("/event-map"),
-        apiAgent.get<SessionResponseDto[]>("/sessions"),
-      ]);
+      const mapNodes = await apiAgent.get<EventMapNodeDto[]>("/event-map");
       setNodes(sortNodes(mapNodes));
-      setSessions(sessionItems);
     } catch (error) {
       console.error(error);
       toast.error("Не удалось загрузить нейрокарту");
@@ -288,17 +184,44 @@ const MapPage = observer(() => {
     void fetchMap();
   }, []);
 
-  const sessionById = useMemo(() => {
-    return new globalThis.Map<string, SessionResponseDto>(
-      sessions.map((session) => [session.id, session]),
-    );
-  }, [sessions]);
-
   const rawNodes = useMemo(() => {
-    return nodes.filter((node) => {
+    const supportedNodes = nodes.filter((node) => {
       const type = (node.nodeType || "LEGACY").toUpperCase();
       return type === "SITUATION" || type === "EMOTION" || type === "THOUGHT";
     });
+
+    // Old client-side synchronization could create identical siblings. Keep one
+    // visual node and redirect every duplicate branch to that canonical parent.
+    const aliases = new globalThis.Map<string, string>();
+    const canonicalByKey = new globalThis.Map<string, EventMapNodeDto>();
+    const canonicalNodes: EventMapNodeDto[] = [];
+    const ordered = [...supportedNodes].sort(
+      (a, b) => levelForNode(a) - levelForNode(b) ||
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+
+    for (const node of ordered) {
+      const parentId = node.parentId ? aliases.get(node.parentId) || node.parentId : null;
+      const normalizedNode = { ...node, parentId };
+      if (!parentId || (node.nodeType || "").toUpperCase() === "SITUATION") {
+        canonicalNodes.push(normalizedNode);
+        continue;
+      }
+
+      const key = `${parentId}|${(node.nodeType || "").toUpperCase()}|${normalizeText(titleForNode(node))}`;
+      const canonical = canonicalByKey.get(key);
+      if (canonical) {
+        aliases.set(node.id, canonical.id);
+        continue;
+      }
+      canonicalByKey.set(key, normalizedNode);
+      canonicalNodes.push(normalizedNode);
+    }
+
+    return canonicalNodes.map((node) => ({
+      ...node,
+      parentId: node.parentId ? aliases.get(node.parentId) || node.parentId : null,
+    }));
   }, [nodes]);
 
   const nodesByParent = useMemo(() => {
@@ -323,22 +246,25 @@ const MapPage = observer(() => {
     return grouped;
   }, [rawNodes]);
 
-  const buildTree = (parentId?: string | null): MindNode[] => {
-    const key = parentId || "__root__";
-    const items = nodesByParent.get(key) || [];
-    return items.map((node) => {
-      const children = buildTree(node.id);
-      return {
-        ...node,
-        resolvedType: ((node.nodeType || "LEGACY").toUpperCase() as MindNodeType) || "LEGACY",
-        resolvedTitle: titleForNode(node),
-        childCount: children.length,
-        children,
-      };
-    });
-  };
-
-  const tree = useMemo(() => buildTree(null), [nodesByParent]);
+  const tree = useMemo(() => {
+    const buildTree = (parentId: string | null, path: Set<string>): MindNode[] => {
+      const items = nodesByParent.get(parentId || "__root__") || [];
+      return items.flatMap((node) => {
+        if (path.has(node.id)) return [];
+        const nextPath = new globalThis.Set(path);
+        nextPath.add(node.id);
+        const children = buildTree(node.id, nextPath);
+        return [{
+          ...node,
+          resolvedType: ((node.nodeType || "LEGACY").toUpperCase() as MindNodeType) || "LEGACY",
+          resolvedTitle: titleForNode(node),
+          childCount: children.length,
+          children,
+        }];
+      });
+    };
+    return buildTree(null, new globalThis.Set<string>());
+  }, [nodesByParent]);
 
   const treeNodeMap = useMemo(() => {
     const map = new globalThis.Map<string, MindNode>();
@@ -381,88 +307,6 @@ const MapPage = observer(() => {
       return next;
     });
   };
-
-  useEffect(() => {
-    if (syncingRef.current || rawNodes.length === 0 || sessions.length === 0) return;
-
-    const syncDerivedThoughts = async () => {
-      syncingRef.current = true;
-      try {
-        let changed = false;
-        const currentNodes = sortNodes(nodes);
-        const currentByParent = new Map<string, EventMapNodeDto[]>();
-        for (const node of currentNodes) {
-          const key = node.parentId || "__root__";
-          const list = currentByParent.get(key) || [];
-          list.push(node);
-          currentByParent.set(key, list);
-        }
-
-        for (const node of currentNodes) {
-          if ((node.nodeType || "").toUpperCase() !== "THOUGHT" || !node.sourceSessionId) continue;
-          const session = sessionById.get(node.sourceSessionId);
-          const state = toState(session?.dialogStateJson);
-          if (!state) continue;
-
-          const reasonEntries = getReasonEntriesForNode(state, node);
-          if (reasonEntries.length === 0) continue;
-
-          for (const entry of reasonEntries) {
-            const reason = entry.reason;
-            const siblings = currentByParent.get(node.id) || [];
-            const existingChild = siblings.find(
-              (item) =>
-                (item.nodeType || "").toUpperCase() === "THOUGHT" &&
-                normalizeText(titleForNode(item)) === normalizeText(reason),
-            );
-            if (existingChild) {
-              if (
-                entry.linkedScopeId &&
-                (existingChild.sourceSessionId !== node.sourceSessionId ||
-                  existingChild.sourceThoughtScopeId !== entry.linkedScopeId)
-              ) {
-                await apiAgent.patch(`/event-map/${existingChild.id}`, {
-                  sourceSessionId: node.sourceSessionId,
-                  sourceThoughtScopeId: entry.linkedScopeId,
-                });
-                changed = true;
-              }
-              continue;
-            }
-
-            const created = await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>(
-              "/event-map",
-              {
-                nodeType: "THOUGHT",
-                title: reason,
-                parentId: node.id,
-                level: levelForNode(node) + 1,
-                displayOrder: entry.displayOrder,
-                sourceSessionId: entry.linkedScopeId ? node.sourceSessionId : null,
-                sourceThoughtScopeId: entry.linkedScopeId,
-                isMuted: false,
-              },
-            );
-            currentNodes.push(created);
-            const nextSiblings = currentByParent.get(node.id) || [];
-            nextSiblings.push(created);
-            currentByParent.set(node.id, nextSiblings);
-            changed = true;
-          }
-        }
-
-        if (changed) {
-          await fetchMap();
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        syncingRef.current = false;
-      }
-    };
-
-    void syncDerivedThoughts();
-  }, [nodes, rawNodes.length, sessionById, sessions.length]);
 
   const openCreateSituation = () => {
     setSituationTitle("");
@@ -876,13 +720,9 @@ const MapPage = observer(() => {
                 <button
                   type="button"
                   className={styles.iconButton}
-                  aria-label={showChildren ? "Свернуть ветку" : "Раскрыть всю ветку"}
+                  aria-label={showChildren ? "Скрыть следующий уровень" : "Показать следующий уровень"}
                   onClick={() => {
-                    if (showChildren) {
-                      collapseBranch(node.id);
-                    } else {
-                      expandBranch(node.id);
-                    }
+                    setExpanded((prev) => ({ ...prev, [node.id]: !showChildren }));
                   }}
                 >
                   {showChildren ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -929,7 +769,12 @@ const MapPage = observer(() => {
               <button type="button" className={styles.zoomButton} onClick={() => zoomMap(-0.1)}>
                 −
               </button>
-              <button type="button" className={styles.zoomValue} onClick={() => setMapScale(0.58)}>
+              <button
+                type="button"
+                className={styles.zoomValue}
+                title="Вернуть масштаб 100%"
+                onClick={() => setMapScale(1)}
+              >
                 {Math.round(mapScale * 100)}%
               </button>
               <button type="button" className={styles.zoomButton} onClick={() => zoomMap(0.1)}>
@@ -957,8 +802,7 @@ const MapPage = observer(() => {
             <div
               className={styles.scaledCanvas}
               style={{
-                width: `${Math.max(100, 100 / mapScale)}%`,
-                transform: `scale(${mapScale})`,
+                zoom: mapScale,
               }}
             >
               <ul className={styles.treeListRoot}>

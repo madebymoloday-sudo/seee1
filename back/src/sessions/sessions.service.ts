@@ -13,7 +13,30 @@ import type { PipelineState } from '../psychologist/pipeline/pipeline.types';
 
 @Injectable()
 export class SessionsService {
+  private readonly mapSyncQueues = new Map<string, Promise<void>>();
+
   constructor(private prisma: PrismaService) {}
+
+  private async queueMapSync(
+    sessionId: string,
+    userId: string,
+  ): Promise<void> {
+    const key = `${userId}:${sessionId}`;
+    const previous = this.mapSyncQueues.get(key) || Promise.resolve();
+    const current = previous
+      .catch(() => undefined)
+      .then(async () => {
+        await this.addSessionToMap(sessionId, userId);
+      });
+    this.mapSyncQueues.set(key, current);
+    try {
+      await current;
+    } finally {
+      if (this.mapSyncQueues.get(key) === current) {
+        this.mapSyncQueues.delete(key);
+      }
+    }
+  }
 
   async create(
     userId: string,
@@ -179,7 +202,7 @@ export class SessionsService {
     });
 
     if (dto.dialogStateJson !== undefined) {
-      await this.addSessionToMap(sessionId, userId);
+      await this.queueMapSync(sessionId, userId);
     }
 
     const [result] = await this.toResponseDtos(userId, [updated]);
@@ -281,8 +304,20 @@ export class SessionsService {
       return [];
     }
 
+    const uniqueOwnerNodes = Array.from(
+      ownerNodes.reduce((result, node) => {
+        const key = [
+          node.parentId || '',
+          node.sourceThoughtScopeId || '',
+          this.normalizeMapText(this.titleForEventMapNode(node)),
+        ].join('|');
+        if (!result.has(key)) result.set(key, node);
+        return result;
+      }, new Map<string, (typeof ownerNodes)[number]>()),
+    ).map(([, node]) => node);
+
     const createdOrUpdated: any[] = [];
-    for (const ownerNode of ownerNodes) {
+    for (const ownerNode of uniqueOwnerNodes) {
       const reasonEntries = this.getReasonEntriesForNode(state, ownerNode);
       for (const entry of reasonEntries) {
         const title = entry.reason.trim();
