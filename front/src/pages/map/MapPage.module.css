@@ -102,6 +102,7 @@
   width: max-content;
   min-width: 100%;
   min-height: 38rem;
+  transition: transform 0.16s ease;
 }
 
 .emptyState {
@@ -135,7 +136,7 @@
   gap: 0.55rem;
   margin-left: 2rem;
   padding: 0.35rem 0 0.35rem 1.35rem;
-  border-left: 1px solid rgba(96, 123, 160, 0.48);
+  border-left: 0;
 }
 
 .treeList::before {
@@ -145,7 +146,8 @@
   left: -2rem;
   width: 2rem;
   height: 1px;
-  background: rgba(96, 123, 160, 0.48);
+  border-top: 1px solid rgba(96, 123, 160, 0.34);
+  border-radius: 999px;
 }
 
 .treeNode {
@@ -159,11 +161,13 @@
 .treeList > .treeNode::before {
   content: "";
   position: absolute;
-  top: 50%;
+  top: calc(50% - 0.9rem);
   left: -1.35rem;
   width: 1.35rem;
-  height: 1px;
-  border-top: 1px solid rgba(96, 123, 160, 0.48);
+  height: 1.8rem;
+  border-left: 1px solid rgba(96, 123, 160, 0.34);
+  border-bottom: 1px solid rgba(96, 123, 160, 0.34);
+  border-bottom-left-radius: 1rem;
 }
 
 .nodeWrap {
@@ -193,6 +197,20 @@
 
 .nodeEmotion {
   background: linear-gradient(180deg, rgba(255, 222, 160, 0.35), rgba(255, 255, 255, 0.92));
+  width: 8.8rem;
+  height: 5.6rem;
+}
+
+.nodeEmotion .nodeMain {
+  padding: 0.55rem 0.65rem 0.62rem;
+}
+
+.nodeEmotion .nodeActions {
+  padding: 0.45rem 0.42rem 0.45rem 0;
+}
+
+.nodeEmotion .nodeDescription {
+  display: none;
 }
 
 .nodeThought {
@@ -236,6 +254,11 @@
   border: 1px solid rgba(142, 163, 192, 0.28);
   background: rgba(255, 255, 255, 0.76);
   color: #334155;
+}
+
+.nodeEmotion .iconButton {
+  width: 1.55rem;
+  height: 1.55rem;
 }
 
 .nodeTypeLabel {

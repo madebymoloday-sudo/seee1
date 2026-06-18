@@ -77,7 +77,7 @@ type ModalState =
 const DEFAULT_EMOTION_FIELDS = 3;
 const DEFAULT_THOUGHT_FIELDS = 1;
 const THOUGHT_REWARD = 25;
-const MIN_MAP_SCALE = 0.35;
+const MIN_MAP_SCALE = 0.85;
 const MAX_MAP_SCALE = 1.35;
 
 function clampScale(value: number) {
@@ -1056,7 +1056,8 @@ const MapPage = observer(() => {
             <div
               className={styles.scaledCanvas}
               style={{
-                zoom: mapScale,
+                transform: `scale(${mapScale})`,
+                transformOrigin: "top center",
               }}
             >
               <ul className={styles.treeListRoot}>

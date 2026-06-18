@@ -2,6 +2,7 @@
   flex: 1;
   min-height: 0;
   height: 100%;
+  overflow: hidden;
 }
 
 .messagesStage {
@@ -19,6 +20,9 @@
   margin-top: auto;
   align-self: stretch;
   flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 120;
 }
 
 .choiceRow {
@@ -793,17 +797,15 @@
   .messagesStage {
     justify-content: flex-start;
     padding-top: 4.35rem;
-    padding-bottom: 5.35rem;
-    scroll-padding-bottom: 5.75rem;
+    padding-bottom: 1.2rem;
+    scroll-padding-bottom: 6.25rem;
   }
 
   .bottomDock {
-    position: fixed;
-    left: 0;
-    right: 0;
+    position: sticky;
     bottom: 0;
     margin-top: 0;
-    z-index: 80;
+    z-index: 120;
   }
 
   .inputAlignWrapper > div {
