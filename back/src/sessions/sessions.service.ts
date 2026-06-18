@@ -14,6 +14,8 @@ import type { PipelineState } from '../psychologist/pipeline/pipeline.types';
 @Injectable()
 export class SessionsService {
   private readonly mapSyncQueues = new Map<string, Promise<void>>();
+  private readonly answerRewardAmount = 3;
+  private readonly sessionCompletionRewardAmount = 25;
 
   constructor(private prisma: PrismaService) {}
 
@@ -202,6 +204,11 @@ export class SessionsService {
     });
 
     if (dto.dialogStateJson !== undefined) {
+      await this.syncGamificationRewardsForState(
+        userId,
+        sessionId,
+        dto.dialogStateJson,
+      );
       await this.queueMapSync(sessionId, userId);
     }
 
@@ -574,6 +581,175 @@ export class SessionsService {
     }
 
     return entries;
+  }
+
+  private isMeaningfulRewardAnswer(value: unknown): value is string {
+    return typeof value === 'string' && value.trim().length >= 2;
+  }
+
+  private collectRewardableAnswers(
+    state: Record<string, any>,
+  ): Array<{ rewardKeyPart: string; value: string }> {
+    const answers: Array<{ rewardKeyPart: string; value: string }> = [];
+    const seen = new Set<string>();
+
+    const pushAnswer = (rewardKeyPart: string, value: unknown) => {
+      if (!this.isMeaningfulRewardAnswer(value)) return;
+      const normalizedKey = rewardKeyPart.trim();
+      if (!normalizedKey || seen.has(normalizedKey)) return;
+      seen.add(normalizedKey);
+      answers.push({ rewardKeyPart: normalizedKey, value: value.trim() });
+    };
+
+    const rootAnswers = this.asRecord(state.answers);
+    if (rootAnswers) {
+      for (const [key, value] of Object.entries(rootAnswers)) {
+        pushAnswer(String(key), value);
+      }
+    }
+
+    if (this.isMeaningfulRewardAnswer(state.importantText)) {
+      pushAnswer('importantText', state.importantText);
+    }
+
+    const scopes = this.asRecord(state.thoughtScopes);
+    if (scopes) {
+      for (const [scopeId, scopeRaw] of Object.entries(scopes)) {
+        const scope = this.asRecord(scopeRaw);
+        if (!scope) continue;
+        for (const [key, value] of Object.entries(scope)) {
+          pushAnswer(`scope:${scopeId}:${key}`, value);
+        }
+      }
+    }
+
+    return answers;
+  }
+
+  private hasCompletionAnswer(state: Record<string, any>): boolean {
+    const rootAnswers = this.asRecord(state.answers) || {};
+    if (this.isMeaningfulRewardAnswer(rootAnswers['core:thought:9'])) return true;
+    if (this.isMeaningfulRewardAnswer(rootAnswers['core:situation:9'])) return true;
+    if (state.completed === true || state.isCompleted === true) return true;
+
+    const scopes = this.asRecord(state.thoughtScopes);
+    if (!scopes) return false;
+
+    return Object.values(scopes).some((scopeRaw) => {
+      const scope = this.asRecord(scopeRaw);
+      return this.isMeaningfulRewardAnswer(scope?.['core:thought:9']);
+    });
+  }
+
+  private async claimSessionGamificationReward(params: {
+    userId: string;
+    sessionId: string;
+    rewardKey: string;
+    rewardKind: string;
+    amount: number;
+    description: string;
+  }): Promise<void> {
+    const amount = Math.max(0, Math.floor(params.amount));
+    if (amount <= 0) return;
+
+    await this.prisma.$transaction(async (tx) => {
+      const existingReward = await tx.gamificationReward.findUnique({
+        where: {
+          userId_rewardKey: {
+            userId: params.userId,
+            rewardKey: params.rewardKey,
+          },
+        },
+        select: { id: true },
+      });
+
+      const currentBalanceRecord = await tx.balance.upsert({
+        where: { userId: params.userId },
+        update: {},
+        create: {
+          userId: params.userId,
+          amount: 0,
+        },
+        select: { amount: true },
+      });
+
+      const rewardsAggregate = await tx.gamificationReward.aggregate({
+        where: { userId: params.userId },
+        _sum: { amount: true },
+      });
+      const currentBalance = Number(currentBalanceRecord.amount ?? 0);
+      const rewardsTotal = Math.max(
+        0,
+        Math.floor(Number(rewardsAggregate._sum.amount ?? 0)),
+      );
+      const baselineBalance = Math.max(currentBalance, rewardsTotal);
+
+      if (baselineBalance !== currentBalance) {
+        await tx.balance.update({
+          where: { userId: params.userId },
+          data: { amount: baselineBalance },
+        });
+      }
+
+      if (existingReward) return;
+
+      await tx.gamificationReward.create({
+        data: {
+          userId: params.userId,
+          sessionId: params.sessionId,
+          rewardKey: params.rewardKey,
+          rewardKind: params.rewardKind,
+          amount,
+          description: params.description,
+        },
+      });
+
+      await tx.balance.update({
+        where: { userId: params.userId },
+        data: { amount: baselineBalance + amount },
+      });
+
+      await tx.transaction.create({
+        data: {
+          userId: params.userId,
+          amount,
+          transactionType: 'PAYMENT',
+          description: params.description,
+        },
+      });
+    });
+  }
+
+  private async syncGamificationRewardsForState(
+    userId: string,
+    sessionId: string,
+    stateRaw: unknown,
+  ): Promise<void> {
+    const state = this.asRecord(stateRaw);
+    if (!state) return;
+
+    const answers = this.collectRewardableAnswers(state);
+    for (const answer of answers) {
+      await this.claimSessionGamificationReward({
+        userId,
+        sessionId,
+        rewardKey: `answer:${sessionId}:${answer.rewardKeyPart}`,
+        rewardKind: 'ANSWER',
+        amount: this.answerRewardAmount,
+        description: 'Награда за ответ в сессии',
+      });
+    }
+
+    if (this.hasCompletionAnswer(state)) {
+      await this.claimSessionGamificationReward({
+        userId,
+        sessionId,
+        rewardKey: `bonus:${sessionId}:session-complete`,
+        rewardKind: 'BONUS',
+        amount: this.sessionCompletionRewardAmount,
+        description: 'Бонус за прохождение сессии',
+      });
+    }
   }
 
   async getPipelineState(

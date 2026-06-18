@@ -17,12 +17,14 @@ import {
 import {
   ChevronDown,
   ChevronRight,
+  Download,
   Map as MapIcon,
   MoreHorizontal,
   Plus,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { parseImportantOptions } from "@/lib/sessionUtils";
 import styles from "./MapPage.module.css";
 
 type MindNodeType = "SITUATION" | "EMOTION" | "THOUGHT" | "LEGACY";
@@ -55,6 +57,12 @@ type MindNode = EventMapNodeDto & {
   resolvedTitle: string;
   childCount: number;
   children: MindNode[];
+};
+
+type ExportTable = {
+  title: string;
+  headers: string[];
+  rows: string[][];
 };
 
 type ModalState =
@@ -122,6 +130,94 @@ function asMindNode(node: EventMapNodeDto, children: MindNode[] = []): MindNode 
   };
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object") return {};
+  return value as Record<string, unknown>;
+}
+
+function parseDialogState(value: unknown): Record<string, unknown> {
+  if (!value) return {};
+  if (typeof value === "string") {
+    try {
+      return asRecord(JSON.parse(value));
+    } catch {
+      return {};
+    }
+  }
+  return asRecord(value);
+}
+
+function normalizeExportValue(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function getScopedAnswer(
+  state: Record<string, unknown>,
+  scope: Record<string, unknown> | null,
+  key: string,
+): string {
+  const scoped = normalizeExportValue(scope?.[key]);
+  if (scoped) return scoped;
+  return normalizeExportValue(asRecord(state.answers)[key]);
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function tableToHtml(table: ExportTable) {
+  const headers = table.headers
+    .map((header) => `<th>${escapeHtml(header)}</th>`)
+    .join("");
+  const rows = table.rows
+    .map((row) => (
+      `<tr>${table.headers
+        .map((_, index) => `<td>${escapeHtml(row[index] || "").replace(/\n/g, "<br>")}</td>`)
+        .join("")}</tr>`
+    ))
+    .join("");
+
+  return `
+    <h2>${escapeHtml(table.title)}</h2>
+    <table>
+      <thead><tr>${headers}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function downloadTablesAsXls(filename: string, tables: ExportTable[]) {
+  const html = `<!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <style>
+          body { font-family: Arial, sans-serif; color: #111827; }
+          h2 { margin: 18px 0 8px; font-size: 18px; }
+          table { border-collapse: collapse; margin-bottom: 28px; }
+          th, td { border: 1px solid #d9dde5; padding: 8px 10px; vertical-align: top; white-space: pre-wrap; mso-number-format: "\\@"; }
+          th { background: #eef4ff; font-weight: 700; }
+        </style>
+      </head>
+      <body>${tables.map(tableToHtml).join("")}</body>
+    </html>`;
+  const blob = new Blob(["\ufeff", html], {
+    type: "application/vnd.ms-excel;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 async function createThoughtSession(title: string) {
   const session = await apiAgent.post<{ title: string }, SessionResponseDto>("/sessions", {
     title: title.trim(),
@@ -139,6 +235,7 @@ const MapPage = observer(() => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [inspectedNode, setInspectedNode] = useState<MindNode | null>(null);
   const [modal, setModal] = useState<ModalState>(null);
@@ -359,6 +456,154 @@ const MapPage = observer(() => {
 
   const zoomMap = (delta: number) => {
     setMapScale((current) => clampScale(Number((current + delta).toFixed(2))));
+  };
+
+  const buildNeuroMapExportTable = (): ExportTable => {
+    type RowDraft = {
+      situation: string;
+      emotion: string;
+      thoughts: string[];
+    };
+
+    const drafts: RowDraft[] = [];
+    const visit = (node: MindNode, draft: RowDraft) => {
+      const next: RowDraft = {
+        situation: draft.situation,
+        emotion: draft.emotion,
+        thoughts: [...draft.thoughts],
+      };
+
+      if (node.resolvedType === "SITUATION") {
+        next.situation = [node.resolvedTitle, node.description].filter(Boolean).join("\n");
+      } else if (node.resolvedType === "EMOTION") {
+        next.emotion = node.resolvedTitle;
+      } else {
+        next.thoughts.push(node.resolvedTitle);
+      }
+
+      if (node.children.length === 0) {
+        drafts.push(next);
+        return;
+      }
+
+      node.children.forEach((child) => visit(child, next));
+    };
+
+    tree.forEach((node) => visit(node, { situation: "", emotion: "", thoughts: [] }));
+
+    const maxThoughtDepth = Math.max(
+      6,
+      ...drafts.map((draft) => draft.thoughts.length),
+    );
+    const headers = [
+      "Ситуация",
+      "Эмоции",
+      ...Array.from({ length: maxThoughtDepth }, (_, index) => `Мысли ${index + 1} уровень`),
+    ];
+    const rows = drafts.length > 0
+      ? drafts.map((draft) => [
+          draft.situation,
+          draft.emotion,
+          ...Array.from({ length: maxThoughtDepth }, (_, index) => draft.thoughts[index] || ""),
+        ])
+      : [["", "", ...Array.from({ length: maxThoughtDepth }, () => "")]];
+
+    return {
+      title: "Нейрокарта",
+      headers,
+      rows,
+    };
+  };
+
+  const buildSessionDetailsExportTable = (sessions: SessionResponseDto[]): ExportTable => {
+    const rows: string[][] = [];
+    let maxReasonCount = 4;
+
+    for (const session of sessions) {
+      const state = parseDialogState(session.dialogStateJson);
+      const rootAnswers = asRecord(state.answers);
+      const scopes = asRecord(state.thoughtScopes);
+      const scopeEntries = Object.entries(scopes)
+        .map(([scopeId, scopeRaw]) => [scopeId, asRecord(scopeRaw)] as const)
+        .filter(([, scope]) => Object.keys(scope).length > 0);
+      const normalizedScopes = scopeEntries.length > 0 ? scopeEntries : [["", null] as const];
+
+      for (const [, scope] of normalizedScopes) {
+        const title =
+          getScopedAnswer(state, scope, "core:thought:3") ||
+          normalizeExportValue(rootAnswers["core:situation:3"]) ||
+          normalizeExportValue(session.title) ||
+          "Без названия";
+        const reasons = parseImportantOptions(
+          getScopedAnswer(state, scope, "core:thought:4") ||
+            normalizeExportValue(state.importantText) ||
+            normalizeExportValue(rootAnswers["core:situation:4"]),
+        );
+        maxReasonCount = Math.max(maxReasonCount, reasons.length);
+
+        rows.push([
+          title,
+          ...reasons,
+          getScopedAnswer(state, scope, "core:thought:5") ||
+            normalizeExportValue(rootAnswers["core:situation:5"]),
+          getScopedAnswer(state, scope, "core:thought:6") ||
+            normalizeExportValue(rootAnswers["core:situation:6"]),
+          getScopedAnswer(state, scope, "core:thought:7") ||
+            normalizeExportValue(rootAnswers["core:situation:7"]),
+          getScopedAnswer(state, scope, "core:thought:8") ||
+            normalizeExportValue(rootAnswers["core:situation:8"]),
+          getScopedAnswer(state, scope, "core:thought:9") ||
+            normalizeExportValue(rootAnswers["core:situation:9"]),
+        ]);
+      }
+    }
+
+    const headers = [
+      "Название",
+      ...Array.from({ length: maxReasonCount }, (_, index) => `почему это важно ${index + 1}`),
+      "Владелец",
+      "Эгоистичная цель",
+      "Эмоциональные пос",
+      "практические пос",
+      "Вывод",
+    ];
+    const rowsWithAlignedReasons = rows.length > 0
+      ? rows.map((row) => {
+          const [title, ...tail] = row;
+          const fixedTailCount = 5;
+          const reasons = tail.slice(0, Math.max(0, tail.length - fixedTailCount));
+          const fixed = tail.slice(-fixedTailCount);
+          return [
+            title,
+            ...Array.from({ length: maxReasonCount }, (_, index) => reasons[index] || ""),
+            ...fixed,
+          ];
+        })
+      : [["", ...Array.from({ length: maxReasonCount + 5 }, () => "")]];
+
+    return {
+      title: "Сессии",
+      headers,
+      rows: rowsWithAlignedReasons,
+    };
+  };
+
+  const exportNeuroMap = async () => {
+    setExporting(true);
+    try {
+      const sessions = await apiAgent.get<SessionResponseDto[]>("/sessions");
+      const date = new Date().toISOString().slice(0, 10);
+      downloadTablesAsXls(`seee-neuro-map-${date}.xls`, [
+        buildNeuroMapExportTable(),
+        buildSessionDetailsExportTable(sessions),
+      ]);
+      toast.success("Таблица нейрокарты скачана");
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось скачать таблицу нейрокарты");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const submitSituation = async () => {
@@ -781,6 +1026,15 @@ const MapPage = observer(() => {
                 +
               </button>
             </div>
+            <Button
+              variant="outline"
+              onClick={() => void exportNeuroMap()}
+              className={styles.primaryButton}
+              disabled={exporting}
+            >
+              <Download size={16} />
+              {exporting ? "Готовлю таблицу..." : "Скачать таблицу"}
+            </Button>
             <Button onClick={openCreateSituation} className={styles.primaryButton}>
               <Plus size={16} />
               Добавить ситуацию
