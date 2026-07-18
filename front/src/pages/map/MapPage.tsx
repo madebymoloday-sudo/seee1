@@ -117,6 +117,19 @@ function sortNodes(nodes: EventMapNodeDto[]) {
   });
 }
 
+function mergeNodes(
+  currentNodes: EventMapNodeDto[],
+  incomingNodes: EventMapNodeDto[],
+) {
+  const nodesById = new globalThis.Map(
+    currentNodes.map((node) => [node.id, node]),
+  );
+  for (const node of incomingNodes) {
+    nodesById.set(node.id, node);
+  }
+  return sortNodes(Array.from(nodesById.values()));
+}
+
 function asMindNode(node: EventMapNodeDto, children: MindNode[] = []): MindNode {
   return {
     ...node,
@@ -265,16 +278,27 @@ const MapPage = observer(() => {
     });
   };
 
-  const fetchMap = async () => {
-    setLoading(true);
+  const fetchMap = async ({
+    showLoading = true,
+    silent = false,
+  }: {
+    showLoading?: boolean;
+    silent?: boolean;
+  } = {}) => {
+    if (showLoading) setLoading(true);
     try {
       const mapNodes = await apiAgent.get<EventMapNodeDto[]>("/event-map");
+      if (!Array.isArray(mapNodes)) {
+        throw new Error("Некорректный ответ нейрокарты");
+      }
       setNodes(sortNodes(mapNodes));
+      return true;
     } catch (error) {
       console.error(error);
-      toast.error("Не удалось загрузить нейрокарту");
+      if (!silent) toast.error("Не удалось загрузить нейрокарту");
+      return false;
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -713,11 +737,12 @@ const MapPage = observer(() => {
           level: 1,
           displayOrder: tree.length,
         });
-        await fetchMap();
+        setNodes((currentNodes) => mergeNodes(currentNodes, [created]));
         setExpanded((prev) => ({ ...prev, [created.id]: true }));
         setEmotionDrafts(Array.from({ length: DEFAULT_EMOTION_FIELDS }, () => ""));
         setModal({ type: "create-emotions", parent: asMindNode(created) });
         toast.success("Ситуация сохранена. Теперь добавьте эмоции к этой ситуации.");
+        void fetchMap({ showLoading: false, silent: true });
       }
     } catch (error) {
       console.error(error);

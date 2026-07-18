@@ -95,25 +95,17 @@ export class EventMapService {
   }
 
   async findAllByUserId(userId: string): Promise<EventMapResponseDto[]> {
-    let eventMaps = await this.prisma.eventMap.findMany({
+    const eventMaps = await this.prisma.eventMap.findMany({
       where: { userId },
       orderBy: [
         { eventNumber: 'asc' },
         { createdAt: 'desc' },
       ],
     });
-    const repaired = await this.repairDuplicateSiblings(userId, eventMaps);
-    if (repaired) {
-      eventMaps = await this.prisma.eventMap.findMany({
-        where: { userId },
-        orderBy: [
-          { eventNumber: 'asc' },
-          { createdAt: 'desc' },
-        ],
-      });
-    }
 
-    return eventMaps.map((em) => this.toResponseDto(em));
+    return this.normalizeNodesForRead(eventMaps).map((em) =>
+      this.toResponseDto(em),
+    );
   }
 
   async update(
@@ -244,84 +236,64 @@ export class EventMapService {
     });
   }
 
-  private async repairDuplicateSiblings(
-    userId: string,
-    sourceNodes: EventMap[],
-  ): Promise<boolean> {
+  private normalizeNodesForRead(sourceNodes: EventMap[]): EventMap[] {
     const nodes = [...sourceNodes].sort(
       (left, right) =>
         left.level - right.level ||
         left.createdAt.getTime() - right.createdAt.getTime(),
     );
-    const siblingKeys = new Set<string>();
-    const hasDuplicates = nodes.some((node) => {
-      const nodeType = this.normalizeNodeType(node.nodeType);
-      if (!node.parentId || nodeType === 'SITUATION') return false;
+    const aliases = new Map<string, string>();
+    const canonicalByKey = new Map<string, EventMap>();
+    const normalizedNodes: EventMap[] = [];
+
+    for (const node of nodes) {
+      const nodeType = this.normalizeStoredNodeType(node.nodeType);
+      const parentId = node.parentId
+        ? aliases.get(node.parentId) || node.parentId
+        : null;
+      const normalizedNode = { ...node, nodeType, parentId };
+
+      // Root situations may legitimately have the same title. Old duplicate
+      // descendants are collapsed only for the response; GET never mutates data.
+      if (!parentId || nodeType === 'SITUATION') {
+        normalizedNodes.push(normalizedNode);
+        continue;
+      }
+
       const normalizedTitle = this.normalizeText(
         node.title || node.idea || node.emotion || node.event,
       );
-      if (!normalizedTitle) return false;
-      const key = `${node.parentId}|${nodeType}|${normalizedTitle}`;
-      if (siblingKeys.has(key)) return true;
-      siblingKeys.add(key);
-      return false;
-    });
-    if (!hasDuplicates) return false;
-
-    const aliases = new Map<string, string>();
-    const canonicalByKey = new Map<string, (typeof nodes)[number]>();
-
-    await this.prisma.$transaction(async (tx) => {
-      for (const node of nodes) {
-        const nodeType = this.normalizeNodeType(node.nodeType);
-        const parentId = node.parentId
-          ? aliases.get(node.parentId) || node.parentId
-          : null;
-        if (node.parentId !== parentId) {
-          await tx.eventMap.update({
-            where: { id: node.id },
-            data: { parentId },
-          });
-        }
-
-        // Identical root situations may describe separate events, so repair only
-        // sibling branches below a situation.
-        if (!parentId || nodeType === 'SITUATION') continue;
-        const normalizedTitle = this.normalizeText(
-          node.title || node.idea || node.emotion || node.event,
-        );
-        if (!normalizedTitle) continue;
-
-        const key = `${parentId}|${nodeType}|${normalizedTitle}`;
-        const canonical = canonicalByKey.get(key);
-        if (!canonical) {
-          canonicalByKey.set(key, { ...node, parentId });
-          continue;
-        }
-
-        aliases.set(node.id, canonical.id);
-        await tx.eventMap.updateMany({
-          where: { userId, parentId: node.id },
-          data: { parentId: canonical.id },
-        });
-        await tx.eventMap.update({
-          where: { id: canonical.id },
-          data: {
-            ...(!canonical.description && node.description
-              ? { description: node.description }
-              : {}),
-            ...(!canonical.sourceSessionId && node.sourceSessionId
-              ? { sourceSessionId: node.sourceSessionId }
-              : {}),
-            ...(!canonical.sourceThoughtScopeId && node.sourceThoughtScopeId
-              ? { sourceThoughtScopeId: node.sourceThoughtScopeId }
-              : {}),
-          },
-        });
-        await tx.eventMap.delete({ where: { id: node.id } });
+      if (!normalizedTitle) {
+        normalizedNodes.push(normalizedNode);
+        continue;
       }
-    });
-    return true;
+
+      const key = `${parentId}|${nodeType}|${normalizedTitle}`;
+      const canonical = canonicalByKey.get(key);
+      if (canonical) {
+        aliases.set(node.id, canonical.id);
+        continue;
+      }
+
+      canonicalByKey.set(key, normalizedNode);
+      normalizedNodes.push(normalizedNode);
+    }
+
+    return normalizedNodes.map((node) => ({
+      ...node,
+      parentId: node.parentId
+        ? aliases.get(node.parentId) || node.parentId
+        : null,
+    }));
+  }
+
+  private normalizeStoredNodeType(value?: string | null): string {
+    const nodeType = String(value || 'LEGACY')
+      .trim()
+      .toUpperCase();
+    return ['SITUATION', 'EMOTION', 'THOUGHT', 'LEGACY'].includes(nodeType)
+      ? nodeType
+      : 'LEGACY';
   }
 
   private normalizeNodeType(value?: string | null): string {

@@ -157,6 +157,54 @@ describe('EventMapService', () => {
     expect(prisma.eventMap.findMany).not.toHaveBeenCalled();
   });
 
+  it('loads a map without mutating storage while collapsing old duplicates', async () => {
+    const prisma = createPrismaMock();
+    prisma.eventMap.findMany.mockResolvedValue([
+      makeNode({
+        id: 'situation',
+        nodeType: 'SITUATION',
+        title: 'Ситуация',
+        parentId: null,
+        level: 1,
+      }),
+      makeNode({
+        id: 'emotion',
+        nodeType: 'EMOTION',
+        title: 'Тревога',
+        parentId: 'situation',
+        level: 2,
+      }),
+      makeNode({
+        id: 'emotion-duplicate',
+        nodeType: 'EMOTION',
+        title: ' тревога! ',
+        parentId: 'situation',
+        level: 2,
+      }),
+      makeNode({
+        id: 'thought',
+        title: 'Я всё потеряю',
+        parentId: 'emotion-duplicate',
+        level: 3,
+      }),
+    ]);
+    const service = new EventMapService(prisma as any);
+
+    const result = await service.findAllByUserId('user');
+
+    expect(result.map((node) => node.id)).toEqual([
+      'situation',
+      'emotion',
+      'thought',
+    ]);
+    expect(result.find((node) => node.id === 'thought')?.parentId).toBe(
+      'emotion',
+    );
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(prisma.eventMap.update).not.toHaveBeenCalled();
+    expect(prisma.eventMap.delete).not.toHaveBeenCalled();
+  });
+
   it('deletes the selected branch without touching neighboring roots', async () => {
     const prisma = createPrismaMock();
     prisma.eventMap.findFirst.mockResolvedValue({ id: 'situation-a' });
