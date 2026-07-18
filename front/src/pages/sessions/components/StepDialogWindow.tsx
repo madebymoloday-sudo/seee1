@@ -19,7 +19,7 @@ import {
 import { ChevronDown } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { extractApiMessage, isSeeTokensExpiredError } from "@/lib/subscription";
@@ -286,6 +286,34 @@ function normalizeStateV3(state: DialogStateV3): DialogStateV3 {
   };
 }
 
+function activateThoughtScope(
+  state: DialogState,
+  requestedScopeId: string,
+): DialogState {
+  const scopeId = requestedScopeId.trim();
+  const scope = state.thoughtScopes[scopeId];
+  if (!scope) return state;
+
+  const thought = sanitizeThoughtValue(scope["core:thought:3"]);
+  const completedSteps = Array.from({ length: 6 }, (_, index) => index + 4).filter(
+    (step) => sanitizeThoughtValue(scope[`core:thought:${step}`]),
+  );
+  const highestCompletedStep =
+    completedSteps.length > 0 ? Math.max(...completedSteps) : 1;
+  const coreStep =
+    highestCompletedStep >= 9 ? 10 : Math.max(2, highestCompletedStep + 1);
+
+  return normalizeStateV3({
+    ...state,
+    subject: "thought",
+    activeThoughtScopeId: scopeId,
+    situationText: thought || state.situationText,
+    importantText: scope["core:thought:4"] || "",
+    coreStep,
+    solveStep: 1,
+  });
+}
+
 function getStageGuidance(
   state: DialogState,
   key: string,
@@ -419,33 +447,36 @@ function buildToExploreIntroText(
 Опишите ситуации, связанные с этой темой, и начнём собирать вашу карту развития шаг за шагом.`;
 }
 
-function parseStoredState(parsed: any): DialogState | null {
-  if (!parsed) return null;
+function parseStoredState(parsed: unknown): DialogState | null {
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return null;
+  }
+  const stored = parsed as Record<string, unknown>;
 
-  if (parsed?.v === 3) {
+  if (stored.v === 3) {
     if (
-      typeof parsed.coreStep !== "number" ||
-      typeof parsed.solveStep !== "number"
+      typeof stored.coreStep !== "number" ||
+      typeof stored.solveStep !== "number"
     ) {
       return null;
     }
     return normalizeStateV3({
-      ...parsed,
-      thoughtScopes: parsed.thoughtScopes || {},
-      answers: parsed.answers || {},
-      stageGuidance: parsed.stageGuidance || {},
-      thoughtScopeLinks: parsed.thoughtScopeLinks || {},
+      ...stored,
+      thoughtScopes: stored.thoughtScopes || {},
+      answers: stored.answers || {},
+      stageGuidance: stored.stageGuidance || {},
+      thoughtScopeLinks: stored.thoughtScopeLinks || {},
     } as DialogStateV3);
   }
 
-  if (parsed?.v === 2) {
+  if (stored.v === 2) {
     if (
-      typeof parsed.coreStep !== "number" ||
-      typeof parsed.solveStep !== "number"
+      typeof stored.coreStep !== "number" ||
+      typeof stored.solveStep !== "number"
     ) {
       return null;
     }
-    const state = parsed as DialogStateV2;
+    const state = stored as unknown as DialogStateV2;
     const answers = { ...(state.answers || {}) };
     const subj = state.subject || "situation";
     const key1 = subj === "situation" ? "core:situation:1" : "core:thought:2";
@@ -468,14 +499,14 @@ function parseStoredState(parsed: any): DialogState | null {
     return migrateToV3({ ...state, answers });
   }
 
-  if (parsed?.v === 1) {
+  if (stored.v === 1) {
     if (
-      typeof parsed.coreStep !== "number" ||
-      typeof parsed.solveStep !== "number"
+      typeof stored.coreStep !== "number" ||
+      typeof stored.solveStep !== "number"
     ) {
       return null;
     }
-    const v1 = parsed as DialogStateV1;
+    const v1 = stored as unknown as DialogStateV1;
     const answers: Record<string, string> = {};
     if (v1.situationText?.trim()) {
       answers[
@@ -509,7 +540,7 @@ function loadState(sessionId: string): DialogState | null {
 }
 
 function loadSessionStateFromServer(raw: unknown): DialogState | null {
-  return parseStoredState(raw as any);
+  return parseStoredState(raw);
 }
 
 function saveState(sessionId: string, state: DialogState) {
@@ -569,7 +600,7 @@ function removeSessionMeta(sessionId: string) {
   }
 }
 
-function decodeJwtPayload(token: string): any | null {
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const parts = token.split(".");
     if (parts.length < 2) return null;
@@ -580,7 +611,11 @@ function decodeJwtPayload(token: string): any | null {
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join(""),
     );
-    return JSON.parse(json);
+    const parsed: unknown = JSON.parse(json);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return null;
+    }
+    return parsed as Record<string, unknown>;
   } catch {
     return null;
   }
@@ -605,9 +640,13 @@ function removeToExploreTemplate(userKey: string, templateId: string) {
     const key = `seee_to_explore_templates:${userKey}`;
     const raw = localStorage.getItem(key);
     if (!raw) return;
-    const parsed = JSON.parse(raw) as any[];
+    const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return;
-    const next = parsed.filter((x) => String(x?.id ?? "") !== templateId);
+    const next = parsed.filter((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return true;
+      const id = (item as Record<string, unknown>).id;
+      return String(id ?? "") !== templateId;
+    });
     localStorage.setItem(key, JSON.stringify(next));
   } catch {
     // ignore
@@ -943,7 +982,7 @@ function formatSummarySection(title: string, body: string): string {
 }
 
 function formatReasonSummary(value?: string): string {
-  const reasons = splitReasonDrafts(value).slice(0, MAX_REASON_FIELDS);
+  const reasons = splitReasonDrafts(value);
   if (!reasons.length) return "";
 
   return reasons.map((reason, index) => `${index + 1}. ${reason}`).join("\n");
@@ -1097,14 +1136,13 @@ function buildUnknownAnswerAdvancePreface(view: View): string {
 }
 
 const MIN_REASON_FIELDS = 3;
-const MAX_REASON_FIELDS = 6;
 
 function splitReasonDrafts(value?: string): string[] {
   const normalized = (value || "").replace(/\r\n/g, "\n").trim();
   if (!normalized) return [];
 
   const parts = normalized
-    .split(/\n+|;\s*|•\s*|\u2022\s*|\d+[\)\.]\s+/g)
+    .split(/\n+|;\s*|•\s*|\u2022\s*|\d+[).]\s+/g)
     .map((item) => item.trim())
     .filter(Boolean);
 
@@ -1116,7 +1154,7 @@ function buildReasonDrafts(value?: string): string[] {
   while (drafts.length < MIN_REASON_FIELDS) {
     drafts.push("");
   }
-  return drafts.slice(0, MAX_REASON_FIELDS);
+  return drafts;
 }
 
 function joinReasonDrafts(drafts: string[]): string {
@@ -1347,7 +1385,7 @@ function buildRewardAnswerId(
     return baseKey;
   }
 
-  return `${state.activeThoughtScopeId || "thought-root"}:${baseKey}`;
+  return `scope:${state.activeThoughtScopeId || "thought-root"}:${baseKey}`;
 }
 
 function waitForAnswerPaint(): Promise<void> {
@@ -1364,10 +1402,12 @@ interface StepDialogWindowProps {
 
 const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const auth = useAuth();
   const { trigger: createSession, isMutating } =
     useSessionsControllerCreateSession();
   const isDraftSession = session.id === "new";
+  const requestedThoughtScopeId = searchParams.get("thoughtScope")?.trim() || "";
   const userKey = useMemo(() => getUserKey(), []);
   const [introStarted, setIntroStarted] = useState(false);
 
@@ -1399,7 +1439,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const [state, setState] = useState<DialogState>(() => {
     const existing =
       loadSessionStateFromServer(session.dialogStateJson) || loadState(session.id);
-    if (existing) return existing;
+    if (existing) {
+      return requestedThoughtScopeId
+        ? activateThoughtScope(existing, requestedThoughtScopeId)
+        : existing;
+    }
 
     const kind =
       getSessionKind(session.id) === "thought" ||
@@ -1428,8 +1472,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       thoughtScopeLinks: {},
     };
   });
-  const persistStateTimeoutRef = useRef<number | null>(null);
   const lastPersistedStateRef = useRef<string>("");
+  const persistStateQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     if (isDraftSession) return;
@@ -1440,6 +1484,15 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       setSessionNotes(session.id, session.notes.trim());
     }
   }, [isDraftSession, session.id, session.notes, session.sessionKind]);
+
+  useEffect(() => {
+    if (!requestedThoughtScopeId) return;
+    setState((current) =>
+      current.activeThoughtScopeId === requestedThoughtScopeId
+        ? current
+        : activateThoughtScope(current, requestedThoughtScopeId),
+    );
+  }, [requestedThoughtScopeId]);
 
   useEffect(() => {
     saveState(session.id, state);
@@ -1461,33 +1514,22 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       return;
     }
 
-    if (persistStateTimeoutRef.current) {
-      window.clearTimeout(persistStateTimeoutRef.current);
-    }
-
-    persistStateTimeoutRef.current = window.setTimeout(() => {
-      void apiAgent
-        .patch<
+    persistStateQueueRef.current = persistStateQueueRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        await apiAgent.patch<
           {
             dialogStateJson: DialogState;
             sessionKind: string | null;
             notes: string | null;
           },
           SessionResponseDto
-        >(`/sessions/${session.id}`, payload)
-        .then(() => {
-          lastPersistedStateRef.current = serialized;
-        })
-        .catch((error: any) => {
-          console.error("Failed to persist session state", error);
-        });
-    }, 250);
-
-    return () => {
-      if (persistStateTimeoutRef.current) {
-        window.clearTimeout(persistStateTimeoutRef.current);
-      }
-    };
+        >(`/sessions/${session.id}`, payload);
+        lastPersistedStateRef.current = serialized;
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to persist session state", error);
+      });
   }, [isDraftSession, session.id, session.notes, session.sessionKind, state]);
 
   // Сохраняем при уходе со страницы (закрытие вкладки, навигация), чтобы сессия открывалась на последнем шаге
@@ -1536,7 +1578,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const currentAnswers = useMemo(
     () => getCurrentAnswers(state),
-    [state.answers, state.thoughtScopes, state.activeThoughtScopeId],
+    [state],
   );
 
   const currentImportantText = useMemo(() => {
@@ -1544,13 +1586,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       return getAnswerValue(state, "core:thought:4") || "";
     }
     return state.answers["core:situation:4"] || state.importantText || "";
-  }, [
-    state.subject,
-    state.answers,
-    state.importantText,
-    state.thoughtScopes,
-    state.activeThoughtScopeId,
-  ]);
+  }, [state]);
 
   const currentStepKey = useMemo(() => {
     if (view.kind === "core") return `core:${view.subject}:${view.step}`;
@@ -1562,7 +1598,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   const currentStageGuidance = useMemo(
     () =>
       currentStepKey ? getStageGuidance(state, currentStepKey) : undefined,
-    [currentStepKey, state.stageGuidance],
+    [currentStepKey, state],
   );
 
   const prompt = useMemo(
@@ -1591,16 +1627,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
   const deepMindMap = useMemo(
     () => (view.kind === "deepPick" ? buildDeepMindMap(state) : []),
-    [
-      state.answers,
-      state.thoughtScopes,
-      state.activeThoughtScopeId,
-      state.thoughtScopeLinks,
-      state.situationText,
-      state.subject,
-      state.coreStep,
-      view.kind,
-    ],
+    [state, view.kind],
   );
 
   const [lastUserAnswer, setLastUserAnswer] = useState<string | null>(null);
@@ -1766,10 +1793,8 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     };
     const serialized = JSON.stringify(payload);
 
-    if (persistStateTimeoutRef.current) {
-      window.clearTimeout(persistStateTimeoutRef.current);
-      persistStateTimeoutRef.current = null;
-    }
+    await persistStateQueueRef.current.catch(() => undefined);
+    if (serialized === lastPersistedStateRef.current) return;
 
     await apiAgent.patch(`/sessions/${session.id}`, payload);
     lastPersistedStateRef.current = serialized;
@@ -1821,15 +1846,11 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
 
     const t = window.setTimeout(() => focusInputWithoutScroll(), 0);
     return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isListModalOpen,
     isAnalyzingAnswer,
     isTransitioning,
-    view.kind,
-    view.kind === "core" ? view.step : null,
-    view.kind === "solve" ? view.step : null,
-    view.kind === "deepPick" ? view.fromImportant : null,
+    view,
   ]);
 
   // Sync input with saved answer (review mode on revisit)
@@ -1876,13 +1897,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
       setReasonDrafts(buildReasonDrafts(""));
       setIsEditing(true);
     }
-  }, [
-    state.answers,
-    state.thoughtScopes,
-    state.activeThoughtScopeId,
-    state.stageGuidance,
-    view,
-  ]);
+  }, [isReasonsStep, state, view]);
 
   const updateReasonDraft = (index: number, value: string) => {
     setReasonDrafts((prev) => {
@@ -1894,10 +1909,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
   };
 
   const addReasonDraft = () => {
-    setReasonDrafts((prev) => {
-      if (prev.length >= MAX_REASON_FIELDS) return prev;
-      return [...prev, ""];
-    });
+    setReasonDrafts((prev) => [...prev, ""]);
   };
 
   const syncThoughtReasonsToMap = async (reasonAnswer: string) => {
@@ -3122,16 +3134,14 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
               ))}
             </div>
             <div className={styles.reasonsActions}>
-              {reasonDrafts.length < MAX_REASON_FIELDS && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addReasonDraft}
-                  className={chatStyles.glassButton}
-                >
-                  Добавить ещё причину
-                </Button>
-              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addReasonDraft}
+                className={chatStyles.glassButton}
+              >
+                Добавить ещё причину
+              </Button>
               <Button
                 type="button"
                 onClick={submitReasonDrafts}

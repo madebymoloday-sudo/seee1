@@ -3,8 +3,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import apiAgent from "@/lib/api";
-
-const PENDING_CHAT_INVITE_KEY = "seee_pending_chat_invite";
+import { PENDING_CHAT_INVITE_KEY } from "@/lib/chatInvite";
 
 const InviteRedirectPage = () => {
   const { chatId } = useParams();
@@ -54,5 +53,4 @@ const InviteRedirectPage = () => {
   );
 };
 
-export { PENDING_CHAT_INVITE_KEY };
 export default InviteRedirectPage;

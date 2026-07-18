@@ -718,10 +718,12 @@ export class StageAssistService {
   private normalizeReasons(answer: string): string[] {
     const raw = String(answer || '')
       .replace(/\r\n/g, '\n')
-      .split(/\n|;\s*|,\s*(?=[A-ZА-ЯЁа-яё])/)
+      .replace(/\s+(?=\d+[.)]\s+)/g, '\n')
+      .split(/\n+|;+/)
       .map((item) =>
         item
-          .replace(/^\d+[\).\s-]*/, '')
+          .replace(/^\s*[-•*]\s+/, '')
+          .replace(/^\s*\d+[.)]\s+/, '')
           .replace(/^[—–-]\s*/, '')
           .trim(),
       )
@@ -734,7 +736,7 @@ export class StageAssistService {
         unique.push(item);
       }
     }
-    return unique.slice(0, 8);
+    return unique;
   }
 
   private hasOnlyPositiveIntent(answer: string): boolean {

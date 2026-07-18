@@ -7,7 +7,7 @@
 }
 
 .header {
-  max-width: 1200px;
+  max-width: 1480px;
   margin: 0 auto 1rem;
   display: flex;
   align-items: flex-start;
@@ -88,21 +88,59 @@
   background: rgba(59, 130, 246, 0.1);
 }
 
+.fitButton {
+  height: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0 0.8rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #24344b;
+  font-size: 0.78rem;
+  font-weight: 750;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+  backdrop-filter: blur(14px);
+}
+
 .canvas {
   max-width: 1480px;
   margin: 0 auto;
   min-height: calc(100dvh - 13rem);
   overflow-x: auto;
   overflow-y: auto;
-  padding: 0.75rem 8rem 18rem;
-  scroll-padding: 2rem 8rem 12rem;
+  padding: 1rem 6rem 28rem;
+  scroll-padding: 3rem 6rem 18rem;
+  overscroll-behavior: contain;
+  touch-action: pan-x pan-y;
 }
 
 .scaledCanvas {
+  --map-zoom: 1;
+  position: relative;
   width: max-content;
   min-width: 100%;
   min-height: 38rem;
-  transition: transform 0.16s ease;
+  padding: 0 9rem 12rem 0;
+  zoom: var(--map-zoom);
+  isolation: isolate;
+}
+
+.edgeLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.edgeLayer path {
+  fill: none;
+  stroke: rgba(91, 120, 158, 0.38);
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 
 .emptyState {
@@ -115,6 +153,8 @@
 
 .treeListRoot,
 .treeList {
+  position: relative;
+  z-index: 1;
   display: flex;
   width: max-content;
   margin: 0;
@@ -130,24 +170,11 @@
 }
 
 .treeList {
-  position: relative;
   flex-direction: column;
   justify-content: center;
   gap: 0.55rem;
   margin-left: 2rem;
-  padding: 0.35rem 0 0.35rem 1.35rem;
-  border-left: 0;
-}
-
-.treeList::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: -2rem;
-  width: 2rem;
-  height: 1px;
-  border-top: 1px solid rgba(96, 123, 160, 0.34);
-  border-radius: 999px;
+  padding: 0.35rem 0 0.35rem 1.75rem;
 }
 
 .treeNode {
@@ -156,18 +183,6 @@
   align-items: center;
   padding: 0;
   text-align: left;
-}
-
-.treeList > .treeNode::before {
-  content: "";
-  position: absolute;
-  top: calc(50% - 0.9rem);
-  left: -1.35rem;
-  width: 1.35rem;
-  height: 1.8rem;
-  border-left: 1px solid rgba(96, 123, 160, 0.34);
-  border-bottom: 1px solid rgba(96, 123, 160, 0.34);
-  border-bottom-left-radius: 1rem;
 }
 
 .nodeWrap {
@@ -182,8 +197,8 @@
   display: flex;
   align-items: stretch;
   gap: 0.45rem;
-  width: 10.4rem;
-  height: 7.8rem;
+  width: 9.7rem;
+  height: 6.9rem;
   border-radius: 0.9rem;
   border: 1px solid rgba(146, 167, 196, 0.34);
   box-shadow: 0 12px 28px rgba(21, 34, 50, 0.1);
@@ -197,8 +212,8 @@
 
 .nodeEmotion {
   background: linear-gradient(180deg, rgba(255, 222, 160, 0.35), rgba(255, 255, 255, 0.92));
-  width: 8.8rem;
-  height: 5.6rem;
+  width: 7.4rem;
+  height: 4.65rem;
 }
 
 .nodeEmotion .nodeMain {
@@ -206,7 +221,7 @@
 }
 
 .nodeEmotion .nodeActions {
-  padding: 0.45rem 0.42rem 0.45rem 0;
+  padding: 0.38rem 0.36rem 0.38rem 0;
 }
 
 .nodeEmotion .nodeDescription {
@@ -257,8 +272,8 @@
 }
 
 .nodeEmotion .iconButton {
-  width: 1.55rem;
-  height: 1.55rem;
+  width: 1.45rem;
+  height: 1.45rem;
 }
 
 .nodeTypeLabel {
@@ -425,6 +440,11 @@
   border-color: rgba(148, 163, 184, 0.45);
 }
 
+:global(.dark) .edgeLayer path,
+:global(html.dark) .edgeLayer path {
+  stroke: rgba(163, 192, 229, 0.42);
+}
+
 :global(.dark) .nodeCard,
 :global(.dark) .addCard,
 :global(.dark) .emptyAddCard,
@@ -481,15 +501,19 @@
 }
 
 :global(.dark) .zoomControls,
-:global(html.dark) .zoomControls {
+:global(.dark) .fitButton,
+:global(html.dark) .zoomControls,
+:global(html.dark) .fitButton {
   background: rgba(15, 23, 42, 0.74);
   border-color: rgba(255, 255, 255, 0.12);
 }
 
 :global(.dark) .zoomButton,
 :global(.dark) .zoomValue,
+:global(.dark) .fitButton,
 :global(html.dark) .zoomButton,
-:global(html.dark) .zoomValue {
+:global(html.dark) .zoomValue,
+:global(html.dark) .fitButton {
   color: rgba(255, 255, 255, 0.92);
 }
 
@@ -589,6 +613,28 @@
   gap: 0.7rem;
 }
 
+:global(.dark) .modalCard,
+:global(html.dark) .modalCard {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #111c2c;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.48);
+}
+
+:global(.dark) .modalTitle,
+:global(.dark) .fieldLabel,
+:global(.dark) .modalClose,
+:global(html.dark) .modalTitle,
+:global(html.dark) .fieldLabel,
+:global(html.dark) .modalClose {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+:global(.dark) .hintBox,
+:global(html.dark) .hintBox {
+  background: rgba(59, 130, 246, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+}
+
 @media (max-width: 760px) {
   .page {
     padding: 1rem 0.6rem 4rem;
@@ -600,12 +646,13 @@
 
   .headerActions {
     justify-content: flex-start;
+    gap: 0.5rem;
   }
 
   .canvas {
     min-height: calc(100dvh - 11rem);
-    padding: 1rem 3rem 16rem;
-    scroll-padding: 2rem 3rem 12rem;
+    padding: 1rem 2rem 26rem;
+    scroll-padding: 2rem 2rem 18rem;
   }
 
   .treeListRoot,
@@ -619,25 +666,31 @@
 
   .treeList {
     margin-left: 1.8rem;
-    padding-left: 1.4rem;
-  }
-
-  .treeList::before {
-    left: -1.8rem;
-    width: 1.8rem;
-  }
-
-  .treeList > .treeNode::before {
-    left: -1.4rem;
-    width: 1.4rem;
+    padding-left: 1.25rem;
   }
 
   .nodeCard,
   .addCard {
-    width: 11rem;
+    width: 9.4rem;
+  }
+
+  .nodeCard.nodeEmotion {
+    width: 7.15rem;
+    height: 4.5rem;
   }
 
   .nodeTitle {
-    font-size: 0.92rem;
+    font-size: 0.86rem;
+  }
+
+  .fitButton {
+    height: 2.2rem;
+    padding: 0 0.7rem;
+  }
+
+  .nodeMenu {
+    right: auto;
+    left: 0;
+    width: min(17rem, calc(100vw - 2rem));
   }
 }

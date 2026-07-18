@@ -1,20 +1,36 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import type { ComponentType } from "react";
 import RegisterPage from "../pages/auth/RegisterPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
-import SessionPage from "../pages/sessions/SessionPage";
-import WizardDemoPage from "../pages/sessions/WizardDemoPage";
 import HomePage from "../pages/HomePage";
 import LandingPage from "../pages/LandingPage";
 import { PublicRoute } from "./PublicRoute";
-import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
 import OfferPage from "../pages/legal/OfferPage";
 import PrivacyPolicyPage from "../pages/legal/PrivacyPolicyPage";
 import RefundPolicyPage from "../pages/legal/RefundPolicyPage";
 import PublicSubscriptionPage from "../pages/subscription/PublicSubscriptionPage";
 import PaymentSuccessPage from "../pages/subscription/PaymentSuccessPage";
 import TeamLoginPage from "../pages/team/TeamLoginPage";
-import InviteRedirectPage from "../pages/people/InviteRedirectPage";
+
+const lazyPage = (load: () => Promise<{ default: ComponentType }>) =>
+  async () => {
+    const module = await load();
+    return { Component: module.default };
+  };
+
+const lazyPublicPage = (load: () => Promise<{ default: ComponentType }>) =>
+  async () => {
+    const module = await load();
+    const Page = module.default;
+    return {
+      Component: () => (
+        <PublicRoute>
+          <Page />
+        </PublicRoute>
+      ),
+    };
+  };
 
 /**
  * Роутер для неавторизованных пользователей
@@ -46,23 +62,17 @@ export const publicRouter = createBrowserRouter([
   },
   {
     path: "/invite/:chatId",
-    element: <InviteRedirectPage />,
+    lazy: lazyPage(() => import("../pages/people/InviteRedirectPage")),
   },
   {
     path: "/sessions",
-    element: (
-      <PublicRoute>
-        <SessionsCollectionPage />
-      </PublicRoute>
+    lazy: lazyPublicPage(() =>
+      import("../pages/sessions/components/SessionsCollectionPage"),
     ),
   },
   {
     path: "/sessions/:id",
-    element: (
-      <PublicRoute>
-        <SessionPage />
-      </PublicRoute>
-    ),
+    lazy: lazyPublicPage(() => import("../pages/sessions/SessionPage")),
   },
   {
     path: "/register",
@@ -120,7 +130,7 @@ export const publicRouter = createBrowserRouter([
     ? [
         {
           path: "/wizard-demo",
-          element: <WizardDemoPage />,
+          lazy: lazyPage(() => import("../pages/sessions/WizardDemoPage")),
         },
       ]
     : []),

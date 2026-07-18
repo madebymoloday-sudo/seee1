@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import type { WheelEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, TouchEvent, WheelEvent } from "react";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Download,
   Map as MapIcon,
+  Maximize2,
   MoreHorizontal,
   Plus,
   X,
@@ -65,6 +66,11 @@ type ExportTable = {
   rows: string[][];
 };
 
+type MapEdge = {
+  id: string;
+  path: string;
+};
+
 type ModalState =
   | { type: "create-situation" }
   | { type: "edit-situation"; node: MindNode }
@@ -77,20 +83,11 @@ type ModalState =
 const DEFAULT_EMOTION_FIELDS = 3;
 const DEFAULT_THOUGHT_FIELDS = 1;
 const THOUGHT_REWARD = 25;
-const MIN_MAP_SCALE = 0.85;
-const MAX_MAP_SCALE = 1.35;
+const MIN_MAP_SCALE = 0.35;
+const MAX_MAP_SCALE = 1.5;
 
 function clampScale(value: number) {
   return Math.min(MAX_MAP_SCALE, Math.max(MIN_MAP_SCALE, value));
-}
-
-function normalizeText(value?: string | null) {
-  return (value || "")
-    .toLowerCase()
-    .replace(/ё/g, "е")
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function titleForNode(node: EventMapNodeDto): string {
@@ -240,6 +237,7 @@ const MapPage = observer(() => {
   const [inspectedNode, setInspectedNode] = useState<MindNode | null>(null);
   const [modal, setModal] = useState<ModalState>(null);
   const [mapScale, setMapScale] = useState(1);
+  const [mapEdges, setMapEdges] = useState<MapEdge[]>([]);
   const [situationTitle, setSituationTitle] = useState("");
   const [situationDescription, setSituationDescription] = useState("");
   const [emotionDrafts, setEmotionDrafts] = useState<string[]>(
@@ -249,6 +247,9 @@ const MapPage = observer(() => {
     Array.from({ length: DEFAULT_THOUGHT_FIELDS }, () => ""),
   );
   const [thoughtHint, setThoughtHint] = useState("");
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const mapContentRef = useRef<HTMLDivElement>(null);
+  const pinchRef = useRef<{ distance: number; scale: number } | null>(null);
 
   const showMapSaveError = (error: unknown, fallback: string) => {
     const message = isSeeTokensExpiredError(error)
@@ -282,43 +283,10 @@ const MapPage = observer(() => {
   }, []);
 
   const rawNodes = useMemo(() => {
-    const supportedNodes = nodes.filter((node) => {
+    return nodes.filter((node) => {
       const type = (node.nodeType || "LEGACY").toUpperCase();
       return type === "SITUATION" || type === "EMOTION" || type === "THOUGHT";
     });
-
-    // Old client-side synchronization could create identical siblings. Keep one
-    // visual node and redirect every duplicate branch to that canonical parent.
-    const aliases = new globalThis.Map<string, string>();
-    const canonicalByKey = new globalThis.Map<string, EventMapNodeDto>();
-    const canonicalNodes: EventMapNodeDto[] = [];
-    const ordered = [...supportedNodes].sort(
-      (a, b) => levelForNode(a) - levelForNode(b) ||
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    );
-
-    for (const node of ordered) {
-      const parentId = node.parentId ? aliases.get(node.parentId) || node.parentId : null;
-      const normalizedNode = { ...node, parentId };
-      if (!parentId || (node.nodeType || "").toUpperCase() === "SITUATION") {
-        canonicalNodes.push(normalizedNode);
-        continue;
-      }
-
-      const key = `${parentId}|${(node.nodeType || "").toUpperCase()}|${normalizeText(titleForNode(node))}`;
-      const canonical = canonicalByKey.get(key);
-      if (canonical) {
-        aliases.set(node.id, canonical.id);
-        continue;
-      }
-      canonicalByKey.set(key, normalizedNode);
-      canonicalNodes.push(normalizedNode);
-    }
-
-    return canonicalNodes.map((node) => ({
-      ...node,
-      parentId: node.parentId ? aliases.get(node.parentId) || node.parentId : null,
-    }));
   }, [nodes]);
 
   const nodesByParent = useMemo(() => {
@@ -374,6 +342,75 @@ const MapPage = observer(() => {
     visit(tree);
     return map;
   }, [tree]);
+
+  useLayoutEffect(() => {
+    const content = mapContentRef.current;
+    if (!content) {
+      setMapEdges([]);
+      return;
+    }
+
+    let frame = 0;
+    const updateEdges = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const cards = Array.from(
+          content.querySelectorAll<HTMLElement>("[data-map-node-id]"),
+        );
+        const cardsById = new globalThis.Map<string, HTMLElement>();
+        for (const card of cards) {
+          const nodeId = card.dataset.mapNodeId;
+          if (nodeId) cardsById.set(nodeId, card);
+        }
+
+        const getPosition = (element: HTMLElement) => {
+          let x = 0;
+          let y = 0;
+          let current: HTMLElement | null = element;
+          while (current && current !== content) {
+            x += current.offsetLeft;
+            y += current.offsetTop;
+            current = current.offsetParent as HTMLElement | null;
+          }
+          return { x, y };
+        };
+
+        const nextEdges: MapEdge[] = [];
+        for (const child of cards) {
+          const childId = child.dataset.mapNodeId;
+          const parentId = child.dataset.mapParentId;
+          if (!childId || !parentId) continue;
+          const parent = cardsById.get(parentId);
+          if (!parent) continue;
+
+          const parentPosition = getPosition(parent);
+          const childPosition = getPosition(child);
+          const startX = parentPosition.x + parent.offsetWidth;
+          const startY = parentPosition.y + parent.offsetHeight / 2;
+          const endX = childPosition.x;
+          const endY = childPosition.y + child.offsetHeight / 2;
+          const distance = Math.max(44, (endX - startX) * 0.48);
+          nextEdges.push({
+            id: `${parentId}:${childId}`,
+            path: `M ${startX} ${startY} C ${startX + distance} ${startY}, ${endX - distance} ${endY}, ${endX} ${endY}`,
+          });
+        }
+        setMapEdges(nextEdges);
+      });
+    };
+
+    updateEdges();
+    const observer = new ResizeObserver(updateEdges);
+    observer.observe(content);
+    for (const card of content.querySelectorAll<HTMLElement>("[data-map-node-id]")) {
+      observer.observe(card);
+    }
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [tree, expanded]);
 
   const getBranchIds = (nodeId: string): string[] => {
     const root = treeNodeMap.get(nodeId);
@@ -456,6 +493,48 @@ const MapPage = observer(() => {
 
   const zoomMap = (delta: number) => {
     setMapScale((current) => clampScale(Number((current + delta).toFixed(2))));
+  };
+
+  const fitMapToViewport = () => {
+    const canvas = canvasRef.current;
+    const content = mapContentRef.current;
+    if (!canvas || !content) return;
+    const availableWidth = Math.max(320, canvas.clientWidth - 32);
+    const contentWidth = Math.max(1, content.scrollWidth);
+    setMapScale(clampScale(Math.min(1, availableWidth / contentWidth)));
+    canvas.scrollTo({ left: 0, top: 0, behavior: "smooth" });
+  };
+
+  const getTouchDistance = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length < 2) return 0;
+    const [first, second] = [event.touches[0], event.touches[1]];
+    return Math.hypot(
+      second.clientX - first.clientX,
+      second.clientY - first.clientY,
+    );
+  };
+
+  const handleMapTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    const distance = getTouchDistance(event);
+    if (distance > 0) {
+      pinchRef.current = { distance, scale: mapScale };
+    }
+  };
+
+  const handleMapTouchMove = (event: TouchEvent<HTMLDivElement>) => {
+    if (!pinchRef.current || event.touches.length < 2) return;
+    const distance = getTouchDistance(event);
+    if (distance <= 0) return;
+    event.preventDefault();
+    setMapScale(
+      clampScale(pinchRef.current.scale * (distance / pinchRef.current.distance)),
+    );
+  };
+
+  const handleMapTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length < 2) {
+      pinchRef.current = null;
+    }
   };
 
   const buildNeuroMapExportTable = (): ExportTable => {
@@ -665,15 +744,14 @@ const MapPage = observer(() => {
         await fetchMap();
       } else {
         const createdEmotions: EventMapNodeDto[] = [];
-        for (let index = 0; index < values.length; index += 1) {
-          const title = values[index];
+        for (const value of values) {
+          const title = value;
           const created = await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>("/event-map", {
             nodeType: "EMOTION",
             title,
             emotion: title,
             parentId: modal.parent.id,
             level: 2,
-            displayOrder: index,
           });
           createdEmotions.push(created);
         }
@@ -722,15 +800,14 @@ const MapPage = observer(() => {
           });
         }
       } else {
-        for (let index = 0; index < values.length; index += 1) {
-          const title = values[index];
+        for (const value of values) {
+          const title = value;
           await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>("/event-map", {
             nodeType: "THOUGHT",
             title,
             idea: title,
             parentId: modal.parent.id,
             level: levelForNode(modal.parent) + 1,
-            displayOrder: index,
             sourceSessionId: null,
             isMuted: false,
           });
@@ -748,16 +825,19 @@ const MapPage = observer(() => {
   };
 
   const deleteNode = async (node: MindNode) => {
+    const childCount = getBranchIds(node.id).length - 1;
+    const details =
+      childCount > 0
+        ? ` Вместе с ней будет удалена вся вложенная ветка (${childCount} ${
+            childCount === 1 ? "карточка" : "карточек"
+          }).`
+        : "";
+    if (!window.confirm(`Удалить карточку «${node.resolvedTitle}»?${details}`)) {
+      return;
+    }
     setSaving(true);
     try {
       await apiAgent.delete(`/event-map/${node.id}`);
-      if (node.sourceSessionId) {
-        try {
-          await apiAgent.delete(`/sessions/${node.sourceSessionId}`);
-        } catch {
-          // ignore session delete errors
-        }
-      }
       setActiveMenuId(null);
       await fetchMap();
     } catch (error) {
@@ -791,7 +871,10 @@ const MapPage = observer(() => {
         });
         await fetchMap();
       }
-      navigate(`/sessions/${sessionId}`);
+      const scopeQuery = node.sourceThoughtScopeId
+        ? `?thoughtScope=${encodeURIComponent(node.sourceThoughtScopeId)}`
+        : "";
+      navigate(`/sessions/${sessionId}${scopeQuery}`);
     } catch (error) {
       console.error(error);
       showMapSaveError(error, "Не удалось открыть разбор мысли");
@@ -814,9 +897,9 @@ const MapPage = observer(() => {
         },
       );
       setThoughtHint(response.message);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const message =
-        error?.response?.data?.message ||
+        extractApiMessage(error) ||
         "Не удалось получить подсказку. Попробуйте описать мысль коротко и своими словами.";
       setThoughtHint(String(message));
     }
@@ -937,6 +1020,8 @@ const MapPage = observer(() => {
                   ? styles.nodeEmotion
                   : styles.nodeThought
             } ${node.isMuted ? styles.nodeMuted : ""}`}
+            data-map-node-id={node.id}
+            data-map-parent-id={node.parentId || undefined}
           >
             <button
               type="button"
@@ -1026,6 +1111,15 @@ const MapPage = observer(() => {
                 +
               </button>
             </div>
+            <button
+              type="button"
+              className={styles.fitButton}
+              onClick={fitMapToViewport}
+              title="Показать всю раскрытую карту"
+            >
+              <Maximize2 size={15} />
+              Вписать
+            </button>
             <Button
               variant="outline"
               onClick={() => void exportNeuroMap()}
@@ -1042,7 +1136,15 @@ const MapPage = observer(() => {
           </div>
         </div>
 
-        <div className={styles.canvas} onWheel={handleMapWheel}>
+        <div
+          ref={canvasRef}
+          className={styles.canvas}
+          onWheel={handleMapWheel}
+          onTouchStart={handleMapTouchStart}
+          onTouchMove={handleMapTouchMove}
+          onTouchEnd={handleMapTouchEnd}
+          onTouchCancel={handleMapTouchEnd}
+        >
           {loading ? (
             <div className={styles.emptyState}>Загружаю нейрокарту...</div>
           ) : tree.length === 0 ? (
@@ -1054,12 +1156,20 @@ const MapPage = observer(() => {
             </div>
           ) : (
             <div
+              ref={mapContentRef}
               className={styles.scaledCanvas}
-              style={{
-                transform: `scale(${mapScale})`,
-                transformOrigin: "top center",
-              }}
+              style={{ "--map-zoom": mapScale } as CSSProperties}
             >
+              <svg
+                className={styles.edgeLayer}
+                aria-hidden="true"
+                width="100%"
+                height="100%"
+              >
+                {mapEdges.map((edge) => (
+                  <path key={edge.id} d={edge.path} />
+                ))}
+              </svg>
               <ul className={styles.treeListRoot}>
                 {tree.map(renderNode)}
                 {renderAddPlaceholder()}

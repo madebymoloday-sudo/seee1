@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { observer } from "mobx-react-lite";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
-import { PENDING_CHAT_INVITE_KEY } from "./people/InviteRedirectPage";
+import { PENDING_CHAT_INVITE_KEY } from "@/lib/chatInvite";
 import { isSubscriptionActive } from "@/lib/subscription";
 
 const EntryGatePage = observer(() => {
@@ -35,6 +35,7 @@ const EntryGatePage = observer(() => {
   }, [
     navigate,
     subscriptionGateEnabled,
+    user,
     user?.id,
     user?.subscriptionActive,
     user?.subscriptionEndsAt,

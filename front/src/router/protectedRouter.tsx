@@ -1,19 +1,13 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import CabinetPage from "../pages/cabinet/CabinetPage";
-import ManagersPage from "../pages/cabinet/ManagersPage";
-import JournalPage from "../pages/journal/JournalPage";
-import MapPage from "../pages/map/MapPage";
-import NeuroMapPage from "../pages/neuro/NeuroMapPage";
-import PipelineBuilderPage from "../pages/pipeline-builder/PipelineBuilderPage";
+import type { ComponentType } from "react";
 import EntryGatePage from "../pages/EntryGatePage";
-import SessionPage from "../pages/sessions/SessionPage";
-import SessionsCollectionPage from "../pages/sessions/components/SessionsCollectionPage";
-import WizardDemoPage from "../pages/sessions/WizardDemoPage";
-import PeoplePage from "../pages/people/PeoplePage";
-import InviteRedirectPage from "../pages/people/InviteRedirectPage";
-import RatingPage from "../pages/rating/RatingPage";
-import SubscriptionGatePage from "../pages/subscription/SubscriptionGatePage";
 import { ProtectedRoute } from "./ProtectedRoute";
+
+const lazyPage = (load: () => Promise<{ default: ComponentType }>) =>
+  async () => {
+    const module = await load();
+    return { Component: module.default };
+  };
 
 /**
  * Роутер для авторизованных пользователей
@@ -29,71 +23,83 @@ export const protectedRouter = createBrowserRouter([
       },
       {
         path: "sessions",
-        element: <SessionsCollectionPage />,
+        lazy: lazyPage(() =>
+          import("../pages/sessions/components/SessionsCollectionPage"),
+        ),
       },
       {
         path: "sessions/list",
-        element: <SessionsCollectionPage />,
+        lazy: lazyPage(() =>
+          import("../pages/sessions/components/SessionsCollectionPage"),
+        ),
       },
       {
         path: "sessions/:id",
-        element: <SessionPage />,
+        lazy: lazyPage(() => import("../pages/sessions/SessionPage")),
       },
       ...(import.meta.env.DEV
         ? [
             {
               path: "wizard-demo",
-              element: <WizardDemoPage />,
+              lazy: lazyPage(() =>
+                import("../pages/sessions/WizardDemoPage"),
+              ),
             },
           ]
         : []),
       {
         path: "map",
-        element: <MapPage />,
+        lazy: lazyPage(() => import("../pages/map/MapPage")),
       },
       {
         path: "neuro",
-        element: <NeuroMapPage />,
+        lazy: lazyPage(() => import("../pages/neuro/NeuroMapPage")),
       },
       {
         path: "cabinet",
-        element: <CabinetPage />,
+        lazy: lazyPage(() => import("../pages/cabinet/CabinetPage")),
       },
       {
         path: "cabinet/founder",
-        element: <ManagersPage />,
+        lazy: lazyPage(() => import("../pages/cabinet/ManagersPage")),
       },
       {
         path: "cabinet/managers",
-        element: <ManagersPage />,
+        lazy: lazyPage(() => import("../pages/cabinet/ManagersPage")),
       },
       {
         path: "people",
-        element: <PeoplePage />,
+        lazy: lazyPage(() => import("../pages/people/PeoplePage")),
       },
       {
         path: "invite/:chatId",
-        element: <InviteRedirectPage />,
+        lazy: lazyPage(() => import("../pages/people/InviteRedirectPage")),
       },
       {
         path: "rating",
-        element: <RatingPage />,
+        lazy: lazyPage(() => import("../pages/rating/RatingPage")),
       },
       {
         path: "subscription",
-        element: <SubscriptionGatePage />,
+        lazy: lazyPage(() =>
+          import("../pages/subscription/SubscriptionGatePage"),
+        ),
       },
       {
         path: "journal",
-        element: <JournalPage />,
+        lazy: lazyPage(() => import("../pages/journal/JournalPage")),
       },
       {
         path: "pipeline-builder",
-        element: <PipelineBuilderPage />,
+        lazy: lazyPage(() =>
+          import("../pages/pipeline-builder/PipelineBuilderPage"),
+        ),
       },
       {
         path: "pipeline-builder/:id",
-        element: <PipelineBuilderPage />,
+        lazy: lazyPage(() =>
+          import("../pages/pipeline-builder/PipelineBuilderPage"),
+        ),
       },
     ],
   },

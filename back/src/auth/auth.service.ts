@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 import { AccountType, FeedbackType } from '@prisma/client';
@@ -31,7 +32,6 @@ import {
   AdminGeneratePasswordResetLinkDto,
   AdminGeneratePasswordResetLinkResponseDto,
 } from './dto/admin.dto';
-import { ForbiddenException } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
@@ -313,16 +313,37 @@ export class AuthService {
   }> {
     const rewardKey = String(dto.rewardKey || '').trim();
     const rewardKind = String(dto.rewardKind || 'ANSWER').trim().toUpperCase();
-    const amount = Math.max(0, Math.floor(Number(dto.amount || 0)));
     const sessionId = String(dto.sessionId || '').trim() || null;
-    const description = String(dto.description || '').trim() || null;
     const dateKey = String(dto.dateKey || '').trim() || null;
+    const rewardConfig = {
+      ANSWER: {
+        amount: 3,
+        keyPrefix: 'answer:',
+        description: 'Награда за ответ в сессии',
+        requiresSession: true,
+      },
+      BONUS: {
+        amount: 25,
+        keyPrefix: 'bonus:',
+        description: 'Бонус за прохождение сессии',
+        requiresSession: true,
+      },
+      DAILY_STREAK: {
+        amount: 10,
+        keyPrefix: 'daily-goal:',
+        description: 'Награда за закрытую ежедневную цель',
+        requiresSession: false,
+      },
+    }[rewardKind];
 
     if (!rewardKey) {
       throw new BadRequestException('rewardKey is required');
     }
-    if (amount <= 0) {
-      throw new BadRequestException('amount must be greater than 0');
+    if (!rewardConfig || !rewardKey.startsWith(rewardConfig.keyPrefix)) {
+      throw new BadRequestException('Неизвестный тип награды');
+    }
+    if (rewardConfig.requiresSession && !sessionId) {
+      throw new BadRequestException('Для награды необходимо указать сессию');
     }
     if (rewardKind === 'DAILY_STREAK') {
       if (!dateKey || !this.isValidDateKey(dateKey)) {
@@ -344,14 +365,18 @@ export class AuthService {
         throw new NotFoundException('Пользователь не найден');
       }
 
-      const existingReward = await tx.gamificationReward.findUnique({
-        where: {
-          userId_rewardKey: {
-            userId,
-            rewardKey,
-          },
-        },
-      });
+      if (sessionId) {
+        const session = await tx.session.findUnique({
+          where: { id: sessionId },
+          select: { userId: true },
+        });
+        if (!session) {
+          throw new NotFoundException('Сессия не найдена');
+        }
+        if (session.userId !== userId) {
+          throw new ForbiddenException('Нет доступа к этой сессии');
+        }
+      }
 
       const currentBalanceRecord = await tx.balance.upsert({
         where: { userId },
@@ -383,10 +408,32 @@ export class AuthService {
         });
       }
 
-      if (existingReward) {
+      const inserted = await tx.gamificationReward.createMany({
+        data: [
+          {
+            userId,
+            sessionId,
+            rewardKey,
+            rewardKind,
+            amount: rewardConfig.amount,
+            description: rewardConfig.description,
+            dateKey,
+          },
+        ],
+        skipDuplicates: true,
+      });
+
+      if (inserted.count === 0) {
+        const latestBalance = await tx.balance.findUnique({
+          where: { userId },
+          select: { amount: true },
+        });
         return {
           awarded: false,
-          balance: baselineBalance,
+          balance: Math.max(
+            baselineBalance,
+            Number(latestBalance?.amount ?? 0),
+          ),
           delta: 0,
           dailyStreak: Math.max(0, user.dailyStreak || 0),
         };
@@ -409,41 +456,28 @@ export class AuthService {
         });
       }
 
-      const nextBalance = baselineBalance + amount;
-
-      await tx.balance.update({
+      const updatedBalance = await tx.balance.update({
         where: { userId },
         data: {
-          amount: nextBalance,
+          amount: { increment: rewardConfig.amount },
         },
+        select: { amount: true },
       });
-
-      await tx.gamificationReward.create({
-        data: {
-          userId,
-          sessionId,
-          rewardKey,
-          rewardKind,
-          amount,
-          description,
-          dateKey,
-        },
-      });
+      const nextBalance = Number(updatedBalance.amount ?? 0);
 
       await tx.transaction.create({
         data: {
           userId,
-          amount,
+          amount: rewardConfig.amount,
           transactionType: 'PAYMENT',
-          description:
-            description || `Gamification reward: ${rewardKind.toLowerCase()}`,
+          description: rewardConfig.description,
         },
       });
 
       return {
         awarded: true,
         balance: nextBalance,
-        delta: amount,
+        delta: rewardConfig.amount,
         dailyStreak: nextDailyStreak,
       };
     });

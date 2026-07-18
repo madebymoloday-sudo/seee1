@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import type { EventMap } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateEventMapDto,
@@ -14,6 +20,56 @@ export class EventMapService {
     userId: string,
     createEventMapDto: CreateEventMapDto,
   ): Promise<EventMapResponseDto> {
+    const nodeType = this.normalizeNodeType(createEventMapDto.nodeType);
+    const placement = await this.resolvePlacement(
+      userId,
+      nodeType,
+      createEventMapDto.parentId || null,
+      createEventMapDto.level,
+    );
+    await this.assertSessionOwnership(
+      userId,
+      createEventMapDto.sourceSessionId,
+    );
+
+    const title =
+      createEventMapDto.title?.trim() ||
+      createEventMapDto.idea?.trim() ||
+      createEventMapDto.emotion?.trim() ||
+      createEventMapDto.event?.trim() ||
+      null;
+
+    const duplicate = await this.findDuplicateSibling({
+      userId,
+      nodeType,
+      parentId: placement.parentId,
+      title,
+    });
+    if (duplicate) {
+      const updatedDuplicate = await this.prisma.eventMap.update({
+        where: { id: duplicate.id },
+        data: {
+          ...(createEventMapDto.description?.trim() && !duplicate.description
+            ? { description: createEventMapDto.description.trim() }
+            : {}),
+          ...(createEventMapDto.sourceSessionId && !duplicate.sourceSessionId
+            ? { sourceSessionId: createEventMapDto.sourceSessionId }
+            : {}),
+          ...(createEventMapDto.sourceThoughtScopeId &&
+          !duplicate.sourceThoughtScopeId
+            ? {
+                sourceThoughtScopeId:
+                  createEventMapDto.sourceThoughtScopeId,
+              }
+            : {}),
+        },
+      });
+      return this.toResponseDto(updatedDuplicate);
+    }
+
+    const displayOrder =
+      createEventMapDto.displayOrder ??
+      (await this.getNextDisplayOrder(userId, placement.parentId));
     const eventMap = await this.prisma.eventMap.create({
       data: {
         userId,
@@ -22,17 +78,12 @@ export class EventMapService {
         emotion: createEventMapDto.emotion?.trim() || null,
         idea: createEventMapDto.idea?.trim() || null,
         rootBelief: createEventMapDto.rootBelief?.trim() || null,
-        nodeType: (createEventMapDto.nodeType || 'LEGACY').trim(),
-        title:
-          createEventMapDto.title?.trim() ||
-          createEventMapDto.idea?.trim() ||
-          createEventMapDto.emotion?.trim() ||
-          createEventMapDto.event?.trim() ||
-          null,
+        nodeType,
+        title,
         description: createEventMapDto.description?.trim() || null,
-        parentId: createEventMapDto.parentId || null,
-        level: createEventMapDto.level ?? 1,
-        displayOrder: createEventMapDto.displayOrder ?? 0,
+        parentId: placement.parentId,
+        level: placement.level,
+        displayOrder,
         sourceSessionId: createEventMapDto.sourceSessionId || null,
         sourceThoughtScopeId: createEventMapDto.sourceThoughtScopeId || null,
         isMuted: createEventMapDto.isMuted ?? false,
@@ -44,13 +95,23 @@ export class EventMapService {
   }
 
   async findAllByUserId(userId: string): Promise<EventMapResponseDto[]> {
-    const eventMaps = await this.prisma.eventMap.findMany({
+    let eventMaps = await this.prisma.eventMap.findMany({
       where: { userId },
       orderBy: [
         { eventNumber: 'asc' },
         { createdAt: 'desc' },
       ],
     });
+    const repaired = await this.repairDuplicateSiblings(userId, eventMaps);
+    if (repaired) {
+      eventMaps = await this.prisma.eventMap.findMany({
+        where: { userId },
+        orderBy: [
+          { eventNumber: 'asc' },
+          { createdAt: 'desc' },
+        ],
+      });
+    }
 
     return eventMaps.map((em) => this.toResponseDto(em));
   }
@@ -62,11 +123,54 @@ export class EventMapService {
   ): Promise<EventMapResponseDto> {
     const existing = await this.prisma.eventMap.findFirst({
       where: { id, userId },
-      select: { id: true },
     });
 
     if (!existing) {
       throw new NotFoundException('Event map node not found');
+    }
+
+    const nodeType =
+      dto.nodeType === undefined
+        ? this.normalizeNodeType(existing.nodeType)
+        : this.normalizeNodeType(dto.nodeType);
+    if (nodeType !== this.normalizeNodeType(existing.nodeType)) {
+      throw new BadRequestException(
+        'Тип существующего узла нейрокарты нельзя изменить',
+      );
+    }
+
+    const parentId =
+      dto.parentId === undefined ? existing.parentId : dto.parentId || null;
+    if (parentId === existing.id) {
+      throw new BadRequestException('Узел не может быть своим родителем');
+    }
+    if (parentId) {
+      await this.assertParentIsNotDescendant(userId, existing.id, parentId);
+    }
+
+    const placement = await this.resolvePlacement(
+      userId,
+      nodeType,
+      parentId,
+      dto.level,
+    );
+    await this.assertSessionOwnership(userId, dto.sourceSessionId);
+
+    const title =
+      dto.title === undefined
+        ? existing.title
+        : dto.title?.trim() || null;
+    const duplicate = await this.findDuplicateSibling({
+      userId,
+      nodeType,
+      parentId: placement.parentId,
+      title,
+      excludeId: existing.id,
+    });
+    if (duplicate) {
+      throw new BadRequestException(
+        'Такая карточка уже есть в этой ветке нейрокарты',
+      );
     }
 
     const updated = await this.prisma.eventMap.update({
@@ -79,13 +183,13 @@ export class EventMapService {
         ...(dto.rootBelief !== undefined
           ? { rootBelief: dto.rootBelief?.trim() || null }
           : {}),
-        ...(dto.nodeType !== undefined ? { nodeType: dto.nodeType.trim() || 'LEGACY' } : {}),
+        nodeType,
         ...(dto.title !== undefined ? { title: dto.title?.trim() || null } : {}),
         ...(dto.description !== undefined
           ? { description: dto.description?.trim() || null }
           : {}),
-        ...(dto.parentId !== undefined ? { parentId: dto.parentId || null } : {}),
-        ...(dto.level !== undefined ? { level: dto.level ?? 1 } : {}),
+        parentId: placement.parentId,
+        level: placement.level,
         ...(dto.displayOrder !== undefined ? { displayOrder: dto.displayOrder ?? 0 } : {}),
         ...(dto.sourceSessionId !== undefined
           ? { sourceSessionId: dto.sourceSessionId || null }
@@ -98,10 +202,23 @@ export class EventMapService {
       },
     });
 
+    const levelDelta = placement.level - existing.level;
+    if (levelDelta !== 0) {
+      await this.shiftDescendantLevels(userId, existing.id, levelDelta);
+    }
+
     return this.toResponseDto(updated);
   }
 
   async delete(id: string, userId: string): Promise<void> {
+    const existing = await this.prisma.eventMap.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new NotFoundException('Event map node not found');
+    }
+
     const allNodes = await this.prisma.eventMap.findMany({
       where: { userId },
       select: { id: true, parentId: true },
@@ -125,6 +242,290 @@ export class EventMapService {
         id: { in: Array.from(idsToDelete) },
       },
     });
+  }
+
+  private async repairDuplicateSiblings(
+    userId: string,
+    sourceNodes: EventMap[],
+  ): Promise<boolean> {
+    const nodes = [...sourceNodes].sort(
+      (left, right) =>
+        left.level - right.level ||
+        left.createdAt.getTime() - right.createdAt.getTime(),
+    );
+    const siblingKeys = new Set<string>();
+    const hasDuplicates = nodes.some((node) => {
+      const nodeType = this.normalizeNodeType(node.nodeType);
+      if (!node.parentId || nodeType === 'SITUATION') return false;
+      const normalizedTitle = this.normalizeText(
+        node.title || node.idea || node.emotion || node.event,
+      );
+      if (!normalizedTitle) return false;
+      const key = `${node.parentId}|${nodeType}|${normalizedTitle}`;
+      if (siblingKeys.has(key)) return true;
+      siblingKeys.add(key);
+      return false;
+    });
+    if (!hasDuplicates) return false;
+
+    const aliases = new Map<string, string>();
+    const canonicalByKey = new Map<string, (typeof nodes)[number]>();
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const node of nodes) {
+        const nodeType = this.normalizeNodeType(node.nodeType);
+        const parentId = node.parentId
+          ? aliases.get(node.parentId) || node.parentId
+          : null;
+        if (node.parentId !== parentId) {
+          await tx.eventMap.update({
+            where: { id: node.id },
+            data: { parentId },
+          });
+        }
+
+        // Identical root situations may describe separate events, so repair only
+        // sibling branches below a situation.
+        if (!parentId || nodeType === 'SITUATION') continue;
+        const normalizedTitle = this.normalizeText(
+          node.title || node.idea || node.emotion || node.event,
+        );
+        if (!normalizedTitle) continue;
+
+        const key = `${parentId}|${nodeType}|${normalizedTitle}`;
+        const canonical = canonicalByKey.get(key);
+        if (!canonical) {
+          canonicalByKey.set(key, { ...node, parentId });
+          continue;
+        }
+
+        aliases.set(node.id, canonical.id);
+        await tx.eventMap.updateMany({
+          where: { userId, parentId: node.id },
+          data: { parentId: canonical.id },
+        });
+        await tx.eventMap.update({
+          where: { id: canonical.id },
+          data: {
+            ...(!canonical.description && node.description
+              ? { description: node.description }
+              : {}),
+            ...(!canonical.sourceSessionId && node.sourceSessionId
+              ? { sourceSessionId: node.sourceSessionId }
+              : {}),
+            ...(!canonical.sourceThoughtScopeId && node.sourceThoughtScopeId
+              ? { sourceThoughtScopeId: node.sourceThoughtScopeId }
+              : {}),
+          },
+        });
+        await tx.eventMap.delete({ where: { id: node.id } });
+      }
+    });
+    return true;
+  }
+
+  private normalizeNodeType(value?: string | null): string {
+    const nodeType = String(value || 'LEGACY')
+      .trim()
+      .toUpperCase();
+    if (!['SITUATION', 'EMOTION', 'THOUGHT', 'LEGACY'].includes(nodeType)) {
+      throw new BadRequestException('Неизвестный тип узла нейрокарты');
+    }
+    return nodeType;
+  }
+
+  private async resolvePlacement(
+    userId: string,
+    nodeType: string,
+    parentId: string | null,
+    requestedLevel?: number,
+  ): Promise<{ parentId: string | null; level: number }> {
+    if (nodeType === 'SITUATION') {
+      return { parentId: null, level: 1 };
+    }
+
+    if (!parentId) {
+      if (nodeType === 'LEGACY') {
+        return {
+          parentId: null,
+          level: Math.max(1, requestedLevel ?? 1),
+        };
+      }
+      throw new BadRequestException(
+        nodeType === 'EMOTION'
+          ? 'Для эмоции необходимо выбрать ситуацию'
+          : 'Для мысли необходимо выбрать эмоцию или родительскую мысль',
+      );
+    }
+
+    const parent = await this.prisma.eventMap.findFirst({
+      where: { id: parentId, userId },
+      select: { id: true, nodeType: true, level: true },
+    });
+    if (!parent) {
+      throw new NotFoundException('Родительский узел нейрокарты не найден');
+    }
+
+    const parentType = this.normalizeNodeType(parent.nodeType);
+    const parentIsValid =
+      nodeType === 'LEGACY' ||
+      (nodeType === 'EMOTION' && parentType === 'SITUATION') ||
+      (nodeType === 'THOUGHT' &&
+        ['EMOTION', 'THOUGHT'].includes(parentType));
+    if (!parentIsValid) {
+      throw new BadRequestException(
+        'Недопустимая связь между уровнями нейрокарты',
+      );
+    }
+
+    return {
+      parentId: parent.id,
+      level: Math.max(1, parent.level + 1),
+    };
+  }
+
+  private async assertSessionOwnership(
+    userId: string,
+    sessionId?: string | null,
+  ): Promise<void> {
+    const normalizedSessionId = String(sessionId || '').trim();
+    if (!normalizedSessionId) return;
+
+    const session = await this.prisma.session.findUnique({
+      where: { id: normalizedSessionId },
+      select: { userId: true },
+    });
+    if (!session) {
+      throw new NotFoundException('Связанная сессия не найдена');
+    }
+    if (session.userId !== userId) {
+      throw new ForbiddenException('Нет доступа к связанной сессии');
+    }
+  }
+
+  private async findDuplicateSibling(params: {
+    userId: string;
+    nodeType: string;
+    parentId: string | null;
+    title?: string | null;
+    excludeId?: string;
+  }): Promise<any | null> {
+    // Two distinct situations may legitimately have the same short name.
+    if (params.nodeType === 'SITUATION' && !params.parentId) return null;
+
+    const normalizedTitle = this.normalizeText(params.title);
+    if (!normalizedTitle) return null;
+
+    const siblings = await this.prisma.eventMap.findMany({
+      where: {
+        userId: params.userId,
+        nodeType: params.nodeType,
+        parentId: params.parentId,
+        ...(params.excludeId ? { id: { not: params.excludeId } } : {}),
+      },
+    });
+    return (
+      siblings.find(
+        (sibling) =>
+          this.normalizeText(
+            sibling.title ||
+              sibling.idea ||
+              sibling.emotion ||
+              sibling.event,
+          ) === normalizedTitle,
+      ) || null
+    );
+  }
+
+  private async getNextDisplayOrder(
+    userId: string,
+    parentId: string | null,
+  ): Promise<number> {
+    const lastSibling = await this.prisma.eventMap.findFirst({
+      where: { userId, parentId },
+      orderBy: { displayOrder: 'desc' },
+      select: { displayOrder: true },
+    });
+    return (lastSibling?.displayOrder ?? -1) + 1;
+  }
+
+  private async assertParentIsNotDescendant(
+    userId: string,
+    nodeId: string,
+    parentId: string,
+  ): Promise<void> {
+    const nodes = await this.prisma.eventMap.findMany({
+      where: { userId },
+      select: { id: true, parentId: true },
+    });
+    const descendants = new Set<string>([nodeId]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const node of nodes) {
+        if (
+          node.parentId &&
+          descendants.has(node.parentId) &&
+          !descendants.has(node.id)
+        ) {
+          descendants.add(node.id);
+          changed = true;
+        }
+      }
+    }
+    if (descendants.has(parentId)) {
+      throw new BadRequestException(
+        'Нельзя переместить узел внутрь его собственной ветки',
+      );
+    }
+  }
+
+  private async shiftDescendantLevels(
+    userId: string,
+    nodeId: string,
+    delta: number,
+  ): Promise<void> {
+    const nodes = await this.prisma.eventMap.findMany({
+      where: { userId },
+      select: { id: true, parentId: true, level: true },
+    });
+    const descendants = new Set<string>();
+    let parentIds = new Set<string>([nodeId]);
+    while (parentIds.size > 0) {
+      const nextParentIds = new Set<string>();
+      for (const node of nodes) {
+        if (
+          node.parentId &&
+          parentIds.has(node.parentId) &&
+          !descendants.has(node.id)
+        ) {
+          descendants.add(node.id);
+          nextParentIds.add(node.id);
+        }
+      }
+      parentIds = nextParentIds;
+    }
+
+    if (descendants.size === 0) return;
+    await this.prisma.$transaction(
+      nodes
+        .filter((node) => descendants.has(node.id))
+        .map((node) =>
+          this.prisma.eventMap.update({
+            where: { id: node.id },
+            data: { level: Math.max(1, node.level + delta) },
+          }),
+        ),
+    );
+  }
+
+  private normalizeText(value?: string | null): string {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   private toResponseDto(eventMap: any): EventMapResponseDto {

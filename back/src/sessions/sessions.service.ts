@@ -10,6 +10,10 @@ import { CreateSessionDto, SessionResponseDto } from './dto/session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
 import { PipelineStep } from '../psychologist/pipeline/pipeline.types';
 import type { PipelineState } from '../psychologist/pipeline/pipeline.types';
+import {
+  normalizeMapText,
+  parseImportantOptions,
+} from './session-map.utils';
 
 @Injectable()
 export class SessionsService {
@@ -285,19 +289,22 @@ export class SessionsService {
     if (ownerNodes.length === 0) {
       const sessionTitle = session.title?.trim();
       if (sessionTitle) {
-        const ownerNode = await this.prisma.eventMap.findFirst({
+        const matchingOwnerNodes = await this.prisma.eventMap.findMany({
           where: {
             userId,
             nodeType: 'THOUGHT',
+            sourceSessionId: null,
             OR: [
               { title: { equals: sessionTitle, mode: 'insensitive' } },
               { idea: { equals: sessionTitle, mode: 'insensitive' } },
             ],
           },
           orderBy: [{ level: 'asc' }, { createdAt: 'asc' }],
+          take: 2,
         });
 
-        if (ownerNode) {
+        if (matchingOwnerNodes.length === 1) {
+          const ownerNode = matchingOwnerNodes[0];
           const updatedOwnerNode = await this.prisma.eventMap.update({
             where: { id: ownerNode.id },
             data: { sourceSessionId: session.id },
@@ -316,7 +323,7 @@ export class SessionsService {
         const key = [
           node.parentId || '',
           node.sourceThoughtScopeId || '',
-          this.normalizeMapText(this.titleForEventMapNode(node)),
+          normalizeMapText(this.titleForEventMapNode(node)),
         ].join('|');
         if (!result.has(key)) result.set(key, node);
         return result;
@@ -325,28 +332,53 @@ export class SessionsService {
 
     const createdOrUpdated: any[] = [];
     for (const ownerNode of uniqueOwnerNodes) {
-      const reasonEntries = this.getReasonEntriesForNode(state, ownerNode);
+      const matchingScopeIds = this.getCandidateThoughtScopeIds(
+        state,
+        ownerNode,
+        false,
+      );
+      if (
+        !ownerNode.sourceThoughtScopeId &&
+        matchingScopeIds.length === 1
+      ) {
+        ownerNode.sourceThoughtScopeId = matchingScopeIds[0];
+        await this.prisma.eventMap.update({
+          where: { id: ownerNode.id },
+          data: { sourceThoughtScopeId: matchingScopeIds[0] },
+        });
+      }
+
+      const reasonEntries = this.getReasonEntriesForNode(
+        state,
+        ownerNode,
+        uniqueOwnerNodes.length === 1,
+      );
+      const existingChildren = await this.prisma.eventMap.findMany({
+        where: {
+          userId,
+          parentId: ownerNode.id,
+          nodeType: 'THOUGHT',
+        },
+      });
+      const existingByTitle = new Map(
+        existingChildren.map((child) => [
+          normalizeMapText(this.titleForEventMapNode(child)),
+          child,
+        ]),
+      );
+
       for (const entry of reasonEntries) {
         const title = entry.reason.trim();
         if (!title) continue;
 
-        const existing = await this.prisma.eventMap.findFirst({
-          where: {
-            userId,
-            parentId: ownerNode.id,
-            nodeType: 'THOUGHT',
-            title: {
-              equals: title,
-              mode: 'insensitive',
-            },
-          },
-        });
+        const normalizedTitle = normalizeMapText(title);
+        const existing = existingByTitle.get(normalizedTitle);
 
         if (existing) {
           let sourceSessionId = existing.sourceSessionId;
           if (entry.linkedScopeId) {
             sourceSessionId = session.id;
-          } else if (!sourceSessionId || sourceSessionId === session.id) {
+          } else if (!sourceSessionId) {
             const childSession = await this.prisma.session.create({
               data: {
                 userId,
@@ -367,6 +399,7 @@ export class SessionsService {
             },
           });
           createdOrUpdated.push(updated);
+          existingByTitle.set(normalizedTitle, updated);
           continue;
         }
 
@@ -395,6 +428,7 @@ export class SessionsService {
           },
         });
         createdOrUpdated.push(created);
+        existingByTitle.set(normalizedTitle, created);
       }
     }
 
@@ -427,15 +461,6 @@ export class SessionsService {
     return value as Record<string, any>;
   }
 
-  private normalizeMapText(value?: string | null): string {
-    return String(value || '')
-      .toLowerCase()
-      .replace(/ё/g, 'е')
-      .replace(/[^\p{L}\p{N}]+/gu, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
   private titleForEventMapNode(node: {
     title?: string | null;
     idea?: string | null;
@@ -449,32 +474,6 @@ export class SessionsService {
       node.event?.trim() ||
       ''
     );
-  }
-
-  private parseImportantOptions(textRaw: unknown): string[] {
-    const text = String(textRaw || '').trim();
-    if (!text) return [];
-
-    const lines = text
-      .split(/\n+/)
-      .map((line) =>
-        line
-          .replace(/^\s*[-•*]\s+/, '')
-          .replace(/^\s*\d+[.)]\s+/, '')
-          .trim(),
-      )
-      .filter(Boolean);
-
-    if (lines.length > 1) {
-      return Array.from(new Set(lines));
-    }
-
-    const parts = text
-      .split(/(?:;|,|\s+и\s+|\s+а еще\s+)/i)
-      .map((part) => part.trim())
-      .filter((part) => part.length >= 3);
-
-    return parts.length > 1 ? Array.from(new Set(parts)) : [text];
   }
 
   private getThoughtScopeIds(state: Record<string, any>): string[] {
@@ -498,21 +497,27 @@ export class SessionsService {
     return String(this.asRecord(state.answers)?.[key] || '');
   }
 
-  private getCandidateThoughtScopeIds(state: Record<string, any>, node: any): string[] {
+  private getCandidateThoughtScopeIds(
+    state: Record<string, any>,
+    node: any,
+    allowFallback = false,
+  ): string[] {
     if (node.sourceThoughtScopeId) {
       return [node.sourceThoughtScopeId];
     }
 
-    const nodeTitle = this.normalizeMapText(this.titleForEventMapNode(node));
+    const nodeTitle = normalizeMapText(this.titleForEventMapNode(node));
     const scopes = this.asRecord(state.thoughtScopes) || {};
     const matchingScopeIds: string[] = [];
     for (const scopeId of Object.keys(scopes)) {
-      const scopeTitle = this.normalizeMapText(
+      const scopeTitle = normalizeMapText(
         this.asRecord(scopes[scopeId])?.['core:thought:3'],
       );
       if (scopeTitle && scopeTitle === nodeTitle) matchingScopeIds.push(scopeId);
     }
     if (matchingScopeIds.length > 0) return matchingScopeIds;
+
+    if (!allowFallback) return [];
 
     if (state.activeThoughtScopeId) return [String(state.activeThoughtScopeId)];
 
@@ -533,7 +538,7 @@ export class SessionsService {
         return (
           link?.parentSubject === 'thought' &&
           String(link.parentScopeId || '') === normalizedOwnerScopeId &&
-          this.normalizeMapText(link.parentReason) === this.normalizeMapText(reason)
+          normalizeMapText(link.parentReason) === normalizeMapText(reason)
         );
       })
       .map(([scopeId]) => scopeId);
@@ -542,17 +547,22 @@ export class SessionsService {
   private getReasonEntriesForNode(
     state: Record<string, any>,
     node: any,
+    allowFallback = false,
   ): Array<{ reason: string; linkedScopeId: string | null; displayOrder: number }> {
     const entries: Array<{ reason: string; linkedScopeId: string | null; displayOrder: number }> = [];
     const seen = new Set<string>();
-    const ownerScopeIds = this.getCandidateThoughtScopeIds(state, node);
+    const ownerScopeIds = this.getCandidateThoughtScopeIds(
+      state,
+      node,
+      allowFallback,
+    );
 
     for (const ownerScopeId of ownerScopeIds) {
-      const reasons = this.parseImportantOptions(
+      const reasons = parseImportantOptions(
         this.getThoughtAnswer(state, 'core:thought:4', ownerScopeId),
       );
       for (const reason of reasons) {
-        const normalized = this.normalizeMapText(reason);
+        const normalized = normalizeMapText(reason);
         if (!normalized || seen.has(normalized)) continue;
         seen.add(normalized);
         entries.push({
@@ -564,12 +574,12 @@ export class SessionsService {
       }
     }
 
-    if (entries.length === 0) {
-      const fallbackReasons = this.parseImportantOptions(
+    if (entries.length === 0 && allowFallback) {
+      const fallbackReasons = parseImportantOptions(
         state.importantText || this.asRecord(state.answers)?.['core:thought:4'],
       );
       for (const reason of fallbackReasons) {
-        const normalized = this.normalizeMapText(reason);
+        const normalized = normalizeMapText(reason);
         if (!normalized || seen.has(normalized)) continue;
         seen.add(normalized);
         entries.push({
@@ -584,7 +594,24 @@ export class SessionsService {
   }
 
   private isMeaningfulRewardAnswer(value: unknown): value is string {
-    return typeof value === 'string' && value.trim().length >= 2;
+    if (typeof value !== 'string') return false;
+    const normalized = value
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[.,!?;:()"«»'—-]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (normalized.length < 2) return false;
+
+    const refusalPatterns = [
+      /^(не знаю|не знаю как ответить|не понимаю|затрудняюсь|затрудняюсь ответить)$/u,
+      /^(сложно ответить|сложно сказать|не могу ответить|не могу сказать)$/u,
+      /^(без понятия|не получается ответить|не хочу отвечать|не буду отвечать)$/u,
+      /^(?:бла(?:\s+бла){1,}|bla(?:\s+bla){1,}|лалала+|тест|test)$/u,
+      /^([a-zа-я]{1,4})(?:\s+\1){2,}$/u,
+    ];
+
+    return !refusalPatterns.some((pattern) => pattern.test(normalized));
   }
 
   private collectRewardableAnswers(
@@ -641,85 +668,6 @@ export class SessionsService {
     });
   }
 
-  private async claimSessionGamificationReward(params: {
-    userId: string;
-    sessionId: string;
-    rewardKey: string;
-    rewardKind: string;
-    amount: number;
-    description: string;
-  }): Promise<void> {
-    const amount = Math.max(0, Math.floor(params.amount));
-    if (amount <= 0) return;
-
-    await this.prisma.$transaction(async (tx) => {
-      const existingReward = await tx.gamificationReward.findUnique({
-        where: {
-          userId_rewardKey: {
-            userId: params.userId,
-            rewardKey: params.rewardKey,
-          },
-        },
-        select: { id: true },
-      });
-
-      const currentBalanceRecord = await tx.balance.upsert({
-        where: { userId: params.userId },
-        update: {},
-        create: {
-          userId: params.userId,
-          amount: 0,
-        },
-        select: { amount: true },
-      });
-
-      const rewardsAggregate = await tx.gamificationReward.aggregate({
-        where: { userId: params.userId },
-        _sum: { amount: true },
-      });
-      const currentBalance = Number(currentBalanceRecord.amount ?? 0);
-      const rewardsTotal = Math.max(
-        0,
-        Math.floor(Number(rewardsAggregate._sum.amount ?? 0)),
-      );
-      const baselineBalance = Math.max(currentBalance, rewardsTotal);
-
-      if (baselineBalance !== currentBalance) {
-        await tx.balance.update({
-          where: { userId: params.userId },
-          data: { amount: baselineBalance },
-        });
-      }
-
-      if (existingReward) return;
-
-      await tx.gamificationReward.create({
-        data: {
-          userId: params.userId,
-          sessionId: params.sessionId,
-          rewardKey: params.rewardKey,
-          rewardKind: params.rewardKind,
-          amount,
-          description: params.description,
-        },
-      });
-
-      await tx.balance.update({
-        where: { userId: params.userId },
-        data: { amount: baselineBalance + amount },
-      });
-
-      await tx.transaction.create({
-        data: {
-          userId: params.userId,
-          amount,
-          transactionType: 'PAYMENT',
-          description: params.description,
-        },
-      });
-    });
-  }
-
   private async syncGamificationRewardsForState(
     userId: string,
     sessionId: string,
@@ -729,27 +677,101 @@ export class SessionsService {
     if (!state) return;
 
     const answers = this.collectRewardableAnswers(state);
-    for (const answer of answers) {
-      await this.claimSessionGamificationReward({
-        userId,
-        sessionId,
-        rewardKey: `answer:${sessionId}:${answer.rewardKeyPart}`,
-        rewardKind: 'ANSWER',
-        amount: this.answerRewardAmount,
-        description: 'Награда за ответ в сессии',
-      });
-    }
+    const answerRewards = answers.map((answer) => ({
+      userId,
+      sessionId,
+      rewardKey: `answer:${sessionId}:${answer.rewardKeyPart}`,
+      rewardKind: 'ANSWER',
+      amount: this.answerRewardAmount,
+      description: 'Награда за ответ в сессии',
+    }));
+    const completionRewards = this.hasCompletionAnswer(state)
+      ? [
+          {
+            userId,
+            sessionId,
+            rewardKey: `bonus:${sessionId}:session-complete`,
+            rewardKind: 'BONUS',
+            amount: this.sessionCompletionRewardAmount,
+            description: 'Бонус за прохождение сессии',
+          },
+        ]
+      : [];
 
-    if (this.hasCompletionAnswer(state)) {
-      await this.claimSessionGamificationReward({
-        userId,
-        sessionId,
-        rewardKey: `bonus:${sessionId}:session-complete`,
-        rewardKind: 'BONUS',
-        amount: this.sessionCompletionRewardAmount,
-        description: 'Бонус за прохождение сессии',
+    if (answerRewards.length === 0 && completionRewards.length === 0) return;
+
+    await this.prisma.$transaction(async (tx) => {
+      const currentBalanceRecord = await tx.balance.upsert({
+        where: { userId },
+        update: {},
+        create: { userId, amount: 0 },
+        select: { amount: true },
       });
-    }
+      const rewardsAggregate = await tx.gamificationReward.aggregate({
+        where: { userId },
+        _sum: { amount: true },
+      });
+      const currentBalance = Number(currentBalanceRecord.amount ?? 0);
+      const rewardsTotal = Math.max(
+        0,
+        Math.floor(Number(rewardsAggregate._sum.amount ?? 0)),
+      );
+      const baselineBalance = Math.max(currentBalance, rewardsTotal);
+      if (baselineBalance !== currentBalance) {
+        await tx.balance.update({
+          where: { userId },
+          data: { amount: baselineBalance },
+        });
+      }
+
+      const insertedAnswers =
+        answerRewards.length > 0
+          ? await tx.gamificationReward.createMany({
+              data: answerRewards,
+              skipDuplicates: true,
+            })
+          : { count: 0 };
+      const insertedCompletions =
+        completionRewards.length > 0
+          ? await tx.gamificationReward.createMany({
+              data: completionRewards,
+              skipDuplicates: true,
+            })
+          : { count: 0 };
+      const answerDelta = insertedAnswers.count * this.answerRewardAmount;
+      const completionDelta =
+        insertedCompletions.count * this.sessionCompletionRewardAmount;
+      const totalDelta = answerDelta + completionDelta;
+      if (totalDelta === 0) return;
+
+      await tx.balance.update({
+        where: { userId },
+        data: { amount: { increment: totalDelta } },
+      });
+      if (answerDelta > 0) {
+        await tx.transaction.create({
+          data: {
+            userId,
+            amount: answerDelta,
+            transactionType: 'PAYMENT',
+            description:
+              insertedAnswers.count === 1
+                ? 'Награда за ответ в сессии'
+                : `Награды за ответы в сессии: ${insertedAnswers.count}`,
+          },
+        });
+      }
+      if (completionDelta > 0) {
+        await tx.transaction.create({
+          data: {
+            userId,
+            amount: completionDelta,
+            transactionType: 'PAYMENT',
+            description: 'Бонус за прохождение сессии',
+          },
+        });
+      }
+    });
   }
 
   async getPipelineState(
