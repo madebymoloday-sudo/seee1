@@ -155,9 +155,13 @@
   }
 
   html[data-keyboard-open="true"] {
-    /* iOS excludes the home-indicator safe area in addition to the keyboard. */
+    /*
+     * iOS can pan the visual viewport to the focused field. Its offset must be
+     * included or the full-screen scene ends above the keyboard.
+     */
     --app-interactive-height: calc(
-      var(--app-viewport-height) + env(safe-area-inset-bottom)
+      var(--app-viewport-height) + var(--app-viewport-top) +
+        env(safe-area-inset-bottom)
     );
   }
 

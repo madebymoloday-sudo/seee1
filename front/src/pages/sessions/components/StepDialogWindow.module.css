@@ -566,7 +566,7 @@
   .reasonsEditor {
     width: calc(100% - 0.55rem);
     max-height: none;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
   }
 
   .reasonsGrid {
