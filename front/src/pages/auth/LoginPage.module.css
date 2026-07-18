@@ -1,400 +1,240 @@
-/* Glass auth shell (structure + tint), inspired by references */
-
 .loginPageContainer {
   position: relative;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
   overflow: hidden;
+  background: #bfe4ff;
 }
 
 .loginPageContainer::before {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* Prefer black background by default (best glass look) */
-  background:
-    radial-gradient(circle at 78% 18%, rgba(255, 80, 170, 0.16) 0%, rgba(255, 80, 170, 0.0) 42%),
-    radial-gradient(circle at 18% 84%, rgba(80, 170, 255, 0.16) 0%, rgba(80, 170, 255, 0.0) 46%),
-    radial-gradient(circle at 52% 12%, rgba(255, 200, 120, 0.12) 0%, rgba(255, 200, 120, 0.0) 48%),
-    linear-gradient(145deg, #05070d 0%, #0b1220 45%, #0a1324 100%);
-  z-index: 0;
+  left: -8vw;
+  bottom: -24vw;
+  width: 78vw;
+  height: 42vw;
+  border-radius: 50%;
+  background: #78a65a;
+  transform: rotate(7deg);
 }
 
-/* Soft haze layer */
 .loginPageContainer::after {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0.0) 72%);
-  opacity: 0.40;
-  z-index: 1;
-  pointer-events: none;
+  top: 8%;
+  right: 8%;
+  width: clamp(7rem, 16vw, 14rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #f3a7b8;
 }
 
 .loginFormContainer {
   position: relative;
   z-index: 2;
-  width: 100%;
-  max-width: 28rem;
-  padding: 2.5rem;
-  color: rgba(255, 255, 255, 0.92);
-  background:
-    radial-gradient(120% 90% at 22% 12%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.0) 58%),
-    radial-gradient(110% 85% at 88% 110%, rgba(255, 80, 170, 0.18) 0%, rgba(255, 80, 170, 0.0) 62%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0.24) 100%);
-  backdrop-filter: blur(22px) saturate(170%);
-  -webkit-backdrop-filter: blur(22px) saturate(170%);
-  border-radius: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  box-shadow:
-    0 26px 70px rgba(0, 0, 0, 0.62),
-    0 10px 22px rgba(0, 0, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.24);
-  overflow: hidden;
+  width: min(100%, 27rem);
+  padding: clamp(1.4rem, 4vw, 2.2rem);
+  border: 1px solid rgba(245, 243, 235, 0.16);
+  border-radius: 48% 48% 1.6rem 1.6rem / 11rem 11rem 1.6rem 1.6rem;
+  background: #111;
+  color: #f5f3eb;
+  box-shadow: 0 28px 72px rgba(17, 17, 17, 0.24);
 }
 
-.loginFormContainer::before {
-  /* Prismatic "structure" border */
-  content: '';
-  position: absolute;
-  inset: 0;
-  padding: 1.25px;
-  border-radius: 1.5rem;
-  background:
-    conic-gradient(
-      from 220deg,
-      rgba(130, 225, 255, 0.95),
-      rgba(255, 120, 200, 0.95),
-      rgba(255, 215, 140, 0.95),
-      rgba(150, 255, 220, 0.95),
-      rgba(130, 225, 255, 0.95)
-    );
-  opacity: 0.55;
-  pointer-events: none;
-  z-index: 0;
-  /* mask the center to keep only the border ring */
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-}
-
-.loginFormContainer::after {
-  /* Inner highlight + subtle grain */
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background:
-    radial-gradient(120% 85% at 18% 12%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.0) 60%),
-    radial-gradient(95% 80% at 92% 88%, rgba(0, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.0) 62%),
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.0),
-      rgba(255, 255, 255, 0.0) 3px,
-      rgba(255, 255, 255, 0.045) 3px,
-      rgba(255, 255, 255, 0.045) 4px
-    );
-  opacity: 0.62;
-  z-index: 1;
-  pointer-events: none;
-  mix-blend-mode: overlay;
-  border-radius: 1.5rem;
-}
-
-/* Keep content above glass layers */
-.loginFormContainer > * {
-  position: relative;
-  z-index: 2;
-}
-
-/* Заголовок и подзаголовки — всегда белые */
 .loginTitle {
-  color: rgba(255, 255, 255, 0.98) !important;
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.55);
+  color: #f5f3eb !important;
+  font-family: var(--font-display);
+  font-weight: 800 !important;
+  letter-spacing: -0.055em;
 }
 
-.loginSubtitle {
-  color: rgba(255, 255, 255, 0.95) !important;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+.loginSubtitle,
+.authLabel,
+.label {
+  color: rgba(245, 243, 235, 0.92) !important;
 }
 
-.authLabel {
-  color: rgba(255, 255, 255, 0.95) !important;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+.authLabel,
+.label {
+  font-size: 0.75rem;
+  font-weight: 740;
+  letter-spacing: 0.04em;
 }
 
 .authInput,
+.input,
+.loginFormContainer input,
 .authInput:hover,
 .authInput:focus,
 .authInput:active {
-  background: rgba(255, 255, 255, 0.12) !important;
-  border: 1px solid rgba(255, 255, 255, 0.24) !important;
-  color: rgba(255, 255, 255, 0.96) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.96) !important;
-  caret-color: rgba(255, 255, 255, 0.96) !important;
+  width: 100%;
+  min-height: 2.8rem;
+  border: 1px solid rgba(245, 243, 235, 0.22) !important;
+  border-radius: 0.75rem !important;
+  background: #1d1d1a !important;
+  box-shadow: none !important;
+  color: #f5f3eb !important;
+  caret-color: #bfe4ff !important;
+  -webkit-text-fill-color: #f5f3eb !important;
 }
 
-.authInput[type="password"] {
-  color: rgba(255, 255, 255, 0.96) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.96) !important;
+.authInput::placeholder,
+.input::placeholder,
+.loginFormContainer input::placeholder {
+  color: rgba(245, 243, 235, 0.42) !important;
+  -webkit-text-fill-color: rgba(245, 243, 235, 0.42) !important;
 }
 
-.authIconButton,
-.authIconButton:hover,
-.authIconButton:focus-visible,
-.authIconButton:active {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 0;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.96) !important;
+.authInput:focus,
+.input:focus,
+.loginFormContainer input:focus {
+  border-color: #bfe4ff !important;
+  outline: none !important;
 }
 
-.authButton,
+.loginFormContainer input:-webkit-autofill,
+.loginFormContainer input:-webkit-autofill:hover,
+.loginFormContainer input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 100px #1d1d1a inset !important;
+  -webkit-text-fill-color: #f5f3eb !important;
+}
+
+.authButton {
+  min-height: 2.75rem;
+  border-color: transparent !important;
+  background: #f5f3eb !important;
+  color: #111 !important;
+}
+
 .authButton:hover,
-.authButton:focus-visible,
-.authButton:active {
-  color: rgba(255, 255, 255, 0.98) !important;
+.authButton:focus-visible {
+  background: #bfe4ff !important;
+  color: #111 !important;
 }
 
 .authInlineButton,
-.authInlineButton:hover,
-.authInlineButton:focus-visible,
-.authInlineButton:active {
+.authInlineLink {
   padding: 0;
-  border: 0;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.98) !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #f5f3eb !important;
+  font-weight: 680;
   text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.authInlineLink,
-.authInlineLink:hover,
-.authInlineLink:focus-visible,
-.authInlineLink:active {
-  color: rgba(255, 255, 255, 0.98) !important;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 .authMutedText {
-  color: rgba(255, 255, 255, 0.72) !important;
+  color: rgba(245, 243, 235, 0.58) !important;
+}
+
+.authIconButton {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  display: grid;
+  place-items: center;
+  border: 0 !important;
+  background: transparent !important;
+  color: #f5f3eb !important;
+  transform: translateY(-50%);
 }
 
 .teamEntryButton {
   position: absolute;
-  right: clamp(1rem, 3vw, 2rem);
-  bottom: clamp(1rem, 3vw, 2rem);
-  z-index: 3;
+  right: clamp(1rem, 3vw, 2.5rem);
+  bottom: clamp(1rem, 3vw, 2.5rem);
+  z-index: 4;
   display: inline-flex;
   align-items: center;
-  gap: 0.7rem;
-  min-height: 3rem;
-  padding: 0.45rem 1rem 0.45rem 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  gap: 0.65rem;
+  min-height: 2.9rem;
+  padding: 0.38rem 1rem 0.38rem 0.38rem;
+  border: 1px solid #111;
   border-radius: 999px;
-  color: rgba(255, 255, 255, 0.96);
-  background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 58%),
-    rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 18px 36px rgba(0, 0, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  background: #f5f3eb;
+  color: #111;
   cursor: pointer;
-  transition:
-    transform 0.18s ease,
-    background 0.18s ease,
-    border-color 0.18s ease;
+  transition: transform 160ms ease, background 160ms ease;
 }
 
-.teamEntryButton:hover,
-.teamEntryButton:focus-visible {
+.teamEntryButton:hover {
+  background: #f3a7b8;
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.42);
-  background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 58%),
-    rgba(255, 255, 255, 0.15);
-  outline: none;
 }
 
 .teamEntryIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.15rem;
-  height: 2.15rem;
-  border-radius: 999px;
-  color: #08111f;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #111;
+  color: #f5f3eb;
 }
 
 .teamEntryLabel {
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+  font-size: 0.8rem;
+  font-weight: 740;
 }
 
-/* Разделитель */
 .divider {
-  border-color: rgba(255, 255, 255, 0.20);
+  border-color: rgba(245, 243, 235, 0.18);
 }
 
 .dividerText {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.62);
+  background: #111;
+  color: rgba(245, 243, 235, 0.52);
 }
-
-/* Поля ввода - эффект стекла */
-.loginFormContainer input {
-  background: rgba(255, 255, 255, 0.12) !important;
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.24) !important;
-  color: rgba(255, 255, 255, 0.92) !important;
-  box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-}
-
-.loginFormContainer input::placeholder {
-  color: rgba(255, 255, 255, 0.56) !important;
-}
-
-.loginFormContainer input:focus {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border-color: rgba(255, 255, 255, 0.36) !important;
-  box-shadow:
-    0 0 0 2px rgba(80, 170, 255, 0.16),
-    0 14px 26px rgba(0, 0, 0, 0.18) !important;
-  outline: none !important;
-}
-
-/* Убираем чёрный прямоугольник от автозаполнения пароля (Chrome/Safari) */
-.loginFormContainer input:-webkit-autofill,
-.loginFormContainer input:-webkit-autofill:hover,
-.loginFormContainer input:-webkit-autofill:focus,
-.loginFormContainer input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 100px rgba(255, 255, 255, 0.12) inset !important;
-  box-shadow: 0 0 0 100px rgba(255, 255, 255, 0.12) inset !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
-  transition: background-color 5000s ease-in-out 0s;
-}
-
-/* Кнопки - эффект стекла */
-.loginFormContainer button {
-  backdrop-filter: blur(14px) saturate(165%);
-  -webkit-backdrop-filter: blur(14px) saturate(165%);
-  border: 1px solid rgba(255, 255, 255, 0.24) !important;
-}
-
-/* Все подписи и текст в форме входа — белые (в т.ч. на мобильных) */
-.loginFormContainer label,
-.loginFormContainer .label,
-.loginFormContainer p,
-.loginFormContainer span,
-.loginFormContainer a {
-  color: rgba(255, 255, 255, 0.95) !important;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
-}
-
-.loginFormContainer a:hover {
-  color: rgba(255, 255, 255, 1) !important;
-}
-
-.loginFormContainer button,
-.loginFormContainer button span,
-.loginFormContainer button svg,
-.loginFormContainer [role="button"] {
-  color: rgba(255, 255, 255, 0.96) !important;
-}
-
-/* Ссылка "Забыли пароль?" — только текст, без фона и рамки, читаемая */
-.loginFormContainer a[href*="forgot-password"] {
-  display: inline-block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.92) !important;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  background: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-}
-.loginFormContainer a[href*="forgot-password"]:hover {
-  color: #fff !important;
-}
-
-.loginFormContainer button {
-  color: rgba(255, 255, 255, 0.95) !important;
-}
-
-/* Стили для label */
-.label {
-  color: rgba(255, 255, 255, 0.95) !important;
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
-}
-
-/* Стили для input */
-.input {
-  background: rgba(255, 255, 255, 0.12) !important;
-  border: 1px solid rgba(255, 255, 255, 0.24) !important;
-  color: rgba(255, 255, 255, 0.92) !important;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  width: 100%;
-  transition: all 0.2s ease;
-}
-
-.input::placeholder {
-  color: rgba(255, 255, 255, 0.56) !important;
-}
-
-.input:focus {
-  outline: none !important;
-  background: rgba(255, 255, 255, 0.15) !important;
-  border-color: rgba(255, 255, 255, 0.36) !important;
-  box-shadow: 0 0 0 2px rgba(80, 170, 255, 0.14) !important;
-}
-
-/* Dark theme remains supported via global app theme; base is already dark */
 
 @media (max-width: 640px) {
+  .loginPageContainer {
+    align-items: start;
+    padding: 5.5rem 0.9rem 6rem;
+  }
+
+  .loginPageContainer::before {
+    left: -42vw;
+    bottom: -5rem;
+    width: 130vw;
+    height: 18rem;
+  }
+
+  .loginPageContainer::after {
+    top: 1rem;
+    right: -1.5rem;
+  }
+
+  .loginFormContainer {
+    padding: 1.35rem;
+    border-radius: 7rem 7rem 1.3rem 1.3rem;
+  }
+
   .teamEntryButton {
     right: 50%;
     bottom: 1rem;
     transform: translateX(50%);
   }
 
-  .teamEntryButton:hover,
-  .teamEntryButton:focus-visible {
+  .teamEntryButton:hover {
     transform: translateX(50%) translateY(-2px);
   }
+}
+
+:global(html.dark) .loginPageContainer {
+  background: #111;
+}
+
+:global(html.dark) .loginPageContainer::before {
+  background: #33512f;
+}
+
+:global(html.dark) .loginPageContainer::after {
+  background: #8d5261;
+}
+
+:global(html.dark) .loginFormContainer {
+  border-color: rgba(245, 243, 235, 0.2);
+  background: #181816;
 }

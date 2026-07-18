@@ -17,6 +17,7 @@ import BottomNavigation from "../sessions/components/BottomNavigation";
 import { useSWRConfig } from "swr";
 import { getAuthControllerGetMeKey } from "@/api/seee.swr";
 import { getSubscriptionTimeLeftLabel, isSubscriptionActive } from "@/lib/subscription";
+import styles from "./CabinetPage.module.css";
 
 function getAccountTypeLabel(accountType?: "USER" | "MANAGER" | "TEAM_MEMBER") {
   switch (accountType) {
@@ -158,15 +159,20 @@ const CabinetPage = observer(() => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 pb-28">
-        <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
-          <User className="h-8 w-8" />
-          Личный кабинет
-        </h1>
+      <div className={styles.page}>
+        <header className={styles.hero}>
+          <div className={styles.heroIcon}>
+            <User />
+          </div>
+          <div>
+            <span className={styles.kicker}>Личное пространство</span>
+            <h1 className={styles.title}>Личный кабинет</h1>
+          </div>
+        </header>
 
-        <div className="mb-6 rounded-xl border bg-card p-4">
-          <h2 className="mb-3 text-lg font-semibold">Разделы</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <section className={`${styles.panel} ${styles.panelSky}`}>
+          <h2 className={styles.panelTitle}>Разделы</h2>
+          <div className={styles.linksGrid}>
             <Button variant="outline" onClick={handleNeurocardClick}>
               Нейрокарта
             </Button>
@@ -185,24 +191,24 @@ const CabinetPage = observer(() => {
               </Button>
             ) : null}
           </div>
-        </div>
+        </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className={styles.profileGrid}>
           <ProfileSection profile={profile} />
         </div>
 
-        <div className="mb-6 rounded-xl border bg-card p-4">
-          <h2 className="mb-3 text-lg font-semibold">Статус аккаунта</h2>
+        <section className={styles.panel}>
+          <h2 className={styles.panelTitle}>Статус аккаунта</h2>
           <div className="inline-flex rounded-full border px-3 py-1 text-sm font-semibold">
             {getAccountTypeLabel(profile?.accountType)}
           </div>
           <p className="mt-3 text-sm text-muted-foreground">
             {getAccountTypeDescription(profile?.accountType)}
           </p>
-        </div>
+        </section>
 
-        <div className="mb-6 rounded-xl border bg-card p-4">
-          <h2 className="mb-3 text-lg font-semibold">Seee-токены</h2>
+        <section className={`${styles.panel} ${styles.panelGrass}`}>
+          <h2 className={styles.panelTitle}>Seee-токены</h2>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-2xl font-bold">
@@ -218,10 +224,10 @@ const CabinetPage = observer(() => {
               {effectiveSubscriptionActive ? "Пополнить заранее" : "Пополнить баланс"}
             </Button>
           </div>
-        </div>
+        </section>
 
-        <div className="mb-6 rounded-xl border bg-card p-4">
-          <h2 className="mb-3 text-lg font-semibold">Ежедневная цель</h2>
+        <section className={`${styles.panel} ${styles.panelPink}`}>
+          <h2 className={styles.panelTitle}>Ежедневная цель</h2>
           <p className="mb-3 text-sm text-muted-foreground">
             Сколько минут в день я хочу тратить на C каждый день.
           </p>
@@ -237,10 +243,10 @@ const CabinetPage = observer(() => {
               </Button>
             ))}
           </div>
-        </div>
+        </section>
 
-        <div className="mb-6 rounded-xl border bg-card p-4">
-          <h2 className="mb-3 text-lg font-semibold">Ударный режим</h2>
+        <section className={styles.panel}>
+          <h2 className={styles.panelTitle}>Ударный режим</h2>
           <p className="text-sm text-muted-foreground">
             Серия дней подряд, в которые вы закрыли ежедневную цель.
           </p>
@@ -261,7 +267,7 @@ const CabinetPage = observer(() => {
           <p className="mt-4 text-base font-semibold">
             {profile?.dailyStreak ?? 0} дней подряд
           </p>
-        </div>
+        </section>
 
         {/* Настройки безопасности */}
         <div className="mb-6">
@@ -289,8 +295,8 @@ const CabinetPage = observer(() => {
           <MyFeedback />
         </div>
 
-        <div className="mb-6 rounded-xl border bg-card p-4">
-          <h2 className="mb-3 text-lg font-semibold">Подписка</h2>
+        <section className={styles.panel}>
+          <h2 className={styles.panelTitle}>Подписка</h2>
           <div className="space-y-2 text-sm">
             {profile?.accountType === "TEAM_MEMBER" ? (
               <p>
@@ -341,7 +347,7 @@ const CabinetPage = observer(() => {
                   : "Отменить подписку"}
             </Button>
           </div>
-        </div>
+        </section>
 
         <div className="pb-6 pt-2">
           <Button variant="destructive" onClick={handleLogout} className="w-full sm:w-auto">

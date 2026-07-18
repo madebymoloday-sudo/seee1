@@ -501,7 +501,8 @@ const MapPage = observer(() => {
     if (!canvas || !content) return;
     const availableWidth = Math.max(320, canvas.clientWidth - 32);
     const contentWidth = Math.max(1, content.scrollWidth);
-    setMapScale(clampScale(Math.min(1, availableWidth / contentWidth)));
+    const overviewScale = Math.max(0.55, Math.min(1, availableWidth / contentWidth));
+    setMapScale(clampScale(overviewScale));
     canvas.scrollTo({ left: 0, top: 0, behavior: "smooth" });
   };
 

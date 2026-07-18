@@ -1524,3 +1524,200 @@
   border-color: rgba(96, 165, 250, 0.34);
   color: #93c5fd;
 }
+
+/* Seee editorial skin */
+.page {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(243, 167, 184, 0.42), transparent 18rem),
+    linear-gradient(180deg, #bfe4ff 0%, #f8f6ef 72%);
+}
+
+.shell {
+  border: 1px solid rgba(17, 17, 17, 0.16);
+  border-radius: 1.8rem 1.8rem 1.8rem 0.65rem;
+  background: #f8f6ef;
+  box-shadow: 0 28px 70px rgba(17, 17, 17, 0.11);
+  backdrop-filter: none;
+}
+
+.left {
+  border-right-color: rgba(17, 17, 17, 0.12);
+  background: #f8f6ef;
+}
+
+.sidebarTop,
+.chatHeader {
+  border-color: rgba(17, 17, 17, 0.1);
+  background: #f8f6ef;
+}
+
+.sidebarTitle,
+.chatHeaderMain {
+  font-family: "Archivo Variable", sans-serif;
+  font-weight: 730;
+  letter-spacing: -0.025em;
+}
+
+.quickAddBtn,
+.headerIconButton,
+.backToListButton {
+  border-color: rgba(17, 17, 17, 0.13);
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: none;
+}
+
+.filterChip {
+  border-color: rgba(17, 17, 17, 0.13);
+  background: transparent;
+}
+
+.filterChipActive {
+  border-color: #111111;
+  background: #111111;
+  color: #ffffff;
+}
+
+.chatAvatar,
+.memberAvatar,
+.manageGroupAvatar,
+.infoPanelAvatar {
+  border-color: rgba(17, 17, 17, 0.1);
+  background: #dbe9c9;
+}
+
+.chatItem {
+  border-bottom-color: rgba(17, 17, 17, 0.07);
+}
+
+.chatItem:hover {
+  background: rgba(191, 228, 255, 0.38);
+}
+
+.chatItemActive {
+  background: #bfe4ff;
+}
+
+.unreadBadge {
+  background: #111111;
+}
+
+.messages {
+  background:
+    radial-gradient(circle at 84% 16%, rgba(243, 167, 184, 0.28), transparent 15rem),
+    rgba(255, 255, 255, 0.38);
+}
+
+.bubble,
+.questionCard,
+.pendingCard {
+  border-color: rgba(17, 17, 17, 0.1);
+  border-radius: 1.2rem 1.2rem 1.2rem 0.4rem;
+  background: #f8f6ef;
+}
+
+.mine {
+  border-radius: 1.2rem 1.2rem 0.4rem 1.2rem;
+  background: #bfe4ff;
+}
+
+.composer {
+  border-top-color: rgba(255, 255, 255, 0.14);
+  background: #111111;
+  backdrop-filter: none;
+}
+
+.composer textarea,
+.composer input {
+  border-color: rgba(17, 17, 17, 0.12) !important;
+  background: #f8f6ef !important;
+  color: #111111 !important;
+}
+
+.quickActionsMenu,
+.headerDropdownMenu,
+.modeList {
+  border-color: rgba(255, 255, 255, 0.14);
+  border-radius: 1rem;
+  background: #111111;
+  color: #ffffff;
+  box-shadow: 0 22px 50px rgba(17, 17, 17, 0.25);
+}
+
+.quickMenuItem,
+.headerDropdownItem,
+.modeBtn {
+  color: #ffffff;
+}
+
+.quickMenuItem:hover,
+.headerDropdownItem:hover,
+.modeBtn:hover {
+  background: rgba(191, 228, 255, 0.14);
+}
+
+.infoPanel {
+  border-left-color: rgba(255, 255, 255, 0.12);
+  background: #111111;
+  color: #ffffff;
+}
+
+.telegramModal,
+.telegramDialog,
+.notesModal {
+  border-color: rgba(17, 17, 17, 0.12);
+  border-radius: 1.8rem 1.8rem 1.8rem 0.65rem;
+  background: #f8f6ef;
+  box-shadow: 0 30px 80px rgba(17, 17, 17, 0.26);
+}
+
+:global(.dark) .page,
+:global(html.dark) .page {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(169, 105, 120, 0.22), transparent 18rem),
+    #111111;
+}
+
+:global(.dark) .shell,
+:global(html.dark) .shell {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #181818;
+}
+
+:global(.dark) .left,
+:global(.dark) .sidebarTop,
+:global(.dark) .chatHeader,
+:global(html.dark) .left,
+:global(html.dark) .sidebarTop,
+:global(html.dark) .chatHeader {
+  background: #181818;
+}
+
+:global(.dark) .chatItemActive,
+:global(html.dark) .chatItemActive {
+  background: #315365;
+}
+
+:global(.dark) .messages,
+:global(html.dark) .messages {
+  background:
+    radial-gradient(circle at 84% 16%, rgba(169, 105, 120, 0.18), transparent 15rem),
+    #111111;
+}
+
+:global(.dark) .composer,
+:global(html.dark) .composer {
+  background: #f8f6ef;
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: 0 0 5rem;
+  }
+
+  .shell {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

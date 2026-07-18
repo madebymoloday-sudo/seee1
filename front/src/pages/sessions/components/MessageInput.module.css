@@ -1,360 +1,168 @@
-/* Стили для поля ввода в стиле Apple 2007 */
-
 .messageInputContainer {
-  padding: 1.05rem 1.4rem 0.95rem;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.2) 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0.18) 100%
-  );
-  backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
-  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
-  border-top: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
   width: 100%;
+  padding: 0.85rem max(1rem, env(safe-area-inset-right))
+    max(0.85rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  background: #111111;
 }
 
 .inputWrapper {
+  width: min(100%, 58rem);
+  margin: 0 auto;
   display: flex;
   align-items: flex-end;
-  gap: 0.85rem;
-  max-width: 920px;
-  margin: 0 auto;
-  width: 100%;
+  gap: 0.55rem;
 }
 
 .textarea {
   flex: 1;
-  background: rgba(255, 255, 255, 0.2) !important;
-  backdrop-filter: blur(15px) saturate(180%);
-  -webkit-backdrop-filter: blur(15px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  border-radius: 1.05rem !important;
-  color: white !important;
-  padding: 0.82rem 1.1rem !important;
-  line-height: 1.35;
-  min-height: 50px !important;
-  max-height: 240px !important;
+  min-height: 3.25rem !important;
+  max-height: 15rem !important;
   overflow-y: auto !important;
   resize: none !important;
-  font-size: 1rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  padding: 0.88rem 1.05rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 1.1rem 1.1rem 1.1rem 0.4rem !important;
+  background: #f8f6ef !important;
+  color: #111111 !important;
+  font-size: 1rem !important;
+  line-height: 1.4;
+  text-shadow: none !important;
 }
 
 .textarea::placeholder {
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: rgba(17, 17, 17, 0.45) !important;
 }
 
 .textarea:focus {
-  background: rgba(255, 255, 255, 0.25) !important;
-  border-color: rgba(255, 255, 255, 0.6) !important;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
-  outline: none !important;
+  border-color: #bfe4ff !important;
+  outline: 0 !important;
+  box-shadow: 0 0 0 3px rgba(191, 228, 255, 0.26) !important;
 }
 
 .settingsButton,
 .voiceButton,
 .sendButton {
-  backdrop-filter: blur(15px) saturate(180%);
-  -webkit-backdrop-filter: blur(15px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.25) 0%,
-    rgba(255, 255, 255, 0.2) 100%
-  ) !important;
-  color: white !important;
-  width: 46px;
-  height: 46px;
-  border-radius: 0.75rem;
-  transition: all 0.3s ease;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  width: 3.15rem;
+  min-width: 3.15rem;
+  height: 3.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.09) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
   cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
 .settingsButton:hover,
 .voiceButton:hover:not(:disabled),
 .sendButton:hover:not(:disabled) {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.35) 0%,
-    rgba(255, 255, 255, 0.3) 100%
-  ) !important;
+  background: #bfe4ff !important;
+  color: #111111 !important;
   transform: translateY(-1px);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.sendButton {
+  background: #78a65a !important;
+  color: #111111 !important;
 }
 
 .sendButton:disabled {
-  opacity: 0.5;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
-.voiceButtonGlow {
-  animation: voiceButtonGlow 1.8s ease-in-out infinite;
-}
-
 .voiceButtonActive {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 91, 91, 0.42) 0%,
-    rgba(255, 70, 70, 0.3) 100%
-  ) !important;
-  border-color: rgba(255, 120, 120, 0.6) !important;
-  box-shadow:
-    0 0 0 1px rgba(255, 107, 107, 0.25),
-    0 0 18px rgba(255, 86, 86, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  background: #f3a7b8 !important;
+  color: #111111 !important;
 }
 
-@keyframes voiceButtonGlow {
-  0%,
-  100% {
-    box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.2),
-      0 0 0 rgba(59, 130, 246, 0),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  }
+.voiceButtonGlow {
+  animation: voicePulse 1.6s ease-in-out infinite;
+}
+
+@keyframes voicePulse {
   50% {
-    box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.24),
-      0 0 18px rgba(59, 130, 246, 0.22),
-      inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    box-shadow: 0 0 0 7px rgba(243, 167, 184, 0.18) !important;
   }
 }
 
-/* Адаптивные стили для мобильных устройств */
-@media (max-width: 768px) {
-  .messageInputContainer {
-    padding: 0.82rem 0.95rem 0.46rem;
-  }
-
-  .inputWrapper {
-    gap: 0.5rem;
-    max-width: 100%;
-  }
-
-  .textarea {
-    min-height: 46px !important;
-    max-height: 200px !important;
-    padding: 0.72rem 0.95rem !important;
-    font-size: 0.95rem;
-  }
-
-  .settingsButton,
-  .voiceButton,
-  .sendButton {
-    width: 42px;
-    height: 42px;
-    border-radius: 0.625rem;
-  }
+:global(.dark) .messageInputContainer,
+:global(html.dark) .messageInputContainer {
+  border-color: rgba(17, 17, 17, 0.12);
+  background: #f8f6ef;
 }
 
-@media (min-width: 769px) {
-  .messageInputContainer {
-    padding-top: 0.9rem;
-    padding-bottom: 0.6rem;
-  }
+:global(.dark) .textarea,
+:global(html.dark) .textarea {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: #1c1c1c !important;
+  color: #ffffff !important;
 }
 
-@media (max-width: 480px) {
-  .messageInputContainer {
-    padding: 0.72rem 0.72rem 0.34rem;
-  }
-
-  .inputWrapper {
-    gap: 0.375rem;
-  }
-
-  .textarea {
-    min-height: 44px !important;
-    max-height: 180px !important;
-    padding: 0.68rem 0.82rem !important;
-    font-size: 0.9rem;
-  }
-
-  .settingsButton,
-  .voiceButton,
-  .sendButton {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-  }
-}
-
-/* Исправление контрастности для светлой темы */
-:global(html:not(.dark)) .textarea {
-  color: rgba(0, 0, 0, 0.85) !important;
-  background: rgba(255, 255, 255, 0.9) !important;
-  text-shadow: none !important;
-}
-
-:global(html:not(.dark)) .textarea::placeholder {
-  color: rgba(0, 0, 0, 0.5) !important;
-}
-
-:global(html:not(.dark)) .textarea:focus {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-color: rgba(59, 130, 246, 0.4) !important;
-}
-
-:global(html:not(.dark)) .messageInputContainer {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(248, 250, 252, 0.95) 100%
-  );
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
-}
-
-:global(html:not(.dark)) .settingsButton,
-:global(html:not(.dark)) .voiceButton,
-:global(html:not(.dark)) .sendButton {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(248, 250, 252, 0.9) 100%
-  ) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  color: rgba(0, 0, 0, 0.7) !important;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-:global(html:not(.dark)) .settingsButton:hover:not(:disabled),
-:global(html:not(.dark)) .voiceButton:hover:not(:disabled),
-:global(html:not(.dark)) .sendButton:hover:not(:disabled) {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(248, 250, 252, 1) 100%
-  ) !important;
-  color: rgba(59, 130, 246, 0.9) !important;
-}
-
-/* Поддержка безопасных областей для iOS */
-@supports (padding: max(0px)) {
-  .messageInputContainer {
-    padding-bottom: max(0.45rem, min(env(safe-area-inset-bottom), 0.7rem));
-    padding-left: max(1.4rem, env(safe-area-inset-left));
-    padding-right: max(1.4rem, env(safe-area-inset-right));
-  }
-
-  @media (max-width: 768px) {
-    .messageInputContainer {
-      padding-bottom: max(0.3rem, min(env(safe-area-inset-bottom), 0.5rem));
-      padding-left: max(0.95rem, env(safe-area-inset-left));
-      padding-right: max(0.95rem, env(safe-area-inset-right));
-    }
-  }
-
-  @media (max-width: 480px) {
-    .messageInputContainer {
-      padding-bottom: max(0.24rem, min(env(safe-area-inset-bottom), 0.4rem));
-      padding-left: max(0.72rem, env(safe-area-inset-left));
-      padding-right: max(0.72rem, env(safe-area-inset-right));
-    }
-  }
-}
-
-/* Предотвращение зума при фокусе на iOS */
-@media (max-width: 768px) {
-  .textarea {
-    font-size: 16px !important;
-  }
-}
-
-/* Стили для темной темы */
-:global(.dark) .messageInputContainer {
-  background:
-    radial-gradient(
-      120% 120% at 85% 6%,
-      rgba(255, 210, 150, 0.08) 0%,
-      rgba(255, 210, 150, 0) 50%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(26, 26, 26, 0.98) 0%,
-      rgba(10, 10, 10, 0.98) 100%
-    );
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-    0 -8px 24px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-:global(.dark) .textarea {
-  background: rgba(20, 20, 20, 0.96) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  color: rgba(255, 255, 255, 0.9) !important;
-  text-shadow: none !important;
-}
-
-:global(.dark) .textarea::placeholder {
-  color: rgba(255, 255, 255, 0.5) !important;
-}
-
-:global(.dark) .textarea:focus {
-  background: rgba(24, 24, 24, 0.98) !important;
-  border-color: rgba(255, 255, 255, 0.28) !important;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12) !important;
-}
-
-:global(.dark) .voiceButtonGlow {
-  animation: voiceButtonGlowDark 1.8s ease-in-out infinite;
-}
-
-@keyframes voiceButtonGlowDark {
-  0%,
-  100% {
-    box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.28),
-      0 0 0 rgba(129, 140, 248, 0),
-      inset 0 1px 0 rgba(255, 255, 255, 0.16);
-  }
-  50% {
-    box-shadow:
-      0 4px 14px rgba(0, 0, 0, 0.35),
-      0 0 18px rgba(129, 140, 248, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
+:global(.dark) .textarea::placeholder,
+:global(html.dark) .textarea::placeholder {
+  color: rgba(255, 255, 255, 0.44) !important;
 }
 
 :global(.dark) .settingsButton,
-:global(.dark) .sendButton {
-  background: linear-gradient(
-    135deg,
-    rgba(42, 42, 42, 0.94) 0%,
-    rgba(18, 18, 18, 0.94) 100%
-  ) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: rgba(255, 255, 255, 0.8) !important;
-  box-shadow:
-    0 3px 10px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+:global(.dark) .voiceButton,
+:global(.dark) .sendButton,
+:global(html.dark) .settingsButton,
+:global(html.dark) .voiceButton,
+:global(html.dark) .sendButton {
+  border-color: rgba(17, 17, 17, 0.14) !important;
+  background: #111111 !important;
+  color: #ffffff !important;
 }
 
-:global(.dark) .settingsButton:hover:not(:disabled),
-:global(.dark) .sendButton:hover:not(:disabled) {
-  background: linear-gradient(
-    135deg,
-    rgba(64, 64, 64, 0.96) 0%,
-    rgba(28, 28, 28, 0.96) 100%
-  ) !important;
-  border-color: rgba(255, 255, 255, 0.3) !important;
-  color: rgba(255, 255, 255, 0.96) !important;
-  box-shadow:
-    0 5px 14px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+:global(.dark) .sendButton,
+:global(html.dark) .sendButton {
+  background: #78a65a !important;
+  color: #111111 !important;
 }
 
-:global(.dark) .sendButton:disabled {
-  opacity: 0.4;
-  color: rgba(255, 255, 255, 0.3) !important;
+@media (max-width: 640px) {
+  .messageInputContainer {
+    padding-top: 0.55rem;
+    padding-right: max(0.55rem, env(safe-area-inset-right));
+    padding-bottom: max(0.55rem, env(safe-area-inset-bottom));
+    padding-left: max(0.55rem, env(safe-area-inset-left));
+  }
+
+  .inputWrapper {
+    gap: 0.38rem;
+  }
+
+  .textarea {
+    min-height: 3rem !important;
+    max-height: 10rem !important;
+    padding: 0.76rem 0.82rem !important;
+    font-size: 16px !important;
+  }
+
+  .settingsButton,
+  .voiceButton,
+  .sendButton {
+    width: 2.9rem;
+    min-width: 2.9rem;
+    height: 2.9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settingsButton,
+  .voiceButton,
+  .sendButton {
+    transition: none;
+  }
+
+  .voiceButtonGlow {
+    animation: none;
+  }
 }

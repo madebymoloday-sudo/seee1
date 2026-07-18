@@ -1,436 +1,291 @@
 .dialogWindow {
-  flex: 1;
-  min-height: 0;
   height: 100%;
+  min-height: 0;
+  flex: 1;
   overflow: hidden;
 }
 
 .messagesStage {
-  flex: 1;
-  min-height: 0;
   width: 100%;
-  padding-top: 3.45rem;
+  min-height: 0;
+  flex: 1;
+  padding-top: 3.8rem;
 }
 
 .messagesStage [data-chat-current-question="true"] {
-  scroll-margin-top: calc(6.6rem + env(safe-area-inset-top));
+  scroll-margin-top: calc(6.5rem + env(safe-area-inset-top));
 }
 
 .bottomDock {
+  position: sticky;
+  z-index: 120;
+  bottom: 0;
   margin-top: auto;
   align-self: stretch;
   flex-shrink: 0;
-  position: sticky;
-  bottom: 0;
-  z-index: 120;
 }
 
 .choiceRow {
+  width: min(100%, 42rem);
   display: flex;
-  gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
-  width: 100%;
-  max-width: 600px;
+  gap: 0.55rem;
 }
 
 .choiceButton {
-  min-width: 220px;
-  max-width: 100%;
   min-width: 0;
-  box-sizing: border-box;
-  white-space: normal;
-  white-space: pre-wrap !important;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  text-align: left;
-  justify-content: flex-start;
-  padding: 0.75rem 1rem;
+  min-height: 2.75rem;
+  max-width: 100%;
   height: auto;
-  min-height: 44px;
+  justify-content: flex-start;
+  padding: 0.72rem 0.9rem;
+  border-radius: 1rem 1rem 1rem 0.35rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap !important;
 }
 
-.helperText {
+.helperText,
+.reasonsHint,
+.deepMindMapHint {
+  max-width: 42rem;
   margin: 0;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.88rem;
+  line-height: 1.45;
   text-align: center;
-  max-width: 600px;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.95rem;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.32);
 }
 
 .reasonsEditor {
-  width: min(760px, calc(100% - 1.25rem));
+  width: min(47rem, calc(100% - 1rem));
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
-}
-
-.reasonsHint {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 0.92rem;
-  text-align: center;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.28);
+  gap: 0.8rem;
 }
 
 .reasonsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: 0.65rem;
 }
 
 .reasonCard {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.85rem;
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  gap: 0.45rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  border-radius: 1.25rem 1.25rem 1.25rem 0.4rem;
+  background: #dbe9c9;
+  box-shadow: none;
 }
 
 .reasonLabel {
-  font-size: 0.9rem;
-  font-weight: 650;
-  color: rgba(15, 23, 42, 0.92);
+  color: #111111;
+  font-family: "Archivo Variable", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 720;
 }
 
 .reasonTextarea {
-  min-height: 90px !important;
+  min-height: 6rem !important;
   resize: none !important;
-  background: rgba(255, 255, 255, 0.96) !important;
-  border: 1px solid rgba(15, 23, 42, 0.12) !important;
-  color: rgba(15, 23, 42, 0.94) !important;
+  border: 1px solid rgba(17, 17, 17, 0.12) !important;
+  border-radius: 0.9rem !important;
+  background: #f8f6ef !important;
+  color: #111111 !important;
   box-shadow: none !important;
-  -webkit-text-fill-color: rgba(15, 23, 42, 0.94) !important;
   text-shadow: none !important;
+  -webkit-text-fill-color: #111111 !important;
 }
 
 .reasonTextarea::placeholder {
-  color: rgba(15, 23, 42, 0.45) !important;
-  -webkit-text-fill-color: rgba(15, 23, 42, 0.45) !important;
+  color: rgba(17, 17, 17, 0.42) !important;
+  -webkit-text-fill-color: rgba(17, 17, 17, 0.42) !important;
 }
 
-.reasonTextarea:focus,
-.reasonTextarea:active {
-  background: rgba(255, 255, 255, 0.98) !important;
-  border-color: rgba(59, 130, 246, 0.42) !important;
+.reasonTextarea:focus {
+  border-color: #111111 !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08) !important;
 }
 
 .reasonsActions {
   display: flex;
-  justify-content: center;
-  gap: 0.75rem;
   flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem;
 }
 
 .slideExitLeft,
 .slideEnterFromRight {
-  will-change: transform, opacity;
+  will-change: opacity, transform;
 }
 
 .slideExitLeft {
-  animation: slideExitLeft 0.34s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: leave 260ms ease forwards;
 }
 
 .slideEnterFromRight {
-  animation: slideEnterFromRight 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: arrive 300ms ease both;
 }
 
-@keyframes slideExitLeft {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
+@keyframes leave {
   to {
     opacity: 0;
-    transform: translate3d(-34vw, 0, 0) scale(0.98);
+    transform: translateX(-1rem);
   }
 }
 
-@keyframes slideEnterFromRight {
+@keyframes arrive {
   from {
     opacity: 0;
-    transform: translate3d(30vw, 0, 0) scale(0.98);
+    transform: translateX(1rem);
   }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-:global(.dark) .helperText,
-:global(html.dark) .helperText {
-  color: rgba(255, 255, 255, 0.76);
-}
-
-:global(.dark) .reasonCard,
-:global(html.dark) .reasonCard {
-  background: rgba(15, 23, 42, 0.9);
-  border-color: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
-}
-
-:global(.dark) .reasonLabel,
-:global(html.dark) .reasonLabel {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-:global(.dark) .reasonTextarea,
-:global(html.dark) .reasonTextarea {
-  background: rgba(2, 6, 23, 0.72) !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  color: rgba(255, 255, 255, 0.92) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
-  text-shadow: none !important;
-}
-
-:global(.dark) .reasonTextarea::placeholder,
-:global(html.dark) .reasonTextarea::placeholder {
-  color: rgba(255, 255, 255, 0.5) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.5) !important;
-}
-
-:global(.dark) .reasonTextarea:focus,
-:global(.dark) .reasonTextarea:active,
-:global(html.dark) .reasonTextarea:focus,
-:global(html.dark) .reasonTextarea:active {
-  background: rgba(2, 6, 23, 0.86) !important;
-  border-color: rgba(147, 197, 253, 0.48) !important;
-}
-
-:global(html:not(.dark)) .reasonsHint {
-  color: rgba(255, 255, 255, 0.94);
-}
-
-:global(html:not(.dark)) .reasonCard {
-  background: rgba(255, 255, 255, 0.82);
-  border-color: rgba(15, 23, 42, 0.08);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
-}
-
-:global(html:not(.dark)) .reasonLabel {
-  color: rgba(15, 23, 42, 0.92);
-}
-
-:global(html:not(.dark)) .reasonTextarea {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border-color: rgba(15, 23, 42, 0.12) !important;
-  color: rgba(15, 23, 42, 0.92) !important;
-  -webkit-text-fill-color: rgba(15, 23, 42, 0.92) !important;
-  text-shadow: none !important;
-}
-
-:global(html:not(.dark)) .reasonTextarea::placeholder {
-  color: rgba(15, 23, 42, 0.45) !important;
-  -webkit-text-fill-color: rgba(15, 23, 42, 0.45) !important;
-}
-
-:global(html:not(.dark)) .deepMindMapHint {
-  color: rgba(15, 23, 42, 0.7);
-  text-shadow: none;
-}
-
-:global(html:not(.dark)) .mindMapNodeGroup::before,
-:global(html:not(.dark)) .mindMapNodeRow::before {
-  background: rgba(15, 23, 42, 0.12);
-}
-
-:global(html:not(.dark)) .mindMapNodeButton {
-  background: rgba(255, 255, 255, 0.84);
-  border-color: rgba(15, 23, 42, 0.08);
-  color: rgba(15, 23, 42, 0.92);
-}
-
-:global(html:not(.dark)) .mindMapBadge {
-  background: rgba(15, 23, 42, 0.08);
-  color: rgba(15, 23, 42, 0.56);
-}
-
-:global(html:not(.dark)) .mindMapThought {
-  background: rgba(255, 247, 224, 0.96);
-}
-
-:global(html:not(.dark)) .mindMapSituation {
-  background: rgba(255, 255, 255, 0.94);
 }
 
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 10050;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(17, 17, 17, 0.65);
 }
 
 .modal {
-  width: min(560px, calc(100% - 32px));
-  border-radius: 18px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.22) 0%,
-    rgba(255, 255, 255, 0.16) 100%
-  );
-  backdrop-filter: blur(30px) saturate(200%) brightness(1.2);
-  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-  padding: 18px;
+  width: min(34rem, 100%);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  padding: 1.2rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  border-radius: 1.8rem 1.8rem 1.8rem 0.65rem;
+  background: #f8f6ef;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
 }
 
 .modalTitle {
-  margin: 0 0 10px;
-  color: white;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  font-size: 1.1rem;
-  font-weight: 650;
+  margin: 0 0 0.7rem;
+  color: #111111;
+  font-family: "Archivo Variable", sans-serif;
+  font-size: 1.2rem;
+  font-weight: 740;
 }
 
 .modalBody {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.65rem;
 }
 
 .modalFooter {
-  margin-top: 14px;
+  margin-top: 0.9rem;
   display: flex;
-  gap: 10px;
-  justify-content: flex-end;
   flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
 }
 
 .modalHint {
-  margin: 10px 0 0;
-  color: rgba(255, 255, 255, 0.75);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  font-size: 0.85rem;
+  margin: 0.7rem 0 0;
+  color: rgba(17, 17, 17, 0.56);
+  font-size: 0.8rem;
   text-align: center;
 }
 
-/* Основная вёрстка — как в ChatWindow (chatWindow + messagesContainer + composerDock из ChatWindow.module.css). */
 .systemActionsRow {
-  margin-top: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
   width: 100%;
+  margin-top: 0.65rem;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.actionsLeft,
+.actionsCenter,
+.actionsRight {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
 }
 
 .actionsLeft {
-  flex: 1;
-  display: flex;
   justify-content: flex-start;
-  flex-shrink: 0;
 }
 
 .actionsCenter {
-  flex: 1;
-  display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
 .actionsRight {
-  flex: 1;
-  display: flex;
   justify-content: flex-end;
-  flex-shrink: 0;
 }
 
 .actionButton,
-.skipButton {
-  appearance: none;
-  background: transparent;
-  border: none;
-  padding: 0;
-  font: inherit;
-  font-weight: 650;
-  cursor: pointer;
-  transition:
-    color 0.15s ease,
-    opacity 0.15s ease;
-}
-
-.actionButton {
-  color: rgba(15, 23, 42, 0.85);
+.skipButton,
+.backButton {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-}
-
-.actionIcon {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
-}
-
-.skipButton {
-  color: rgba(15, 23, 42, 0.85);
+  gap: 0.3rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #111111;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 680;
+  cursor: pointer;
 }
 
 .actionButton:hover:not(:disabled),
-.skipButton:hover:not(:disabled) {
-  color: rgba(2, 6, 23, 0.95);
-  text-decoration: underline;
+.skipButton:hover:not(:disabled),
+.backButton:hover:not(:disabled) {
+  opacity: 0.62;
 }
 
 .actionButton:disabled,
-.skipButton:disabled {
-  opacity: 0.4;
+.skipButton:disabled,
+.backButton:disabled {
+  opacity: 0.35;
   cursor: not-allowed;
+}
+
+.actionIcon {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .ideasList {
   margin: 0;
-  padding-left: 1.25rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.95rem;
+  padding-left: 1.2rem;
+  color: #111111;
+  font-size: 0.9rem;
   line-height: 1.5;
 }
 
-.ideasList li {
-  margin-bottom: 0.5rem;
-}
-
-.ideasList li:last-child {
-  margin-bottom: 0;
-}
-
 .ideasListButtons {
+  max-height: 60dvh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  max-height: 60vh;
-  overflow-y: auto;
+  gap: 0.55rem;
 }
 
 .ideasListButtons .choiceButton {
   width: 100%;
-  text-align: left;
 }
 
 .deepIdeasList {
-  width: 100%;
-  max-width: 680px;
+  width: min(100%, 42rem);
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-}
-
-.deepIdeaItem {
-  position: relative;
-  min-width: 0;
+  gap: 0.55rem;
 }
 
 .deepIdeaButton {
@@ -438,19 +293,36 @@
   min-width: 0;
 }
 
-.deepMindMap {
-  width: min(760px, calc(100% - 1rem));
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
+.deepIdeaMenu {
+  margin-top: 0.35rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 1rem;
+  background: #111111;
 }
 
-.deepMindMapHint {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.92rem;
-  text-align: center;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.28);
+.deepIdeaMenuItem {
+  width: 100%;
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+.deepIdeaMenuItem:hover {
+  background: rgba(191, 228, 255, 0.14);
+}
+
+.deepMindMap {
+  width: min(47rem, calc(100% - 0.5rem));
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
 }
 
 .deepMindMapTree {
@@ -461,7 +333,7 @@
 
 .mindMapNodeGroup {
   position: relative;
-  padding-left: 1.35rem;
+  padding-left: 1.2rem;
 }
 
 .mindMapNodeGroupRoot {
@@ -471,14 +343,15 @@
 .mindMapNodeGroup::before {
   content: "";
   position: absolute;
-  left: 0.48rem;
   top: 0;
-  bottom: -0.35rem;
+  bottom: -0.3rem;
+  left: 0.42rem;
   width: 1px;
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.28);
 }
 
-.mindMapNodeGroupRoot::before {
+.mindMapNodeGroupRoot::before,
+.mindMapNodeGroupRoot > .mindMapNodeRow::before {
   display: none;
 }
 
@@ -489,93 +362,73 @@
 .mindMapNodeRow::before {
   content: "";
   position: absolute;
-  left: -0.9rem;
-  top: 1.1rem;
-  width: 0.9rem;
+  top: 1rem;
+  left: -0.8rem;
+  width: 0.8rem;
   height: 1px;
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.mindMapNodeGroupRoot > .mindMapNodeRow::before {
-  display: none;
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .mindMapChildren {
+  margin-top: 0.45rem;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  margin-top: 0.55rem;
+  gap: 0.45rem;
 }
 
 .mindMapNodeButton {
   width: 100%;
   min-width: 0;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.35rem;
-  padding: 0.8rem 0.95rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  color: rgba(255, 255, 255, 0.96);
+  gap: 0.3rem;
+  padding: 0.72rem 0.85rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  border-radius: 1rem 1rem 1rem 0.35rem;
+  background: #f8f6ef;
+  color: #111111;
   text-align: left;
-  cursor: pointer;
-  transition:
-    transform 0.16s ease,
-    border-color 0.16s ease,
-    background 0.16s ease;
-}
-
-.mindMapNodeButton:disabled {
-  cursor: default;
 }
 
 .mindMapNodeButton:not(:disabled):hover {
-  transform: translateY(-1px);
-  border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.16);
+  border-color: #111111;
 }
 
 .mindMapSituation {
-  background: rgba(255, 255, 255, 0.18);
+  background: #bfe4ff;
 }
 
 .mindMapThought {
-  background: rgba(255, 244, 214, 0.16);
+  background: #f3a7b8;
 }
 
 .mindMapIdea {
-  background: rgba(255, 255, 255, 0.1);
+  background: #dbe9c9;
 }
 
 .mindMapNodeActive {
-  border-color: rgba(253, 224, 71, 0.72);
-  box-shadow: 0 10px 24px rgba(253, 224, 71, 0.14);
+  border-color: #111111;
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
 }
 
 .mindMapBadge {
   display: inline-flex;
-  align-items: center;
-  padding: 0.18rem 0.55rem;
+  padding: 0.15rem 0.48rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  background: rgba(17, 17, 17, 0.09);
+  color: rgba(17, 17, 17, 0.58);
+  font-size: 0.62rem;
+  font-weight: 740;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .mindMapLabel {
-  white-space: pre-wrap;
-  word-break: break-word;
+  font-size: 0.9rem;
+  line-height: 1.38;
   overflow-wrap: anywhere;
-  font-size: 0.96rem;
-  line-height: 1.4;
+  white-space: pre-wrap;
 }
 
 .deepMindMapFooter {
@@ -583,260 +436,198 @@
   justify-content: center;
 }
 
-.deepIdeaMenu {
-  margin-top: 0.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 0.7rem;
-  background: rgba(18, 18, 18, 0.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  overflow: hidden;
-}
-
-.deepIdeaMenuItem {
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  text-align: left;
-  padding: 0.6rem 0.75rem;
-  border: none;
-  background: transparent;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.deepIdeaMenuItem:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.backButton {
-  appearance: none;
-  background: transparent;
-  border: none;
-  padding: 0;
-  font: inherit;
-  color: rgba(15, 23, 42, 0.85);
-  font-weight: 650;
-  cursor: pointer;
-  transition:
-    color 0.15s ease,
-    opacity 0.15s ease;
-}
-
-.backButton:hover:not(:disabled) {
-  color: rgba(2, 6, 23, 0.95);
-  text-decoration: underline;
-}
-
-.backButton:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Тёмная тема: кнопки светлые (жёсткий приоритет) */
-:global(html.dark) .actionButton,
-:global(html.dark) .skipButton,
-:global(html.dark) .backButton {
-  color: rgba(255, 255, 255, 0.72) !important;
-}
-
-:global(html.dark) .actionButton:hover:not(:disabled),
-:global(html.dark) .skipButton:hover:not(:disabled),
-:global(html.dark) .backButton:hover:not(:disabled) {
-  color: rgba(255, 255, 255, 0.92) !important;
-}
-
-/* В non-chat wizard ответ пользователя не прижимаем к правому краю */
 .centeredUserBubble {
-  margin-left: auto !important;
-  margin-right: auto !important;
-  width: calc(100% - 1rem);
-  max-width: 680px;
+  width: min(42rem, calc(100% - 1rem));
   min-width: 0;
+  margin-right: auto !important;
+  margin-left: auto !important;
 }
 
-.centeredUserBubble .messageContent {
-  text-align: left !important;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  color: rgba(15, 23, 42, 0.94) !important;
-}
-
+.centeredUserBubble .messageContent,
 .centeredUserBubble p {
-  color: rgba(15, 23, 42, 0.94) !important;
+  color: #111111 !important;
+  text-align: left !important;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
-:global(html.dark) .centeredUserBubble .messageContent,
-:global(html.dark) .centeredUserBubble p {
-  color: rgba(255, 255, 255, 0.95) !important;
-}
-
-/* Обёртка поля ввода: выравнивание по ширине сообщений (как в ChatWindow). */
 .inputAlignWrapper {
   width: 100%;
 }
 
 .inputAlignWrapper > div {
-  /* messageInputContainer: полная ширина, фон не обрезан */
-  box-sizing: border-box;
-  max-width: none;
   width: 100%;
-  padding-top: 0.18rem !important;
-  padding-right: 0;
-  padding-bottom: 0.2rem !important;
-  padding-left: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(248, 250, 252, 0.05) 0%,
-    rgba(248, 250, 252, 0.82) 38%,
-    rgba(248, 250, 252, 0.96) 100%
-  ) !important;
-  border-top: 1px solid rgba(15, 23, 42, 0.08) !important;
-  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08) !important;
+  max-width: none;
+  box-sizing: border-box;
+  padding-top: 0.65rem !important;
+  padding-bottom: 0.65rem !important;
+  border-top: 0 !important;
+  background: #111111 !important;
+  box-shadow: none !important;
 }
 
 .inputAlignWrapper > div > div {
-  /* inputWrapper: та же ширина и центрирование, что у сообщения — левые края совпадают */
-  max-width: 980px;
-  width: calc(100% - 0.35rem);
-  margin-left: auto;
-  margin-right: auto;
+  width: min(calc(100% - 1rem), 58rem);
+  max-width: 58rem;
+  margin: 0 auto;
 }
 
 .inputAlignWrapper.inputAlignWrapper textarea {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border-color: rgba(15, 23, 42, 0.12) !important;
-  color: rgba(15, 23, 42, 0.94) !important;
-  -webkit-text-fill-color: rgba(15, 23, 42, 0.94) !important;
+  border-color: rgba(17, 17, 17, 0.14) !important;
+  background: #f8f6ef !important;
+  color: #111111 !important;
   text-shadow: none !important;
+  -webkit-text-fill-color: #111111 !important;
 }
 
 .inputAlignWrapper.inputAlignWrapper textarea::placeholder {
-  color: rgba(15, 23, 42, 0.46) !important;
-  -webkit-text-fill-color: rgba(15, 23, 42, 0.46) !important;
+  color: rgba(17, 17, 17, 0.44) !important;
+  -webkit-text-fill-color: rgba(17, 17, 17, 0.44) !important;
 }
 
-.inputAlignWrapper.inputAlignWrapper textarea:focus {
-  background: rgba(255, 255, 255, 0.98) !important;
-  border-color: rgba(59, 130, 246, 0.42) !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12) !important;
+:global(.dark) .reasonCard,
+:global(html.dark) .reasonCard {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: #526b42;
 }
 
+:global(.dark) .reasonLabel,
+:global(html.dark) .reasonLabel {
+  color: #ffffff;
+}
+
+:global(.dark) .reasonTextarea,
+:global(html.dark) .reasonTextarea {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+:global(.dark) .reasonTextarea::placeholder,
+:global(html.dark) .reasonTextarea::placeholder {
+  color: rgba(255, 255, 255, 0.44) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.44) !important;
+}
+
+:global(.dark) .modal,
+:global(html.dark) .modal {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #1a1a1a;
+}
+
+:global(.dark) .modalTitle,
+:global(.dark) .ideasList,
+:global(html.dark) .modalTitle,
+:global(html.dark) .ideasList {
+  color: #ffffff;
+}
+
+:global(.dark) .modalHint,
+:global(html.dark) .modalHint {
+  color: rgba(255, 255, 255, 0.56);
+}
+
+:global(.dark) .actionButton,
+:global(.dark) .skipButton,
+:global(.dark) .backButton,
+:global(html.dark) .actionButton,
+:global(html.dark) .skipButton,
+:global(html.dark) .backButton {
+  color: #ffffff;
+}
+
+:global(.dark) .centeredUserBubble .messageContent,
+:global(.dark) .centeredUserBubble p,
+:global(html.dark) .centeredUserBubble .messageContent,
+:global(html.dark) .centeredUserBubble p {
+  color: #ffffff !important;
+}
+
+:global(.dark) .inputAlignWrapper > div,
 :global(html.dark) .inputAlignWrapper > div {
-  background: linear-gradient(
-    180deg,
-    rgba(7, 12, 20, 0.04) 0%,
-    rgba(7, 12, 20, 0.82) 38%,
-    rgba(7, 12, 20, 0.96) 100%
-  ) !important;
-  border-top-color: rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.28) !important;
+  background: #f8f6ef !important;
 }
 
+:global(.dark) .inputAlignWrapper.inputAlignWrapper textarea,
 :global(html.dark) .inputAlignWrapper.inputAlignWrapper textarea {
-  background: rgba(15, 23, 42, 0.94) !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  color: rgba(255, 255, 255, 0.94) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.94) !important;
-}
-
-:global(html.dark) .inputAlignWrapper.inputAlignWrapper textarea::placeholder {
-  color: rgba(255, 255, 255, 0.48) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.48) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 @media (max-width: 768px) {
   .messagesStage {
-    padding-top: 4.15rem;
-    padding-bottom: calc(10rem + env(safe-area-inset-bottom));
-    scroll-padding-bottom: calc(8rem + env(safe-area-inset-bottom));
+    padding-top: 4.1rem;
+    padding-bottom: 0;
   }
 
   .reasonsEditor {
-    width: calc(100% - 0.75rem);
-    gap: 0.75rem;
-    margin-bottom: 2rem;
+    width: calc(100% - 0.55rem);
+    max-height: none;
+    margin-bottom: 0.5rem;
   }
 
   .reasonsGrid {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
   .reasonCard {
-    padding: 0.75rem;
-  }
-
-  .deepMindMap {
-    width: calc(100% - 0.5rem);
+    padding: 0.62rem;
   }
 
   .reasonTextarea {
-    min-height: 64px !important;
+    min-height: 4.5rem !important;
+    font-size: 16px !important;
   }
 
-  .messagesStage [data-chat-current-question="true"] {
-    scroll-margin-top: calc(8.35rem + env(safe-area-inset-top));
+  .systemActionsRow {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.35rem;
+  }
+
+  .actionButton,
+  .skipButton,
+  .backButton {
+    font-size: 0.74rem;
+  }
+
+  .deepMindMap {
+    width: calc(100% - 0.25rem);
   }
 
   .inputAlignWrapper > div {
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: 0.42rem !important;
-    padding-bottom: 0.55rem !important;
+    padding: 0.5rem !important;
   }
 
   .inputAlignWrapper > div > div {
-    width: calc(100% - 0.75rem);
-  }
-
-  .mindMapNodeGroup {
-    padding-left: 1rem;
-  }
-
-  .mindMapNodeButton {
-    padding: 0.72rem 0.8rem;
-    border-radius: 0.9rem;
-  }
-
-  .mindMapLabel {
-    font-size: 0.92rem;
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
   .messagesStage {
-    padding-top: 4.35rem;
+    padding-top: 4.25rem;
   }
 
-  .reasonsEditor {
-    width: calc(100% - 0.5rem);
+  .choiceRow {
+    gap: 0.4rem;
+  }
+
+  .choiceButton {
+    width: 100%;
+  }
+
+  .actionsCenter {
+    gap: 0.35rem;
   }
 }
 
-@media (min-width: 769px) {
-  .messagesStage {
-    justify-content: flex-start;
-    padding-top: 4.35rem;
-    padding-bottom: 1.2rem;
-    scroll-padding-bottom: 6.25rem;
-  }
-
-  .bottomDock {
-    position: sticky;
-    bottom: 0;
-    margin-top: 0;
-    z-index: 120;
-  }
-
-  .inputAlignWrapper > div {
-    padding-top: 0.08rem !important;
-    padding-bottom: 0.12rem !important;
+@media (prefers-reduced-motion: reduce) {
+  .slideExitLeft,
+  .slideEnterFromRight {
+    animation: none;
   }
 }

@@ -17,19 +17,19 @@ export const Layout = observer(
         style={{ height: "var(--app-viewport-height, 100dvh)" }}
       >
         <nav
-          className="bg-card shadow-sm border-b border-border shrink-0 sticky top-0 z-[10020]"
+          className="bg-background/92 border-b border-border shrink-0 sticky top-0 z-[10020] backdrop-blur-xl"
           style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
         >
-          <div className="container mx-auto px-4">
-            <div className="flex items-center h-16">
+          <div className="mx-auto w-full max-w-[1480px] px-4">
+            <div className="flex h-14 items-center">
               <Link
                 to="/sessions/list"
-                className="flex items-center space-x-2 text-xl font-bold text-foreground dark:text-white hover:opacity-90"
+                className="flex items-center gap-2.5 text-lg font-[760] tracking-[-0.04em] text-foreground transition-opacity hover:opacity-65"
               >
                 <img
                   src="/seee-logo-128.png"
                   alt="Seee"
-                  className="h-10 w-10 rounded-full"
+                  className="h-8 w-8 rounded-full border border-border bg-card"
                   draggable={false}
                 />
                 <span>Seee</span>

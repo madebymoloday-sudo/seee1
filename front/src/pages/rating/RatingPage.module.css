@@ -1,56 +1,50 @@
 .page {
-  min-height: calc(100dvh - 4rem);
-  padding: 0 0 6.55rem;
-  background: #ffffff;
-  color: #1d1d1f;
+  min-height: calc(100dvh - 3.5rem);
+  padding: 0 0 7rem;
+  background:
+    radial-gradient(circle at 85% 12%, rgba(243, 167, 184, 0.55), transparent 16rem),
+    linear-gradient(180deg, #bfe4ff 0 19rem, #f8f6ef 19rem 100%);
+  color: #111111;
 }
 
 .stickyTop {
   position: sticky;
-  top: 0;
   z-index: 8;
-  padding: 0.95rem 0 0.72rem;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  top: 0;
+  padding: 2.1rem 0 1rem;
+  background: transparent;
 }
 
 .leaguesSection,
 .listSection {
-  max-width: 760px;
+  width: min(100%, 48rem);
   margin: 0 auto;
   padding: 0 1rem;
 }
 
 .sectionTitle {
-  margin: 0 0 0.18rem;
-  font-size: 1.55rem;
-  line-height: 1.05;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  color: #1d1d1f;
+  margin: 0;
+  font-family: "Archivo Variable", sans-serif;
+  font-size: clamp(2.3rem, 7vw, 5rem);
+  font-weight: 790;
+  line-height: 0.88;
+  letter-spacing: -0.075em;
 }
 
-.sectionHint {
-  margin: 0 0 0.85rem;
-  font-size: 0.88rem;
-  color: rgba(29, 29, 31, 0.48);
-}
-
+.sectionHint,
 .subtitle {
-  margin: 0 0 1rem;
-  font-size: 0.95rem;
+  margin: 0.65rem 0 1rem;
+  color: rgba(17, 17, 17, 0.57);
+  font-size: 0.86rem;
   line-height: 1.45;
-  color: rgba(29, 29, 31, 0.62);
 }
 
 .leagueCarousel {
   display: flex;
-  gap: 1rem;
+  gap: 0.7rem;
   overflow-x: auto;
-  padding: 0.2rem 0 0.45rem;
+  padding: 0.3rem 0 0.7rem;
   scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch;
 }
 
 .leagueCarousel::-webkit-scrollbar {
@@ -58,33 +52,14 @@
 }
 
 .leagueBadge {
+  width: 5.5rem;
   flex: 0 0 auto;
-  width: 92px;
   text-align: center;
   scroll-snap-align: center;
 }
 
-.leagueBadgePassed .leagueStatue {
-  filter: saturate(1.02);
-}
-
-.leagueBadgeLocked .leagueStatue {
-  background: linear-gradient(135deg, #f0f0f0 0%, #d4d4d4 100%) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
-}
-
-.leagueBadgeLocked .leagueName {
-  color: rgba(29, 29, 31, 0.28);
-}
-
 .leagueBadgeActive {
-  width: 118px;
-}
-
-.leagueBadgeActive .leagueStatue {
-  width: 4.6rem;
-  height: 4.8rem;
-  transform: translateY(-2px);
+  width: 7rem;
 }
 
 .leagueStatueWrap {
@@ -94,45 +69,56 @@
 }
 
 .leagueStatue {
-  width: 3.5rem;
-  height: 3.7rem;
-  border-radius: 1.1rem 1.1rem 0.95rem 0.95rem;
-  background: var(--league-surface);
-  box-shadow:
-    0 9px 18px rgba(15, 23, 42, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.82);
   position: relative;
-  transition: transform 0.18s ease;
+  width: 3.4rem;
+  height: 3.4rem;
+  border: 1px solid rgba(17, 17, 17, 0.13);
+  border-radius: 50% 50% 50% 18%;
+  background: var(--league-surface);
 }
 
 .leagueStatue::after {
   content: "";
   position: absolute;
-  left: 50%;
-  bottom: -0.42rem;
-  transform: translateX(-50%);
-  width: 2.2rem;
-  height: 0.38rem;
+  right: 18%;
+  bottom: -0.3rem;
+  left: 18%;
+  height: 0.35rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--league-accent) 68%, white);
+  background: var(--league-accent);
+}
+
+.leagueBadgeActive .leagueStatue {
+  width: 4.6rem;
+  height: 4.6rem;
+  border-color: #111111;
+  background: #111111;
+}
+
+.leagueBadgeLocked {
+  opacity: 0.34;
+  filter: grayscale(1);
 }
 
 .leagueLock {
   position: absolute;
+  top: -0.15rem;
   right: -0.15rem;
-  top: -0.25rem;
-  font-size: 0.95rem;
-  filter: grayscale(1);
+  font-size: 0.78rem;
 }
 
 .leagueName {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #1d1d1f;
+  color: #111111;
+  font-size: 0.72rem;
+  font-weight: 710;
 }
 
 .listSection {
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1.4rem;
+  padding-bottom: 1.4rem;
+  border-radius: 1.8rem 1.8rem 1.8rem 0.65rem;
+  background: rgba(255, 255, 255, 0.84);
 }
 
 .fullList {
@@ -144,59 +130,58 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  padding: 0.82rem 0.1rem;
+  gap: 0.75rem;
+  padding: 0.72rem 0.45rem;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.08);
 }
 
-.row + .row {
-  margin-top: 0.08rem;
+.row:last-child {
+  border-bottom: 0;
 }
 
 .rowCurrent {
-  margin-inline: -0.12rem;
-  padding-inline: 0.22rem;
-  border-radius: 0.9rem;
-  background: rgba(236, 210, 155, 0.24);
+  border-radius: 1rem;
+  background: #dbe9c9;
 }
 
 .rowCurrent::before {
   content: "";
-  position: absolute;
-  left: 0.02rem;
-  top: 0.45rem;
-  bottom: 0.45rem;
   width: 0.28rem;
+  align-self: stretch;
   border-radius: 999px;
-  background: linear-gradient(180deg, #f6d372 0%, #d8a73f 100%);
+  background: #111111;
 }
 
 .rowRank {
   width: 2rem;
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: rgba(29, 29, 31, 0.44);
+  flex: 0 0 auto;
+  color: rgba(17, 17, 17, 0.45);
+  font-size: 0.88rem;
+  font-weight: 730;
   text-align: center;
-  flex-shrink: 0;
 }
 
 .rowRankTop {
-  font-size: 1.05rem;
+  color: #111111;
+}
+
+.leagueBadgePassed .leagueStatue {
+  filter: saturate(0.55);
+  opacity: 0.78;
 }
 
 .rowAvatar {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 999px;
-  background: var(--avatar-surface);
+  width: 2.8rem;
+  height: 2.8rem;
   display: grid;
   place-items: center;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--avatar-surface);
 }
 
 .avatarEmoji {
-  font-size: 1.5rem;
-  line-height: 1;
+  font-size: 1.3rem;
 }
 
 .rowMeta {
@@ -205,143 +190,109 @@
 }
 
 .rowName {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #1d1d1f;
+  overflow: hidden;
+  color: #111111;
+  font-size: 0.9rem;
+  font-weight: 710;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rowLeague {
-  margin-top: 0.15rem;
-  font-size: 0.82rem;
-  color: rgba(29, 29, 31, 0.5);
+  margin-top: 0.1rem;
+  color: rgba(17, 17, 17, 0.5);
+  font-size: 0.72rem;
 }
 
 .rowPoints {
   margin-left: auto;
-  font-size: 0.96rem;
-  font-weight: 700;
-  color: rgba(29, 29, 31, 0.64);
+  color: #111111;
+  font-size: 0.84rem;
+  font-weight: 720;
   white-space: nowrap;
 }
 
 .zoneMarker {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.95rem 0 0.55rem;
-  font-size: 0.84rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  gap: 0.4rem;
+  padding: 0.85rem 0.45rem 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .zoneMarkerUp {
-  color: #2f9d47;
+  color: #54793d;
 }
 
 .zoneMarkerDown {
-  color: #d24b4b;
+  color: #a85062;
 }
 
 .zoneArrow {
-  font-size: 0.95rem;
-  line-height: 1;
+  font-size: 0.85rem;
+}
+
+:global(.dark) .page,
+:global(html.dark) .page {
+  background:
+    radial-gradient(circle at 85% 12%, rgba(169, 105, 120, 0.34), transparent 16rem),
+    linear-gradient(180deg, #315365 0 19rem, #111111 19rem 100%);
+  color: #ffffff;
+}
+
+:global(.dark) .sectionTitle,
+:global(.dark) .leagueName,
+:global(html.dark) .sectionTitle,
+:global(html.dark) .leagueName {
+  color: #ffffff;
+}
+
+:global(.dark) .listSection,
+:global(html.dark) .listSection {
+  background: #1b1b1b;
+}
+
+:global(.dark) .row,
+:global(html.dark) .row {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .rowCurrent,
+:global(html.dark) .rowCurrent {
+  background: #34452d;
+}
+
+:global(.dark) .rowName,
+:global(.dark) .rowPoints,
+:global(html.dark) .rowName,
+:global(html.dark) .rowPoints {
+  color: #ffffff;
 }
 
 @media (max-width: 640px) {
   .page {
-    padding: 0 0 6.35rem;
+    background: linear-gradient(180deg, #bfe4ff 0 16rem, #f8f6ef 16rem 100%);
   }
 
   .stickyTop {
-    padding-top: 0.9rem;
-  }
-
-  .leaguesSection,
-  .listSection {
-    padding: 0 0.9rem;
+    padding-top: 1.25rem;
   }
 
   .sectionTitle {
-    font-size: 1.38rem;
+    font-size: 2.8rem;
   }
 
-  .rowAvatar {
-    width: 2.7rem;
-    height: 2.7rem;
+  .listSection {
+    margin-right: 0.55rem;
+    margin-left: 0.55rem;
+    padding-right: 0.55rem;
+    padding-left: 0.55rem;
   }
 
-  .avatarEmoji {
-    font-size: 1.35rem;
+  .leaguesSection {
+    padding: 0 0.75rem;
   }
-
-  .leagueBadge {
-    width: 84px;
-  }
-
-  .leagueBadgeActive {
-    width: 104px;
-  }
-
-  .row {
-    gap: 0.68rem;
-    padding: 0.78rem 0.05rem;
-  }
-
-  .rowPoints {
-    font-size: 0.9rem;
-  }
-}
-
-:global(html.dark) .page {
-  background:
-    radial-gradient(circle at 84% 10%, rgba(96, 165, 250, 0.16) 0%, rgba(96, 165, 250, 0) 34%),
-    radial-gradient(circle at 14% 92%, rgba(244, 114, 182, 0.12) 0%, rgba(244, 114, 182, 0) 38%),
-    linear-gradient(160deg, #07101c 0%, #0b1324 46%, #0a1020 100%);
-  color: rgba(241, 245, 249, 0.96);
-}
-
-:global(html.dark) .stickyTop {
-  background: rgba(7, 16, 28, 0.82);
-}
-
-:global(html.dark) .sectionTitle,
-:global(html.dark) .rowName,
-:global(html.dark) .leagueName {
-  color: rgba(248, 250, 252, 0.96);
-}
-
-:global(html.dark) .subtitle,
-:global(html.dark) .sectionHint,
-:global(html.dark) .rowLeague,
-:global(html.dark) .rowRank,
-:global(html.dark) .rowPoints {
-  color: rgba(226, 232, 240, 0.66);
-}
-
-:global(html.dark) .leagueBadgeLocked .leagueStatue {
-  background: linear-gradient(135deg, #263244 0%, #182232 100%) !important;
-  box-shadow:
-    0 8px 20px rgba(2, 6, 23, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-:global(html.dark) .leagueBadgeLocked .leagueName {
-  color: rgba(226, 232, 240, 0.28);
-}
-
-:global(html.dark) .rowCurrent {
-  background: rgba(214, 165, 78, 0.12);
-}
-
-:global(html.dark) .rowCurrent::before {
-  background: linear-gradient(180deg, #f7da7e 0%, #d8a73f 100%);
-}
-
-:global(html.dark) .zoneMarkerUp {
-  color: #6fda7f;
-}
-
-:global(html.dark) .zoneMarkerDown {
-  color: #ff8080;
 }

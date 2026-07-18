@@ -892,3 +892,420 @@
   border-color: rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.9);
 }
+
+/* Seee landscape editorial layer */
+.collectionPage {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 87% 12%, #f3a7b8 0 6.5rem, transparent 6.6rem),
+    linear-gradient(180deg, #bfe4ff 0 23rem, #f8f6ef 23rem 100%);
+  color: #111111;
+}
+
+.collectionPage::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  right: -12vw;
+  bottom: -28vh;
+  left: -12vw;
+  height: 58vh;
+  border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+  background: #78a65a;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.archivistWelcome {
+  position: relative;
+  padding-top: clamp(1rem, 4vh, 2.8rem);
+}
+
+.archivistWelcomeLogoWrap {
+  width: 4.5rem;
+  height: 4.5rem;
+  margin-bottom: -1.6rem;
+  position: relative;
+  z-index: 5;
+  border: 0.45rem solid #111111;
+  background: #f8f6ef;
+  box-shadow: 0 1rem 2.8rem rgba(17, 17, 17, 0.18);
+}
+
+.archivistWelcomeLogo {
+  width: 100%;
+  height: 100%;
+}
+
+.archivistWelcomeCard {
+  width: min(92vw, 61rem);
+  min-height: 12rem;
+  padding: clamp(2.7rem, 6vw, 4.5rem) clamp(1.4rem, 5vw, 4.5rem) 2rem;
+  border: 1px solid rgba(17, 17, 17, 0.1);
+  border-radius: 2.6rem 2.6rem 2.6rem 0.8rem;
+  background: rgba(248, 246, 239, 0.95);
+  box-shadow: 0 2rem 5rem rgba(17, 17, 17, 0.12);
+}
+
+.archivistWelcomeTitle {
+  max-width: 9ch;
+  margin-bottom: 0.75rem;
+  font-size: clamp(3.2rem, 8vw, 6.7rem);
+  font-weight: 770;
+  line-height: 0.82;
+  letter-spacing: -0.075em;
+}
+
+.archivistWelcomeText {
+  max-width: 46ch;
+  font-family: "Manrope Variable", sans-serif;
+  font-size: clamp(0.95rem, 1.7vw, 1.2rem);
+  font-weight: 580;
+  line-height: 1.48;
+}
+
+.archivistTrainingProgress {
+  color: #111111;
+  background: #bfe4ff;
+}
+
+.archivistWelcomeScene {
+  width: min(92vw, 68rem);
+  min-height: 22rem;
+}
+
+.archivistCharacter {
+  left: 2%;
+  width: min(23vw, 15rem);
+  filter: drop-shadow(0 2rem 2.5rem rgba(17, 17, 17, 0.18));
+}
+
+.archivistControls {
+  right: 18%;
+  bottom: 3rem;
+  width: min(32vw, 22rem);
+  gap: 0.55rem;
+}
+
+.archivistChoiceBar {
+  gap: 0.55rem;
+}
+
+.archivistChoiceButton {
+  width: 100%;
+  min-height: 3.25rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  border-radius: 1.6rem 1.6rem 1.6rem 0.5rem;
+  color: #ffffff;
+  background: #111111;
+  box-shadow: 0 0.8rem 2rem rgba(17, 17, 17, 0.16);
+}
+
+.archivistChoiceButton:hover,
+.archivistChoiceButton:focus-visible {
+  border-color: transparent;
+  color: #111111;
+  background: #bfe4ff;
+  box-shadow: 0 1rem 2.5rem rgba(17, 17, 17, 0.14);
+}
+
+.archivistComposer {
+  border-radius: 1.6rem 1.6rem 1.6rem 0.5rem;
+  background: #111111;
+}
+
+.archivistComposerInput {
+  border: 0;
+  color: #111111;
+  background: #f8f6ef;
+}
+
+.archivistComposerButton {
+  color: #111111;
+  background: #bfe4ff;
+  box-shadow: none;
+}
+
+.archivistArchiveButton {
+  right: 0;
+  width: min(31vw, 20rem);
+  filter: saturate(0.72);
+}
+
+.header {
+  width: min(100% - 2rem, 74rem);
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 4rem) 0 2rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.headerTitle {
+  align-items: flex-end;
+}
+
+.titleRow {
+  align-items: flex-end;
+}
+
+.logo {
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 0.25rem;
+  border: 0.35rem solid #111111;
+  border-radius: 50%;
+  background: #f8f6ef;
+}
+
+.title {
+  margin: 0;
+  color: #111111;
+  font-family: "Archivo Variable", sans-serif;
+  font-size: clamp(3rem, 8vw, 6.8rem);
+  font-weight: 760;
+  line-height: 0.83;
+  letter-spacing: -0.075em;
+}
+
+.plusButton {
+  width: 4.3rem;
+  height: 4.3rem;
+  border: 0;
+  border-radius: 52% 48% 46% 54% / 44% 58% 42% 56%;
+  color: #ffffff;
+  background: #111111;
+  box-shadow: 0 1rem 2.4rem rgba(17, 17, 17, 0.18);
+}
+
+.plusButton:hover:not(:disabled) {
+  color: #111111;
+  background: #78a65a;
+}
+
+.searchBar {
+  width: min(100%, 43rem);
+  margin: 1.8rem 0 0 auto;
+}
+
+.searchInput {
+  min-height: 3.5rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  border-radius: 1.8rem 1.8rem 1.8rem 0.55rem;
+  color: #111111;
+  background: rgba(248, 246, 239, 0.94);
+  box-shadow: 0 0.75rem 2rem rgba(17, 17, 17, 0.08);
+}
+
+.sortButton {
+  width: 3.5rem;
+  height: 3.5rem;
+  border: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #111111;
+}
+
+.sortMenu {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.4rem 1.4rem 0.5rem 1.4rem;
+  background: #111111;
+  box-shadow: 0 1.4rem 4rem rgba(17, 17, 17, 0.26);
+}
+
+.sortMenuItem {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.sortMenuItem:hover,
+.sortMenuItemActive {
+  color: #111111;
+  background: #bfe4ff;
+}
+
+.telegramPrompt {
+  width: min(100% - 2rem, 64rem);
+  margin: 0 auto 1.5rem;
+  border: 0;
+  border-radius: 1.6rem 1.6rem 1.6rem 0.5rem;
+  color: #ffffff;
+  background: #111111;
+  box-shadow: 0 1rem 3rem rgba(17, 17, 17, 0.17);
+}
+
+.telegramPromptButtonPrimary {
+  color: #111111;
+  background: #bfe4ff;
+}
+
+.telegramPromptButtonSecondary {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.foldersContainer {
+  width: min(100% - 2rem, 64rem);
+  margin: 0 auto;
+  padding-bottom: 4rem;
+}
+
+.foldersList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.loadingState,
+.errorState,
+.emptyState {
+  min-height: 15rem;
+  display: grid;
+  place-content: center;
+  border-radius: 2.4rem 2.4rem 2.4rem 0.7rem;
+  color: #111111;
+  background: rgba(248, 246, 239, 0.94);
+}
+
+.infoModalOverlay {
+  background: rgba(17, 17, 17, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.infoModal {
+  border: 0;
+  border-radius: 2rem 2rem 2rem 0.65rem;
+  color: #111111;
+  background: #f8f6ef;
+  box-shadow: 0 2rem 6rem rgba(17, 17, 17, 0.34);
+}
+
+.infoItem {
+  border: 0;
+  border-radius: 1.1rem;
+  background: #dce9cd;
+}
+
+.ideaChip {
+  border: 0;
+  color: #111111;
+  background: #bfe4ff;
+  box-shadow: none;
+}
+
+:global(.dark) .collectionPage,
+:global(html.dark) .collectionPage {
+  background:
+    radial-gradient(circle at 87% 12%, #9d6372 0 6.5rem, transparent 6.6rem),
+    linear-gradient(180deg, #1a3442 0 23rem, #111111 23rem 100%);
+}
+
+:global(.dark) .archivistWelcomeCard,
+:global(.dark) .infoModal,
+:global(.dark) .loadingState,
+:global(.dark) .errorState,
+:global(.dark) .emptyState,
+:global(html.dark) .archivistWelcomeCard,
+:global(html.dark) .infoModal,
+:global(html.dark) .loadingState,
+:global(html.dark) .errorState,
+:global(html.dark) .emptyState {
+  color: #ffffff;
+  background: #1d1d1d;
+}
+
+:global(.dark) .archivistWelcomeTitle,
+:global(.dark) .archivistWelcomeText,
+:global(.dark) .title,
+:global(html.dark) .archivistWelcomeTitle,
+:global(html.dark) .archivistWelcomeText,
+:global(html.dark) .title {
+  color: #ffffff;
+}
+
+@media (max-width: 760px) {
+  .collectionPage {
+    background:
+      radial-gradient(circle at 91% 7%, #f3a7b8 0 3.8rem, transparent 3.9rem),
+      linear-gradient(180deg, #bfe4ff 0 16rem, #f8f6ef 16rem 100%);
+  }
+
+  .archivistWelcome {
+    overflow: auto;
+    padding: 1rem 0.8rem 7rem;
+  }
+
+  .archivistWelcomeCard {
+    min-height: 0;
+    padding: 2.8rem 1.2rem 1.3rem;
+    border-radius: 2rem 2rem 2rem 0.65rem;
+  }
+
+  .archivistWelcomeTitle {
+    font-size: clamp(3rem, 18vw, 4.8rem);
+  }
+
+  .archivistWelcomeScene {
+    min-height: 27rem;
+  }
+
+  .archivistCharacter {
+    left: -1rem;
+    width: 10rem;
+  }
+
+  .archivistControls {
+    right: 0;
+    bottom: 5rem;
+    width: calc(100% - 3rem);
+  }
+
+  .archivistArchiveButton {
+    right: -0.5rem;
+    bottom: -1rem;
+    width: 10rem;
+  }
+
+  .header {
+    padding-top: 1.5rem;
+  }
+
+  .headerTitle {
+    align-items: center;
+  }
+
+  .logo {
+    display: none;
+  }
+
+  .title {
+    font-size: clamp(2.8rem, 16vw, 4.6rem);
+  }
+
+  .plusButton {
+    width: 3.6rem;
+    height: 3.6rem;
+  }
+
+  .searchBar {
+    margin-top: 1.8rem;
+  }
+
+  .foldersList {
+    grid-template-columns: 1fr;
+  }
+
+  .telegramPrompt {
+    align-items: stretch;
+  }
+
+  .telegramPromptActions {
+    width: 100%;
+  }
+
+  .infoModal {
+    width: calc(100vw - 1rem);
+    max-height: calc(100dvh - 1rem);
+    border-radius: 1.5rem 1.5rem 1.5rem 0.5rem;
+  }
+}

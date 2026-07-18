@@ -1,130 +1,134 @@
-/* Страница сессий в стиле архивариуса */
-
 .sessionsPage {
-  min-height: 100vh;
-  padding: 2rem 1.5rem 6rem 1.5rem;
-  padding-bottom: 6rem; /* Отступ для нижней панели навигации */
-  background: linear-gradient(
-    135deg,
-    #f8fafc 0%,
-    #f1f5f9 25%,
-    #e2e8f0 50%,
-    #f1f5f9 75%,
-    #f8fafc 100%
-  );
   position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden auto;
+  padding: clamp(1.25rem, 4vw, 3rem) max(1.1rem, calc((100vw - 70rem) / 2)) 8rem;
+  background:
+    radial-gradient(circle at 88% 10%, rgba(243, 167, 184, 0.72) 0 6rem, transparent 6.1rem),
+    linear-gradient(180deg, #bfe4ff 0 21rem, #f8f6ef 21rem 100%);
+  color: #111111;
 }
 
-/* Заголовок */
+.sessionsPage::before {
+  content: "";
+  position: absolute;
+  top: 11rem;
+  right: -12%;
+  left: -12%;
+  height: 19rem;
+  border-radius: 50%;
+  background: #78a65a;
+  transform: translateY(12rem);
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.header,
+.searchSection,
+.foldersContainer {
+  position: relative;
+  z-index: 1;
+}
+
 .header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
 }
 
 .title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.9);
+  max-width: 8ch;
   margin: 0;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(59, 130, 246, 0.8) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #111111;
+  font-family: "Archivo Variable", sans-serif;
+  font-size: clamp(3.2rem, 9vw, 7.4rem);
+  font-weight: 760;
+  line-height: 0.82;
+  letter-spacing: -0.075em;
+}
+
+.newSessionButton,
+.filterButton {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 0;
+  color: #ffffff;
+  background: #111111;
+  cursor: pointer;
+  box-shadow: 0 1rem 2.6rem rgba(17, 17, 17, 0.18);
+  transition: transform 180ms ease, background 180ms ease;
 }
 
 .newSessionButton {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.9) 0%,
-    rgba(99, 102, 241, 0.9) 100%
-  );
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: none;
-  box-shadow: 
-    0 4px 12px rgba(59, 130, 246, 0.3),
-    0 2px 4px rgba(59, 130, 246, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: white;
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 54% 46% 48% 52% / 42% 58% 42% 58%;
 }
 
-.newSessionButton:hover:not(:disabled) {
-  transform: scale(1.05) rotate(90deg);
-  box-shadow: 
-    0 6px 20px rgba(59, 130, 246, 0.4),
-    0 3px 8px rgba(59, 130, 246, 0.3);
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 1) 0%,
-    rgba(99, 102, 241, 1) 100%
-  );
+.newSessionButton:hover:not(:disabled),
+.filterButton:hover {
+  background: #243f2d;
+  transform: translateY(-2px) rotate(2deg);
 }
 
 .newSessionButton:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .plusIcon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.7rem;
+  height: 1.7rem;
 }
 
-/* Поиск и фильтр */
 .searchSection {
+  width: min(100%, 48rem);
   display: flex;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
+  gap: 0.7rem;
+  margin: 0 0 2rem auto;
 }
 
 .searchWrapper {
-  flex: 1;
   position: relative;
   display: flex;
   align-items: center;
+  flex: 1;
 }
 
 .searchIcon {
   position: absolute;
-  left: 1rem;
-  width: 1.25rem;
-  height: 1.25rem;
-  color: rgba(0, 0, 0, 0.5);
+  left: 1.15rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: rgba(17, 17, 17, 0.56);
   pointer-events: none;
 }
 
 .searchInput {
   width: 100%;
-  padding: 0.875rem 1rem 0.875rem 2.75rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  color: rgba(0, 0, 0, 0.85);
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  min-height: 3.55rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  border-radius: 1.8rem 1.8rem 1.8rem 0.65rem;
+  outline: none;
+  padding: 0.9rem 1.1rem 0.9rem 3rem;
+  color: #111111;
+  background: rgba(248, 246, 239, 0.93);
+  font: 620 0.96rem/1.2 "Manrope Variable", sans-serif;
+  box-shadow: 0 0.65rem 1.8rem rgba(17, 17, 17, 0.08);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .searchInput:focus {
-  outline: none;
-  background: rgba(255, 255, 255, 1);
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-color: #111111;
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.09);
 }
 
 .searchInput::placeholder {
-  color: rgba(0, 0, 0, 0.4);
+  color: rgba(17, 17, 17, 0.42);
 }
 
 .filterWrapper {
@@ -132,226 +136,154 @@
 }
 
 .filterButton {
-  width: 48px;
-  height: 48px;
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: rgba(0, 0, 0, 0.7);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.filterButton:hover {
-  background: rgba(255, 255, 255, 1);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-color: rgba(59, 130, 246, 0.3);
+  width: 3.55rem;
+  height: 3.55rem;
+  border-radius: 50%;
 }
 
 .filterIcon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .filterDropdown {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  top: calc(100% + 0.65rem);
   right: 0;
-  min-width: 240px;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 0.5rem;
   z-index: 100;
-  animation: fadeInDown 0.2s ease;
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  min-width: 17rem;
+  padding: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 1.35rem 1.35rem 0.45rem 1.35rem;
+  background: #111111;
+  box-shadow: 0 1.5rem 4rem rgba(17, 17, 17, 0.25);
+  animation: filter-arrive 180ms ease both;
 }
 
 .filterOption {
   width: 100%;
-  padding: 0.75rem 1rem;
+  border: 0;
+  border-radius: 0.8rem;
+  padding: 0.78rem 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
   background: transparent;
-  border: none;
-  border-radius: 0.5rem;
+  font: 620 0.88rem/1.25 "Manrope Variable", sans-serif;
   text-align: left;
-  font-size: 0.95rem;
-  color: rgba(0, 0, 0, 0.85);
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
 }
 
 .filterOption:hover {
-  background: rgba(59, 130, 246, 0.08);
-  color: rgba(59, 130, 246, 0.9);
+  color: #111111;
+  background: #bfe4ff;
 }
 
-/* Контейнер папок */
+@keyframes filter-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(-0.4rem);
+  }
+}
+
 .foldersContainer {
-  max-width: 800px;
-  margin: 0 auto;
+  width: min(100%, 48rem);
+  margin-left: auto;
 }
 
 .foldersList {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  display: grid;
+  gap: 0.85rem;
 }
 
 .loadingState,
 .errorState,
 .emptyState {
+  min-height: 16rem;
+  display: grid;
+  place-content: center;
+  padding: 2rem;
+  border-radius: 2.4rem 2.4rem 2.4rem 0.8rem;
+  color: #111111;
+  background: rgba(248, 246, 239, 0.9);
   text-align: center;
-  padding: 4rem 1rem;
-  color: rgba(0, 0, 0, 0.6);
 }
 
 .emptyTitle {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: rgba(0, 0, 0, 0.7);
+  margin: 0;
+  font-family: "Archivo Variable", sans-serif;
+  font-size: clamp(1.6rem, 4vw, 2.5rem);
+  font-weight: 720;
+  letter-spacing: -0.05em;
 }
 
 .emptyText {
-  font-size: 0.95rem;
-  color: rgba(0, 0, 0, 0.5);
+  max-width: 30ch;
+  margin: 0.45rem auto 0;
+  color: rgba(17, 17, 17, 0.56);
+  font-size: 0.9rem;
 }
 
-/* Тёмный режим */
-:global(.dark) .sessionsPage {
-  background: linear-gradient(
-    135deg,
-    #161616 0%,
-    #0d0d0d 50%,
-    #161616 100%
-  );
-}
-
-:global(.dark) .title {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-:global(.dark) .searchInput {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-:global(.dark) .searchInput::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-:global(.dark) .searchIcon {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-:global(.dark) .filterButton {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-:global(.dark) .filterDropdown {
-  background: rgba(0, 0, 0, 0.8);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-:global(.dark) .filterOption {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-:global(.dark) .filterOption:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-:global(.dark) .emptyTitle,
-:global(.dark) .emptyText {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-:global(.dark) .sessionsPage {
+:global(.dark) .sessionsPage,
+:global(html.dark) .sessionsPage {
   background:
-    radial-gradient(120% 90% at 10% 0%, rgba(255, 213, 150, 0.07) 0%, rgba(255, 213, 150, 0) 52%),
-    radial-gradient(110% 95% at 88% 100%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 62%),
-    linear-gradient(180deg, #151515 0%, #0a0a0a 100%);
+    radial-gradient(circle at 88% 10%, rgba(169, 105, 120, 0.54) 0 6rem, transparent 6.1rem),
+    linear-gradient(180deg, #1a3442 0 21rem, #111111 21rem 100%);
+  color: #ffffff;
 }
 
-:global(.dark) .title {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.7) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+:global(.dark) .title,
+:global(html.dark) .title {
+  color: #ffffff;
 }
 
-:global(.dark) .newSessionButton {
-  background: linear-gradient(
-    135deg,
-    rgba(44, 44, 44, 0.95) 0%,
-    rgba(20, 20, 20, 0.95) 100%
-  );
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.45),
-    0 2px 4px rgba(0, 0, 0, 0.35);
-}
-
-:global(.dark) .newSessionButton:hover:not(:disabled) {
-  box-shadow: 
-    0 6px 20px rgba(0, 0, 0, 0.55),
-    0 3px 8px rgba(0, 0, 0, 0.42);
-}
-
-:global(.dark) .searchInput {
-  background: rgba(20, 20, 20, 0.9);
-  border-color: rgba(255, 255, 255, 0.16);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-:global(.dark) .searchInput:focus {
-  background: rgba(24, 24, 24, 0.98);
-  border-color: rgba(255, 255, 255, 0.28);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12), 0 2px 6px rgba(0, 0, 0, 0.45);
-}
-
-:global(.dark) .filterButton {
-  background: rgba(20, 20, 20, 0.92);
-  border-color: rgba(255, 255, 255, 0.16);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-:global(.dark) .filterButton:hover {
-  background: rgba(28, 28, 28, 0.98);
-  border-color: rgba(255, 255, 255, 0.28);
-}
-
-:global(.dark) .filterDropdown {
-  background: rgba(10, 10, 10, 0.98);
+:global(.dark) .searchInput,
+:global(.dark) .loadingState,
+:global(.dark) .errorState,
+:global(.dark) .emptyState,
+:global(html.dark) .searchInput,
+:global(html.dark) .loadingState,
+:global(html.dark) .errorState,
+:global(html.dark) .emptyState {
   border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  background: #1d1d1d;
 }
 
-:global(.dark) .filterOption {
-  color: rgba(255, 255, 255, 0.9);
+:global(.dark) .searchIcon,
+:global(html.dark) .searchIcon {
+  color: rgba(255, 255, 255, 0.55);
 }
 
-:global(.dark) .filterOption:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.98);
+@media (max-width: 640px) {
+  .sessionsPage {
+    padding-top: 1.6rem;
+    background:
+      radial-gradient(circle at 92% 7%, rgba(243, 167, 184, 0.75) 0 3.5rem, transparent 3.6rem),
+      linear-gradient(180deg, #bfe4ff 0 15rem, #f8f6ef 15rem 100%);
+  }
+
+  .header {
+    align-items: center;
+  }
+
+  .title {
+    font-size: clamp(2.8rem, 16vw, 4.2rem);
+  }
+
+  .newSessionButton {
+    width: 3.6rem;
+    height: 3.6rem;
+  }
+
+  .searchSection {
+    margin-top: 2rem;
+  }
+
+  .filterDropdown {
+    position: fixed;
+    right: 0.75rem;
+    bottom: 5.8rem;
+    left: 0.75rem;
+    top: auto;
+    min-width: 0;
+  }
 }

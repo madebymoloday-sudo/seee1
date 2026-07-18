@@ -27,15 +27,25 @@ const AppContent = observer(() => {
   // Показываем загрузку пока проверяем авторизацию
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <img
-            src="/seee-logo-128.png"
-            alt="Seee"
-            className="h-16 w-16 rounded-full bg-white/90 shadow-sm"
-            draggable={false}
-          />
-          <div className="text-2xl font-semibold tracking-tight">Cииикундочку!</div>
+      <div className="seee-loading-screen">
+        <div className="seee-loading-sun" aria-hidden="true" />
+        <div className="seee-loading-hill" aria-hidden="true" />
+        <div className="seee-loading-content">
+          <div className="seee-loading-mark">
+            <span className="seee-loading-kicker">SEEE / THINKING SYSTEM</span>
+            <div className="seee-loading-logo-wrap">
+              <img
+                src="/seee-logo-128.png"
+                alt="Seee"
+                className="seee-loading-logo"
+                draggable={false}
+              />
+            </div>
+          </div>
+          <div className="seee-loading-copy">Сииикундочку!</div>
+          <div className="seee-loading-line" aria-hidden="true">
+            <span />
+          </div>
         </div>
       </div>
     );

@@ -903,3 +903,132 @@
     font-size: 0.88rem;
   }
 }
+
+/* Seee editorial skin */
+.sessionHeader {
+  padding: max(0.65rem, env(safe-area-inset-top)) 1rem 0.65rem;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.12);
+  background: #f8f6ef;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.headerContent {
+  width: min(100%, 70rem);
+  min-height: 3.35rem;
+}
+
+.sessionTitleButton {
+  min-height: 2.7rem;
+  padding: 0.55rem 0.8rem;
+  border-color: rgba(17, 17, 17, 0.12);
+  border-radius: 1rem 1rem 1rem 0.35rem;
+  background: #bfe4ff;
+}
+
+.sessionTitleButton:hover {
+  border-color: #111111;
+  background: #bfe4ff;
+}
+
+.sessionTitle {
+  color: #111111;
+  font-family: "Archivo Variable", sans-serif;
+  font-size: 1rem;
+  font-weight: 710;
+}
+
+.icon,
+.chevron {
+  color: #111111;
+}
+
+.coinsPill {
+  padding: 0.5rem 0.75rem;
+  border-color: rgba(17, 17, 17, 0.12);
+  border-radius: 1rem;
+  background: #dbe9c9;
+  box-shadow: none;
+  color: #111111;
+}
+
+.coinsPill:hover {
+  box-shadow: none;
+  filter: none;
+}
+
+.dropdownMenu,
+.coinsPopover {
+  border-color: rgba(255, 255, 255, 0.14);
+  border-radius: 1.2rem;
+  background: #111111;
+  box-shadow: 0 24px 54px rgba(17, 17, 17, 0.25);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.menuItem,
+.themeItem {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.menuItem:hover,
+.themeItem:hover {
+  background: rgba(191, 228, 255, 0.14);
+}
+
+.coinsRewardBanner,
+.dailyPracticeBanner {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: #111111;
+  box-shadow: 0 22px 48px rgba(17, 17, 17, 0.22);
+}
+
+:global(.dark) .sessionHeader,
+:global(html.dark) .sessionHeader {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #111111;
+}
+
+:global(.dark) .sessionTitleButton,
+:global(html.dark) .sessionTitleButton {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #6babc9;
+}
+
+:global(.dark) .sessionTitle,
+:global(.dark) .icon,
+:global(.dark) .chevron,
+:global(html.dark) .sessionTitle,
+:global(html.dark) .icon,
+:global(html.dark) .chevron {
+  color: #ffffff;
+}
+
+:global(.dark) .coinsPill,
+:global(html.dark) .coinsPill {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #526b42;
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .sessionHeader {
+    padding: max(0.45rem, env(safe-area-inset-top)) 0.55rem 0.45rem;
+  }
+
+  .headerContent {
+    min-height: 3rem;
+  }
+
+  .sessionTitleButton {
+    min-height: 2.55rem;
+    padding: 0.45rem 0.65rem;
+  }
+
+  .sessionTitle {
+    max-width: min(52vw, 17rem);
+    font-size: 0.9rem;
+  }
+}

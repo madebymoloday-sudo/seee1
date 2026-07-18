@@ -1,165 +1,142 @@
-/* Нижняя панель навигации в стиле Apple 2007 */
-
 .bottomNav {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.25) 0%,
-    rgba(255, 255, 255, 0.2) 100%
-  );
-  backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
-  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.15);
-  border-top: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
   z-index: 10030;
+  right: 50%;
+  bottom: max(0.85rem, env(safe-area-inset-bottom));
+  width: min(31rem, calc(100vw - 1.5rem));
+  min-height: 4.35rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  padding: 0.38rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1.5rem;
+  background: #111111;
+  box-shadow: 0 20px 50px rgba(17, 17, 17, 0.24);
+  transform: translateX(50%);
 }
 
 .navButton {
+  min-width: 0;
+  min-height: 3.45rem;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.38rem 0.55rem;
+  border: 0;
+  border-radius: 1.1rem;
   background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem 1rem;
-  border-radius: 0.75rem;
-  transition: all 0.2s ease;
-  min-width: 60px;
-}
-
-.navButtonPrimary .navLabel {
-  font-weight: 700;
+  color: rgba(255, 255, 255, 0.62);
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
 .navButton:hover {
-  transform: translateY(-2px);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.navButtonPrimary {
+  background: #bfe4ff;
+  color: #111111;
+}
+
+.navButtonPrimary:hover {
+  color: #111111;
 }
 
 .navIconBubble {
-  width: 2.05rem;
-  height: 2.05rem;
-  border-radius: 0.6rem;
+  width: 1.75rem;
+  height: 1.75rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background:
-    linear-gradient(165deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.32) 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(0, 0, 0, 0.08) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.78);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .navIconBubblePrimary {
-  background:
-    linear-gradient(165deg, rgba(255, 237, 184, 0.98) 0%, rgba(236, 191, 93, 0.9) 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(0, 0, 0, 0.08) 100%);
-  border-color: rgba(235, 187, 74, 0.85);
-  box-shadow:
-    0 5px 16px rgba(231, 187, 85, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.navButtonPrimary:hover .navIconBubblePrimary {
-  box-shadow:
-    0 8px 22px rgba(231, 187, 85, 0.44),
-    0 0 18px rgba(231, 187, 85, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  background: #111111;
+  color: #ffffff;
 }
 
 .navIcon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: rgba(0, 0, 0, 0.7);
-  transition: all 0.2s ease;
-}
-
-.emojiIcon {
-  font-size: 1rem;
-  line-height: 1;
-  filter: saturate(0.82) contrast(0.95);
-}
-
-.navButton:hover .navIcon {
-  color: rgba(0, 0, 0, 0.9);
-  transform: scale(1.02);
-}
-
-.navButton:hover .navIconBubble {
-  transform: translateY(-1px) scale(1.04);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 1.8;
 }
 
 .navLabel {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.7);
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  font-family: "Archivo Variable", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 690;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.navButton:hover .navLabel {
-  color: rgba(0, 0, 0, 0.9);
+:global(.dark) .bottomNav,
+:global(html.dark) .bottomNav {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: #f8f6ef;
 }
 
-/* Тёмный режим */
-:global(.dark) .bottomNav {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.7) 0%,
-    rgba(0, 0, 0, 0.6) 100%
-  );
-  border-color: rgba(255, 255, 255, 0.2);
+:global(.dark) .navButton,
+:global(html.dark) .navButton {
+  color: rgba(17, 17, 17, 0.62);
 }
 
-:global(.dark) .navButton:hover {
-  background: transparent;
+:global(.dark) .navButtonPrimary,
+:global(html.dark) .navButtonPrimary {
+  background: #78a65a;
+  color: #111111;
 }
 
-:global(.dark) .navIcon {
-  color: rgba(255, 255, 255, 0.8);
+:global(.dark) .navIconBubble,
+:global(html.dark) .navIconBubble {
+  background: rgba(17, 17, 17, 0.07);
 }
 
-:global(.dark) .navButton:hover .navIcon {
-  color: white;
+:global(.dark) .navIconBubblePrimary,
+:global(html.dark) .navIconBubblePrimary {
+  background: #111111;
+  color: #ffffff;
 }
 
-:global(.dark) .navIconBubble {
-  background:
-    linear-gradient(165deg, rgba(58, 58, 58, 0.92) 0%, rgba(24, 24, 24, 0.9) 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(0, 0, 0, 0.24) 100%);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow:
-    0 3px 10px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+@media (max-width: 560px) {
+  .bottomNav {
+    bottom: 0;
+    width: 100%;
+    min-height: calc(4.7rem + env(safe-area-inset-bottom));
+    padding: 0.35rem 0.35rem max(0.35rem, env(safe-area-inset-bottom));
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 1.35rem 1.35rem 0 0;
+    box-shadow: 0 -12px 36px rgba(17, 17, 17, 0.18);
+  }
+
+  .navButton {
+    min-height: 3.5rem;
+    flex-direction: column;
+    gap: 0.18rem;
+    padding: 0.3rem;
+  }
+
+  .navIconBubble {
+    width: 1.65rem;
+    height: 1.65rem;
+  }
+
+  .navLabel {
+    max-width: 6.5rem;
+    font-size: 0.62rem;
+  }
 }
 
-:global(.dark) .navIconBubblePrimary {
-  background:
-    linear-gradient(165deg, rgba(236, 190, 92, 0.98) 0%, rgba(172, 119, 34, 0.92) 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(0, 0, 0, 0.2) 100%);
-  border-color: rgba(245, 207, 120, 0.75);
-  box-shadow:
-    0 5px 18px rgba(231, 187, 85, 0.28),
-    0 0 18px rgba(231, 187, 85, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
-}
-
-:global(.dark) .navLabel {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-:global(.dark) .navButton:hover .navLabel {
-  color: white;
+@media (prefers-reduced-motion: reduce) {
+  .navButton {
+    transition: none;
+  }
 }

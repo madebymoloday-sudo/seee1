@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import { User, Trophy, Map } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import styles from "./BottomNavigation.module.css";
 
 interface BottomNavigationProps {
@@ -13,29 +14,49 @@ const BottomNavigation = ({
   onRating, 
   onMindMap 
 }: BottomNavigationProps) => {
+  const location = useLocation();
+  const isMapActive = location.pathname === "/" || location.pathname.startsWith("/map");
+  const isRatingActive = location.pathname.startsWith("/rating");
+  const isCabinetActive = location.pathname.startsWith("/cabinet");
+
   const navigation = (
-    <div className={styles.bottomNav}>
-      <button onClick={onRating} className={styles.navButton} title="Рейтинг">
-        <span className={styles.navIconBubble}>
+    <nav className={styles.bottomNav} aria-label="Основная навигация">
+      <button
+        onClick={onRating}
+        className={`${styles.navButton} ${isRatingActive ? styles.navButtonPrimary : ""}`}
+        title="Рейтинг"
+        aria-current={isRatingActive ? "page" : undefined}
+      >
+        <span className={`${styles.navIconBubble} ${isRatingActive ? styles.navIconBubblePrimary : ""}`}>
           <Trophy className={styles.navIcon} />
         </span>
         <span className={styles.navLabel}>Рейтинг</span>
       </button>
 
-      <button onClick={onMindMap} className={`${styles.navButton} ${styles.navButtonPrimary}`} title="Нейрокарта">
-        <span className={`${styles.navIconBubble} ${styles.navIconBubblePrimary}`}>
+      <button
+        onClick={onMindMap}
+        className={`${styles.navButton} ${isMapActive ? styles.navButtonPrimary : ""}`}
+        title="Нейрокарта"
+        aria-current={isMapActive ? "page" : undefined}
+      >
+        <span className={`${styles.navIconBubble} ${isMapActive ? styles.navIconBubblePrimary : ""}`}>
           <Map className={styles.navIcon} />
         </span>
         <span className={styles.navLabel}>Нейрокарта</span>
       </button>
       
-      <button onClick={onCabinet} className={styles.navButton} title="Личный кабинет">
-        <span className={styles.navIconBubble}>
+      <button
+        onClick={onCabinet}
+        className={`${styles.navButton} ${isCabinetActive ? styles.navButtonPrimary : ""}`}
+        title="Личный кабинет"
+        aria-current={isCabinetActive ? "page" : undefined}
+      >
+        <span className={`${styles.navIconBubble} ${isCabinetActive ? styles.navIconBubblePrimary : ""}`}>
           <User className={styles.navIcon} />
         </span>
         <span className={styles.navLabel}>Личный кабинет</span>
       </button>
-    </div>
+    </nav>
   );
 
   if (typeof document === "undefined") {
