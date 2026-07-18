@@ -4,6 +4,15 @@ function roundViewportValue(value: number) {
   return `${Math.round(value)}px`;
 }
 
+function isEditableElement(element: Element | null) {
+  return (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement ||
+    element instanceof HTMLSelectElement ||
+    (element instanceof HTMLElement && element.isContentEditable)
+  );
+}
+
 export function useVisualViewportCssVars() {
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -25,6 +34,8 @@ export function useVisualViewportCssVars() {
         0,
         layoutHeight - viewportHeight - viewportTop,
       );
+      const keyboardOpen =
+        keyboardInset > 80 && isEditableElement(document.activeElement);
 
       root.style.setProperty(
         "--app-layout-height",
@@ -54,7 +65,7 @@ export function useVisualViewportCssVars() {
         "--app-keyboard-inset",
         roundViewportValue(keyboardInset),
       );
-      root.dataset.keyboardOpen = keyboardInset > 0 ? "true" : "false";
+      root.dataset.keyboardOpen = keyboardOpen ? "true" : "false";
     };
 
     const scheduleUpdate = () => {

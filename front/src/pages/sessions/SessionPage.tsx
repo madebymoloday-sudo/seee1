@@ -92,7 +92,7 @@ const SessionPage = observer(() => {
     return (
       <div
         className={sessionLayoutClass}
-        style={{ height: "var(--app-viewport-height, 100dvh)" }}
+        style={{ height: "var(--app-interactive-height, 100dvh)" }}
       >
         <SessionHeader session={draftSession} isDraft />
         <div className={`${styles.sessionContent} ${sceneStyles.content}`}>
@@ -139,7 +139,7 @@ const SessionPage = observer(() => {
   return (
     <div
       className={sessionLayoutClass}
-      style={{ height: "var(--app-viewport-height, 100dvh)" }}
+      style={{ height: "var(--app-interactive-height, 100dvh)" }}
     >
       <SessionHeader session={session} />
       <div className={`${styles.sessionContent} ${sceneStyles.content}`}>
