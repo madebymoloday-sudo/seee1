@@ -165,6 +165,112 @@
   color: rgba(17, 17, 17, 0.56);
 }
 
+.mapLoader {
+  align-content: center;
+  justify-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.loaderNodes {
+  position: relative;
+  width: 8.5rem;
+  height: 3.5rem;
+}
+
+.loaderNodes::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  left: 1rem;
+  height: 1px;
+  background: rgba(17, 17, 17, 0.28);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: loaderLine 1.35s ease-in-out infinite;
+}
+
+.loaderNode {
+  position: absolute;
+  top: 50%;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid rgba(17, 17, 17, 0.2);
+  box-shadow: 0 10px 24px rgba(17, 17, 17, 0.1);
+  transform: translateY(-50%);
+  animation: loaderNodeFloat 1.35s ease-in-out infinite;
+}
+
+.loaderNodeSky {
+  left: 0;
+  border-radius: 0.85rem 0.85rem 0.85rem 0.3rem;
+  background: #bfe4ff;
+}
+
+.loaderNodeGrass {
+  left: 50%;
+  border-radius: 50%;
+  background: #a8c98b;
+  transform: translate(-50%, -50%);
+  animation-delay: 120ms;
+}
+
+.loaderNodeSunset {
+  right: 0;
+  border-radius: 999px;
+  background: #f3a7b8;
+  animation-delay: 240ms;
+}
+
+.loaderCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.loaderCopy strong {
+  color: #111111;
+  font-family: "Archivo Variable", sans-serif;
+  font-size: 0.92rem;
+  font-weight: 740;
+}
+
+.loaderCopy span {
+  color: rgba(17, 17, 17, 0.52);
+  font-size: 0.75rem;
+}
+
+@keyframes loaderNodeFloat {
+  0%,
+  100% {
+    margin-top: 0;
+  }
+
+  50% {
+    margin-top: -0.42rem;
+  }
+}
+
+@keyframes loaderLine {
+  0%,
+  15% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  45%,
+  75% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
 .treeListRoot,
 .treeList {
   position: relative;
@@ -582,10 +688,22 @@
 :global(.dark) .title,
 :global(.dark) .subtitle,
 :global(.dark) .emptyState,
+:global(.dark) .loaderCopy strong,
 :global(html.dark) .title,
 :global(html.dark) .subtitle,
-:global(html.dark) .emptyState {
+:global(html.dark) .emptyState,
+:global(html.dark) .loaderCopy strong {
   color: #ffffff;
+}
+
+:global(.dark) .loaderCopy span,
+:global(html.dark) .loaderCopy span {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+:global(.dark) .loaderNodes::before,
+:global(html.dark) .loaderNodes::before {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 :global(.dark) .canvas,
@@ -772,7 +890,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nodeCard {
+  .nodeCard,
+  .loaderNode,
+  .loaderNodes::before {
     transition: none;
+    animation: none;
+  }
+
+  .loaderNodes::before {
+    opacity: 1;
+    transform: scaleX(1);
   }
 }

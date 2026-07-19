@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { CSSProperties, TouchEvent, WheelEvent } from "react";
 import { observer } from "mobx-react-lite";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +33,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { parseImportantOptions } from "@/lib/sessionUtils";
+import { useAuth } from "@/hooks/useAuth";
 import styles from "./MapPage.module.css";
 
 type MindNodeType = "SITUATION" | "EMOTION" | "THOUGHT" | "LEGACY";
@@ -85,6 +93,8 @@ const DEFAULT_THOUGHT_FIELDS = 1;
 const THOUGHT_REWARD = 25;
 const MIN_MAP_SCALE = 0.35;
 const MAX_MAP_SCALE = 1.5;
+const MAP_CACHE_PREFIX = "seee:event-map:";
+const MAP_CACHE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
 function clampScale(value: number) {
   return Math.min(MAX_MAP_SCALE, Math.max(MIN_MAP_SCALE, value));
@@ -138,6 +148,92 @@ function asMindNode(node: EventMapNodeDto, children: MindNode[] = []): MindNode 
     childCount: children.length,
     children,
   };
+}
+
+function readMapCache(userId?: string): EventMapNodeDto[] {
+  if (!userId) return [];
+  try {
+    const raw = localStorage.getItem(`${MAP_CACHE_PREFIX}${userId}`);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as {
+      savedAt?: number;
+      nodes?: EventMapNodeDto[];
+    };
+    if (
+      !parsed.savedAt ||
+      Date.now() - parsed.savedAt > MAP_CACHE_MAX_AGE_MS ||
+      !Array.isArray(parsed.nodes)
+    ) {
+      localStorage.removeItem(`${MAP_CACHE_PREFIX}${userId}`);
+      return [];
+    }
+    return sortNodes(parsed.nodes);
+  } catch {
+    return [];
+  }
+}
+
+function writeMapCache(userId: string | undefined, nodes: EventMapNodeDto[]) {
+  if (!userId) return;
+  window.setTimeout(() => {
+    try {
+      localStorage.setItem(
+        `${MAP_CACHE_PREFIX}${userId}`,
+        JSON.stringify({ savedAt: Date.now(), nodes }),
+      );
+    } catch {
+      // The server remains the source of truth when browser storage is unavailable.
+    }
+  }, 0);
+}
+
+function buildMindTree(nodes: EventMapNodeDto[]) {
+  const sourceById = new globalThis.Map(
+    nodes.filter((node) => Boolean(node.id)).map((node) => [node.id, node]),
+  );
+  const mindById = new globalThis.Map<string, MindNode>();
+  for (const node of sourceById.values()) {
+    mindById.set(node.id, asMindNode(node));
+  }
+
+  const roots: MindNode[] = [];
+  for (const node of sourceById.values()) {
+    const mindNode = mindById.get(node.id);
+    if (!mindNode) continue;
+
+    const parent = node.parentId ? mindById.get(node.parentId) : null;
+    let canAttach = Boolean(parent) && node.parentId !== node.id;
+
+    if (canAttach) {
+      const visited = new globalThis.Set<string>([node.id]);
+      let cursorId: string | null | undefined = node.parentId;
+      while (cursorId) {
+        if (visited.has(cursorId)) {
+          canAttach = false;
+          break;
+        }
+        visited.add(cursorId);
+        cursorId = sourceById.get(cursorId)?.parentId;
+      }
+    }
+
+    if (canAttach && parent) {
+      parent.children.push(mindNode);
+    } else {
+      roots.push(mindNode);
+    }
+  }
+
+  for (const node of mindById.values()) {
+    node.children = sortNodes(node.children) as MindNode[];
+    node.childCount = node.children.length;
+  }
+  roots.sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+
+  return { tree: roots, nodeMap: mindById };
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -241,9 +337,17 @@ async function createThoughtSession(title: string) {
 
 const MapPage = observer(() => {
   const navigate = useNavigate();
-  const [nodes, setNodes] = useState<EventMapNodeDto[]>([]);
+  const { user } = useAuth();
+  const initialNodesRef = useRef<EventMapNodeDto[] | null>(null);
+  if (initialNodesRef.current === null) {
+    initialNodesRef.current = readMapCache(user?.id);
+  }
+  const hadCachedMapRef = useRef(initialNodesRef.current.length > 0);
+  const [nodes, setNodes] = useState<EventMapNodeDto[]>(
+    initialNodesRef.current,
+  );
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!hadCachedMapRef.current);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -263,6 +367,8 @@ const MapPage = observer(() => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const mapContentRef = useRef<HTMLDivElement>(null);
   const pinchRef = useRef<{ distance: number; scale: number } | null>(null);
+  const fetchRequestRef = useRef(0);
+  const mapMutationVersionRef = useRef(0);
 
   const showMapSaveError = (error: unknown, fallback: string) => {
     const message = isSeeTokensExpiredError(error)
@@ -278,33 +384,47 @@ const MapPage = observer(() => {
     });
   };
 
-  const fetchMap = async ({
-    showLoading = true,
-    silent = false,
-  }: {
-    showLoading?: boolean;
-    silent?: boolean;
-  } = {}) => {
-    if (showLoading) setLoading(true);
-    try {
-      const mapNodes = await apiAgent.get<EventMapNodeDto[]>("/event-map");
-      if (!Array.isArray(mapNodes)) {
-        throw new Error("Некорректный ответ нейрокарты");
+  const fetchMap = useCallback(
+    async ({
+      showLoading = true,
+      silent = false,
+    }: {
+      showLoading?: boolean;
+      silent?: boolean;
+    } = {}) => {
+      const requestId = ++fetchRequestRef.current;
+      const mutationVersionAtStart = mapMutationVersionRef.current;
+      if (showLoading) setLoading(true);
+      try {
+        const mapNodes = await apiAgent.get<EventMapNodeDto[]>("/event-map");
+        if (!Array.isArray(mapNodes)) {
+          throw new Error("Некорректный ответ нейрокарты");
+        }
+        const nextNodes = sortNodes(mapNodes);
+        if (requestId !== fetchRequestRef.current) return false;
+        setNodes((currentNodes) => {
+          const resolvedNodes =
+            mutationVersionAtStart === mapMutationVersionRef.current
+              ? nextNodes
+              : mergeNodes(nextNodes, currentNodes);
+          writeMapCache(user?.id, resolvedNodes);
+          return resolvedNodes;
+        });
+        return true;
+      } catch (error) {
+        console.error(error);
+        if (!silent) toast.error("Не удалось загрузить нейрокарту");
+        return false;
+      } finally {
+        if (showLoading) setLoading(false);
       }
-      setNodes(sortNodes(mapNodes));
-      return true;
-    } catch (error) {
-      console.error(error);
-      if (!silent) toast.error("Не удалось загрузить нейрокарту");
-      return false;
-    } finally {
-      if (showLoading) setLoading(false);
-    }
-  };
+    },
+    [user?.id],
+  );
 
   useEffect(() => {
-    void fetchMap();
-  }, []);
+    void fetchMap({ showLoading: !hadCachedMapRef.current });
+  }, [fetchMap]);
 
   const rawNodes = useMemo(() => {
     return nodes.filter((node) => {
@@ -313,59 +433,10 @@ const MapPage = observer(() => {
     });
   }, [nodes]);
 
-  const nodesByParent = useMemo(() => {
-    const grouped = new globalThis.Map<string, EventMapNodeDto[]>();
-    for (const node of rawNodes) {
-      const key = node.parentId || "__root__";
-      const current = grouped.get(key) || [];
-      current.push(node);
-      grouped.set(key, current);
-    }
-    for (const [key, value] of grouped) {
-      grouped.set(
-        key,
-        key === "__root__"
-          ? [...value].sort(
-              (a, b) =>
-                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-            )
-          : sortNodes(value),
-      );
-    }
-    return grouped;
-  }, [rawNodes]);
-
-  const tree = useMemo(() => {
-    const buildTree = (parentId: string | null, path: Set<string>): MindNode[] => {
-      const items = nodesByParent.get(parentId || "__root__") || [];
-      return items.flatMap((node) => {
-        if (path.has(node.id)) return [];
-        const nextPath = new globalThis.Set(path);
-        nextPath.add(node.id);
-        const children = buildTree(node.id, nextPath);
-        return [{
-          ...node,
-          resolvedType: ((node.nodeType || "LEGACY").toUpperCase() as MindNodeType) || "LEGACY",
-          resolvedTitle: titleForNode(node),
-          childCount: children.length,
-          children,
-        }];
-      });
-    };
-    return buildTree(null, new globalThis.Set<string>());
-  }, [nodesByParent]);
-
-  const treeNodeMap = useMemo(() => {
-    const map = new globalThis.Map<string, MindNode>();
-    const visit = (items: MindNode[]) => {
-      for (const item of items) {
-        map.set(item.id, item);
-        visit(item.children);
-      }
-    };
-    visit(tree);
-    return map;
-  }, [tree]);
+  const { tree, nodeMap: treeNodeMap } = useMemo(
+    () => buildMindTree(rawNodes),
+    [rawNodes],
+  );
 
   useLayoutEffect(() => {
     const content = mapContentRef.current;
@@ -419,7 +490,19 @@ const MapPage = observer(() => {
             path: `M ${startX} ${startY} C ${startX + distance} ${startY}, ${endX - distance} ${endY}, ${endX} ${endY}`,
           });
         }
-        setMapEdges(nextEdges);
+        setMapEdges((currentEdges) => {
+          if (
+            currentEdges.length === nextEdges.length &&
+            currentEdges.every(
+              (edge, index) =>
+                edge.id === nextEdges[index]?.id &&
+                edge.path === nextEdges[index]?.path,
+            )
+          ) {
+            return currentEdges;
+          }
+          return nextEdges;
+        });
       });
     };
 
@@ -440,11 +523,17 @@ const MapPage = observer(() => {
     const root = treeNodeMap.get(nodeId);
     if (!root) return [];
     const result: string[] = [];
-    const walk = (node: MindNode) => {
+    const stack = [root];
+    const visited = new globalThis.Set<string>();
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (!node || visited.has(node.id)) continue;
+      visited.add(node.id);
       result.push(node.id);
-      node.children.forEach(walk);
-    };
-    walk(root);
+      for (let index = node.children.length - 1; index >= 0; index -= 1) {
+        stack.push(node.children[index]);
+      }
+    }
     return result;
   };
 
@@ -719,16 +808,24 @@ const MapPage = observer(() => {
     setSaving(true);
     try {
       if (modal?.type === "edit-situation") {
-        await apiAgent.patch(`/event-map/${modal.node.id}`, {
+        const updated = await apiAgent.patch<
+          CreateEventMapPayload,
+          EventMapNodeDto
+        >(`/event-map/${modal.node.id}`, {
           title,
           description: situationDescription.trim() || null,
           event: title,
           rootBelief: situationDescription.trim() || null,
         });
+        mapMutationVersionRef.current += 1;
+        setNodes((currentNodes) => mergeNodes(currentNodes, [updated]));
         closeModal();
-        await fetchMap();
+        void fetchMap({ showLoading: false, silent: true });
       } else {
-        const created = await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>("/event-map", {
+        const created = await apiAgent.post<
+          CreateEventMapPayload,
+          EventMapNodeDto
+        >("/event-map", {
           nodeType: "SITUATION",
           title,
           description: situationDescription.trim() || null,
@@ -737,6 +834,7 @@ const MapPage = observer(() => {
           level: 1,
           displayOrder: tree.length,
         });
+        mapMutationVersionRef.current += 1;
         setNodes((currentNodes) => mergeNodes(currentNodes, [created]));
         setExpanded((prev) => ({ ...prev, [created.id]: true }));
         setEmotionDrafts(Array.from({ length: DEFAULT_EMOTION_FIELDS }, () => ""));
@@ -754,7 +852,10 @@ const MapPage = observer(() => {
 
   const submitEmotions = async () => {
     const values = emotionDrafts.map((item) => item.trim()).filter(Boolean);
-    if (values.length === 0 || modal?.type !== "create-emotions" && modal?.type !== "edit-emotion") {
+    if (
+      values.length === 0 ||
+      (modal?.type !== "create-emotions" && modal?.type !== "edit-emotion")
+    ) {
       toast.error("Добавьте хотя бы одну эмоцию");
       return;
     }
@@ -762,17 +863,25 @@ const MapPage = observer(() => {
     try {
       if (modal.type === "edit-emotion") {
         const title = values[0];
-        await apiAgent.patch(`/event-map/${modal.node.id}`, {
+        const updated = await apiAgent.patch<
+          CreateEventMapPayload,
+          EventMapNodeDto
+        >(`/event-map/${modal.node.id}`, {
           title,
           emotion: title,
         });
+        mapMutationVersionRef.current += 1;
+        setNodes((currentNodes) => mergeNodes(currentNodes, [updated]));
         closeModal();
-        await fetchMap();
+        void fetchMap({ showLoading: false, silent: true });
       } else {
         const createdEmotions: EventMapNodeDto[] = [];
         for (const value of values) {
           const title = value;
-          const created = await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>("/event-map", {
+          const created = await apiAgent.post<
+            CreateEventMapPayload,
+            EventMapNodeDto
+          >("/event-map", {
             nodeType: "EMOTION",
             title,
             emotion: title,
@@ -782,7 +891,8 @@ const MapPage = observer(() => {
           createdEmotions.push(created);
         }
         const firstEmotion = createdEmotions[0];
-        await fetchMap();
+        mapMutationVersionRef.current += 1;
+        setNodes((currentNodes) => mergeNodes(currentNodes, createdEmotions));
         if (firstEmotion) {
           setExpanded((prev) => ({
             ...prev,
@@ -792,10 +902,15 @@ const MapPage = observer(() => {
           setThoughtDrafts(Array.from({ length: DEFAULT_THOUGHT_FIELDS }, () => ""));
           setThoughtHint("");
           setModal({ type: "create-thoughts", parent: asMindNode(firstEmotion) });
-          toast.success(`Эмоции сохранены. Теперь добавьте мысль для эмоции «${firstEmotion.title || firstEmotion.emotion || "эмоция"}».`);
+          toast.success(
+            `Эмоции сохранены. Теперь добавьте мысль для эмоции «${
+              firstEmotion.title || firstEmotion.emotion || "эмоция"
+            }».`,
+          );
         } else {
           closeModal();
         }
+        void fetchMap({ showLoading: false, silent: true });
       }
     } catch (error) {
       console.error(error);
@@ -807,7 +922,10 @@ const MapPage = observer(() => {
 
   const submitThoughts = async () => {
     const values = thoughtDrafts.map((item) => item.trim()).filter(Boolean);
-    if (values.length === 0 || modal?.type !== "create-thoughts" && modal?.type !== "edit-thought") {
+    if (
+      values.length === 0 ||
+      (modal?.type !== "create-thoughts" && modal?.type !== "edit-thought")
+    ) {
       toast.error("Добавьте хотя бы одну мысль");
       return;
     }
@@ -815,10 +933,15 @@ const MapPage = observer(() => {
     try {
       if (modal.type === "edit-thought") {
         const nextTitle = values[0];
-        await apiAgent.patch(`/event-map/${modal.node.id}`, {
+        const updated = await apiAgent.patch<
+          CreateEventMapPayload,
+          EventMapNodeDto
+        >(`/event-map/${modal.node.id}`, {
           title: nextTitle,
           idea: nextTitle,
         });
+        mapMutationVersionRef.current += 1;
+        setNodes((currentNodes) => mergeNodes(currentNodes, [updated]));
         if (modal.node.sourceSessionId) {
           await apiAgent.patch(`/sessions/${modal.node.sourceSessionId}`, {
             title: nextTitle,
@@ -826,9 +949,13 @@ const MapPage = observer(() => {
           });
         }
       } else {
+        const createdThoughts: EventMapNodeDto[] = [];
         for (const value of values) {
           const title = value;
-          await apiAgent.post<CreateEventMapPayload, EventMapNodeDto>("/event-map", {
+          const created = await apiAgent.post<
+            CreateEventMapPayload,
+            EventMapNodeDto
+          >("/event-map", {
             nodeType: "THOUGHT",
             title,
             idea: title,
@@ -837,11 +964,21 @@ const MapPage = observer(() => {
             sourceSessionId: null,
             isMuted: false,
           });
+          createdThoughts.push(created);
         }
+        mapMutationVersionRef.current += 1;
+        setNodes((currentNodes) => mergeNodes(currentNodes, createdThoughts));
         setExpanded((prev) => ({ ...prev, [modal.parent.id]: true }));
       }
       closeModal();
-      await fetchMap();
+      toast.success(
+        modal.type === "edit-thought"
+          ? "Мысль обновлена"
+          : values.length === 1
+            ? "Мысль добавлена в нейрокарту"
+            : "Мысли добавлены в нейрокарту",
+      );
+      void fetchMap({ showLoading: false, silent: true });
     } catch (error) {
       console.error(error);
       showMapSaveError(error, "Не удалось сохранить мысли");
@@ -1172,7 +1309,17 @@ const MapPage = observer(() => {
           onTouchCancel={handleMapTouchEnd}
         >
           {loading ? (
-            <div className={styles.emptyState}>Загружаю нейрокарту...</div>
+            <div className={`${styles.emptyState} ${styles.mapLoader}`} role="status">
+              <div className={styles.loaderNodes} aria-hidden="true">
+                <span className={`${styles.loaderNode} ${styles.loaderNodeSky}`} />
+                <span className={`${styles.loaderNode} ${styles.loaderNodeGrass}`} />
+                <span className={`${styles.loaderNode} ${styles.loaderNodeSunset}`} />
+              </div>
+              <div className={styles.loaderCopy}>
+                <strong>Собираю мысли в карту</strong>
+                <span>Сииикундочку!</span>
+              </div>
+            </div>
           ) : tree.length === 0 ? (
             <div className={styles.emptyState}>
               <button type="button" className={styles.emptyAddCard} onClick={openCreateSituation}>
