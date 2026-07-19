@@ -171,6 +171,7 @@ const STORAGE_KEY_PREFIX = "seee_step_dialog_state:";
 const SESSION_KIND_PREFIX = "seee_session_kind:";
 const SESSION_NOTES_PREFIX = "seee_session_notes:";
 const DRAFT_TO_EXPLORE_CATEGORY_PREFIX = "seee_draft_to_explore_category:";
+const STAGE_ASSIST_TIMEOUT_MS = 10_000;
 
 function createThoughtScopeId(): string {
   return `thought-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -2202,6 +2203,7 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
     return apiAgent.post<StageAssistRequest, StageAssistResponse>(
       "/psychologist/stage-assist",
       payload,
+      { timeout: STAGE_ASSIST_TIMEOUT_MS },
     );
   };
 
@@ -2264,7 +2266,15 @@ const StepDialogWindow = observer(({ session }: StepDialogWindowProps) => {
           return;
         }
 
-        const assist = await requestStageAssist(trimmed, options);
+        let assist: StageAssistResponse | null = null;
+        try {
+          assist = await requestStageAssist(trimmed, options);
+        } catch (error) {
+          console.warn(
+            "Stage assist is unavailable; continuing with the local session flow",
+            error,
+          );
+        }
         if (assist) {
           const normalized = (assist.normalizedAnswer || trimmed).trim() || trimmed;
           const answerToPersist = trimmed;

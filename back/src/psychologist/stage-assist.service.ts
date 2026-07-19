@@ -17,6 +17,7 @@ type StageAssistLLMResult = {
 };
 
 const DEFAULT_STAGE_MODEL = 'gpt-4o-mini';
+const STAGE_ASSIST_TIMEOUT_MS = 8_000;
 
 const EMOTION_MARKERS = [
   'трев',
@@ -110,7 +111,11 @@ export class StageAssistService {
       return null;
     }
 
-    this.client = new OpenAI({ apiKey });
+    this.client = new OpenAI({
+      apiKey,
+      timeout: STAGE_ASSIST_TIMEOUT_MS,
+      maxRetries: 0,
+    });
     return this.client;
   }
 
