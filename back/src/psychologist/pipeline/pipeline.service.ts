@@ -93,9 +93,6 @@ export class PipelineService implements OnModuleInit {
 
       this.logger.log("✅ LLM успешно подключен и работает");
       this.logger.log(`   Модель: gpt-4o-mini`);
-      this.logger.log(
-        `   API ключ: ${apiKey.substring(0, 7)}...${apiKey.substring(apiKey.length - 4)}`
-      );
       this.llmAvailable = true;
       return true;
     } catch (error: any) {

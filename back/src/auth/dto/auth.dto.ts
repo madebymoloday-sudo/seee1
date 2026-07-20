@@ -1,5 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsString, IsNotEmpty, IsOptional, MinLength, Matches, MaxLength, IsIn } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  MinLength,
+  Matches,
+  MaxLength,
+  IsIn,
+  IsInt,
+  Min,
+} from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({
@@ -166,6 +177,8 @@ export class ClaimGamificationRewardDto {
     description: 'Количество монет к начислению',
     example: 3,
   })
+  @IsInt()
+  @Min(1)
   amount: number;
 
   @ApiPropertyOptional({

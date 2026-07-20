@@ -212,9 +212,14 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
           return;
         }
         applyTranscriptToInput(transcript);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const apiMessage = (
+          error as { response?: { data?: { message?: unknown } } }
+        )?.response?.data?.message;
         const errorMessage =
-          error?.response?.data?.message || "Не удалось распознать голос.";
+          typeof apiMessage === "string" || Array.isArray(apiMessage)
+            ? apiMessage
+            : "Не удалось распознать голос.";
         toast.error(
           Array.isArray(errorMessage) ? errorMessage[0] : errorMessage,
         );
@@ -394,13 +399,13 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
         };
 
         recorder.start();
-      } catch (error: any) {
+      } catch (error: unknown) {
         setIsRecording(false);
         stream?.getTracks().forEach((track) => track.stop());
         clearRecorderResources();
         recordingConfigRef.current = null;
 
-        const errorName = String(error?.name || "");
+        const errorName = String((error as { name?: unknown })?.name || "");
         if (
           errorName === "NotAllowedError" ||
           errorName === "PermissionDeniedError"
@@ -534,6 +539,8 @@ const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
             }
             className={styles.sendButton}
             size="icon"
+            aria-label="Отправить ответ"
+            title="Отправить ответ"
           >
             <ArrowUp className="h-5 w-5" />
           </Button>

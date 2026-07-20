@@ -196,26 +196,46 @@ function buildMindTree(nodes: EventMapNodeDto[]) {
     mindById.set(node.id, asMindNode(node));
   }
 
+  const cyclicPathById = new globalThis.Map<string, boolean>();
+  for (const startId of sourceById.keys()) {
+    if (cyclicPathById.has(startId)) continue;
+
+    const path: string[] = [];
+    const pathIndexes = new globalThis.Map<string, number>();
+    let cursorId: string | null | undefined = startId;
+    let reachesCycle = false;
+
+    while (cursorId && sourceById.has(cursorId)) {
+      const knownResult = cyclicPathById.get(cursorId);
+      if (knownResult !== undefined) {
+        reachesCycle = knownResult;
+        break;
+      }
+      if (pathIndexes.has(cursorId)) {
+        reachesCycle = true;
+        break;
+      }
+
+      pathIndexes.set(cursorId, path.length);
+      path.push(cursorId);
+      cursorId = sourceById.get(cursorId)?.parentId;
+    }
+
+    for (const nodeId of path) {
+      cyclicPathById.set(nodeId, reachesCycle);
+    }
+  }
+
   const roots: MindNode[] = [];
   for (const node of sourceById.values()) {
     const mindNode = mindById.get(node.id);
     if (!mindNode) continue;
 
     const parent = node.parentId ? mindById.get(node.parentId) : null;
-    let canAttach = Boolean(parent) && node.parentId !== node.id;
-
-    if (canAttach) {
-      const visited = new globalThis.Set<string>([node.id]);
-      let cursorId: string | null | undefined = node.parentId;
-      while (cursorId) {
-        if (visited.has(cursorId)) {
-          canAttach = false;
-          break;
-        }
-        visited.add(cursorId);
-        cursorId = sourceById.get(cursorId)?.parentId;
-      }
-    }
+    const canAttach =
+      Boolean(parent) &&
+      node.parentId !== node.id &&
+      cyclicPathById.get(node.id) !== true;
 
     if (canAttach && parent) {
       parent.children.push(mindNode);
@@ -659,7 +679,17 @@ const MapPage = observer(() => {
     };
 
     const drafts: RowDraft[] = [];
-    const visit = (node: MindNode, draft: RowDraft) => {
+    const stack = [...tree]
+      .reverse()
+      .map((node) => ({
+        node,
+        draft: { situation: "", emotion: "", thoughts: [] } as RowDraft,
+      }));
+
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (!current) continue;
+      const { node, draft } = current;
       const next: RowDraft = {
         situation: draft.situation,
         emotion: draft.emotion,
@@ -676,13 +706,13 @@ const MapPage = observer(() => {
 
       if (node.children.length === 0) {
         drafts.push(next);
-        return;
+        continue;
       }
 
-      node.children.forEach((child) => visit(child, next));
-    };
-
-    tree.forEach((node) => visit(node, { situation: "", emotion: "", thoughts: [] }));
+      for (let index = node.children.length - 1; index >= 0; index -= 1) {
+        stack.push({ node: node.children[index], draft: next });
+      }
+    }
 
     const maxThoughtDepth = Math.max(
       6,
